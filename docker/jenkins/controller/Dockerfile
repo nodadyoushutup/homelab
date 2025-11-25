@@ -1,4 +1,4 @@
-FROM jenkins/jenkins:2.535
+FROM jenkins/jenkins:2.539
 
 ENV JAVA_OPTS="-Djenkins.install.runSetupWizard=false" \
     CASC_JENKINS_CONFIG="/home/jenkins/jenkins.yaml"
