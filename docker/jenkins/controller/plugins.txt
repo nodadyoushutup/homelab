@@ -13,7 +13,7 @@ pipeline-github-lib:65.v203688e7727e
 ssh-slaves:3.1085.vc64d040efa_85
 timestamper:1.30
 ws-cleanup:0.49
-github-oauth:651.v135e939e8b_60
+github-oauth:683.v04a_a_b_e9d7e07
 github-pullrequest:0.7.2
 ansicolor:1.0.6
 configuration-as-code:2006.v001a_2ca_6b_574
