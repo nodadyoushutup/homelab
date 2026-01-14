@@ -153,11 +153,11 @@ Trigger the stage you need via Jenkins once tfvars/backend files are available o
   7. **TrueNAS – Services & Network (`truenas-services-network.json`, uid `truenas-svc-net`):** `system.*`, `mem.*`, `net.*`, `net_speed.*`, `nut_ix_dummy_ups.*`, `nfsd.*`.
   8. **TrueNAS – K3s & Diagnostics (`truenas-k3s-diagnostics.json`, uid `truenas-k3s`):** `k3s_stats.k3s_pod_stats.*` plus optional `netdata.*` helpers.
 - Shared template variables (Graphite datasource `uid=graphite`):
-  - `host` (constant) – pinned to `truenas.truenas` on every dashboard.
-  - `disk` – multi-select include-all list sourced from `truenas.truenas.disk_ops.*` (disk-* and disk_ext dashboards).
-  - `smart_serial` – multi-select of drive serials from `truenas.truenas.smart_log_smart.disktemp.*` (SMART dashboard).
-  - `zpool` – multi-select derived from `truenas.truenas.zfspool.state_*` (SMART & ZFS dashboard).
-  - `nfs_op` – optional filter across `truenas.truenas.nfsd.proc[34].*` (Services & Network).
+  - `host` (constant) – pinned to `truenas.nas` on every dashboard.
+  - `disk` – multi-select include-all list sourced from `truenas.nas.disk_ops.*` (disk-* and disk_ext dashboards).
+  - `smart_serial` – multi-select of drive serials from `truenas.nas.smart_log_smart.disktemp.*` (SMART dashboard).
+  - `zpool` – multi-select derived from `truenas.nas.zfspool.state_*` (SMART & ZFS dashboard).
+  - `nfs_op` – optional filter across `truenas.nas.nfsd.proc[34].*` (Services & Network).
   - `k3s_pod` – multi-select for pod IDs under `k3s_stats.k3s_pod_stats.*` (K3s dashboard).
   - `diagnostic_target` – optional multi-select defaulting to `netdata.*` for the diagnostics panel.
 - The former `graphite-truenas-overview` dashboard has been removed; update any tfvars to reference the specific `truenas-*` dashboards listed above.
@@ -170,7 +170,7 @@ Trigger the stage you need via Jenkins once tfvars/backend files are available o
 ### Graphite inventory helper
 
 - Script: `scripts/graphite_inventory.py`
-  - Example: `python3 scripts/graphite_inventory.py --base-url http://swarm-cp-0:8081 --prefix truenas.truenas --output /tmp/truenas_metrics.txt --verbose`.
+  - Example: `python3 scripts/graphite_inventory.py --base-url http://swarm-cp-0:8081 --prefix truenas.nas --output /tmp/truenas_metrics.txt --verbose`.
   - Crawls `/metrics/find` breadth-first, records every leaf metric, and prints progress when `--verbose` / `--log-every` is set.
 - Workflow:
   1. Copy the previous `/tmp/truenas_metrics.txt` before re-running so you can diff against the new output.

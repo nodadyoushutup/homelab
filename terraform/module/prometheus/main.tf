@@ -58,7 +58,7 @@ resource "docker_service" "prometheus" {
           architecture = platforms.value.architecture
         }
       }
-      constraints = ["node.labels.role==controller"]
+      constraints = ["node.labels.role==swarm-cp-0"]
     }
 
     networks_advanced {

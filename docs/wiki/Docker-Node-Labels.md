@@ -3,85 +3,61 @@
 > Run these on a Swarm **manager** node.
 
 ## Label strategy overview
-- Keep labels lightweight (`key=value` strings) and scoped to scheduling needs. A common pattern is `role=<function>` so constraints read naturally.
+- Keep labels lightweight (`key=value` strings) and scoped to scheduling needs. The default pattern here is `role=<node-name>` so constraints are explicit and stable.
 - Apply labels to every node as part of provisioning so schedulers avoid "unknown" nodes. Record label intent next to any automation (Terraform, Ansible) that writes it.
-- Combine labels with node availability/taints when you must isolate critical workloads (for example, pin databases to SSD-backed managers plus `role=database`).
+- If you ever need functional grouping later, add a second label (for example, `tier=database`) without replacing the per-node `role`.
 - Double-check that labels land in `.Spec.Labels`; `docker node update` writes there while container labels live elsewhere.
 
-## Known labels in this swarm
+## Role labels in this swarm (per-node)
 
-### `role=cicd`
-- **Intent**: Reserve nodes that host Jenkins controller/agents and other CI tooling so pipelines do not compete with stateful services.
-- **Placement**: Add the label to nodes with fast storage and close network proximity to the registry/MinIO backends.
-- **Usage**:
-  ```bash
-  docker node update --label-add role=cicd swarm-wk-0
-  docker node update --label-rm role swarm-wk-0
-  docker service create --name my-ci-runner --constraint 'node.labels.role==cicd' alpine:3.20 sleep 1d
-  ```
+Use each node name as the `role` label value:
 
-### `role=monitoring`
-- **Intent**: Keep Grafana, Prometheus, Alertmanager, and exporters on nodes sized for metrics retention.
-- **Placement**: Apply to nodes that already run Swarm stacks like Grafana and Prometheus or have extra RAM/CPU for scraping.
-- **Usage**:
-  ```bash
-  docker node update --label-add role=monitoring swarm-wk-2
-  docker node update --label-rm role swarm-wk-2
-  docker service create --name prom --constraint 'node.labels.role==monitoring' prom/prometheus
-  ```
+```text
+role=swarm-cp-0
+role=swarm-wk-0
+role=swarm-wk-1
+role=swarm-wk-2
+role=swarm-wk-3
+role=swarm-wk-4
+```
 
-### `role=database`
-- **Intent**: Protect nodes with durable disks (NVMe/ZFS) for PostgreSQL, MinIO, or any stateful data service.
-- **Placement**: Restrict database services to these nodes and avoid co-locating noisy neighbors.
-- **Usage**:
-  ```bash
-  docker node update --label-add role=database swarm-wk-1
-  docker node update --label-rm role swarm-wk-1
-  docker service create --name pg --constraint 'node.labels.role==database' postgres:16
-  ```
-
-### `role=edge`
-- **Intent**: Host perimeter workloads that terminate TLS and face the public internet (Nginx Proxy Manager, future WAF/ACME helpers) so the rest of the cluster stays interior-only.
-- **Placement**: Label DMZ-capable workers that sit closest to the router/firewall; keep noisy/stateful apps off these nodes so reverse proxies stay responsive.
-- **Usage**:
-  ```bash
-  docker node update --label-add role=edge swarm-wk-3
-  docker node update --label-rm role swarm-wk-3
-  docker service create --name npm --constraint 'node.labels.role==edge' jc21/nginx-proxy-manager:2.12.6
-  ```
+### Example usage
+```bash
+docker node update --label-add role=swarm-wk-0 swarm-wk-0
+docker node update --label-rm role swarm-wk-0
+docker service create --name pinned-task --constraint 'node.labels.role==swarm-wk-0' alpine:3.20 sleep 1d
+```
 
 ## Current homelab node map
 
 | Node        | Swarm role | Availability | Labels           | Notes                                                  |
 |-------------|------------|--------------|------------------|--------------------------------------------------------|
-| `swarm-cp-0`| manager    | active       | _none yet_       | Controller/leader; add labels only when needed.        |
-| `swarm-wk-0`| worker     | active       | `role=cicd`      | Hosts Jenkins controller/agents and related CI.        |
-| `swarm-wk-1`| worker     | active       | `role=database`  | Primary database node (durable storage).               |
-| `swarm-wk-2`| worker     | active       | `role=monitoring`| Runs Prometheus/Grafana/Alertmanager stacks.           |
-| `swarm-wk-3`| worker     | active       | `role=edge`      | Perimeter node for Nginx Proxy Manager / TLS handling. |
+| `swarm-cp-0`| manager    | active       | `role=swarm-cp-0`| Controller/leader.                                     |
+| `swarm-wk-0`| worker     | active       | `role=swarm-wk-0`| Worker.                                                |
+| `swarm-wk-1`| worker     | active       | `role=swarm-wk-1`| Worker.                                                |
+| `swarm-wk-2`| worker     | active       | `role=swarm-wk-2`| Worker.                                                |
+| `swarm-wk-3`| worker     | active       | `role=swarm-wk-3`| Worker.                                                |
+| `swarm-wk-4`| worker     | active       | `role=swarm-wk-4`| Worker.                                                |
 
-> Keep this table updated as nodes change roles. Label the manager if you ever need to pin control-plane services (for example, `role=control-plane`).
+> Keep this table updated as nodes change. The role label always matches the node name.
 
 ## Fast label commands for this cluster
 ```bash
 # ensure existing labels stay present
-docker node update --label-add role=cicd swarm-wk-0
-docker node update --label-add role=database swarm-wk-1
-docker node update --label-add role=monitoring swarm-wk-2
-docker node update --label-add role=edge swarm-wk-3
-
-# promote additional database nodes (pick workers with SSD/NVMe)
-docker node update --label-add role=database NODE_WITH_FAST_DISKS   # replace placeholder with the target worker
+docker node update --label-add role=swarm-cp-0 swarm-cp-0
+docker node update --label-add role=swarm-wk-0 swarm-wk-0
+docker node update --label-add role=swarm-wk-1 swarm-wk-1
+docker node update --label-add role=swarm-wk-2 swarm-wk-2
+docker node update --label-add role=swarm-wk-3 swarm-wk-3
+docker node update --label-add role=swarm-wk-4 swarm-wk-4
 
 # quick removals when shifting roles
+docker node update --label-rm role swarm-cp-0
 docker node update --label-rm role swarm-wk-0
 docker node update --label-rm role swarm-wk-1
 docker node update --label-rm role swarm-wk-2
 docker node update --label-rm role swarm-wk-3
-
-# optional: label the controller if you need manager-only workloads
-docker node update --label-add role=control-plane swarm-cp-0
-docker node update --label-rm role swarm-cp-0             # drop control-plane label when opening scheduling
+docker node update --label-rm role swarm-wk-4
 ```
 
 ## 1) See your Docker nodes
@@ -91,6 +67,9 @@ docker node ls
 
 # (optional) quick view with hostname + availability + labels
 docker node ls --format 'table {{.ID}}	{{.Hostname}}	{{.Availability}}	{{.ManagerStatus}}'
+
+# quick view with hostname + role label
+docker node ls --format 'table {{.Hostname}}	{{.Labels}}'
 ```
 
 ## 2) See what labels a node has
@@ -105,10 +84,10 @@ docker node inspect NODE | jq '.[0].Spec.Labels'
 docker node inspect --pretty NODE
 ```
 
-## 3) Add (or change) a label (e.g., role=cicd)
+## 3) Add (or change) a label (e.g., role=swarm-wk-0)
 ```bash
-# add/update label "role=cicd" on a node
-docker node update --label-add role=cicd NODE
+# add/update label "role=swarm-wk-0" on a node
+docker node update --label-add role=swarm-wk-0 NODE
 
 # verify
 docker node inspect NODE --format '{{ json .Spec.Labels }}'
@@ -122,7 +101,7 @@ docker node inspect NODE --format '{{ json .Spec.Labels }}'
 
 ### A) With `docker service create`
 ```bash
-docker service create   --name my-ci-runner   --constraint 'node.labels.role==cicd'   alpine:3.20 sleep 1d
+docker service create   --name pinned-task   --constraint 'node.labels.role==swarm-wk-0'   alpine:3.20 sleep 1d
 ```
 
 ### B) In a Compose/Stack file (`docker stack deploy`)
@@ -130,13 +109,13 @@ docker service create   --name my-ci-runner   --constraint 'node.labels.role==ci
 # docker-compose.yml
 version: "3.8"
 services:
-  my-ci-runner:
+  pinned-task:
     image: alpine:3.20
     command: ["sleep","1d"]
     deploy:
       placement:
         constraints:
-          - node.labels.role==cicd
+          - node.labels.role==swarm-wk-0
 ```
 ```bash
 docker stack deploy -c docker-compose.yml mystack
@@ -147,7 +126,7 @@ docker stack deploy -c docker-compose.yml mystack
 {
   "deploy": {
     "placement": {
-      "constraints": ["node.labels.role==cicd"]
+      "constraints": ["node.labels.role==swarm-wk-0"]
     }
   }
 }
@@ -156,7 +135,7 @@ docker stack deploy -c docker-compose.yml mystack
 ## 5) Confirm the constraint is working
 ```bash
 # check where the task is scheduled
-docker service ps my-ci-runner --no-trunc
+docker service ps pinned-task --no-trunc
 
 # or for stacks
 docker stack ps mystack --no-trunc

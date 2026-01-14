@@ -61,7 +61,7 @@
       "targets": [
         {
           "refId": "A",
-          "target": "aliasByNode(truenas.truenas.smart_log_smart.disktemp.$smart_serial.*,4)",
+          "target": "aliasByNode(truenas.nas.smart_log_smart.disktemp.$smart_serial.*,4)",
           "textEditor": true
         }
       ],
@@ -105,17 +105,17 @@
       "targets": [
         {
           "refId": "A",
-          "target": "aliasByNode(truenas.truenas.zfs.arc_size.*,4)",
+          "target": "aliasByNode(truenas.nas.zfs.arc_size.*,4)",
           "textEditor": true
         },
         {
           "refId": "B",
-          "target": "aliasByNode(truenas.truenas.zfs.arc_size_breakdown.*,4)",
+          "target": "aliasByNode(truenas.nas.zfs.arc_size_breakdown.*,4)",
           "textEditor": true
         },
         {
           "refId": "C",
-          "target": "aliasByNode(truenas.truenas.zfs.hits_rate.*,4)",
+          "target": "aliasByNode(truenas.nas.zfs.hits_rate.*,4)",
           "textEditor": true
         }
       ],
@@ -159,7 +159,7 @@
       "targets": [
         {
           "refId": "A",
-          "target": "aliasByNode(truenas.truenas.zfspool.state_$zpool.*,4)",
+          "target": "aliasByNode(truenas.nas.zfspool.state_$zpool.*,4)",
           "textEditor": true
         }
       ],
@@ -203,17 +203,17 @@
       "targets": [
         {
           "refId": "A",
-          "target": "aliasByNode(truenas.truenas.zfs.demand_data_hits_rate.*,4)",
+          "target": "aliasByNode(truenas.nas.zfs.demand_data_hits_rate.*,4)",
           "textEditor": true
         },
         {
           "refId": "B",
-          "target": "aliasByNode(truenas.truenas.zfs.prefetch_data_hits_rate.*,4)",
+          "target": "aliasByNode(truenas.nas.zfs.prefetch_data_hits_rate.*,4)",
           "textEditor": true
         },
         {
           "refId": "C",
-          "target": "aliasByNode(truenas.truenas.zfs.actual_hits_rate.*,4)",
+          "target": "aliasByNode(truenas.nas.zfs.actual_hits_rate.*,4)",
           "textEditor": true
         }
       ],
@@ -278,8 +278,8 @@
           "type": "graphite",
           "uid": "graphite"
         },
-        "definition": "truenas.truenas.smart_log_smart.disktemp.*",
-        "query": "truenas.truenas.smart_log_smart.disktemp.*",
+        "definition": "truenas.nas.smart_log_smart.disktemp.*",
+        "query": "truenas.nas.smart_log_smart.disktemp.*",
         "regex": "/^truenas\\.truenas\\.smart_log_smart\\.disktemp\\.([^.]+)/",
         "includeAll": true,
         "allValue": "*",
@@ -303,8 +303,8 @@
           "type": "graphite",
           "uid": "graphite"
         },
-        "definition": "truenas.truenas.zfspool.state_*",
-        "query": "truenas.truenas.zfspool.state_*",
+        "definition": "truenas.nas.zfspool.state_*",
+        "query": "truenas.nas.zfspool.state_*",
         "regex": "/^truenas\\.truenas\\.zfspool\\.state_([^.]+)/",
         "includeAll": true,
         "allValue": "*",

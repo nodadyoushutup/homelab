@@ -68,7 +68,7 @@ resource "docker_service" "grafana" {
         }
       }
 
-      constraints = ["node.labels.role==controller"]
+      constraints = ["node.labels.role==swarm-cp-0"]
     }
 
     networks_advanced {

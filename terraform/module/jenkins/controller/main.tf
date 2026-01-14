@@ -189,7 +189,7 @@ resource "docker_service" "controller" {
           architecture = platforms.value.architecture
         }
       }
-      constraints = ["node.labels.role==controller"]
+      constraints = ["node.labels.role==swarm-cp-0"]
     }
   }
 

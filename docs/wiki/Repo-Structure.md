@@ -8,7 +8,8 @@
 ├── docker/
 │   ├── jenkins/           # Jenkins controller/agent image build contexts
 │   ├── purge/             # Service-specific purge scripts (Swarm cleanup)
-│   └── state/             # Docker Compose stack for MinIO + Renovate
+│   ├── minio/             # Docker Compose stack for MinIO backend
+│   └── renovate/          # Docker Compose stack for Renovate
 ├── pipeline/              # Swarm pipeline entrypoints + Jenkins wrappers per service
 ├── terraform/
 │   ├── module/            # Terraform modules (services, healthcheck helpers, Jenkins jobs)

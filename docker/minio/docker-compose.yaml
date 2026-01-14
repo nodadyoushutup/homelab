@@ -11,6 +11,7 @@ services:
       MINIO_ROOT_PASSWORD: "${MINIO_ROOT_PASSWORD}"
       MINIO_REGION_NAME: "${MINIO_REGION_NAME}"
       MINIO_PROMETHEUS_AUTH_TYPE: "${MINIO_PROMETHEUS_AUTH_TYPE}"
+      MINIO_LOG_LEVEL: "${MINIO_LOG_LEVEL}"
     volumes:
       - minio-data:/data
       - minio-config:/root/.minio
@@ -20,28 +21,6 @@ services:
       interval: 10s
       timeout: 10s
       retries: 10
-
-  renovate-arm:
-    image: renovate/renovate:latest # runs arm-targeted bot (docker.platform in config)
-    container_name: renovate-arm
-    restart: unless-stopped
-    environment:
-      RENOVATE_TOKEN: "${GITHUB_PAT}"
-      RENOVATE_CONFIG_FILE: /etc/renovate/config-arm.json
-      LOG_LEVEL: "info"
-    volumes:
-      - ./renovate-arm.json:/etc/renovate/config-arm.json:ro
-
-  renovate-amd:
-    image: renovate/renovate:latest # runs default/amd bot
-    container_name: renovate-amd
-    restart: unless-stopped
-    environment:
-      RENOVATE_TOKEN: "${GITHUB_PAT}"
-      RENOVATE_CONFIG_FILE: /etc/renovate/config-amd.json
-      LOG_LEVEL: "info"
-    volumes:
-      - ./renovate-amd.json:/etc/renovate/config-amd.json:ro
 
 volumes:
   minio-data:

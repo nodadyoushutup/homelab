@@ -61,7 +61,7 @@
       "targets": [
         {
           "refId": "A",
-          "target": "aliasByNode(truenas.truenas.disk_ext_ops.$disk.*,3,4)",
+          "target": "aliasByNode(truenas.nas.disk_ext_ops.$disk.*,3,4)",
           "textEditor": true
         }
       ],
@@ -105,7 +105,7 @@
       "targets": [
         {
           "refId": "A",
-          "target": "aliasByNode(truenas.truenas.disk_ext_mops.$disk.*,3,4)",
+          "target": "aliasByNode(truenas.nas.disk_ext_mops.$disk.*,3,4)",
           "textEditor": true
         }
       ],
@@ -149,7 +149,7 @@
       "targets": [
         {
           "refId": "A",
-          "target": "aliasByNode(truenas.truenas.disk_ext_iotime.$disk.*,3,4)",
+          "target": "aliasByNode(truenas.nas.disk_ext_iotime.$disk.*,3,4)",
           "textEditor": true
         }
       ],
@@ -193,7 +193,7 @@
       "targets": [
         {
           "refId": "A",
-          "target": "aliasByNode(truenas.truenas.disk_ext_await.$disk.*,3,4)",
+          "target": "aliasByNode(truenas.nas.disk_ext_await.$disk.*,3,4)",
           "textEditor": true
         }
       ],
@@ -237,7 +237,7 @@
       "targets": [
         {
           "refId": "A",
-          "target": "aliasByNode(truenas.truenas.disk_ext_avgsz.$disk.*,3,4)",
+          "target": "aliasByNode(truenas.nas.disk_ext_avgsz.$disk.*,3,4)",
           "textEditor": true
         }
       ],
@@ -281,7 +281,7 @@
       "targets": [
         {
           "refId": "A",
-          "target": "aliasByNode(truenas.truenas.disk_ext.$disk.*,3,4)",
+          "target": "aliasByNode(truenas.nas.disk_ext.$disk.*,3,4)",
           "textEditor": true
         }
       ],
@@ -346,8 +346,8 @@
           "type": "graphite",
           "uid": "graphite"
         },
-        "definition": "truenas.truenas.disk_ops.*",
-        "query": "truenas.truenas.disk_ops.*",
+        "definition": "truenas.nas.disk_ops.*",
+        "query": "truenas.nas.disk_ops.*",
         "regex": "/^.*\\.disk_ops\\.([^.]+)/",
         "includeAll": true,
         "allValue": "*",

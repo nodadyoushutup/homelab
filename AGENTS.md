@@ -9,6 +9,6 @@ Use this as a directory to the source-of-truth docs agents need.
 - Swarm node onboarding (manual worker/manager add, prerequisites, labels, validation): `docs/wiki/Swarm-Node-Onboarding.md`.
 - Planning docs for active changes: `docs/planning/<service>-plan.md` (complete before merging).
 - Repo path is `~/code/homelab` everywhere via NFS from `truenas.internal` (see Machines for export details).
-- Compose-only stack (MinIO backend + Renovate) runs on `medusa.internal` under `docker/state/`; images must support `linux/aarch64`.
+- Compose-only stacks (MinIO backend + Renovate) run on `medusa.internal` under `docker/minio/` and `docker/renovate/`; images must support `linux/aarch64`.
 - NFS root_squash note: running repo scripts directly via `sudo` can return “Permission denied”; pipe them into `sudo bash -s` or copy to `/tmp` first.
 - Python note: use `python3` explicitly; no `python` shim is assumed across hosts.
