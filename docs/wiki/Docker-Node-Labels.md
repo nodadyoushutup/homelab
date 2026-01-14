@@ -70,6 +70,9 @@ docker node ls --format 'table {{.ID}}	{{.Hostname}}	{{.Availability}}	{{.Manage
 
 # quick view with hostname + role label
 docker node ls --format 'table {{.Hostname}}	{{.Labels}}'
+
+# quick view with hostname + CPU architecture
+docker node inspect -f '{{ .Description.Hostname }}	{{ .Description.Platform.Architecture }}' $(docker node ls -q)
 ```
 
 ## 2) See what labels a node has
@@ -107,7 +110,6 @@ docker service create   --name pinned-task   --constraint 'node.labels.role==swa
 ### B) In a Compose/Stack file (`docker stack deploy`)
 ```yaml
 # docker-compose.yml
-version: "3.8"
 services:
   pinned-task:
     image: alpine:3.20
