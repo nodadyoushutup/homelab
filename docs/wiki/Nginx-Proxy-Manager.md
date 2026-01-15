@@ -4,7 +4,7 @@ Reverse proxy automation for edge HTTP/S workloads. The stack follows the **App 
 
 ## Architecture
 
-- **App stage** – `terraform/module/nginx_proxy_manager/app` provisions the Swarm service, overlay network, and persistent volumes. It pins `jc21/nginx-proxy-manager:2.12.6@sha256:6ab097814f54b1362d5fd3c5884a01ddd5878aaae9992ffd218439180f0f92f3` and constrains placement to nodes labeled `role=controller` (see [[Docker Node Labels]]).
+- **App stage** – `terraform/module/nginx_proxy_manager/app` provisions the Swarm service, overlay network, and persistent volumes. It pins `jc21/nginx-proxy-manager:2.12.6@sha256:6ab097814f54b1362d5fd3c5884a01ddd5878aaae9992ffd218439180f0f92f3` and honors placement constraints/platforms from `app.tfvars` (see [[Docker Node Labels]]).
 - **Config stage** – `terraform/module/nginx_proxy_manager/config` uses the [`Sander0542/nginxproxymanager`](https://registry.terraform.io/providers/Sander0542/nginxproxymanager/latest/docs) provider to manage certificates, proxy hosts, and access lists. It consumes the app stage’s remote state to reference stack metadata but writes all runtime config through the API.
 - **State storage** – both stages use the shared MinIO backend defined in `~/.tfvars/minio.backend.hcl` (use `endpoints = { s3 = "http://..." }` instead of the deprecated `endpoint` key). The config stage exports `TF_VAR_remote_state_backend` (parsed from that file) so `data "terraform_remote_state"` can fetch `nginx-proxy-manager-app.tfstate` without copy/pasting credentials.
 - **Pipelines/Jenkins** – `pipeline/nginx_proxy_manager/{app,config}.{sh,jenkins}` run through `pipeline/script/swarm_pipeline.sh`. Jenkins jobs live under the `nginx_proxy_manager` folder once `terraform/module/jenkins/config` is applied.
@@ -22,7 +22,7 @@ Reverse proxy automation for edge HTTP/S workloads. The stack follows the **App 
 
 | File | Purpose | Notes |
 |------|---------|-------|
-| `~/.tfvars/nginx-proxy-manager/app.tfvars` | Docker host SSH details (`provider_config.docker`) plus the bootstrap credentials under `provider_config.nginx_proxy_manager.{username,password}`. Those values hydrate the container’s `INITIAL_ADMIN_*` variables so the first login skips the setup wizard. Leave everything else (ports, node labels) in Terraform locals. |
+| `~/.tfvars/nginx-proxy-manager/app.tfvars` | Docker host SSH details (`provider_config.docker`) plus the bootstrap credentials under `provider_config.nginx_proxy_manager.{username,password}`. Those values hydrate the container’s `INITIAL_ADMIN_*` variables so the first login skips the setup wizard. Optional `env`, `dns_nameservers`, and `placement` (constraints/platforms) mirror other Swarm app modules. |
 | `~/.tfvars/nginx-proxy-manager/config.tfvars` | `provider_config.nginx_proxy_manager` (URL + credentials) plus the declarative `config` payload. Use `config.default_certificate_email` for the ACME contact and `config.default_dns_challenge` (enabled/provider/credentials/propagation_seconds) so every Let’s Encrypt cert shares the same DNS challenge defaults unless a specific certificate overrides them. |
 | `~/.tfvars/minio.backend.hcl` | Shared backend definition. The config pipeline parses this file to export `TF_VAR_remote_state_backend` (JSON) so Terraform can read the app state. Override with `--backend` if you use a different file. |
 
@@ -65,17 +65,17 @@ Both shell stages accept `--tfvars` and `--backend` overrides. The config wrappe
 - **Troubleshooting**:
   - `terraform plan` fails in config stage: confirm `TF_VAR_remote_state_backend` is set (script logs the derived JSON) and that the app pipeline has been applied.
   - Jenkins job missing: run `pipeline/jenkins/config.sh --plan` or `terraform -chdir=terraform/swarm/jenkins/config plan -var-file ~/.tfvars/jenkins/config.tfvars` to add the multi-stage folder/jobs.
-  - Service placement issues: ensure the target nodes still carry `role=edge` (`docker node ls --format '{{.Hostname}} {{.Spec.Labels}}'`).
+  - Service placement issues: ensure target nodes satisfy the placement constraints in `app.tfvars` (`docker node ls --format '{{.Hostname}} {{.Spec.Labels}}'`).
 
 ## Validation matrix
 
 | Persona | Test | Status | Notes |
 |---------|------|--------|-------|
 | Agent | `TF_LOG=INFO pipeline/nginx_proxy_manager/app.sh --plan` (auto apply) | ✅ | `terraform` init/plan/apply completed; outputs under `/tmp/npm_app_plan.log`. |
-| Agent | `docker service ls` / `docker service ps nginx-proxy-manager --no-trunc` | ⚠️ | Swarm reports `0/1` replicas – no node currently satisfies `node.labels.role==controller`. Label the manager (or a target node) before rerunning config stage. |
+| Agent | `docker service ls` / `docker service ps nginx-proxy-manager --no-trunc` | ⚠️ | Swarm reports `0/1` replicas – no node currently satisfies the placement constraints from `app.tfvars`. Adjust the constraints or label a node before rerunning config stage. |
 | Agent | `TF_LOG=INFO pipeline/nginx_proxy_manager/config.sh --plan` | ⚠️ | Plan fails with `lookup npm.example.com: no such host`; replace placeholder URL in `~/.tfvars/nginx-proxy-manager/config.tfvars` with a reachable NPM endpoint before retrying. |
 | Human | Run Jenkins jobs `nginx_proxy_manager-app` / `nginx_proxy_manager-config` | ⏳ | Pending – requires Jenkins credentials once pipelines are wired into CI. |
-| Human | Hit `https://<npm-domain>:81` and verify proxy hosts | ⏳ | Perform after config plan succeeds and Swarm exposes the service on a controller-labeled node. Document screenshots or curl output in the planning doc. |
+| Human | Hit `https://<npm-domain>:81` and verify proxy hosts | ⏳ | Perform after config plan succeeds and Swarm exposes the service on a node matching the placement constraints. Document screenshots or curl output in the planning doc. |
 
 ## Reference links
 

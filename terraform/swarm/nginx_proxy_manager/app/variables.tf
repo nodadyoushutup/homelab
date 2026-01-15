@@ -1,17 +1,28 @@
 variable "provider_config" {
-  description = "Docker provider inputs (host connection + optional overrides)"
+  description = "Provider configuration map passed to the Docker provider"
+  type        = any
+}
+
+variable "env" {
+  description = "Additional environment variables to pass to the Nginx Proxy Manager container"
+  type        = map(string)
+  default     = null
+}
+
+variable "dns_nameservers" {
+  description = "DNS nameservers to use in the Nginx Proxy Manager container"
+  type        = list(string)
+  default     = null
+}
+
+variable "placement" {
+  description = "Placement configuration for the Nginx Proxy Manager service"
   type = object({
-    docker = object({
-      host     = string
-      ssh_opts = list(string)
-    })
-    timezone = optional(string)
-    puid     = optional(string)
-    pgid     = optional(string)
-    nginx_proxy_manager = optional(object({
-      username = string
-      password = string
-      url      = optional(string)
-    }))
+    constraints = optional(list(string))
+    platforms = optional(list(object({
+      os           = string
+      architecture = string
+    })))
   })
+  default = null
 }
