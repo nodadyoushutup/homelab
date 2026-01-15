@@ -4,7 +4,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/../../../../.." && pwd)"
-PIPELINE_SCRIPT_ROOT="${ROOT_DIR}/pipeline/script"
+PIPELINE_SCRIPT_ROOT="${ROOT_DIR}/scripts/pipeline"
 
 SERVICE_NAME="nginx_proxy_manager"
 STAGE_NAME="Nginx Proxy Manager config"

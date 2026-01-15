@@ -225,4 +225,4 @@ Destroying both states removes the Swarm service, overlay, volume, secrets, data
 
 - Grafana Terraform provider documentation: <https://registry.terraform.io/providers/grafana/grafana/latest/docs>
 - Deployment plan with historical context: `docs/planning/grafana-plan.md`
-- Helper scripts used by all pipelines: `pipeline/script/*.sh`
+- Helper scripts used by all pipelines: `scripts/pipeline/*.sh`

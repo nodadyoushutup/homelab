@@ -30,7 +30,7 @@ cd /home/nodadyoushutup/code/homelab
 ```
 
 Pipeline stages:
-1. Environment + input resolution through `pipeline/script/*.sh`.
+1. Environment + input resolution through `scripts/pipeline/*.sh`.
 2. `terraform init` with the MinIO backend.
 3. Full-stack `terraform plan` + `apply` (single module, no targeting needed).
 

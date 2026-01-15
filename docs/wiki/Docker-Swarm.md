@@ -25,10 +25,10 @@ Source of truth for Swarm workflows, pipelines, Terraform state, and supporting 
 ## Repository surfaces per Swarm service
 - **Modules (`terraform/module/<service>`)** – Core Docker resources. Multi-stage services split into `app`/`config` (Grafana) or more (`jenkins/{controller,agent,config}`).
 - **Stack entrypoints (`terraform/swarm/<service>`)** – Wire backends/providers/modules. Multi-stage keep per-stage dirs (`terraform/swarm/grafana/{app,config}`, `terraform/swarm/jenkins/{controller,agent,config}`).
-- **Pipelines (`terraform/swarm/<service>/<stage>/pipeline/<stage>.sh`)** – Set `SERVICE_NAME`, `STAGE_NAME`, overrides, then source `pipeline/script/swarm_pipeline.sh`.
+- **Pipelines (`terraform/swarm/<service>/<stage>/pipeline/<stage>.sh`)** – Set `SERVICE_NAME`, `STAGE_NAME`, overrides, then source `scripts/pipeline/swarm_pipeline.sh`.
 - **Jenkins wrappers (`terraform/swarm/<service>/<stage>/pipeline/<stage>.jenkins`)** – Declarative wrappers calling the bash scripts via `runShellPipeline`.
 - **Jenkins job registry (`terraform/module/jenkins/config`)** – Add single-stage services to `local.single_stage_jobs`; multi-stage to `local.multi_stage_services`; keep Jenkins controller/agent/config in `local.jenkins_jobs`.
-- **Pipeline helpers (`pipeline/script/`)** – Shared tooling (`env_check.sh`, `resolve_inputs.sh`, `swarm_pipeline.sh`, `terraform_exec.sh`, `terraform_output_filter.py`).
+- **Pipeline helpers (`scripts/pipeline/`)** – Shared tooling (`env_check.sh`, `resolve_inputs.sh`, `swarm_pipeline.sh`, `terraform_exec.sh`, `terraform_output_filter.py`).
 - **Planning docs (`docs/planning/<service>-plan.md`)** – Readiness gate for merges.
 
 ## TFVARS, provider_config, and backend contract

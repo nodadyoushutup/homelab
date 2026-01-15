@@ -2,7 +2,7 @@
 set -e
 
 if [[ $# -lt 1 ]]; then
-  echo "Usage: pipeline/script/terraform_exec.sh <args...>" >&2
+  echo "Usage: scripts/pipeline/terraform_exec.sh <args...>" >&2
   exit 64
 fi
 
