@@ -14,7 +14,7 @@ ssh-slaves:3.1085.vc64d040efa_85
 timestamper:1.30
 ws-cleanup:0.49
 github-oauth:651.v135e939e8b_60
-github-pullrequest:0.7.2
+github-pullrequest:0.7.3
 ansicolor:1.0.6
 configuration-as-code:2006.v001a_2ca_6b_574
 job-dsl:1.93
