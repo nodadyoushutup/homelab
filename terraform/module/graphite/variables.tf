@@ -1,16 +1,16 @@
 variable "provider_config" {
-  description = "Configuration for the Docker provider"
+  description = "Provider configuration shared across Graphite components"
   type        = any
 }
 
 variable "dns_nameservers" {
-  description = "DNS nameservers to use in the Dozzle container"
+  description = "DNS nameservers to use in the Graphite container"
   type        = list(string)
   default     = null
 }
 
 variable "placement" {
-  description = "Placement configuration for the Dozzle service"
+  description = "Placement configuration for the Graphite service"
   type = object({
     constraints = optional(list(string))
     platforms = optional(list(object({

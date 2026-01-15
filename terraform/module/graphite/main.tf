@@ -1,17 +1,3 @@
-locals {
-  # Order matches Swarm's platform reporting (aarch64 then arm64) to avoid churny platform diffs.
-  allowed_platforms = [
-    {
-      os           = "linux"
-      architecture = "aarch64"
-    },
-    {
-      os           = "linux"
-      architecture = "arm64"
-    }
-  ]
-}
-
 resource "docker_network" "graphite" {
   name   = "graphite-net"
   driver = "overlay"
@@ -21,26 +7,25 @@ resource "docker_volume" "graphite_data" {
   name = "graphite-data"
 }
 
-resource "terraform_data" "platforms" {
-  input = local.allowed_platforms
-}
-
 resource "docker_service" "graphite" {
   name = "graphite"
-  depends_on = [terraform_data.platforms]
 
   task_spec {
-    placement {
-      dynamic "platforms" {
-        for_each = local.allowed_platforms
+    dynamic "placement" {
+      for_each = var.placement == null ? [] : [var.placement]
 
-        content {
-          os           = platforms.value.os
-          architecture = platforms.value.architecture
+      content {
+        constraints = try(placement.value.constraints, null)
+
+        dynamic "platforms" {
+          for_each = try(placement.value.platforms, [])
+
+          content {
+            os           = platforms.value.os
+            architecture = platforms.value.architecture
+          }
         }
       }
-
-      constraints = ["node.labels.role==swarm-cp-0"]
     }
 
     networks_advanced {
@@ -51,12 +36,12 @@ resource "docker_service" "graphite" {
     container_spec {
       image = "graphiteapp/graphite-statsd:1.1.10-5@sha256:ceb163a8f237ea1a5d2839589f6b5b7aef05153b12b05ed9fe3cec12fe10cf43"
 
-      dns_config {
-        nameservers = [
-          "192.168.1.1",
-          "1.1.1.1",
-          "8.8.8.8",
-        ]
+      dynamic "dns_config" {
+        for_each = var.dns_nameservers == null ? [] : [var.dns_nameservers]
+
+        content {
+          nameservers = dns_config.value
+        }
       }
 
       mounts {
@@ -102,14 +87,5 @@ resource "docker_service" "graphite" {
       protocol       = "udp"
       publish_mode   = "ingress"
     }
-  }
-
-  lifecycle {
-    ignore_changes = [
-      task_spec[0].placement[0].platforms,
-    ]
-    replace_triggered_by = [
-      terraform_data.platforms,
-    ]
   }
 }

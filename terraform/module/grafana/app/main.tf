@@ -1,17 +1,5 @@
 locals {
-  admin_password   = tostring(var.provider_config.grafana.password)
   grafana_ini_path = "${path.module}/grafana.ini"
-  # Order matches Swarm's platform reporting (aarch64 then arm64) to prevent perpetual plan diffs.
-  allowed_platforms = [
-    {
-      os           = "linux"
-      architecture = "aarch64"
-    },
-    {
-      os           = "linux"
-      architecture = "arm64"
-    }
-  ]
 }
 
 data "docker_network" "external" {
@@ -29,15 +17,6 @@ resource "docker_volume" "grafana_data" {
   driver = "local"
 }
 
-resource "terraform_data" "platforms" {
-  input = local.allowed_platforms
-}
-
-resource "docker_secret" "grafana_admin_password" {
-  name = "grafana-admin-password"
-  data = base64encode(local.admin_password)
-}
-
 resource "docker_config" "grafana_ini" {
   name = format("grafana-ini-%s", substr(sha256(file(local.grafana_ini_path)), 0, 12))
   data = filebase64(local.grafana_ini_path)
@@ -45,30 +24,23 @@ resource "docker_config" "grafana_ini" {
 
 resource "docker_service" "grafana" {
   name = "grafana"
-  depends_on = [terraform_data.platforms]
-
-  labels {
-    label = "com.docker.stack.namespace"
-    value = "grafana"
-  }
-
-  labels {
-    label = "com.docker.service"
-    value = "grafana"
-  }
 
   task_spec {
-    placement {
-      dynamic "platforms" {
-        for_each = local.allowed_platforms
+    dynamic "placement" {
+      for_each = var.placement == null ? [] : [var.placement]
 
-        content {
-          os           = platforms.value.os
-          architecture = platforms.value.architecture
+      content {
+        constraints = try(placement.value.constraints, null)
+
+        dynamic "platforms" {
+          for_each = try(placement.value.platforms, [])
+
+          content {
+            os           = platforms.value.os
+            architecture = platforms.value.architecture
+          }
         }
       }
-
-      constraints = ["node.labels.role==swarm-cp-0"]
     }
 
     networks_advanced {
@@ -87,34 +59,20 @@ resource "docker_service" "grafana" {
 
     container_spec {
       image = "grafana/grafana:12.3.1@sha256:2175aaa91c96733d86d31cf270d5310b278654b03f5718c59de12a865380a31f"
-      env = {
-        GF_SECURITY_ADMIN_USER           = "admin"
-        GF_SECURITY_ADMIN_PASSWORD__FILE = "/run/secrets/grafana-admin-password"
-        GF_SERVER_HTTP_PORT              = "3000"
-        GF_SERVER_ROOT_URL               = "https://grafana.nodadyoushutup.com"
-        GF_USERS_ALLOW_SIGN_UP           = "false"
-        GF_SERVER_DOMAIN                 = "grafana.nodadyoushutup.com"
-        GF_INSTALL_PLUGINS               = "grafana-clock-panel,grafana-piechart-panel"
-      }
+      env = var.env == null ? {} : var.env
 
-      dns_config {
-        nameservers = [
-          "192.168.1.1",
-          "1.1.1.1",
-          "8.8.8.8",
-        ]
+      dynamic "dns_config" {
+        for_each = var.dns_nameservers == null ? [] : [var.dns_nameservers]
+
+        content {
+          nameservers = dns_config.value
+        }
       }
 
       mounts {
         target = "/var/lib/grafana"
         source = docker_volume.grafana_data.name
         type   = "volume"
-      }
-
-      secrets {
-        secret_id   = docker_secret.grafana_admin_password.id
-        secret_name = docker_secret.grafana_admin_password.name
-        file_name   = "/run/secrets/grafana-admin-password"
       }
 
       configs {
@@ -150,13 +108,8 @@ resource "docker_service" "grafana" {
   }
 
   lifecycle {
-    ignore_changes = [
-      task_spec[0].placement[0].platforms,
-    ]
     replace_triggered_by = [
-      docker_secret.grafana_admin_password,
       docker_config.grafana_ini,
-      terraform_data.platforms,
     ]
   }
 }
