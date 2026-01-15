@@ -12,9 +12,9 @@ Swarm pipelines.
 ## Deployment
 
 - Terraform modules: `terraform/module/jenkins/{controller,agent,config}` with stack entrypoints under `terraform/swarm/jenkins/{controller,agent,config}`.
-- Pipelines: `pipeline/jenkins/{controller,agent,config}.{sh,jenkins}` run through the shared Swarm pipeline helper.
+- Pipelines: `terraform/swarm/jenkins/controller/pipeline/controller.{sh,jenkins}`, `terraform/swarm/jenkins/agent/pipeline/agent.{sh,jenkins}`, and `terraform/swarm/jenkins/config/pipeline/config.{sh,jenkins}` run through the shared Swarm pipeline helper.
 - Tfvars: `~/.tfvars/jenkins/{controller.tfvars,agent.tfvars,config.tfvars}` plus shared backend `~/.tfvars/minio.backend.hcl` (see [[Secrets]]).
-- Purge: `docker/purge/jenkins.sh` tears down Jenkins Swarm artifacts when needed.
+- Purge: `scripts/purge/jenkins.sh` tears down Jenkins Swarm artifacts when needed.
 
 ## Operations
 

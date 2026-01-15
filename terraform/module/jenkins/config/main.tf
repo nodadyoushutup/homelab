@@ -4,15 +4,15 @@ locals {
   jenkins_jobs = {
     controller = {
       description = "Jenkins controller deployment"
-      script_path = "pipeline/jenkins/controller.jenkins"
+      script_path = "terraform/swarm/jenkins/controller/pipeline/controller.jenkins"
     }
     agent = {
       description = "Jenkins agent deployment"
-      script_path = "pipeline/jenkins/agent.jenkins"
+      script_path = "terraform/swarm/jenkins/agent/pipeline/agent.jenkins"
     }
     config = {
       description = "Jenkins configuration apply"
-      script_path = "pipeline/jenkins/config.jenkins"
+      script_path = "terraform/swarm/jenkins/config/pipeline/config.jenkins"
     }
   }
 
@@ -21,11 +21,11 @@ locals {
       jobs = {
         app = {
           description = "Grafana application deployment"
-          script_path = "pipeline/grafana/app.jenkins"
+          script_path = "terraform/swarm/grafana/app/pipeline/app.jenkins"
         }
         config = {
           description = "Grafana configuration apply"
-          script_path = "pipeline/grafana/config.jenkins"
+          script_path = "terraform/swarm/grafana/config/pipeline/config.jenkins"
         }
       }
     }
@@ -33,11 +33,11 @@ locals {
       jobs = {
         app = {
           description = "Nginx Proxy Manager application deployment"
-          script_path = "pipeline/nginx_proxy_manager/app.jenkins"
+          script_path = "terraform/swarm/nginx_proxy_manager/app/pipeline/app.jenkins"
         }
         config = {
           description = "Nginx Proxy Manager configuration apply"
-          script_path = "pipeline/nginx_proxy_manager/config.jenkins"
+          script_path = "terraform/swarm/nginx_proxy_manager/config/pipeline/config.jenkins"
         }
       }
     }
@@ -46,19 +46,19 @@ locals {
   single_stage_jobs = {
     dozzle = {
       description = "Dozzle Swarm deployment"
-      script_path = "pipeline/dozzle/deploy.jenkins"
+      script_path = "terraform/swarm/dozzle/app/pipeline/app.jenkins"
     }
     node_exporter = {
       description = "Node Exporter Swarm deployment"
-      script_path = "pipeline/node_exporter/deploy.jenkins"
+      script_path = "terraform/swarm/node_exporter/app/pipeline/app.jenkins"
     }
     graphite = {
       description = "Graphite Swarm deployment"
-      script_path = "pipeline/graphite/deploy.jenkins"
+      script_path = "terraform/swarm/graphite/app/pipeline/app.jenkins"
     }
     prometheus = {
       description = "Prometheus Swarm deployment"
-      script_path = "pipeline/prometheus/app.jenkins"
+      script_path = "terraform/swarm/prometheus/app/pipeline/app.jenkins"
     }
   }
 

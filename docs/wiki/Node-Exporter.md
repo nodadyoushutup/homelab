@@ -40,14 +40,14 @@ placement = {
 
 ```bash
 cd /path/to/homelab
-./pipeline/node_exporter/deploy.sh \
+./terraform/swarm/node_exporter/app/pipeline/app.sh \
   --tfvars ~/.tfvars/node_exporter.tfvars \
   --backend ~/.tfvars/minio.backend.hcl
 ```
 
 What happens:
 1. Helper scripts verify Terraform/python availability and resolve tfvars/backend paths.
-2. Terraform initializes the `terraform/swarm/node_exporter` stack, planning + applying the `module.node_exporter_app`.
+2. Terraform initializes the `terraform/swarm/node_exporter/app` stack, planning + applying the `module.node_exporter_app`.
 3. A `node-exporter` overlay network plus a global `docker_service` is created; each node binds `/proc`, `/sys`, `/` read-only and exposes `:9100`.
 
 ### Validation checklist
@@ -58,7 +58,7 @@ What happens:
 
 ## Deploy via Jenkins
 
-1. In Jenkins, navigate to the `node_exporter` job (script path `pipeline/node_exporter/deploy.jenkins`).
+1. In Jenkins, navigate to the `node_exporter` job (script path `terraform/swarm/node_exporter/app/pipeline/app.jenkins`).
 2. Kick off a build; optionally override `TFVARS_FILE` or `BACKEND_FILE` parameters to point at non-default locations.
 3. The pipeline stages mirror the bash script (Env Check → Resolve Inputs → Init → Plan → Apply) and emit the same Terraform logs.
 

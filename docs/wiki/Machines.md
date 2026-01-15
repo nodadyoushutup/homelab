@@ -10,12 +10,8 @@ This page catalogs the machines that make up the homelab and the default expecta
 | medusa.internal | 192.168.1.34 | Docker Compose host (MinIO, Renovate) | Ubuntu 25.04 (plucky) | linux/aarch64 | 28.5.2 |
 | truenas.internal | 192.168.1.100 | storage / NAS (TrueNAS) | TrueNAS SCALE Dragonfish-24.04.0 (Debian 12/bookworm base) | linux/amd64 | n/a |
 | proxmox.internal | 192.168.1.10 | Proxmox hypervisor | Proxmox VE 8.2.2 (Debian 12/bookworm base) | linux/amd64 | n/a |
-| swarm-cp-0.internal | 192.168.1.42 | Docker Swarm controller (role=controller) | Ubuntu 25.04 (plucky) | linux/aarch64 | 28.5.2 |
-| swarm-wk-0.internal | 192.168.1.41 | Docker Swarm worker (role=cicd) | Ubuntu 25.04 (plucky) | linux/aarch64 | 28.4.0 |
-| swarm-wk-1.internal | 192.168.1.40 | Docker Swarm worker (role=database) | Ubuntu 25.10 (questing) | linux/aarch64 | 28.5.2 |
-| swarm-wk-2.internal | 192.168.1.39 | Docker Swarm worker (role=monitoring) | Ubuntu 25.04 (plucky) | linux/aarch64 | 28.4.0 |
-| swarm-wk-3.internal | 192.168.1.38 | Docker Swarm worker (role=edge) | Ubuntu 25.04 (plucky) | linux/aarch64 | 28.4.0 |
-| swarm-wk-4.internal | 192.168.1.37 | Docker Swarm worker (role=unassigned) | unknown | linux/aarch64 | unknown |
+| swarm-cp-0.internal | 192.168.1.42 | Docker Swarm controller (role=swarm-cp-0) | Ubuntu 25.04 (plucky) | linux/aarch64 | 28.5.2 |
+| swarm-wk-0.internal | 192.168.1.41 | Docker Swarm worker (role=swarm-wk-0) | Ubuntu 25.04 (plucky) | linux/aarch64 | 28.4.0 |
 
 ## Agent guidance (see AGENTS.md)
 

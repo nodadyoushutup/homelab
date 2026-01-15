@@ -1,0 +1,58 @@
+def PIPELINE_LABEL = 'Nginx Proxy Manager App'
+def SCRIPT_PATH = 'terraform/swarm/nginx_proxy_manager/app/pipeline/app.sh'
+
+pipeline {
+  agent any
+
+  options {
+    ansiColor('xterm')
+  }
+
+  parameters {
+    string(name: 'TFVARS_FILE', defaultValue: '', description: 'Optional tfvars path; leave empty to auto-discover defaults')
+    string(name: 'BACKEND_FILE', defaultValue: '', description: 'Optional backend config path; leave empty to auto-discover defaults')
+  }
+
+  stages {
+    stage('Execute NPM App Pipeline') {
+      steps {
+        script {
+          runShellPipeline(
+            label: PIPELINE_LABEL,
+            scriptPath: SCRIPT_PATH,
+            tfvarsPath: params?.TFVARS_FILE ?: '',
+            backendPath: params?.BACKEND_FILE ?: ''
+          )
+        }
+      }
+    }
+  }
+}
+
+def runShellPipeline(Map args = [:]) {
+  String label = args.label ?: 'Terraform Pipeline'
+  String scriptPath = args.scriptPath ?: ''
+  String tfvarsPath = args.tfvarsPath ?: ''
+  String backendPath = args.backendPath ?: ''
+
+  if (!scriptPath?.trim()) {
+    error 'scriptPath is required'
+  }
+
+  List<String> command = [shellEscape(scriptPath)]
+  if (tfvarsPath?.trim()) {
+    command += ['--tfvars', shellEscape(tfvarsPath.trim())]
+  }
+  if (backendPath?.trim()) {
+    command += ['--backend', shellEscape(backendPath.trim())]
+  }
+
+  sh label: label, script: command.join(' ')
+}
+
+def shellEscape(String value) {
+  if (value == null || value.isEmpty()) {
+    return "''"
+  }
+  return "'" + value.replace("'", "'\\''") + "'"
+}

@@ -6,7 +6,7 @@ End-to-end runbook for the Grafana Swarm stack that ships with both infrastructu
 
 - **Service type:** App + config (Docker Swarm service + Grafana Terraform provider).
 - **Purpose:** Visualize metrics scraped by Prometheus and emitted via Graphite (TrueNAS) or Prometheus (Node Exporter), shipping both the Node Exporter and TrueNAS folders of per-category dashboards alongside their managed data sources.
-- **Key paths:** `terraform/module/grafana`, `terraform/module/grafana/config`, `terraform/swarm/grafana/{app,config}`, `pipeline/grafana/app.{sh,jenkins}`, `pipeline/grafana/config.{sh,jenkins}`.
+- **Key paths:** `terraform/module/grafana`, `terraform/module/grafana/config`, `terraform/swarm/grafana/{app,config}`, `terraform/swarm/grafana/app/pipeline/app.{sh,jenkins}`, `terraform/swarm/grafana/config/pipeline/config.{sh,jenkins}`.
 
 ## Prerequisites
 
@@ -86,10 +86,10 @@ dashboards = [
 
 Run whichever stage matches the change you’re rolling out—the app stage handles the Swarm resources, while the config stage manages Grafana provider resources once the container is healthy.
 
-### App stage (`pipeline/grafana/app.sh`)
+### App stage (`terraform/swarm/grafana/app/pipeline/app.sh`)
 
 ```bash
-./pipeline/grafana/app.sh \
+./terraform/swarm/grafana/app/pipeline/app.sh \
   --tfvars ~/.tfvars/grafana/app.tfvars \
   --backend ~/.tfvars/minio.backend.hcl
 ```
@@ -98,10 +98,10 @@ Run whichever stage matches the change you’re rolling out—the app stage hand
 - `terraform init` migrates the backend as needed.
 - The stage runs from `terraform/swarm/grafana/app`, so the Terraform state only contains Swarm resources—no targeting needed.
 
-### Config stage (`pipeline/grafana/config.sh`)
+### Config stage (`terraform/swarm/grafana/config/pipeline/config.sh`)
 
 ```bash
-./pipeline/grafana/config.sh \
+./terraform/swarm/grafana/config/pipeline/config.sh \
   --tfvars ~/.tfvars/grafana/config.tfvars \
   --backend ~/.tfvars/minio.backend.hcl
 ```
@@ -113,7 +113,7 @@ Run whichever stage matches the change you’re rolling out—the app stage hand
 ## Jenkins pipelines
 
 - Job names: `grafana/app` and `grafana/config` (under the `grafana` folder).
-- Script paths: `pipeline/grafana/app.jenkins` and `pipeline/grafana/config.jenkins`.
+- Script paths: `terraform/swarm/grafana/app/pipeline/app.jenkins` and `terraform/swarm/grafana/config/pipeline/config.jenkins`.
 - Parameters: `TFVARS_FILE`, `BACKEND_FILE` (optional overrides).
 
 Trigger the stage you need via Jenkins once tfvars/backend files are available on the agent. The job templates mirror the bash stages, so Terraform logs and helper output stay consistent regardless of entrypoint.
@@ -165,7 +165,7 @@ Trigger the stage you need via Jenkins once tfvars/backend files are available o
 - Extending the folder:
   1. Generate the latest metric inventory (see below) to spot new namespaces.
   2. Add/edit the relevant JSON(s) using `aliasByNode`/`aliasSub` and reuse the variables above.
-  3. If you introduce a brand new dashboard, add it to `default_dashboard_inputs` (or append it to the tfvars `dashboards` list) with the `TrueNAS` folder reference, then re-run `pipeline/grafana/config.sh`.
+  3. If you introduce a brand new dashboard, add it to `default_dashboard_inputs` (or append it to the tfvars `dashboards` list) with the `TrueNAS` folder reference, then re-run `terraform/swarm/grafana/config/pipeline/config.sh`.
 
 ### Graphite inventory helper
 
@@ -195,7 +195,7 @@ After each apply:
    - Both `Node Exporter` and `TrueNAS` folders exist with their respective dashboards (overview + per-category splits).
 4. Confirm users/dashboards survive restarts (volume mount `grafana-data` should persist on the Swarm node).
 
-If anything fails, re-run the app stage from `terraform/swarm/grafana/app` (or via `pipeline/grafana/app.sh`) to remediate container-level issues before touching config.
+If anything fails, re-run the app stage from `terraform/swarm/grafana/app` (or via `terraform/swarm/grafana/app/pipeline/app.sh`) to remediate container-level issues before touching config.
 
 ## Rollback / destroy
 

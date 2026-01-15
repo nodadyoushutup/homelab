@@ -52,17 +52,17 @@ Terraform renders a default Prometheus config that scrapes the `node_exporter` j
 
 ## Pipelines
 
-### Bash deployment (`pipeline/prometheus/app.sh`)
+### Bash deployment (`terraform/swarm/prometheus/app/pipeline/app.sh`)
 
 ```bash
 cd /path/to/homelab
-./pipeline/prometheus/app.sh \
+./terraform/swarm/prometheus/app/pipeline/app.sh \
   --tfvars ~/.tfvars/prometheus.tfvars \
   --backend ~/.tfvars/minio.backend.hcl
 ```
 
 - Shared helpers verify Terraform availability and resolve input paths.
-- `terraform init/plan/apply` runs against `terraform/swarm/prometheus`, updating the service, network, volume definitions, and the rendered Docker config in a single pass.
+- `terraform init/plan/apply` runs against `terraform/swarm/prometheus/app`, updating the service, network, volume definitions, and the rendered Docker config in a single pass.
 
 ### Jenkins deployment (`prometheus`)
 
