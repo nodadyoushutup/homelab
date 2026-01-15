@@ -27,62 +27,6 @@
         "jc21/nginx-proxy-manager"
       ],
       "allowedVersions": "!/^(2\\.13\\.0|2\\.13\\.1|2\\.13\\.2)$/"
-    },
-    {
-      "matchDatasources": [
-        "docker"
-      ],
-      "matchPackageNames": [
-        "grafana/grafana"
-      ]
-    },
-    {
-      "matchDatasources": [
-        "docker"
-      ],
-      "matchPackageNames": [
-        "amir20/dozzle"
-      ]
-    },
-    {
-      "matchDatasources": [
-        "docker"
-      ],
-      "matchPackageNames": [
-        "graphiteapp/graphite-statsd"
-      ]
-    },
-    {
-      "matchDatasources": [
-        "docker"
-      ],
-      "matchPackageNames": [
-        "prom/node-exporter"
-      ]
-    },
-    {
-      "matchDatasources": [
-        "docker"
-      ],
-      "matchPackageNames": [
-        "prom/prometheus"
-      ]
-    },
-    {
-      "matchDatasources": [
-        "docker"
-      ],
-      "matchPackageNames": [
-        "ghcr.io/nodadyoushutup/jenkins-controller"
-      ]
-    },
-    {
-      "matchDatasources": [
-        "docker"
-      ],
-      "matchPackageNames": [
-        "ghcr.io/nodadyoushutup/jenkins-agent"
-      ]
     }
   ]
 }

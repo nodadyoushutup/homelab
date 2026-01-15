@@ -31,7 +31,7 @@ resource "docker_service" "node_exporter" {
     }
 
     container_spec {
-      image = "prom/node-exporter:v1.10.2@sha256:3ac34ce007accad95afed72149e0d2b927b7e42fd1c866149b945b84737c62c3"
+      image = "prom/node-exporter:v1.10.2@sha256:49214755b6153f90a597adcbff0252cc61069f8ab69ce8411285cd4a560e8038"
 
       args = [
         "--path.procfs=/host/proc",
