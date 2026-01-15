@@ -47,7 +47,7 @@
       "id": 2,
       "title": "System Clock & IO",
       "type": "timeseries",
-      "description": "Clock sync status + aggregate IO counters from truenas.truenas.system.*",
+      "description": "Clock sync status + aggregate IO counters from truenas.nas.system.*",
       "datasource": {
         "type": "graphite",
         "uid": "graphite"
@@ -61,7 +61,7 @@
       "targets": [
         {
           "refId": "A",
-          "target": "aliasByNode(truenas.truenas.system.*.*,3,4)",
+          "target": "aliasByNode(truenas.nas.system.*.*,3,4)",
           "textEditor": true
         }
       ],
@@ -91,7 +91,7 @@
       "id": 27,
       "title": "Memory Breakdown",
       "type": "timeseries",
-      "description": "Kernel and writeback buckets reported under truenas.truenas.mem.*.*",
+      "description": "Kernel and writeback buckets reported under truenas.nas.mem.*.*",
       "datasource": {
         "type": "graphite",
         "uid": "graphite"
@@ -105,7 +105,7 @@
       "targets": [
         {
           "refId": "A",
-          "target": "aliasByNode(truenas.truenas.mem.*.*,3,4)",
+          "target": "aliasByNode(truenas.nas.mem.*.*,3,4)",
           "textEditor": true
         }
       ],
@@ -135,7 +135,7 @@
       "id": 28,
       "title": "Network Throughput",
       "type": "timeseries",
-      "description": "Interface TX/RX plus negotiated speed pulled from truenas.truenas.net* namespaces.",
+      "description": "Interface TX/RX plus negotiated speed pulled from truenas.nas.net* namespaces.",
       "datasource": {
         "type": "graphite",
         "uid": "graphite"
@@ -149,17 +149,17 @@
       "targets": [
         {
           "refId": "A",
-          "target": "aliasByNode(truenas.truenas.net.*.received,3,4)",
+          "target": "aliasByNode(truenas.nas.net.*.received,3,4)",
           "textEditor": true
         },
         {
           "refId": "B",
-          "target": "aliasByNode(truenas.truenas.net.*.sent,3,4)",
+          "target": "aliasByNode(truenas.nas.net.*.sent,3,4)",
           "textEditor": true
         },
         {
           "refId": "C",
-          "target": "aliasByNode(truenas.truenas.net_speed.*.speed,3,4)",
+          "target": "aliasByNode(truenas.nas.net_speed.*.speed,3,4)",
           "textEditor": true
         }
       ],
@@ -189,7 +189,7 @@
       "id": 29,
       "title": "UPS Status",
       "type": "timeseries",
-      "description": "NUT metrics sourced from truenas.truenas.nut_ix_dummy_ups.*.*",
+      "description": "NUT metrics sourced from truenas.nas.nut_ix_dummy_ups.*.*",
       "datasource": {
         "type": "graphite",
         "uid": "graphite"
@@ -203,7 +203,7 @@
       "targets": [
         {
           "refId": "A",
-          "target": "aliasByNode(truenas.truenas.nut_ix_dummy_ups.*.*,3,4)",
+          "target": "aliasByNode(truenas.nas.nut_ix_dummy_ups.*.*,3,4)",
           "textEditor": true
         }
       ],
@@ -247,12 +247,12 @@
       "targets": [
         {
           "refId": "A",
-          "target": "aliasByNode(truenas.truenas.nfsd.proc3.$nfs_op,4)",
+          "target": "aliasByNode(truenas.nas.nfsd.proc3.$nfs_op,4)",
           "textEditor": true
         },
         {
           "refId": "B",
-          "target": "aliasByNode(truenas.truenas.nfsd.proc4.$nfs_op,4)",
+          "target": "aliasByNode(truenas.nas.nfsd.proc4.$nfs_op,4)",
           "textEditor": true
         }
       ],
@@ -296,17 +296,17 @@
       "targets": [
         {
           "refId": "A",
-          "target": "aliasByNode(truenas.truenas.nfsd.io.*,3,4)",
+          "target": "aliasByNode(truenas.nas.nfsd.io.*,3,4)",
           "textEditor": true
         },
         {
           "refId": "B",
-          "target": "aliasByNode(truenas.truenas.nfsd.net.*,3,4)",
+          "target": "aliasByNode(truenas.nas.nfsd.net.*,3,4)",
           "textEditor": true
         },
         {
           "refId": "C",
-          "target": "aliasByNode(truenas.truenas.nfsd.threads.*,3,4)",
+          "target": "aliasByNode(truenas.nas.nfsd.threads.*,3,4)",
           "textEditor": true
         }
       ],
@@ -371,8 +371,8 @@
           "type": "graphite",
           "uid": "graphite"
         },
-        "definition": "truenas.truenas.nfsd.proc[34].*",
-        "query": "truenas.truenas.nfsd.proc[34].*",
+        "definition": "truenas.nas.nfsd.proc[34].*",
+        "query": "truenas.nas.nfsd.proc[34].*",
         "regex": "/^truenas\\.truenas\\.nfsd\\.proc\\d+\\.([^.]+)/",
         "includeAll": true,
         "allValue": "*",

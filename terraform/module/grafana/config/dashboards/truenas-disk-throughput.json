@@ -61,12 +61,12 @@
       "targets": [
         {
           "refId": "A",
-          "target": "aliasByNode(truenas.truenas.disk.$disk.reads,3,4)",
+          "target": "aliasByNode(truenas.nas.disk.$disk.reads,3,4)",
           "textEditor": true
         },
         {
           "refId": "B",
-          "target": "aliasByNode(truenas.truenas.disk.$disk.writes,3,4)",
+          "target": "aliasByNode(truenas.nas.disk.$disk.writes,3,4)",
           "textEditor": true
         }
       ],
@@ -110,12 +110,12 @@
       "targets": [
         {
           "refId": "A",
-          "target": "aliasByNode(truenas.truenas.disk_ops.$disk.reads,3,4)",
+          "target": "aliasByNode(truenas.nas.disk_ops.$disk.reads,3,4)",
           "textEditor": true
         },
         {
           "refId": "B",
-          "target": "aliasByNode(truenas.truenas.disk_ops.$disk.writes,3,4)",
+          "target": "aliasByNode(truenas.nas.disk_ops.$disk.writes,3,4)",
           "textEditor": true
         }
       ],
@@ -159,12 +159,12 @@
       "targets": [
         {
           "refId": "A",
-          "target": "aliasByNode(truenas.truenas.disk_mops.$disk.reads,3,4)",
+          "target": "aliasByNode(truenas.nas.disk_mops.$disk.reads,3,4)",
           "textEditor": true
         },
         {
           "refId": "B",
-          "target": "aliasByNode(truenas.truenas.disk_mops.$disk.writes,3,4)",
+          "target": "aliasByNode(truenas.nas.disk_mops.$disk.writes,3,4)",
           "textEditor": true
         }
       ],
@@ -208,7 +208,7 @@
       "targets": [
         {
           "refId": "A",
-          "target": "aliasByNode(truenas.truenas.disk_qops.$disk.operations,3,4)",
+          "target": "aliasByNode(truenas.nas.disk_qops.$disk.operations,3,4)",
           "textEditor": true
         }
       ],
@@ -273,8 +273,8 @@
           "type": "graphite",
           "uid": "graphite"
         },
-        "definition": "truenas.truenas.disk_ops.*",
-        "query": "truenas.truenas.disk_ops.*",
+        "definition": "truenas.nas.disk_ops.*",
+        "query": "truenas.nas.disk_ops.*",
         "regex": "/^.*\\.disk_ops\\.([^.]+)/",
         "includeAll": true,
         "allValue": "*",

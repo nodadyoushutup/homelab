@@ -84,7 +84,7 @@ resource "docker_service" "nginx_proxy_manager" {
 
   task_spec {
     placement {
-      constraints = ["node.labels.role==controller"]
+      constraints = ["node.labels.role==swarm-cp-0"]
 
       dynamic "platforms" {
         for_each = local.allowed_platforms

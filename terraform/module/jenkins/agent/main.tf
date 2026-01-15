@@ -180,7 +180,7 @@ resource "docker_service" "agent" {
           architecture = platforms.value.architecture
         }
       }
-      constraints = ["node.labels.role==controller"]
+      constraints = ["node.labels.role==swarm-cp-0"]
     }
   }
 

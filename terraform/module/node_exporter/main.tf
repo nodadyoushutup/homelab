@@ -1,48 +1,25 @@
-locals {
-  # Order matches Swarm's platform reporting (aarch64 then arm64) to avoid churny platform diffs.
-  allowed_platforms = [
-    {
-      os           = "linux"
-      architecture = "aarch64"
-    },
-    {
-      os           = "linux"
-      architecture = "arm64"
-    }
-  ]
-}
-
 resource "docker_network" "node_exporter" {
   name   = "node-exporter"
   driver = "overlay"
 }
 
-resource "terraform_data" "platforms" {
-  input = local.allowed_platforms
-}
-
 resource "docker_service" "node_exporter" {
   name = "node-exporter"
-  depends_on = [terraform_data.platforms]
-
-  labels {
-    label = "com.docker.stack.namespace"
-    value = "node-exporter"
-  }
-
-  labels {
-    label = "com.docker.service"
-    value = "node-exporter"
-  }
-
+  
   task_spec {
-    placement {
-      dynamic "platforms" {
-        for_each = local.allowed_platforms
+    dynamic "placement" {
+      for_each = var.placement == null ? [] : [var.placement]
 
-        content {
-          os           = platforms.value.os
-          architecture = platforms.value.architecture
+      content {
+        constraints = try(placement.value.constraints, null)
+
+        dynamic "platforms" {
+          for_each = try(placement.value.platforms, [])
+
+          content {
+            os           = platforms.value.os
+            architecture = platforms.value.architecture
+          }
         }
       }
     }
@@ -64,12 +41,12 @@ resource "docker_service" "node_exporter" {
         "--collector.filesystem.ignored-fs-types=^(autofs|proc|sysfs|tmpfs|devtmpfs|devpts|overlay|aufs)$",
       ]
 
-      dns_config {
-        nameservers = [
-          "192.168.1.1",
-          "1.1.1.1",
-          "8.8.8.8",
-        ]
+      dynamic "dns_config" {
+        for_each = var.dns_nameservers == null ? [] : [var.dns_nameservers]
+
+        content {
+          nameservers = dns_config.value
+        }
       }
 
       mounts {
@@ -112,14 +89,5 @@ resource "docker_service" "node_exporter" {
       published_port = 9100
       publish_mode   = "host"
     }
-  }
-
-  lifecycle {
-    ignore_changes = [
-      task_spec[0].placement[0].platforms,
-    ]
-    replace_triggered_by = [
-      terraform_data.platforms,
-    ]
   }
 }

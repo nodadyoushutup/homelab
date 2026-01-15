@@ -17,3 +17,4 @@ Source of truth for where operational secrets and environment files live across 
 - Treat these paths as private; never commit contents to the repo.
 - When adding new services, follow existing tfvars naming in `~/.tfvars` and update planning docs with the exact files created.
 - Verify files exist before running pipelines (for example, `ls ~/.tfvars/<service>.tfvars`); capture proof in the relevant plan.
+- Do not symlink repo paths (for example, `.tfvars/`) into `~/.tfvars`; keep tfvars files directly under `~/.tfvars` to avoid broken-link sync failures.

@@ -7,7 +7,7 @@ Source of truth for Swarm workflows, pipelines, Terraform state, and supporting 
 - Repo path: `~/code/homelab` on every host (NFS from `truenas.internal`).
 - Default Docker host: `ssh://swarm-cp-0.internal` (`DOCKER_SWARM_CP` in `.env`).
 - Terraform backend: `~/.tfvars/minio.backend.hcl` (MinIO on `medusa.internal`).
-- Compose-only stack (MinIO + Renovate): run from `medusa.internal` at `docker/state/`; ensure images support `linux/aarch64`.
+- Compose-only stacks (MinIO backend + Renovate): run from `medusa.internal` at `docker/minio/` and `docker/renovate/`; ensure images support `linux/aarch64`.
 
 ## Application taxonomy & provider expectations
 - **App + config** – multi-stage (for example, Jenkins controller/agent/config; Grafana app/config). Multiple pipelines/states.
@@ -37,6 +37,7 @@ Source of truth for Swarm workflows, pipelines, Terraform state, and supporting 
 - Use `provider_config` map with Docker host + SSH opts; add nested providers only when needed (Grafana auth, Jenkins creds).
 - Place secrets/env-specific coordinates in tfvars; encode static defaults as locals.
 - Include sanitized tfvars/backend snippets in plans; create missing files under `~/.tfvars` (never defer to the user).
+- Avoid symlinking repo paths (such as `.tfvars/`) into `~/.tfvars`; edit the files directly under `~/.tfvars` to prevent sync failures.
 
 ## Docker Swarm module conventions
 - Prefix resources with the service name; set `com.docker.stack.namespace` + `com.docker.service` labels.

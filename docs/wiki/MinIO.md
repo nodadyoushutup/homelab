@@ -17,8 +17,8 @@
 
 ## File layout
 
-- `docker/state/docker-compose.yaml` – defines the single-node MinIO service.
-- `docker/state/.env` – local overrides for credentials and region settings.
+- `docker/minio/docker-compose.yaml` – defines the single-node MinIO service.
+- `docker/minio/.env` – local overrides for credentials and region settings.
 - `docker/purge/minio.sh` – helper script that tears the stack down (including
   volumes) when you need a clean slate.
 
@@ -26,7 +26,7 @@
 
 1. Ensure Docker with Compose v2 is installed and that you can run
    `docker compose`.
-2. Create a `.env` file in `docker/state/` with the variables consumed by
+2. Create a `.env` file in `docker/minio/` with the variables consumed by
    `docker-compose.yaml`. Example:
 
    ```bash
@@ -38,10 +38,10 @@
    EOF
    ```
 
-3. Bring MinIO up from `docker/state/`:
+3. Bring MinIO up from `docker/minio/`:
 
    ```bash
-  (cd docker/state && docker compose up -d)
+  (cd docker/minio && docker compose up -d)
    ```
 
    - S3 endpoint: <http://localhost:9000>
@@ -50,17 +50,17 @@
 
 ## Operations
 
-- Tail logs or inspect service state from `docker/state/`:
+- Tail logs or inspect service state from `docker/minio/`:
 
   ```bash
-  (cd docker/state && docker compose logs -f minio)
-  (cd docker/state && docker compose ps)
+  (cd docker/minio && docker compose logs -f minio)
+  (cd docker/minio && docker compose ps)
   ```
 
 - Stop the stack but keep data:
 
   ```bash
-  (cd docker/state && docker compose down)
+  (cd docker/minio && docker compose down)
   ```
 
 - Remove everything (containers, volumes, optional images) via the helper

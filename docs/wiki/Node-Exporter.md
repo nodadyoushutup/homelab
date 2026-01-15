@@ -14,7 +14,25 @@ provider_config = {
     ssh_opts = ["-o", "StrictHostKeyChecking=no"]
   }
 }
+
+dns_nameservers = [
+  "192.168.1.1",
+  "1.1.1.1",
+  "8.8.8.8",
+]
+
+placement = {
+  constraints = []
+  platforms = [
+    {
+      os           = "linux"
+      architecture = "aarch64"
+    }
+  ]
+}
 ```
+
+- Optional: omit `dns_nameservers` or `placement` to let Docker defaults apply; the rest of the service config is set in `terraform/module/node_exporter/main.tf`.
 
 - Prometheus (or another scraper) reachable on the published ingress port (default `9100`).
 

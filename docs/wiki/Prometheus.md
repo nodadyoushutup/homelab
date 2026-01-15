@@ -5,7 +5,7 @@ Prometheus runs as a Docker Swarm service (single replica on a controller-labele
 ## Prerequisites
 
 - MinIO/S3 backend config at `~/.tfvars/minio.backend.hcl`.
-- `~/.tfvars/prometheus.tfvars` containing both the Docker provider config and a `prometheus_config` block. Example:
+- `~/.tfvars/prometheus.tfvars` containing the Docker provider config plus Prometheus settings. Example:
 
 ```hcl
 provider_config = {
@@ -19,29 +19,36 @@ provider_config = {
   }
 }
 
-prometheus_config = {
-  global = {
-    scrape_interval     = "15s"
-    evaluation_interval = "15s"
-  }
+dns_nameservers = [
+  "192.168.1.1",
+  "1.1.1.1",
+  "8.8.8.8"
+]
 
-  scrape_configs = [{
-    job_name     = "node_exporter"
-    metrics_path = "/metrics"
-    static_configs = [{
-      targets = [
-        "swarm-cp-0.internal:9100",
-        "swarm-wk-0.internal:9100",
-        "swarm-wk-1.internal:9100",
-        "swarm-wk-2.internal:9100",
-        "swarm-wk-3.internal:9100"
-      ]
-    }]
-  }]
+placement = {
+  constraints = ["node.labels.role==swarm-cp-0"]
+  platforms = [
+    {
+      os           = "linux"
+      architecture = "aarch64"
+    },
+    {
+      os           = "linux"
+      architecture = "arm64"
+    }
+  ]
 }
+
+targets = [
+  "swarm-cp-0.internal:9100",
+  "swarm-wk-0.internal:9100",
+  "swarm-wk-1.internal:9100",
+  "swarm-wk-2.internal:9100",
+  "swarm-wk-3.internal:9100"
+]
 ```
 
-Add more jobs/targets to `prometheus_config` as needed; Terraform serializes the entire structure into a Docker config.
+Terraform renders a default Prometheus config that scrapes the `node_exporter` job with the `targets` list.
 
 ## Pipelines
 
@@ -71,7 +78,7 @@ cd /path/to/homelab
 
 ## Editing scrape configs
 
-1. Update the `prometheus_config` map inside your tfvars file (add new jobs, relabel targets, tweak scrape intervals).
+1. Update the `targets` list inside your tfvars file if nodes change.
 2. Re-run the Prometheus pipeline (bash or Jenkins). Terraform detects the config change, uploads a new Docker config, and rolling-updates the service.
 3. Use `curl http://<host>:9090/-/config` or the UI to verify changes.
 

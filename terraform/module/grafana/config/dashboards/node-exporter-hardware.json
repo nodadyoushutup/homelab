@@ -363,6 +363,46 @@
           "sort": "desc"
         }
       }
+    },
+    {
+      "id": 40,
+      "title": "Voltage Sensors",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 29
+      },
+      "targets": [
+        {
+          "expr": "node_hwmon_in_volts{instance=~\"$node\"}",
+          "legendFormat": "{{instance}} {{chip}} {{sensor}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "volt"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
     }
   ],
   "title": "Node Exporter \u2013 Hardware",
