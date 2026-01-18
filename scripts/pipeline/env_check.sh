@@ -8,6 +8,7 @@ FILTER_SCRIPT_PATH="${SCRIPT_DIR}/terraform_output_filter.py"
 command -v terraform >/dev/null 2>&1 || { echo "[ERR] terraform not found in PATH" >&2; exit 127; }
 command -v realpath  >/dev/null 2>&1 || { echo "[ERR] realpath not found in PATH" >&2; exit 127; }
 
+# Prefer python3 explicitly to match host setups.
 PYTHON_CMD=""
 if command -v python3 >/dev/null 2>&1; then
   PYTHON_CMD="$(command -v python3)"
