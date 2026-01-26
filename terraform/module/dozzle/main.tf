@@ -31,7 +31,7 @@ resource "docker_service" "dozzle" {
     }
 
     container_spec {
-      image = "amir20/dozzle:v9.0.1@sha256:a7529f02748a9520a4f372f7b349e099bb0bc6ae93c2be9d85945f51d45f8967"
+      image = "amir20/dozzle:v9.0.3@sha256:2d59d09503f2c947133a4f231fdeb1f4c99e23aa0d4137f81bb1a6318e0e06cf"
 
       env = {
         DOZZLE_MODE = "swarm"
