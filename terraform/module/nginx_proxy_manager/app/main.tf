@@ -40,7 +40,7 @@ resource "docker_service" "nginx_proxy_manager" {
     }
 
     container_spec {
-      image = "jc21/nginx-proxy-manager:2.12.6@sha256:6ab097814f54b1362d5fd3c5884a01ddd5878aaae9992ffd218439180f0f92f3"
+      image = "jc21/nginx-proxy-manager:2.14.0@sha256:2aa69b382a384b676c0d4f1d6f2eac40ecd478fcf7af1cfb3f9f1d3cd0c81e12"
       env = merge(
         {
           INITIAL_ADMIN_EMAIL = coalesce(
