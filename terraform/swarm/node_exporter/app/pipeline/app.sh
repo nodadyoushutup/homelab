@@ -9,6 +9,9 @@ SERVICE_NAME="node_exporter"
 STAGE_NAME="Node Exporter app"
 ENTRYPOINT_RELATIVE="terraform/swarm/node_exporter/app/pipeline/app.sh"
 TERRAFORM_DIR="${ROOT_DIR}/terraform/swarm/node_exporter/app"
+TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-/mnt/eapp/.tfvars}"
+DEFAULT_TFVARS_FILE="${DEFAULT_TFVARS_FILE:-${TFVARS_HOME_DIR}/node_exporter/app.tfvars}"
+DEFAULT_BACKEND_FILE="${DEFAULT_BACKEND_FILE:-${TFVARS_HOME_DIR}/minio.backend.hcl}"
 
 PLAN_ARGS_EXTRA=()
 APPLY_ARGS_EXTRA=()

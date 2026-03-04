@@ -10,7 +10,7 @@ STAGE_NAME="Jenkins agents"
 ENTRYPOINT_RELATIVE="terraform/swarm/jenkins/agent/pipeline/agent.sh"
 TERRAFORM_DIR="${ROOT_DIR}/terraform/swarm/jenkins/agent"
 
-JENKINS_TFVARS_DIR="${JENKINS_TFVARS_DIR:-${HOME}/.tfvars/jenkins}"
+JENKINS_TFVARS_DIR="${JENKINS_TFVARS_DIR:-/mnt/eapp/.tfvars/jenkins}"
 DEFAULT_TFVARS_FILE="${DEFAULT_TFVARS_FILE:-${JENKINS_TFVARS_DIR}/agent.tfvars}"
 
 PLAN_ARGS_EXTRA=()

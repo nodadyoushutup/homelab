@@ -1,0 +1,325 @@
+{
+  "refresh": "10s",
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "schemaVersion": 39,
+  "liveNow": false,
+  "graphTooltip": 0,
+  "weekStart": "",
+  "timezone": "",
+  "style": "dark",
+  "editable": true,
+  "links": [],
+  "fiscalYearStartMonth": 0,
+  "tags": [
+    "homelab",
+    "truenas"
+  ],
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
+  "timepicker": {
+    "time_options": [
+      "1h",
+      "6h",
+      "24h",
+      "7d"
+    ]
+  },
+  "id": null,
+  "panels": [
+    {
+      "id": 21,
+      "title": "SMART Disk Temperatures",
+      "type": "timeseries",
+      "description": "smart_log_smart.disktemp serial feeds (per-drive SMART temperature channels).",
+      "datasource": {
+        "type": "graphite",
+        "uid": "graphite"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "target": "aliasByNode(truenas.nas.smart_log_smart.disktemp.$smart_serial.*,4)",
+          "textEditor": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "celsius"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": [
+            "max",
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 22,
+      "title": "ZFS ARC & Cache",
+      "type": "timeseries",
+      "description": "All Graphite-reported zfs.* metrics (ARC size, hit/miss pairs, list health, etc.).",
+      "datasource": {
+        "type": "graphite",
+        "uid": "graphite"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "target": "aliasByNode(truenas.nas.zfs.arc_size.*,4)",
+          "textEditor": true
+        },
+        {
+          "refId": "B",
+          "target": "aliasByNode(truenas.nas.zfs.arc_size_breakdown.*,4)",
+          "textEditor": true
+        },
+        {
+          "refId": "C",
+          "target": "aliasByNode(truenas.nas.zfs.hits_rate.*,4)",
+          "textEditor": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": [
+            "max",
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 23,
+      "title": "ZFS Pool State",
+      "type": "timeseries",
+      "description": "zfspool.state_* pools with online/offline/degraded flags per pool.",
+      "datasource": {
+        "type": "graphite",
+        "uid": "graphite"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "target": "aliasByNode(truenas.nas.zfspool.state_$zpool.*,4)",
+          "textEditor": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": [
+            "max",
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 30,
+      "title": "ZFS Data Hit Mix",
+      "type": "timeseries",
+      "description": "Demand vs prefetch hit/miss rates for ARC.",
+      "datasource": {
+        "type": "graphite",
+        "uid": "graphite"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "target": "aliasByNode(truenas.nas.zfs.demand_data_hits_rate.*,4)",
+          "textEditor": true
+        },
+        {
+          "refId": "B",
+          "target": "aliasByNode(truenas.nas.zfs.prefetch_data_hits_rate.*,4)",
+          "textEditor": true
+        },
+        {
+          "refId": "C",
+          "target": "aliasByNode(truenas.nas.zfs.actual_hits_rate.*,4)",
+          "textEditor": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": [
+            "max",
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    }
+  ],
+  "title": "TrueNAS \u2013 SMART & ZFS",
+  "uid": "truenas-smart-zfs",
+  "version": 3,
+  "templating": {
+    "list": [
+      {
+        "name": "host",
+        "label": "TrueNAS host",
+        "type": "query",
+        "datasource": {
+          "type": "graphite",
+          "uid": "graphite"
+        },
+        "definition": "truenas.*",
+        "query": "truenas.*",
+        "regex": "",
+        "includeAll": true,
+        "multi": false,
+        "refresh": 2,
+        "sort": 1,
+        "options": [],
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "hide": 0,
+        "skipUrlSync": false,
+        "allValue": "*"
+      },
+      {
+        "name": "smart_serial",
+        "label": "SMART Serial",
+        "type": "query",
+        "datasource": {
+          "type": "graphite",
+          "uid": "graphite"
+        },
+        "definition": "truenas.nas.smart_log_smart.disktemp.*",
+        "query": "truenas.nas.smart_log_smart.disktemp.*",
+        "regex": "/^truenas\\.truenas\\.smart_log_smart\\.disktemp\\.([^.]+)/",
+        "includeAll": true,
+        "allValue": "*",
+        "multi": true,
+        "refresh": 2,
+        "sort": 1,
+        "options": [],
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "hide": 0,
+        "skipUrlSync": false
+      },
+      {
+        "name": "zpool",
+        "label": "ZFS Pool",
+        "type": "query",
+        "datasource": {
+          "type": "graphite",
+          "uid": "graphite"
+        },
+        "definition": "truenas.nas.zfspool.state_*",
+        "query": "truenas.nas.zfspool.state_*",
+        "regex": "/^truenas\\.truenas\\.zfspool\\.state_([^.]+)/",
+        "includeAll": true,
+        "allValue": "*",
+        "multi": true,
+        "refresh": 2,
+        "sort": 1,
+        "options": [],
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "hide": 0,
+        "skipUrlSync": false
+      }
+    ]
+  }
+}

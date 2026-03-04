@@ -1,0 +1,393 @@
+{
+  "refresh": "10s",
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "schemaVersion": 39,
+  "liveNow": false,
+  "graphTooltip": 0,
+  "weekStart": "",
+  "timezone": "",
+  "style": "dark",
+  "editable": true,
+  "links": [],
+  "fiscalYearStartMonth": 0,
+  "tags": [
+    "homelab",
+    "truenas"
+  ],
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
+  "timepicker": {
+    "time_options": [
+      "1h",
+      "6h",
+      "24h",
+      "7d"
+    ]
+  },
+  "id": null,
+  "panels": [
+    {
+      "id": 2,
+      "title": "System Clock & IO",
+      "type": "timeseries",
+      "description": "Clock sync status + aggregate IO counters from truenas.nas.system.*",
+      "datasource": {
+        "type": "graphite",
+        "uid": "graphite"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "target": "aliasByNode(truenas.nas.system.*.*,3,4)",
+          "textEditor": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": [
+            "max",
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 27,
+      "title": "Memory Breakdown",
+      "type": "timeseries",
+      "description": "Kernel and writeback buckets reported under truenas.nas.mem.*.*",
+      "datasource": {
+        "type": "graphite",
+        "uid": "graphite"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 12,
+        "y": 0
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "target": "aliasByNode(truenas.nas.mem.*.*,3,4)",
+          "textEditor": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": [
+            "max",
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 28,
+      "title": "Network Throughput",
+      "type": "timeseries",
+      "description": "Interface TX/RX plus negotiated speed pulled from truenas.nas.net* namespaces.",
+      "datasource": {
+        "type": "graphite",
+        "uid": "graphite"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 18,
+        "y": 0
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "target": "aliasByNode(truenas.nas.net.*.received,3,4)",
+          "textEditor": true
+        },
+        {
+          "refId": "B",
+          "target": "aliasByNode(truenas.nas.net.*.sent,3,4)",
+          "textEditor": true
+        },
+        {
+          "refId": "C",
+          "target": "aliasByNode(truenas.nas.net_speed.*.speed,3,4)",
+          "textEditor": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "Bps"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": [
+            "max",
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 29,
+      "title": "UPS Status",
+      "type": "timeseries",
+      "description": "NUT metrics sourced from truenas.nas.nut_ix_dummy_ups.*.*",
+      "datasource": {
+        "type": "graphite",
+        "uid": "graphite"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 12,
+        "y": 6
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "target": "aliasByNode(truenas.nas.nut_ix_dummy_ups.*.*,3,4)",
+          "textEditor": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "volt"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": [
+            "max",
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 24,
+      "title": "NFS Server Activity",
+      "type": "timeseries",
+      "description": "nfsd.* RPC, IO, and transport counters across v3/v4 procedures.",
+      "datasource": {
+        "type": "graphite",
+        "uid": "graphite"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 94
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "target": "aliasByNode(truenas.nas.nfsd.proc3.$nfs_op,4)",
+          "textEditor": true
+        },
+        {
+          "refId": "B",
+          "target": "aliasByNode(truenas.nas.nfsd.proc4.$nfs_op,4)",
+          "textEditor": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": [
+            "max",
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 31,
+      "title": "NFS IO & Transport",
+      "type": "timeseries",
+      "description": "Throughput (io.*) and protocol usage (net.*, threads).",
+      "datasource": {
+        "type": "graphite",
+        "uid": "graphite"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 94
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "target": "aliasByNode(truenas.nas.nfsd.io.*,3,4)",
+          "textEditor": true
+        },
+        {
+          "refId": "B",
+          "target": "aliasByNode(truenas.nas.nfsd.net.*,3,4)",
+          "textEditor": true
+        },
+        {
+          "refId": "C",
+          "target": "aliasByNode(truenas.nas.nfsd.threads.*,3,4)",
+          "textEditor": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": [
+            "max",
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    }
+  ],
+  "title": "TrueNAS \u2013 Services & Network",
+  "uid": "truenas-svc-net",
+  "version": 3,
+  "templating": {
+    "list": [
+      {
+        "name": "host",
+        "label": "TrueNAS host",
+        "type": "query",
+        "datasource": {
+          "type": "graphite",
+          "uid": "graphite"
+        },
+        "definition": "truenas.*",
+        "query": "truenas.*",
+        "regex": "",
+        "includeAll": true,
+        "multi": false,
+        "refresh": 2,
+        "sort": 1,
+        "options": [],
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "hide": 0,
+        "skipUrlSync": false,
+        "allValue": "*"
+      },
+      {
+        "name": "nfs_op",
+        "label": "NFS Operation",
+        "type": "query",
+        "datasource": {
+          "type": "graphite",
+          "uid": "graphite"
+        },
+        "definition": "truenas.nas.nfsd.proc[34].*",
+        "query": "truenas.nas.nfsd.proc[34].*",
+        "regex": "/^truenas\\.truenas\\.nfsd\\.proc\\d+\\.([^.]+)/",
+        "includeAll": true,
+        "allValue": "*",
+        "multi": true,
+        "refresh": 2,
+        "sort": 1,
+        "options": [],
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "hide": 0,
+        "skipUrlSync": false
+      }
+    ]
+  }
+}

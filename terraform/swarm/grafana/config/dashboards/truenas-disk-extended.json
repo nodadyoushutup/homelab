@@ -1,0 +1,368 @@
+{
+  "refresh": "10s",
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "schemaVersion": 39,
+  "liveNow": false,
+  "graphTooltip": 0,
+  "weekStart": "",
+  "timezone": "",
+  "style": "dark",
+  "editable": true,
+  "links": [],
+  "fiscalYearStartMonth": 0,
+  "tags": [
+    "homelab",
+    "truenas"
+  ],
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
+  "timepicker": {
+    "time_options": [
+      "1h",
+      "6h",
+      "24h",
+      "7d"
+    ]
+  },
+  "id": null,
+  "panels": [
+    {
+      "id": 15,
+      "title": "Extended Disk Ops",
+      "type": "timeseries",
+      "description": "disk_ext_ops.* discards/flushes tracked per disk.",
+      "datasource": {
+        "type": "graphite",
+        "uid": "graphite"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "target": "aliasByNode(truenas.nas.disk_ext_ops.$disk.*,3,4)",
+          "textEditor": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": [
+            "max",
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 16,
+      "title": "Extended Disk Merge Ops",
+      "type": "timeseries",
+      "description": "disk_ext_mops.* merged discard/flush operations.",
+      "datasource": {
+        "type": "graphite",
+        "uid": "graphite"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "target": "aliasByNode(truenas.nas.disk_ext_mops.$disk.*,3,4)",
+          "textEditor": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": [
+            "max",
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 17,
+      "title": "Extended Disk I/O Time",
+      "type": "timeseries",
+      "description": "disk_ext_iotime.* time spent handling discard/flush operations.",
+      "datasource": {
+        "type": "graphite",
+        "uid": "graphite"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "target": "aliasByNode(truenas.nas.disk_ext_iotime.$disk.*,3,4)",
+          "textEditor": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": [
+            "max",
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 18,
+      "title": "Extended Disk Wait",
+      "type": "timeseries",
+      "description": "disk_ext_await.* wait time for discard/flush paths.",
+      "datasource": {
+        "type": "graphite",
+        "uid": "graphite"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "target": "aliasByNode(truenas.nas.disk_ext_await.$disk.*,3,4)",
+          "textEditor": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": [
+            "max",
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 19,
+      "title": "Extended Disk Avg Size",
+      "type": "timeseries",
+      "description": "disk_ext_avgsz.* sizes associated with extended ops.",
+      "datasource": {
+        "type": "graphite",
+        "uid": "graphite"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 16
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "target": "aliasByNode(truenas.nas.disk_ext_avgsz.$disk.*,3,4)",
+          "textEditor": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": [
+            "max",
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 20,
+      "title": "Extended Disk Discards",
+      "type": "timeseries",
+      "description": "disk_ext.* discard counters for every disk.",
+      "datasource": {
+        "type": "graphite",
+        "uid": "graphite"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 16
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "target": "aliasByNode(truenas.nas.disk_ext.$disk.*,3,4)",
+          "textEditor": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": [
+            "max",
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    }
+  ],
+  "title": "TrueNAS \u2013 Extended Disk Ops",
+  "uid": "truenas-disk-ext",
+  "version": 3,
+  "templating": {
+    "list": [
+      {
+        "name": "host",
+        "label": "TrueNAS host",
+        "type": "query",
+        "datasource": {
+          "type": "graphite",
+          "uid": "graphite"
+        },
+        "definition": "truenas.*",
+        "query": "truenas.*",
+        "regex": "",
+        "includeAll": true,
+        "multi": false,
+        "refresh": 2,
+        "sort": 1,
+        "options": [],
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "hide": 0,
+        "skipUrlSync": false,
+        "allValue": "*"
+      },
+      {
+        "name": "disk",
+        "label": "Disks",
+        "type": "query",
+        "datasource": {
+          "type": "graphite",
+          "uid": "graphite"
+        },
+        "definition": "truenas.nas.disk_ops.*",
+        "query": "truenas.nas.disk_ops.*",
+        "regex": "/^.*\\.disk_ops\\.([^.]+)/",
+        "includeAll": true,
+        "allValue": "*",
+        "multi": true,
+        "refresh": 2,
+        "sort": 1,
+        "options": [],
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "hide": 0,
+        "skipUrlSync": false
+      }
+    ]
+  }
+}

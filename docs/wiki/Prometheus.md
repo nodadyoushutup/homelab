@@ -5,7 +5,7 @@ Prometheus runs as a Docker Swarm service (single replica on a controller-labele
 ## Prerequisites
 
 - MinIO/S3 backend config at `~/.tfvars/minio.backend.hcl`.
-- `~/.tfvars/prometheus.tfvars` containing the Docker provider config plus Prometheus settings. Example:
+- `~/.tfvars/prometheus/app.tfvars` containing the Docker provider config plus Prometheus settings. Example:
 
 ```hcl
 provider_config = {
@@ -19,36 +19,8 @@ provider_config = {
   }
 }
 
-dns_nameservers = [
-  "192.168.1.1",
-  "1.1.1.1",
-  "8.8.8.8"
-]
-
-placement = {
-  constraints = ["node.labels.role==swarm-cp-0"]
-  platforms = [
-    {
-      os           = "linux"
-      architecture = "aarch64"
-    },
-    {
-      os           = "linux"
-      architecture = "arm64"
-    }
-  ]
-}
-
-targets = [
-  "swarm-cp-0.internal:9100",
-  "swarm-wk-0.internal:9100",
-  "swarm-wk-1.internal:9100",
-  "swarm-wk-2.internal:9100",
-  "swarm-wk-3.internal:9100"
-]
 ```
-
-Terraform renders a default Prometheus config that scrapes the `node_exporter` job with the `targets` list.
+Terraform renders the Docker config from `terraform/swarm/prometheus/app/prometheus.yaml`.
 
 ## Pipelines
 
@@ -57,12 +29,12 @@ Terraform renders a default Prometheus config that scrapes the `node_exporter` j
 ```bash
 cd /path/to/homelab
 ./terraform/swarm/prometheus/app/pipeline/app.sh \
-  --tfvars ~/.tfvars/prometheus.tfvars \
+  --tfvars ~/.tfvars/prometheus/app.tfvars \
   --backend ~/.tfvars/minio.backend.hcl
 ```
 
 - Shared helpers verify Terraform availability and resolve input paths.
-- `terraform init/plan/apply` runs against `terraform/swarm/prometheus/app`, updating the service, network, volume definitions, and the rendered Docker config in a single pass.
+- `terraform init/plan/apply` runs against `terraform/swarm/prometheus/app`, updating the service, network, volume definitions, and the rendered Docker config from `terraform/swarm/prometheus/app/prometheus.yaml` in a single pass.
 
 ### Jenkins deployment (`prometheus`)
 
@@ -78,13 +50,13 @@ cd /path/to/homelab
 
 ## Editing scrape configs
 
-1. Update the `targets` list inside your tfvars file if nodes change.
+1. Update target entries in `terraform/swarm/prometheus/app/prometheus.yaml` if nodes change.
 2. Re-run the Prometheus pipeline (bash or Jenkins). Terraform detects the config change, uploads a new Docker config, and rolling-updates the service.
 3. Use `curl http://<host>:9090/-/config` or the UI to verify changes.
 
 ## Changing ports or persistence
 
-- To adjust the Prometheus web port, edit `endpoint_spec.ports` in `terraform/module/prometheus/main.tf`.
+- To adjust the Prometheus web port, edit `endpoint_spec.ports` in `terraform/swarm/prometheus/app/main.tf`.
 - To change TSDB retention or flags, edit the `args` list in the same file.
 - Re-run the pipeline to roll out changes; remember to update firewalls and any load balancers.
 
@@ -92,4 +64,4 @@ cd /path/to/homelab
 
 - Introduce Alertmanager and/or Grafana using the same Terraform/pipeline pattern for a full observability suite.
 - Parameterize the node constraint or published port via module variables if future environments differ.
-- Consider templating scrape targets from a list of nodes defined in tfvars to avoid duplicating hostnames.
+- Consider adding additional scrape jobs as separate sections in `prometheus.yaml` as your observability stack grows.

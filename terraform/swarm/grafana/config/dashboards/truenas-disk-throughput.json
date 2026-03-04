@@ -1,0 +1,295 @@
+{
+  "refresh": "10s",
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "schemaVersion": 39,
+  "liveNow": false,
+  "graphTooltip": 0,
+  "weekStart": "",
+  "timezone": "",
+  "style": "dark",
+  "editable": true,
+  "links": [],
+  "fiscalYearStartMonth": 0,
+  "tags": [
+    "homelab",
+    "truenas"
+  ],
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
+  "timepicker": {
+    "time_options": [
+      "1h",
+      "6h",
+      "24h",
+      "7d"
+    ]
+  },
+  "id": null,
+  "panels": [
+    {
+      "id": 4,
+      "title": "Disk Counters",
+      "type": "timeseries",
+      "description": "Raw disk.* counters (reads/writes) straight from Graphite; mirrors /proc/diskstats totals.",
+      "datasource": {
+        "type": "graphite",
+        "uid": "graphite"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "target": "aliasByNode(truenas.nas.disk.$disk.reads,3,4)",
+          "textEditor": true
+        },
+        {
+          "refId": "B",
+          "target": "aliasByNode(truenas.nas.disk.$disk.writes,3,4)",
+          "textEditor": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "iops"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": [
+            "max",
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 5,
+      "title": "Disk Ops per Second",
+      "type": "timeseries",
+      "description": "Per-device IOPS using disk_ops.* with nulls coerced by Graphite functions for legibility.",
+      "datasource": {
+        "type": "graphite",
+        "uid": "graphite"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "target": "aliasByNode(truenas.nas.disk_ops.$disk.reads,3,4)",
+          "textEditor": true
+        },
+        {
+          "refId": "B",
+          "target": "aliasByNode(truenas.nas.disk_ops.$disk.writes,3,4)",
+          "textEditor": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "iops"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": [
+            "max",
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 6,
+      "title": "Disk Merge Ops",
+      "type": "timeseries",
+      "description": "disk_mops.* (merged read/write operations) for every disk device.",
+      "datasource": {
+        "type": "graphite",
+        "uid": "graphite"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "target": "aliasByNode(truenas.nas.disk_mops.$disk.reads,3,4)",
+          "textEditor": true
+        },
+        {
+          "refId": "B",
+          "target": "aliasByNode(truenas.nas.disk_mops.$disk.writes,3,4)",
+          "textEditor": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "iops"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": [
+            "max",
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 7,
+      "title": "Disk Queue Ops",
+      "type": "timeseries",
+      "description": "disk_qops.* queue depth operations per device (Graphite\u2019s operations leaf).",
+      "datasource": {
+        "type": "graphite",
+        "uid": "graphite"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "target": "aliasByNode(truenas.nas.disk_qops.$disk.operations,3,4)",
+          "textEditor": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": [
+            "max",
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    }
+  ],
+  "title": "TrueNAS \u2013 Disk Throughput",
+  "uid": "truenas-disk-tput",
+  "version": 3,
+  "templating": {
+    "list": [
+      {
+        "name": "host",
+        "label": "TrueNAS host",
+        "type": "query",
+        "datasource": {
+          "type": "graphite",
+          "uid": "graphite"
+        },
+        "definition": "truenas.*",
+        "query": "truenas.*",
+        "regex": "",
+        "includeAll": true,
+        "multi": false,
+        "refresh": 2,
+        "sort": 1,
+        "options": [],
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "hide": 0,
+        "skipUrlSync": false,
+        "allValue": "*"
+      },
+      {
+        "name": "disk",
+        "label": "Disks",
+        "type": "query",
+        "datasource": {
+          "type": "graphite",
+          "uid": "graphite"
+        },
+        "definition": "truenas.nas.disk_ops.*",
+        "query": "truenas.nas.disk_ops.*",
+        "regex": "/^.*\\.disk_ops\\.([^.]+)/",
+        "includeAll": true,
+        "allValue": "*",
+        "multi": true,
+        "refresh": 2,
+        "sort": 1,
+        "options": [],
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "hide": 0,
+        "skipUrlSync": false
+      }
+    ]
+  }
+}

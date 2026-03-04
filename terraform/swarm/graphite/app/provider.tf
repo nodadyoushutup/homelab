@@ -13,5 +13,5 @@ terraform {
 
 provider "docker" {
   host     = var.provider_config.docker.host
-  ssh_opts = try(var.provider_config.docker.ssh_opts, [])
+  ssh_opts = var.provider_config.docker.ssh_opts
 }

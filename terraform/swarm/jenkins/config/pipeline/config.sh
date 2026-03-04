@@ -10,7 +10,7 @@ STAGE_NAME="Jenkins config"
 ENTRYPOINT_RELATIVE="terraform/swarm/jenkins/config/pipeline/config.sh"
 TERRAFORM_DIR="${ROOT_DIR}/terraform/swarm/jenkins/config"
 
-JENKINS_TFVARS_DIR="${JENKINS_TFVARS_DIR:-${HOME}/.tfvars/jenkins}"
+JENKINS_TFVARS_DIR="${JENKINS_TFVARS_DIR:-/mnt/eapp/.tfvars/jenkins}"
 DEFAULT_TFVARS_FILE="${DEFAULT_TFVARS_FILE:-${JENKINS_TFVARS_DIR}/config.tfvars}"
 
 PLAN_ARGS_EXTRA=()

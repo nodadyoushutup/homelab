@@ -5,7 +5,7 @@ Graphite (Carbon cache + Graphite-web + bundled StatsD) currently runs as a **mi
 ## Prerequisites
 
 - Remote backend definition at `~/.tfvars/minio.backend.hcl`.
-- `~/.tfvars/graphite.tfvars` containing only the Docker provider map. No additional values are required while the service runs with baked-in defaults.
+- `~/.tfvars/graphite/app.tfvars` containing only the Docker provider map. No additional values are required while the service runs with baked-in defaults.
 
 ```hcl
 provider_config = {
@@ -25,7 +25,7 @@ provider_config = {
 ```bash
 cd /home/nodadyoushutup/code/homelab
 ./terraform/swarm/graphite/app/pipeline/app.sh \
-  --tfvars ~/.tfvars/graphite.tfvars \
+  --tfvars ~/.tfvars/graphite/app.tfvars \
   --backend ~/.tfvars/minio.backend.hcl
 ```
 
@@ -39,7 +39,7 @@ Set `TF_CLI_ARGS_plan` or `TF_LOG` before running if you need extra Terraform fl
 ## Deploy via Jenkins
 
 1. Open the `graphite` job under the Jenkins root (script path `terraform/swarm/graphite/app/pipeline/app.jenkins`).
-2. Override `TFVARS_FILE` / `BACKEND_FILE` only if the defaults (`~/.tfvars/graphite.tfvars`, `~/.tfvars/minio.backend.hcl`) differ.
+2. Override `TFVARS_FILE` / `BACKEND_FILE` only if the defaults (`~/.tfvars/graphite/app.tfvars`, `~/.tfvars/minio.backend.hcl`) differ.
 3. Build the job; stages mirror the bash script (Env Check → Resolve Inputs → Init → Stack Plan/Apply).
 
 The Jenkins job template matches other Swarm services (log retention, GitHub metadata, concurrency guard).

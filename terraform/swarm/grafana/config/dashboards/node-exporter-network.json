@@ -1,0 +1,817 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "links": [],
+  "liveNow": false,
+  "refresh": "10s",
+  "schemaVersion": 39,
+  "timezone": "",
+  "weekStart": "",
+  "style": "dark",
+  "tags": [
+    "homelab",
+    "node-exporter"
+  ],
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
+  "timepicker": {
+    "time_options": [
+      "1h",
+      "6h",
+      "24h",
+      "7d"
+    ]
+  },
+  "id": null,
+  "panels": [
+    {
+      "id": 80,
+      "title": "Average Net Throughput",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 0,
+        "y": 0
+      },
+      "targets": [
+        {
+          "expr": "avg(sum by (instance) (rate(node_network_receive_bytes_total{instance=~\"$node\", device!~\"lo|docker.*|veth.*\"}[5m]) + rate(node_network_transmit_bytes_total{instance=~\"$node\", device!~\"lo|docker.*|veth.*\"}[5m])))",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 5000000.0
+              },
+              {
+                "color": "red",
+                "value": 20000000.0
+              }
+            ]
+          },
+          "unit": "bytespersec"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "text": {
+          "titleSize": "12px",
+          "valueSize": "32px"
+        }
+      }
+    },
+    {
+      "id": 81,
+      "title": "Average Errors/Drops",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 6,
+        "y": 0
+      },
+      "targets": [
+        {
+          "expr": "avg(sum by (instance) (rate(node_network_receive_errs_total{instance=~\"$node\", device!~\"lo|docker.*|veth.*\"}[5m]) + rate(node_network_transmit_errs_total{instance=~\"$node\", device!~\"lo|docker.*|veth.*\"}[5m]) + rate(node_network_receive_drop_total{instance=~\"$node\", device!~\"lo|docker.*|veth.*\"}[5m]) + rate(node_network_transmit_drop_total{instance=~\"$node\", device!~\"lo|docker.*|veth.*\"}[5m])))",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 5
+              }
+            ]
+          },
+          "unit": "eps"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "text": {
+          "titleSize": "12px",
+          "valueSize": "32px"
+        }
+      }
+    },
+    {
+      "id": 82,
+      "title": "Average TCP Retrans",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 12,
+        "y": 0
+      },
+      "targets": [
+        {
+          "expr": "avg(rate(node_netstat_Tcp_RetransSegs{instance=~\"$node\"}[5m]))",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 5
+              }
+            ]
+          },
+          "unit": "eps"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "text": {
+          "titleSize": "12px",
+          "valueSize": "32px"
+        }
+      }
+    },
+    {
+      "id": 83,
+      "title": "Conntrack Utilization",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 18,
+        "y": 0
+      },
+      "targets": [
+        {
+          "expr": "avg((node_nf_conntrack_entries{instance=~\"$node\"} / clamp_min(node_nf_conntrack_entries_limit{instance=~\"$node\"}, 1)) * 100)",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 60
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "text": {
+          "titleSize": "12px",
+          "valueSize": "32px"
+        }
+      }
+    },
+    {
+      "id": 14,
+      "title": "Network Throughput by Node",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 5
+      },
+      "targets": [
+        {
+          "expr": "sum by (instance) (rate(node_network_receive_bytes_total{instance=~\"$node\", device!~\"lo|docker.*|veth.*\"}[5m]))",
+          "legendFormat": "{{instance}} rx",
+          "refId": "A"
+        },
+        {
+          "expr": "sum by (instance) (rate(node_network_transmit_bytes_total{instance=~\"$node\", device!~\"lo|docker.*|veth.*\"}[5m]))",
+          "legendFormat": "{{instance}} tx",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytespersec"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 15,
+      "title": "Network Errors & Drops",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 13
+      },
+      "targets": [
+        {
+          "expr": "sum by (instance) (rate(node_network_receive_errs_total{instance=~\"$node\", device!~\"lo|docker.*|veth.*\"}[5m]))",
+          "legendFormat": "{{instance}} rx errors",
+          "refId": "A"
+        },
+        {
+          "expr": "sum by (instance) (rate(node_network_transmit_errs_total{instance=~\"$node\", device!~\"lo|docker.*|veth.*\"}[5m]))",
+          "legendFormat": "{{instance}} tx errors",
+          "refId": "B"
+        },
+        {
+          "expr": "sum by (instance) (rate(node_network_receive_drop_total{instance=~\"$node\", device!~\"lo|docker.*|veth.*\"}[5m]))",
+          "legendFormat": "{{instance}} rx drops",
+          "refId": "C"
+        },
+        {
+          "expr": "sum by (instance) (rate(node_network_transmit_drop_total{instance=~\"$node\", device!~\"lo|docker.*|veth.*\"}[5m]))",
+          "legendFormat": "{{instance}} tx drops",
+          "refId": "D"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 26,
+      "title": "TCP Retrans & Errors",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 21
+      },
+      "targets": [
+        {
+          "expr": "rate(node_netstat_Tcp_RetransSegs{instance=~\"$node\"}[5m])",
+          "legendFormat": "{{instance}} retrans",
+          "refId": "A"
+        },
+        {
+          "expr": "rate(node_netstat_Tcp_InErrs{instance=~\"$node\"}[5m])",
+          "legendFormat": "{{instance}} in_errs",
+          "refId": "B"
+        },
+        {
+          "expr": "rate(node_netstat_Tcp_OutRsts{instance=~\"$node\"}[5m])",
+          "legendFormat": "{{instance}} out_rsts",
+          "refId": "C"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "eps"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 27,
+      "title": "UDP Errors",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 21
+      },
+      "targets": [
+        {
+          "expr": "rate(node_netstat_Udp_InErrors{instance=~\"$node\"}[5m])",
+          "legendFormat": "{{instance}} in_errs",
+          "refId": "A"
+        },
+        {
+          "expr": "rate(node_netstat_Udp_NoPorts{instance=~\"$node\"}[5m])",
+          "legendFormat": "{{instance}} no_ports",
+          "refId": "B"
+        },
+        {
+          "expr": "rate(node_netstat_Udp_RcvbufErrors{instance=~\"$node\"}[5m])",
+          "legendFormat": "{{instance}} rcvbuf",
+          "refId": "C"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "eps"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 28,
+      "title": "Conntrack Entries",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 29
+      },
+      "targets": [
+        {
+          "expr": "node_nf_conntrack_entries{instance=~\"$node\"}",
+          "legendFormat": "{{instance}} entries",
+          "refId": "A"
+        },
+        {
+          "expr": "node_nf_conntrack_entries_limit{instance=~\"$node\"}",
+          "legendFormat": "{{instance}} limit",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 29,
+      "title": "Socket Usage",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 29
+      },
+      "targets": [
+        {
+          "expr": "node_sockstat_TCP_inuse{instance=~\"$node\"}",
+          "legendFormat": "{{instance}} TCP inuse",
+          "refId": "A"
+        },
+        {
+          "expr": "node_sockstat_TCP_alloc{instance=~\"$node\"}",
+          "legendFormat": "{{instance}} TCP alloc",
+          "refId": "B"
+        },
+        {
+          "expr": "node_sockstat_sockets_used{instance=~\"$node\"}",
+          "legendFormat": "{{instance}} sockets used",
+          "refId": "C"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 30,
+      "title": "Socket Memory",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 37
+      },
+      "targets": [
+        {
+          "expr": "node_sockstat_TCP_mem_bytes{instance=~\"$node\"}",
+          "legendFormat": "{{instance}} TCP mem",
+          "refId": "A"
+        },
+        {
+          "expr": "node_sockstat_UDP_mem_bytes{instance=~\"$node\"}",
+          "legendFormat": "{{instance}} UDP mem",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 32,
+      "title": "Softnet Drops vs Processed",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 45
+      },
+      "targets": [
+        {
+          "expr": "sum by (instance) (rate(node_softnet_dropped_total{instance=~\"$node\"}[5m]))",
+          "legendFormat": "{{instance}} dropped",
+          "refId": "A"
+        },
+        {
+          "expr": "sum by (instance) (rate(node_softnet_processed_total{instance=~\"$node\"}[5m]))",
+          "legendFormat": "{{instance}} processed",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 33,
+      "title": "Softnet Flow Pressure",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 45
+      },
+      "targets": [
+        {
+          "expr": "sum by (instance) (rate(node_softnet_times_squeezed_total{instance=~\"$node\"}[5m]))",
+          "legendFormat": "{{instance}} squeezed",
+          "refId": "A"
+        },
+        {
+          "expr": "sum by (instance) (rate(node_softnet_flow_limit_count_total{instance=~\"$node\"}[5m]))",
+          "legendFormat": "{{instance}} flow_limit",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 34,
+      "title": "Softnet Backlog Length",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 53
+      },
+      "targets": [
+        {
+          "expr": "sum by (instance) (node_softnet_backlog_len{instance=~\"$node\"})",
+          "legendFormat": "{{instance}} backlog",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    }
+  ],
+  "title": "Node Exporter \u2013 Network",
+  "uid": "node-exp-net",
+  "version": 6,
+  "templating": {
+    "list": [
+      {
+        "name": "node",
+        "label": "Node exporter",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
+        "definition": "label_values(up{job=\"node_exporter\"}, instance)",
+        "query": "label_values(up{job=\"node_exporter\"}, instance)",
+        "includeAll": true,
+        "allValue": ".*",
+        "multi": true,
+        "refresh": 2,
+        "sort": 1,
+        "options": [],
+        "regex": "",
+        "hide": 0,
+        "skipUrlSync": false,
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        }
+      }
+    ]
+  }
+}

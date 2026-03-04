@@ -10,7 +10,7 @@ STAGE_NAME="Grafana config"
 ENTRYPOINT_RELATIVE="terraform/swarm/grafana/config/pipeline/config.sh"
 TERRAFORM_DIR="${ROOT_DIR}/terraform/swarm/grafana/config"
 
-TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${HOME}/.tfvars}"
+TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-/mnt/eapp/.tfvars}"
 DEFAULT_TFVARS_FILE="${DEFAULT_TFVARS_FILE:-${TFVARS_HOME_DIR}/grafana/config.tfvars}"
 
 PLAN_ARGS_EXTRA=()

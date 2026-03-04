@@ -12,3 +12,5 @@ Use this as a directory to the source-of-truth docs agents need.
 - Compose-only stacks (MinIO backend + Renovate) run on `medusa.internal` under `docker/minio/` and `docker/renovate/`; images must support `linux/aarch64`.
 - NFS root_squash note: running repo scripts directly via `sudo` can return “Permission denied”; pipe them into `sudo bash -s` or copy to `/tmp` first.
 - Python note: use `python3` explicitly; no `python` shim is assumed across hosts.
+- Never abstract a container image to locals in terraform. Always have the image directly in the resource.
+- Never use Terraform `moved` blocks in this repo unless the user explicitly asks for them in that task.

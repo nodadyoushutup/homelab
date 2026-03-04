@@ -9,6 +9,9 @@ SERVICE_NAME="prometheus"
 STAGE_NAME="Prometheus app"
 ENTRYPOINT_RELATIVE="terraform/swarm/prometheus/app/pipeline/app.sh"
 TERRAFORM_DIR="${ROOT_DIR}/terraform/swarm/prometheus/app"
+TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-/mnt/eapp/.tfvars}"
+DEFAULT_TFVARS_FILE="${DEFAULT_TFVARS_FILE:-${TFVARS_HOME_DIR}/prometheus/app.tfvars}"
+DEFAULT_BACKEND_FILE="${DEFAULT_BACKEND_FILE:-${TFVARS_HOME_DIR}/minio.backend.hcl}"
 
 PLAN_ARGS_EXTRA=()
 APPLY_ARGS_EXTRA=()
