@@ -48,6 +48,10 @@ locals {
       description = "Dozzle Swarm deployment"
       script_path = "terraform/swarm/dozzle/app/pipeline/app.jenkins"
     }
+    docker_volume_backup = {
+      description = "Docker Volume Backup Swarm deployment"
+      script_path = "terraform/swarm/docker_volume_backup/app/pipeline/app.jenkins"
+    }
     node_exporter = {
       description = "Node Exporter Swarm deployment"
       script_path = "terraform/swarm/node_exporter/app/pipeline/app.jenkins"
