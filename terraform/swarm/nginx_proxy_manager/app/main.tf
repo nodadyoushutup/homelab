@@ -40,6 +40,11 @@ resource "docker_service" "nginx_proxy_manager" {
       env = {
         INITIAL_ADMIN_EMAIL    = var.env.INITIAL_ADMIN_EMAIL
         INITIAL_ADMIN_PASSWORD = var.env.INITIAL_ADMIN_PASSWORD
+        DB_MYSQL_HOST = var.env.DB_MYSQL_HOST
+        DB_MYSQL_NAME = var.env.DB_MYSQL_NAME
+        DB_MYSQL_PORT = var.env.DB_MYSQL_PORT
+        DB_MYSQL_USER = var.env.DB_MYSQL_USER
+        DB_MYSQL_PASSWORD = var.env.DB_MYSQL_PASSWORD
       }
 
       dns_config {

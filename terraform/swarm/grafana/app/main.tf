@@ -4,7 +4,7 @@ locals {
 }
 
 data "docker_network" "external" {
-  for_each = toset(["prometheus"])
+  for_each = "prometheus"
   name     = each.value
 }
 
