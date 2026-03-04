@@ -1,5 +1,5 @@
 locals {
-  prometheus_config_hash  = substr(filemd5("${path.module}/prometheus.yaml"), 0, 12)
+  prometheus_config_hash  = substr(filemd5(var.prometheus_config_path), 0, 12)
   prometheus_force_update = parseint(substr(local.prometheus_config_hash, 0, 8), 16)
 }
 
@@ -18,7 +18,7 @@ resource "docker_volume" "prometheus_data" {
 
 resource "docker_config" "prometheus" {
   name = "prometheus-${local.prometheus_config_hash}"
-  data = filebase64("${path.module}/prometheus.yaml")
+  data = filebase64(var.prometheus_config_path)
 
   lifecycle {
     create_before_destroy = true
