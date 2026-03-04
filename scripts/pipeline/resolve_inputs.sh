@@ -5,11 +5,14 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PIPELINE_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 ROOT_DIR="$(cd "${PIPELINE_DIR}/.." && pwd)"
 
+# shellcheck source=/dev/null
+source "${SCRIPT_DIR}/load_root_env.sh"
+
 TFVARS_ARG="${TFVARS_ARG:-}"
 BACKEND_ARG="${BACKEND_ARG:-}"
 DEFAULT_TFVARS_FILE="${DEFAULT_TFVARS_FILE:-}"
 DEFAULT_TFVARS_BASENAME="${DEFAULT_TFVARS_BASENAME:-}"
-TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-/mnt/eapp/.tfvars}"
+TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${TFVARS_DIR:-/mnt/eapp/.tfvars}}"
 DEFAULT_BACKEND_FILE="${DEFAULT_BACKEND_FILE:-}"
 TERRAFORM_DIR="${TERRAFORM_DIR:-${ROOT_DIR}/terraform}"
 

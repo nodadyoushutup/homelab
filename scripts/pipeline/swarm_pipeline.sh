@@ -9,9 +9,6 @@ STAGE_NAME="${STAGE_NAME:-}"
 ENTRYPOINT_RELATIVE="${ENTRYPOINT_RELATIVE:-${SERVICE_NAME}}"
 TERRAFORM_DIR="${TERRAFORM_DIR:-}"
 DEFAULT_TFVARS_BASENAME="${DEFAULT_TFVARS_BASENAME:-${SERVICE_NAME}}"
-TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-/mnt/eapp/.tfvars}"
-DEFAULT_TFVARS_FILE="${DEFAULT_TFVARS_FILE:-${TFVARS_HOME_DIR}/${DEFAULT_TFVARS_BASENAME}.tfvars}"
-DEFAULT_BACKEND_FILE="${DEFAULT_BACKEND_FILE:-${TFVARS_HOME_DIR}/minio.backend.hcl}"
 
 if [[ -z "${SCRIPT_DIR_FOR_STAGE}" || -z "${ROOT_DIR}" || -z "${PIPELINE_SCRIPT_ROOT}" ]]; then
   echo "[ERR] Stage script must define SCRIPT_DIR, ROOT_DIR, and PIPELINE_SCRIPT_ROOT before sourcing swarm_pipeline.sh" >&2
@@ -22,6 +19,13 @@ if [[ -z "${SERVICE_NAME}" || -z "${STAGE_NAME}" ]]; then
   echo "[ERR] Stage script must define SERVICE_NAME and STAGE_NAME before sourcing swarm_pipeline.sh" >&2
   exit 1
 fi
+
+# shellcheck source=/dev/null
+source "${PIPELINE_SCRIPT_ROOT}/load_root_env.sh"
+
+TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${TFVARS_DIR:-/mnt/eapp/.tfvars}}"
+DEFAULT_TFVARS_FILE="${DEFAULT_TFVARS_FILE:-${TFVARS_HOME_DIR}/${DEFAULT_TFVARS_BASENAME}.tfvars}"
+DEFAULT_BACKEND_FILE="${DEFAULT_BACKEND_FILE:-${TFVARS_HOME_DIR}/minio.backend.hcl}"
 
 TERRAFORM_DIR="${TERRAFORM_DIR:-${ROOT_DIR}/terraform/swarm/${SERVICE_NAME}}"
 
