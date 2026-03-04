@@ -3,22 +3,17 @@ locals {
   grafana_ini_force_update = parseint(substr(local.grafana_ini_hash, 0, 8), 16)
 }
 
-data "docker_network" "external" {
-  for_each = "prometheus"
-  name     = each.value
-}
-
-resource "docker_network" "grafana" {
-  name   = "grafana"
+resource "docker_network" "grafana_app" {
+  name   = "grafana-app"
   driver = "overlay"
 }
 
-resource "docker_volume" "grafana_data" {
-  name   = "grafana-data"
+resource "docker_volume" "grafana_app" {
+  name   = "grafana-app"
   driver = "local"
 }
 
-resource "docker_config" "grafana_ini" {
+resource "docker_config" "grafana_app" {
   name = "grafana-ini-${local.grafana_ini_hash}"
   data = filebase64("${path.module}/grafana.ini")
 
@@ -42,7 +37,7 @@ resource "docker_service" "grafana" {
     }
 
     networks_advanced {
-      name    = docker_network.grafana.id
+      name    = docker_network.grafana_app.id
       aliases = ["grafana"]
     }
 
@@ -52,13 +47,13 @@ resource "docker_service" "grafana" {
 
       mounts {
         target = "/var/lib/grafana"
-        source = docker_volume.grafana_data.name
+        source = docker_volume.grafana_app.name
         type   = "volume"
       }
 
       configs {
-        config_id   = docker_config.grafana_ini.id
-        config_name = docker_config.grafana_ini.name
+        config_id   = docker_config.grafana_app.id
+        config_name = docker_config.grafana_app.name
         file_name   = "/etc/grafana/grafana.ini"
       }
 

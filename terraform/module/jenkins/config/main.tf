@@ -60,6 +60,10 @@ locals {
       description = "Prometheus Swarm deployment"
       script_path = "terraform/swarm/prometheus/app/pipeline/app.jenkins"
     }
+    victoriametrics = {
+      description = "VictoriaMetrics Swarm deployment"
+      script_path = "terraform/swarm/victoriametrics/app/pipeline/app.jenkins"
+    }
   }
 
   multi_stage_jobs = merge([

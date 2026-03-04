@@ -3,6 +3,10 @@ locals {
   prometheus_force_update = parseint(substr(local.prometheus_config_hash, 0, 8), 16)
 }
 
+data "docker_network" "victoriametrics" {
+  name = "victoriametrics"
+}
+
 resource "docker_network" "prometheus" {
   name   = "prometheus"
   driver = "overlay"
@@ -37,6 +41,12 @@ resource "docker_service" "prometheus" {
 
     networks_advanced {
       name        = docker_network.prometheus.id
+      aliases     = []
+      driver_opts = []
+    }
+
+    networks_advanced {
+      name        = data.docker_network.victoriametrics.id
       aliases     = []
       driver_opts = []
     }
