@@ -38,7 +38,7 @@ node:
     iscsiDirHostPathType: DirectoryOrCreate
 
 storageClasses:
-  - name: truenas-iscsi-csi
+  - name: truenas-iscsi-csi-retain
     defaultClass: false
     reclaimPolicy: Retain
     volumeBindingMode: Immediate
