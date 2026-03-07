@@ -34,8 +34,15 @@ driver:
       extentAvailThreshold: 0
 
 node:
+  hostPID: true
   driver:
-    iscsiDirHostPathType: DirectoryOrCreate
+    extraEnv:
+      - name: ISCSIADM_HOST_STRATEGY
+        value: nsenter
+      - name: ISCSIADM_HOST_PATH
+        value: /usr/local/sbin/iscsiadm
+    iscsiDirHostPath: /usr/local/etc/iscsi
+    iscsiDirHostPathType: ""
 
 storageClasses:
   - name: truenas-iscsi-csi-retain
