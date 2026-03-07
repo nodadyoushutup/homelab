@@ -144,6 +144,18 @@ configure_argocd_service_exposure() {
   esac
 }
 
+ensure_argocd_terminal_exec_rbac() {
+  if kubectl get clusterrole argocd-server -o jsonpath='{range .rules[*].resources[*]}{.}{"\n"}{end}' | grep -qx 'pods/exec'; then
+    echo "[INFO] argocd-server ClusterRole already includes pods/exec"
+    return 0
+  fi
+
+  echo "[STEP] Patching argocd-server ClusterRole for pods/exec"
+  kubectl patch clusterrole argocd-server \
+    --type='json' \
+    -p='[{"op":"add","path":"/rules/-","value":{"apiGroups":[""],"resources":["pods/exec"],"verbs":["create"]}}]'
+}
+
 wait_for_argocd_application_synced_healthy() {
   local app_name="$1"
   local max_attempts="${2:-180}"
@@ -345,10 +357,12 @@ main() {
   kubectl -n "${ARGOCD_NAMESPACE}" rollout status deployment/argocd-redis --timeout=10m
   kubectl -n "${ARGOCD_NAMESPACE}" rollout status deployment/argocd-applicationset-controller --timeout=10m
 
-  echo "[STEP] Ensuring admin account is enabled"
+  echo "[STEP] Ensuring admin account and web terminal are enabled"
   kubectl -n "${ARGOCD_NAMESPACE}" patch configmap argocd-cm \
     --type merge \
-    -p '{"data":{"admin.enabled":"true"}}'
+    -p '{"data":{"admin.enabled":"true","exec.enabled":"true"}}'
+
+  ensure_argocd_terminal_exec_rbac
 
   echo "[STEP] Waiting for argocd-secret"
   wait_for_secret "${ARGOCD_NAMESPACE}" "argocd-secret" 120 2

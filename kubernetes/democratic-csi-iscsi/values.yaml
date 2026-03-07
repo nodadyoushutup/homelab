@@ -47,7 +47,7 @@ node:
 storageClasses:
   - name: truenas-iscsi-csi-retain
     defaultClass: false
-    reclaimPolicy: Retain
+    reclaimPolicy: Delete
     volumeBindingMode: Immediate
     allowVolumeExpansion: true
     parameters:

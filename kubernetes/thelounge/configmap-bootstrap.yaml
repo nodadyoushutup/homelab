@@ -5,4 +5,4 @@ metadata:
   namespace: thelounge
 data:
   TL_USERNAME: admin
-  TL_PASSWORD: change-me-now
+  TL_PASSWORD: password
