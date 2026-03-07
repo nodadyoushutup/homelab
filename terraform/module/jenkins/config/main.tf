@@ -44,6 +44,14 @@ locals {
   }
 
   single_stage_jobs = {
+    proxmox = {
+      description = "Proxmox cluster Terraform deployment"
+      script_path = "terraform/cluster/proxmox/app/pipeline/app.jenkins"
+    }
+    talos = {
+      description = "Talos cluster Terraform deployment"
+      script_path = "terraform/cluster/talos/app/pipeline/app.jenkins"
+    }
     dozzle = {
       description = "Dozzle Swarm deployment"
       script_path = "terraform/swarm/dozzle/app/pipeline/app.jenkins"
@@ -65,8 +73,8 @@ locals {
       script_path = "terraform/swarm/prometheus/app/pipeline/app.jenkins"
     }
     victoriametrics = {
-      description = "VictoriaMetrics Swarm deployment"
-      script_path = "terraform/swarm/victoriametrics/app/pipeline/app.jenkins"
+      description = "VictoriaMetrics (Prometheus database) Swarm deployment"
+      script_path = "terraform/swarm/prometheus/database/pipeline/database.jenkins"
     }
   }
 

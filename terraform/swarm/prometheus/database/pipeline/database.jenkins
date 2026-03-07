@@ -1,5 +1,5 @@
-def PIPELINE_LABEL = 'VictoriaMetrics App'
-def SCRIPT_PATH = 'terraform/swarm/victoriametrics/app/pipeline/app.sh'
+def PIPELINE_LABEL = 'Prometheus Database (VictoriaMetrics)'
+def SCRIPT_PATH = 'terraform/swarm/prometheus/database/pipeline/database.sh'
 
 pipeline {
   agent any
@@ -14,7 +14,7 @@ pipeline {
   }
 
   stages {
-    stage('Execute VictoriaMetrics App Pipeline') {
+    stage('Execute Prometheus Database Pipeline') {
       steps {
         script {
           runShellPipeline(
