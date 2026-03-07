@@ -5,6 +5,8 @@ metadata:
   namespace: thelounge
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app.kubernetes.io/name: thelounge
@@ -15,6 +17,37 @@ spec:
     spec:
       securityContext:
         fsGroup: 1000
+      initContainers:
+        - name: bootstrap-user
+          image: ghcr.io/thelounge/thelounge:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: THELOUNGE_HOME
+              value: /var/opt/thelounge
+          envFrom:
+            - configMapRef:
+                name: thelounge-bootstrap
+          command:
+            - /bin/sh
+            - -lc
+            - |
+              set -eu
+              : "${TL_USERNAME:?TL_USERNAME is required}"
+              : "${TL_PASSWORD:?TL_PASSWORD is required}"
+              user_file="/var/opt/thelounge/users/${TL_USERNAME}.json"
+              if [ -f "$user_file" ]; then
+                echo "The Lounge user ${TL_USERNAME} already exists; skipping bootstrap."
+                exit 0
+              fi
+              echo "Creating The Lounge user ${TL_USERNAME}"
+              thelounge add --password "${TL_PASSWORD}" "${TL_USERNAME}"
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - name: thelounge-data
+              mountPath: /var/opt/thelounge
       containers:
         - name: thelounge
           image: ghcr.io/thelounge/thelounge:latest
