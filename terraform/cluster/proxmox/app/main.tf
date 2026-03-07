@@ -15,7 +15,7 @@ resource "proxmox_virtual_environment_download_file" "talos_v1_12_4cloud_image" 
   datastore_id        = "local"
   content_type        = "iso"
   file_name           = "talos-v1.12.4-nocloud-amd64.iso"
-  url                 = "https://factory.talos.dev/image/c9078f9419961640c712a8bf2bb9174933dfcf1da383fd8ea2b7dc21493f8bac/v1.12.4/nocloud-amd64.iso"
+  url                 = "https://factory.talos.dev/image/eda6c02d94377f983da3aa0c8a98c58dc6b2b9341ec42512161eb7661acb526d/v1.12.4/nocloud-amd64.iso"
   verify              = false
   overwrite           = true
   overwrite_unmanaged = true
