@@ -21,6 +21,13 @@ spec:
             chartVersion: 4.14.3
             gitPath: kubernetes/ingress-nginx
             syncWave: "20"
+          - name: democratic-csi
+            destinationNamespace: democratic-csi
+            chartRepo: https://democratic-csi.github.io/charts
+            chartName: democratic-csi
+            chartVersion: 0.15.1
+            gitPath: kubernetes/democratic-csi
+            syncWave: "30"
   template:
     metadata:
       name: '{{name}}'
@@ -38,6 +45,11 @@ spec:
           targetRevision: '{{chartVersion}}'
           helm:
             releaseName: '{{name}}'
+            valueFiles:
+              - $values/{{gitPath}}/values.yaml
+        - repoURL: __ARGOCD_GITOPS_REPO_URL__
+          targetRevision: __ARGOCD_GITOPS_REPO_REVISION__
+          ref: values
         - repoURL: __ARGOCD_GITOPS_REPO_URL__
           targetRevision: __ARGOCD_GITOPS_REPO_REVISION__
           path: '{{gitPath}}'

@@ -28,6 +28,7 @@ ARGOCD_GITOPS_REPO_SSH_PRIVATE_KEY="${ARGOCD_GITOPS_REPO_SSH_PRIVATE_KEY:-}"
 GITOPS_CHILD_APPS=(
   "metallb"
   "ingress-nginx"
+  "democratic-csi"
 )
 
 wait_for_secret() {
@@ -397,6 +398,7 @@ GitOps app-of-apps file: ${ARGOCD_GITOPS_APPS_FILE}
 Argo CD child apps now reconcile from git commits:
 - metallb
 - ingress-nginx
+- democratic-csi
 EOF_DONE
 }
 
