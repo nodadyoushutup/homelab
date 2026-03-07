@@ -163,7 +163,7 @@ wait_for_argocd_application_synced_healthy() {
     fi
 
     if [[ "${sync_status}" == "Synced" && "${health_status}" == "Healthy" ]]; then
-      ((stable_hits++))
+      ((++stable_hits))
       if (( stable_hits >= 3 )); then
         echo "[INFO] Argo CD application ${app_name} is Synced/Healthy"
         return 0
