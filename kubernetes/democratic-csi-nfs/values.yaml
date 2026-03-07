@@ -1,0 +1,42 @@
+csiDriver:
+  name: org.democratic-csi.truenas-nfs
+
+driver:
+  config:
+    driver: freenas-api-nfs
+    instance_id: homelab-nfs
+    httpConnection:
+      protocol: https
+      host: 192.168.1.100
+      port: 443
+      username: root
+      password: "S#nvhs89vher"
+      allowInsecure: true
+      apiVersion: 2
+    zfs:
+      datasetParentName: eapp/k8s/nfs/vols
+      detachedSnapshotsDatasetParentName: eapp/k8s/nfs/snaps
+      datasetEnableQuotas: true
+      datasetEnableReservation: false
+      datasetPermissionsMode: "0777"
+      datasetPermissionsUser: 0
+      datasetPermissionsGroup: 0
+    nfs:
+      shareHost: 192.168.1.100
+      shareAlldirs: false
+      shareAllowedHosts: []
+      shareAllowedNetworks:
+        - 192.168.1.0/24
+      shareMaprootUser: root
+      shareMaprootGroup: root
+      shareMapallUser: ""
+      shareMapallGroup: ""
+
+storageClasses:
+  - name: truenas-nfs-csi-retain
+    defaultClass: false
+    reclaimPolicy: Retain
+    volumeBindingMode: Immediate
+    allowVolumeExpansion: true
+    parameters:
+      fsType: nfs

@@ -29,6 +29,7 @@ GITOPS_CHILD_APPS=(
   "metallb"
   "ingress-nginx"
   "democratic-csi"
+  "democratic-csi-nfs"
 )
 
 wait_for_secret() {
@@ -399,6 +400,7 @@ Argo CD child apps now reconcile from git commits:
 - metallb
 - ingress-nginx
 - democratic-csi
+- democratic-csi-nfs
 EOF_DONE
 }
 
