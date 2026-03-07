@@ -4,10 +4,14 @@ metadata:
   name: homelab-addons
   namespace: argocd
 spec:
+  goTemplate: true
+  goTemplateOptions:
+    - missingkey=error
   generators:
     - list:
         elements:
           - name: metallb
+            appType: helm
             helmReleaseName: metallb
             destinationNamespace: metallb-system
             chartRepo: https://metallb.github.io/metallb
@@ -16,6 +20,7 @@ spec:
             gitPath: kubernetes/metallb
             syncWave: "10"
           - name: ingress-nginx
+            appType: helm
             helmReleaseName: ingress-nginx
             destinationNamespace: ingress-nginx
             chartRepo: https://kubernetes.github.io/ingress-nginx
@@ -24,6 +29,7 @@ spec:
             gitPath: kubernetes/ingress-nginx
             syncWave: "20"
           - name: democratic-csi-iscsi
+            appType: helm
             helmReleaseName: democratic-csi
             destinationNamespace: democratic-csi
             chartRepo: https://democratic-csi.github.io/charts
@@ -32,6 +38,7 @@ spec:
             gitPath: kubernetes/democratic-csi-iscsi
             syncWave: "30"
           - name: democratic-csi-nfs
+            appType: helm
             helmReleaseName: democratic-csi-nfs
             destinationNamespace: democratic-csi-nfs
             chartRepo: https://democratic-csi.github.io/charts
@@ -39,31 +46,22 @@ spec:
             chartVersion: 0.15.1
             gitPath: kubernetes/democratic-csi-nfs
             syncWave: "31"
+          - name: thelounge
+            appType: manifests
+            destinationNamespace: thelounge
+            gitPath: kubernetes/thelounge
+            syncWave: "40"
   template:
     metadata:
-      name: '{{name}}'
+      name: '{{.name}}'
       namespace: argocd
       annotations:
-        argocd.argoproj.io/sync-wave: '{{syncWave}}'
+        argocd.argoproj.io/sync-wave: '{{.syncWave}}'
     spec:
       project: default
       destination:
         server: https://kubernetes.default.svc
-        namespace: '{{destinationNamespace}}'
-      sources:
-        - repoURL: '{{chartRepo}}'
-          chart: '{{chartName}}'
-          targetRevision: '{{chartVersion}}'
-          helm:
-            releaseName: '{{helmReleaseName}}'
-            valueFiles:
-              - $values/{{gitPath}}/values.yaml
-        - repoURL: __ARGOCD_GITOPS_REPO_URL__
-          targetRevision: __ARGOCD_GITOPS_REPO_REVISION__
-          ref: values
-        - repoURL: __ARGOCD_GITOPS_REPO_URL__
-          targetRevision: __ARGOCD_GITOPS_REPO_REVISION__
-          path: '{{gitPath}}'
+        namespace: '{{.destinationNamespace}}'
       syncPolicy:
         automated:
           prune: true
@@ -72,3 +70,26 @@ spec:
           - CreateNamespace=true
           - ServerSideApply=true
           - SkipDryRunOnMissingResource=true
+  templatePatch: |
+    spec:
+      {{- if eq .appType "helm" }}
+      sources:
+        - repoURL: '{{.chartRepo}}'
+          chart: '{{.chartName}}'
+          targetRevision: '{{.chartVersion}}'
+          helm:
+            releaseName: '{{.helmReleaseName}}'
+            valueFiles:
+              - '$values/{{.gitPath}}/values.yaml'
+        - repoURL: __ARGOCD_GITOPS_REPO_URL__
+          targetRevision: __ARGOCD_GITOPS_REPO_REVISION__
+          ref: values
+        - repoURL: __ARGOCD_GITOPS_REPO_URL__
+          targetRevision: __ARGOCD_GITOPS_REPO_REVISION__
+          path: '{{.gitPath}}'
+      {{- else if eq .appType "manifests" }}
+      source:
+        repoURL: __ARGOCD_GITOPS_REPO_URL__
+        targetRevision: __ARGOCD_GITOPS_REPO_REVISION__
+        path: '{{.gitPath}}'
+      {{- end }}
