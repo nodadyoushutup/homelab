@@ -24,7 +24,7 @@ driver:
       nameSuffix: -homelab
       targetGroups:
         - targetGroupPortalGroup: 1
-          targetGroupInitiatorGroup: 1
+          targetGroupInitiatorGroup: 6
           targetGroupAuthType: None
       extentInsecureTpc: true
       extentXenCompat: false
