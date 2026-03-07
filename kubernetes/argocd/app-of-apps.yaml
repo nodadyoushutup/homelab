@@ -1,0 +1,51 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: homelab-addons
+  namespace: argocd
+spec:
+  generators:
+    - list:
+        elements:
+          - name: metallb
+            destinationNamespace: metallb-system
+            chartRepo: https://metallb.github.io/metallb
+            chartName: metallb
+            chartVersion: 0.15.3
+            gitPath: kubernetes/metallb
+            syncWave: "10"
+          - name: ingress-nginx
+            destinationNamespace: ingress-nginx
+            chartRepo: https://kubernetes.github.io/ingress-nginx
+            chartName: ingress-nginx
+            chartVersion: 4.14.3
+            gitPath: kubernetes/ingress-nginx
+            syncWave: "20"
+  template:
+    metadata:
+      name: '{{name}}'
+      namespace: argocd
+      annotations:
+        argocd.argoproj.io/sync-wave: '{{syncWave}}'
+    spec:
+      project: default
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{destinationNamespace}}'
+      sources:
+        - repoURL: '{{chartRepo}}'
+          chart: '{{chartName}}'
+          targetRevision: '{{chartVersion}}'
+          helm:
+            releaseName: '{{name}}'
+        - repoURL: __ARGOCD_GITOPS_REPO_URL__
+          targetRevision: __ARGOCD_GITOPS_REPO_REVISION__
+          path: '{{gitPath}}'
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+          - ServerSideApply=true
+          - SkipDryRunOnMissingResource=true
