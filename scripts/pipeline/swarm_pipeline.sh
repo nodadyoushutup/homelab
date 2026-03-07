@@ -191,6 +191,10 @@ if ! run_terraform_init -backend-config="${BACKEND_CONFIG_PATH}"; then
   exit 1
 fi
 
+if declare -F pipeline_post_init > /dev/null; then
+  pipeline_post_init
+fi
+
 if ! declare -p PLAN_ARGS_EXTRA >/dev/null 2>&1; then
   PLAN_ARGS_EXTRA=()
 fi

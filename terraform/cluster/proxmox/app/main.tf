@@ -393,7 +393,7 @@ resource "proxmox_virtual_environment_vm" "k8s_cp_0_vm" {
   }
 
   memory {
-    dedicated = 2048
+    dedicated = 8192
   }
 
   disk {
@@ -458,7 +458,7 @@ resource "proxmox_virtual_environment_vm" "k8s_wk_0_vm" {
   }
 
   memory {
-    dedicated = 2048
+    dedicated = 8192
   }
 
   disk {
@@ -523,7 +523,7 @@ resource "proxmox_virtual_environment_vm" "k8s_wk_1_vm" {
   }
 
   memory {
-    dedicated = 2048
+    dedicated = 8192
   }
 
   disk {
@@ -588,7 +588,7 @@ resource "proxmox_virtual_environment_vm" "k8s_wk_2_vm" {
   }
 
   memory {
-    dedicated = 2048
+    dedicated = 8192
   }
 
   disk {
@@ -653,7 +653,7 @@ resource "proxmox_virtual_environment_vm" "k8s_wk_3_vm" {
   }
 
   memory {
-    dedicated = 2048
+    dedicated = 8192
   }
 
   disk {
@@ -718,7 +718,7 @@ resource "proxmox_virtual_environment_vm" "k8s_wk_4_vm" {
   }
 
   memory {
-    dedicated = 2048
+    dedicated = 8192
   }
 
   disk {
@@ -783,7 +783,7 @@ resource "proxmox_virtual_environment_vm" "k8s_wk_5_vm" {
   }
 
   memory {
-    dedicated = 2048
+    dedicated = 8192
   }
 
   disk {
@@ -848,7 +848,7 @@ resource "proxmox_virtual_environment_vm" "k8s_wk_6_vm" {
   }
 
   memory {
-    dedicated = 2048
+    dedicated = 8192
   }
 
   disk {
@@ -913,7 +913,7 @@ resource "proxmox_virtual_environment_vm" "k8s_wk_7_vm" {
   }
 
   memory {
-    dedicated = 2048
+    dedicated = 8192
   }
 
   disk {
@@ -978,7 +978,7 @@ resource "proxmox_virtual_environment_vm" "k8s_wk_8_vm" {
   }
 
   memory {
-    dedicated = 2048
+    dedicated = 8192
   }
 
   disk {
@@ -1043,7 +1043,7 @@ resource "proxmox_virtual_environment_vm" "k8s_wk_9_vm" {
   }
 
   memory {
-    dedicated = 2048
+    dedicated = 8192
   }
 
   disk {
@@ -1108,7 +1108,7 @@ resource "proxmox_virtual_environment_vm" "k8s_wk_10_vm" {
   }
 
   memory {
-    dedicated = 2048
+    dedicated = 8192
   }
 
   disk {
