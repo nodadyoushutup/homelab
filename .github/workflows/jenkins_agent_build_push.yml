@@ -19,7 +19,7 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-24.04
+    runs-on: [self-hosted, linux, homelab]
     outputs:
       version: ${{ steps.version.outputs.version }}
       digest: ${{ steps.image_metadata.outputs.digest }}
@@ -90,7 +90,7 @@ jobs:
           echo "digest=$digest" >> "$GITHUB_OUTPUT"
 
   push:
-    runs-on: ubuntu-24.04
+    runs-on: [self-hosted, linux, homelab]
     needs: build
 
     steps:
