@@ -1,6 +1,6 @@
 terraform {
   backend "s3" {
-    key = "grafana-database.tfstate"
+    key = "vault-app.tfstate"
   }
 
   required_providers {

@@ -1,8 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: thelounge-bootstrap
-  namespace: thelounge
-data:
-  TL_USERNAME: admin
-  TL_PASSWORD: password

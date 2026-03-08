@@ -17,30 +17,66 @@ spec:
     spec:
       securityContext:
         fsGroup: 1000
+      nodeSelector:
+        kubernetes.io/hostname: k8s-wk-0
       initContainers:
+        - name: fetch-bootstrap-secret
+          image: hashicorp/vault:1.21.4
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: VAULT_ADDR
+              valueFrom:
+                secretKeyRef:
+                  name: thelounge-vault-reader
+                  key: VAULT_ADDR
+            - name: VAULT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: thelounge-vault-reader
+                  key: VAULT_TOKEN
+          command:
+            - /bin/sh
+            - -lc
+            - |
+              set -eu
+              TL_USERNAME="$(vault kv get -field=username secret/k8s/thelounge)"
+              TL_PASSWORD="$(vault kv get -field=password secret/k8s/thelounge)"
+              printf 'TL_USERNAME=%s\nTL_PASSWORD=%s\n' "${TL_USERNAME}" "${TL_PASSWORD}" > /work/bootstrap.env
+              chmod 0600 /work/bootstrap.env
+          securityContext:
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - name: bootstrap-env
+              mountPath: /work
         - name: bootstrap-user
           image: ghcr.io/thelounge/thelounge:latest
           imagePullPolicy: IfNotPresent
           env:
             - name: THELOUNGE_HOME
               value: /var/opt/thelounge
-          envFrom:
-            - configMapRef:
-                name: thelounge-bootstrap
           command:
             - /bin/sh
             - -lc
             - |
               set -eu
+              if [ -f /work/bootstrap.env ]; then
+                . /work/bootstrap.env
+                export TL_USERNAME TL_PASSWORD
+              fi
               : "${TL_USERNAME:?TL_USERNAME is required}"
               : "${TL_PASSWORD:?TL_PASSWORD is required}"
               user_file="/var/opt/thelounge/users/${TL_USERNAME}.json"
+              mkdir -p /var/opt/thelounge/users
               if [ -f "$user_file" ]; then
                 echo "The Lounge user ${TL_USERNAME} already exists; skipping bootstrap."
                 exit 0
               fi
               echo "Creating The Lounge user ${TL_USERNAME}"
               thelounge add --password "${TL_PASSWORD}" "${TL_USERNAME}"
+              if [ ! -f "$user_file" ]; then
+                echo "Failed to bootstrap The Lounge user ${TL_USERNAME}" >&2
+                exit 1
+              fi
           securityContext:
             runAsUser: 1000
             runAsGroup: 1000
@@ -48,6 +84,8 @@ spec:
           volumeMounts:
             - name: thelounge-data
               mountPath: /var/opt/thelounge
+            - name: bootstrap-env
+              mountPath: /work
       containers:
         - name: thelounge
           image: ghcr.io/thelounge/thelounge:latest
@@ -72,6 +110,8 @@ spec:
             initialDelaySeconds: 30
             periodSeconds: 20
       volumes:
+        - name: bootstrap-env
+          emptyDir: {}
         - name: thelounge-data
           persistentVolumeClaim:
             claimName: thelounge-data

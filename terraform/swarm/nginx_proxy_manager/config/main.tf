@@ -1,223 +1,154 @@
-resource "nginxproxymanager_certificate_letsencrypt" "nodadyoushutup" {
-  domain_names             = ["nodadyoushutup.com", "www.nodadyoushutup.com"]
-  letsencrypt_email        = "admin@nodadyoushutup.com"
-  letsencrypt_agree        = true
-  dns_challenge            = true
-  dns_provider             = "cloudflare"
-  dns_provider_credentials = var.dns_provider_credentials
-  propagation_seconds      = 60
+locals {
+  legacy_default_certificate_email = "admin@nodadyoushutup.com"
+
+  legacy_default_dns_challenge = {
+    enabled             = true
+    provider            = "cloudflare"
+    credentials         = var.dns_provider_credentials
+    propagation_seconds = 60
+  }
+
+  legacy_certificates = [
+    {
+      name         = "nodadyoushutup"
+      domain_names = ["nodadyoushutup.com", "www.nodadyoushutup.com"]
+    },
+    {
+      name         = "irc"
+      domain_names = ["irc.nodadyoushutup.com"]
+    },
+    {
+      name         = "nginx_proxy_manager"
+      domain_names = ["nginx-proxy-manager.nodadyoushutup.com"]
+    },
+    {
+      name         = "dozzle"
+      domain_names = ["dozzle.nodadyoushutup.com"]
+    },
+    {
+      name         = "grafana"
+      domain_names = ["grafana.nodadyoushutup.com"]
+    },
+    {
+      name         = "minio"
+      domain_names = ["minio.nodadyoushutup.com"]
+    },
+    {
+      name         = "prometheus"
+      domain_names = ["prometheus.nodadyoushutup.com"]
+    },
+    {
+      name         = "tautulli"
+      domain_names = ["tautulli.nodadyoushutup.com"]
+    },
+    {
+      name         = "graphite"
+      domain_names = ["graphite.nodadyoushutup.com"]
+    },
+  ]
+
+  legacy_proxy_hosts = [
+    {
+      name         = "nodadyoushutup"
+      domain_names = ["nodadyoushutup.com", "www.nodadyoushutup.com"]
+      scheme       = "http"
+      forward_host = "192.168.1.100"
+      forward_port = 9055
+      certificate  = "nodadyoushutup"
+    },
+    {
+      name         = "irc"
+      domain_names = ["irc.nodadyoushutup.com"]
+      scheme       = "http"
+      forward_host = "192.168.1.100"
+      forward_port = 9009
+      certificate  = "irc"
+    },
+    {
+      name         = "nginx_proxy_manager"
+      domain_names = ["nginx-proxy-manager.nodadyoushutup.com"]
+      scheme       = "http"
+      forward_host = "192.168.1.26"
+      forward_port = 81
+      certificate  = "nginx_proxy_manager"
+    },
+    {
+      name         = "dozzle_nodadyoushutup_com"
+      domain_names = ["dozzle.nodadyoushutup.com"]
+      scheme       = "http"
+      forward_host = "192.168.1.26"
+      forward_port = 8888
+      certificate  = "dozzle"
+    },
+    {
+      name         = "grafana_nodadyoushutup_com"
+      domain_names = ["grafana.nodadyoushutup.com"]
+      scheme       = "http"
+      forward_host = "192.168.1.26"
+      forward_port = 3000
+      certificate  = "grafana"
+    },
+    {
+      name         = "minio_nodadyoushutup_com"
+      domain_names = ["minio.nodadyoushutup.com"]
+      scheme       = "http"
+      forward_host = "192.168.1.26"
+      forward_port = 9001
+      certificate  = "minio"
+    },
+    {
+      name         = "prometheus_nodadyoushutup_com"
+      domain_names = ["prometheus.nodadyoushutup.com"]
+      scheme       = "http"
+      forward_host = "192.168.1.26"
+      forward_port = 9090
+      certificate  = "prometheus"
+    },
+    {
+      name         = "tautulli_nodadyoushutup_com"
+      domain_names = ["tautulli.nodadyoushutup.com"]
+      scheme       = "http"
+      forward_host = "192.168.1.100"
+      forward_port = 9181
+      certificate  = "tautulli"
+    },
+    {
+      name         = "graphite_nodadyoushutup_com"
+      domain_names = ["graphite.nodadyoushutup.com"]
+      scheme       = "http"
+      forward_host = "192.168.1.26"
+      forward_port = 8081
+      certificate  = "graphite"
+    },
+  ]
+
+  legacy_config = {
+    default_certificate_email = local.legacy_default_certificate_email
+    default_dns_challenge     = local.legacy_default_dns_challenge
+    certificates              = local.legacy_certificates
+    proxy_hosts               = local.legacy_proxy_hosts
+    access_lists              = []
+    streams                   = []
+    redirections              = []
+  }
+
+  effective_config = jsondecode(var.config != null ? jsonencode(var.config) : jsonencode(local.legacy_config))
+
+  app_state = var.remote_state_backend == null ? null : try(data.terraform_remote_state.app[0].outputs, null)
 }
 
-resource "nginxproxymanager_certificate_letsencrypt" "irc" {
-  domain_names             = ["irc.nodadyoushutup.com"]
-  letsencrypt_email        = "admin@nodadyoushutup.com"
-  letsencrypt_agree        = true
-  dns_challenge            = true
-  dns_provider             = "cloudflare"
-  dns_provider_credentials = var.dns_provider_credentials
-  propagation_seconds      = 60
+data "terraform_remote_state" "app" {
+  count   = var.remote_state_backend == null ? 0 : 1
+  backend = "s3"
+  config = merge(var.remote_state_backend, {
+    key = "nginx-proxy-manager-app.tfstate"
+  })
 }
 
-resource "nginxproxymanager_certificate_letsencrypt" "nginx_proxy_manager" {
-  domain_names             = ["nginx-proxy-manager.nodadyoushutup.com"]
-  letsencrypt_email        = "admin@nodadyoushutup.com"
-  letsencrypt_agree        = true
-  dns_challenge            = true
-  dns_provider             = "cloudflare"
-  dns_provider_credentials = var.dns_provider_credentials
-  propagation_seconds      = 60
-}
+module "nginx_proxy_manager_config" {
+  source = "../../../module/nginx_proxy_manager/config"
 
-resource "nginxproxymanager_certificate_letsencrypt" "dozzle" {
-  domain_names             = ["dozzle.nodadyoushutup.com"]
-  letsencrypt_email        = "admin@nodadyoushutup.com"
-  letsencrypt_agree        = true
-  dns_challenge            = true
-  dns_provider             = "cloudflare"
-  dns_provider_credentials = var.dns_provider_credentials
-  propagation_seconds      = 60
-}
-
-resource "nginxproxymanager_certificate_letsencrypt" "grafana" {
-  domain_names             = ["grafana.nodadyoushutup.com"]
-  letsencrypt_email        = "admin@nodadyoushutup.com"
-  letsencrypt_agree        = true
-  dns_challenge            = true
-  dns_provider             = "cloudflare"
-  dns_provider_credentials = var.dns_provider_credentials
-  propagation_seconds      = 60
-}
-
-resource "nginxproxymanager_certificate_letsencrypt" "minio" {
-  domain_names             = ["minio.nodadyoushutup.com"]
-  letsencrypt_email        = "admin@nodadyoushutup.com"
-  letsencrypt_agree        = true
-  dns_challenge            = true
-  dns_provider             = "cloudflare"
-  dns_provider_credentials = var.dns_provider_credentials
-  propagation_seconds      = 60
-}
-
-resource "nginxproxymanager_certificate_letsencrypt" "prometheus" {
-  domain_names             = ["prometheus.nodadyoushutup.com"]
-  letsencrypt_email        = "admin@nodadyoushutup.com"
-  letsencrypt_agree        = true
-  dns_challenge            = true
-  dns_provider             = "cloudflare"
-  dns_provider_credentials = var.dns_provider_credentials
-  propagation_seconds      = 60
-}
-
-resource "nginxproxymanager_certificate_letsencrypt" "tautulli" {
-  domain_names             = ["tautulli.nodadyoushutup.com"]
-  letsencrypt_email        = "admin@nodadyoushutup.com"
-  letsencrypt_agree        = true
-  dns_challenge            = true
-  dns_provider             = "cloudflare"
-  dns_provider_credentials = var.dns_provider_credentials
-  propagation_seconds      = 60
-}
-
-resource "nginxproxymanager_certificate_letsencrypt" "graphite" {
-  domain_names             = ["graphite.nodadyoushutup.com"]
-  letsencrypt_email        = "admin@nodadyoushutup.com"
-  letsencrypt_agree        = true
-  dns_challenge            = true
-  dns_provider             = "cloudflare"
-  dns_provider_credentials = var.dns_provider_credentials
-  propagation_seconds      = 60
-}
-resource "nginxproxymanager_proxy_host" "nodadyoushutup" {
-  domain_names            = ["nodadyoushutup.com", "www.nodadyoushutup.com"]
-  forward_scheme          = "http"
-  forward_host            = "192.168.1.100"
-  forward_port            = 9055
-  certificate_id          = nginxproxymanager_certificate_letsencrypt.nodadyoushutup.id
-  block_exploits          = true
-  ssl_forced              = true
-  caching_enabled         = false
-  allow_websocket_upgrade = true
-  http2_support           = true
-  hsts_enabled            = false
-  hsts_subdomains         = false
-}
-
-resource "nginxproxymanager_proxy_host" "irc" {
-  domain_names            = ["irc.nodadyoushutup.com"]
-  forward_scheme          = "http"
-  forward_host            = "192.168.1.100"
-  forward_port            = 9009
-  certificate_id          = nginxproxymanager_certificate_letsencrypt.irc.id
-  block_exploits          = true
-  ssl_forced              = true
-  caching_enabled         = false
-  allow_websocket_upgrade = true
-  http2_support           = true
-  hsts_enabled            = false
-  hsts_subdomains         = false
-}
-
-resource "nginxproxymanager_proxy_host" "nginx_proxy_manager" {
-  domain_names            = ["nginx-proxy-manager.nodadyoushutup.com"]
-  forward_scheme          = "http"
-  forward_host            = "192.168.1.26"
-  forward_port            = 81
-  certificate_id          = nginxproxymanager_certificate_letsencrypt.nginx_proxy_manager.id
-  block_exploits          = true
-  ssl_forced              = true
-  caching_enabled         = false
-  allow_websocket_upgrade = true
-  http2_support           = true
-  hsts_enabled            = false
-  hsts_subdomains         = false
-}
-
-resource "nginxproxymanager_proxy_host" "dozzle_nodadyoushutup_com" {
-  domain_names            = ["dozzle.nodadyoushutup.com"]
-  forward_scheme          = "http"
-  forward_host            = "192.168.1.26"
-  forward_port            = 8888
-  certificate_id          = nginxproxymanager_certificate_letsencrypt.dozzle.id
-  block_exploits          = true
-  ssl_forced              = true
-  caching_enabled         = false
-  allow_websocket_upgrade = true
-  http2_support           = true
-  hsts_enabled            = false
-  hsts_subdomains         = false
-}
-
-resource "nginxproxymanager_proxy_host" "grafana_nodadyoushutup_com" {
-  domain_names            = ["grafana.nodadyoushutup.com"]
-  forward_scheme          = "http"
-  forward_host            = "192.168.1.26"
-  forward_port            = 3000
-  certificate_id          = nginxproxymanager_certificate_letsencrypt.grafana.id
-  block_exploits          = true
-  ssl_forced              = true
-  caching_enabled         = false
-  allow_websocket_upgrade = true
-  http2_support           = true
-  hsts_enabled            = false
-  hsts_subdomains         = false
-}
-
-resource "nginxproxymanager_proxy_host" "minio_nodadyoushutup_com" {
-  domain_names            = ["minio.nodadyoushutup.com"]
-  forward_scheme          = "http"
-  forward_host            = "192.168.1.26"
-  forward_port            = 9001
-  certificate_id          = nginxproxymanager_certificate_letsencrypt.minio.id
-  block_exploits          = true
-  ssl_forced              = true
-  caching_enabled         = false
-  allow_websocket_upgrade = true
-  http2_support           = true
-  hsts_enabled            = false
-  hsts_subdomains         = false
-}
-
-resource "nginxproxymanager_proxy_host" "prometheus_nodadyoushutup_com" {
-  domain_names            = ["prometheus.nodadyoushutup.com"]
-  forward_scheme          = "http"
-  forward_host            = "192.168.1.26"
-  forward_port            = 9090
-  certificate_id          = nginxproxymanager_certificate_letsencrypt.prometheus.id
-  block_exploits          = true
-  ssl_forced              = true
-  caching_enabled         = false
-  allow_websocket_upgrade = true
-  http2_support           = true
-  hsts_enabled            = false
-  hsts_subdomains         = false
-}
-
-resource "nginxproxymanager_proxy_host" "tautulli_nodadyoushutup_com" {
-  domain_names            = ["tautulli.nodadyoushutup.com"]
-  forward_scheme          = "http"
-  forward_host            = "192.168.1.100"
-  forward_port            = 9181
-  certificate_id          = nginxproxymanager_certificate_letsencrypt.tautulli.id
-  block_exploits          = true
-  ssl_forced              = true
-  caching_enabled         = false
-  allow_websocket_upgrade = true
-  http2_support           = true
-  hsts_enabled            = false
-  hsts_subdomains         = false
-}
-
-resource "nginxproxymanager_proxy_host" "graphite_nodadyoushutup_com" {
-  domain_names            = ["graphite.nodadyoushutup.com"]
-  forward_scheme          = "http"
-  forward_host            = "192.168.1.26"
-  forward_port            = 8081
-  certificate_id          = nginxproxymanager_certificate_letsencrypt.graphite.id
-  block_exploits          = true
-  ssl_forced              = true
-  caching_enabled         = false
-  allow_websocket_upgrade = true
-  http2_support           = true
-  hsts_enabled            = false
-  hsts_subdomains         = false
+  provider_config = var.provider_config
+  config          = local.effective_config
+  app_state       = local.app_state
 }

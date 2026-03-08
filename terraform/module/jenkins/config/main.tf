@@ -1,84 +1,12 @@
 locals {
   repo_url = "https://github.com/nodadyoushutup/homelab"
 
-  jenkins_jobs = {
-    controller = {
-      description = "Jenkins controller deployment"
-      script_path = "terraform/swarm/jenkins/controller/pipeline/controller.jenkins"
-    }
-    agent = {
-      description = "Jenkins agent deployment"
-      script_path = "terraform/swarm/jenkins/agent/pipeline/agent.jenkins"
-    }
-    config = {
-      description = "Jenkins configuration apply"
-      script_path = "terraform/swarm/jenkins/config/pipeline/config.jenkins"
-    }
-  }
+  # Jenkins pipeline wrappers are currently disabled repo-wide.
+  jenkins_jobs         = {}
+  multi_stage_services = {}
+  single_stage_jobs    = {}
 
-  multi_stage_services = {
-    grafana = {
-      jobs = {
-        app = {
-          description = "Grafana application deployment"
-          script_path = "terraform/swarm/grafana/app/pipeline/app.jenkins"
-        }
-        config = {
-          description = "Grafana configuration apply"
-          script_path = "terraform/swarm/grafana/config/pipeline/config.jenkins"
-        }
-      }
-    }
-    nginx_proxy_manager = {
-      jobs = {
-        app = {
-          description = "Nginx Proxy Manager application deployment"
-          script_path = "terraform/swarm/nginx_proxy_manager/app/pipeline/app.jenkins"
-        }
-        config = {
-          description = "Nginx Proxy Manager configuration apply"
-          script_path = "terraform/swarm/nginx_proxy_manager/config/pipeline/config.jenkins"
-        }
-      }
-    }
-  }
-
-  single_stage_jobs = {
-    proxmox = {
-      description = "Proxmox cluster Terraform deployment"
-      script_path = "terraform/cluster/proxmox/app/pipeline/app.jenkins"
-    }
-    talos = {
-      description = "Talos cluster Terraform deployment"
-      script_path = "terraform/cluster/talos/app/pipeline/app.jenkins"
-    }
-    dozzle = {
-      description = "Dozzle Swarm deployment"
-      script_path = "terraform/swarm/dozzle/app/pipeline/app.jenkins"
-    }
-    docker_volume_backup = {
-      description = "Docker Volume Backup Swarm deployment"
-      script_path = "terraform/swarm/docker_volume_backup/app/pipeline/app.jenkins"
-    }
-    node_exporter = {
-      description = "Node Exporter Swarm deployment"
-      script_path = "terraform/swarm/node_exporter/app/pipeline/app.jenkins"
-    }
-    graphite = {
-      description = "Graphite Swarm deployment"
-      script_path = "terraform/swarm/graphite/app/pipeline/app.jenkins"
-    }
-    prometheus = {
-      description = "Prometheus Swarm deployment"
-      script_path = "terraform/swarm/prometheus/app/pipeline/app.jenkins"
-    }
-    victoriametrics = {
-      description = "VictoriaMetrics (Prometheus database) Swarm deployment"
-      script_path = "terraform/swarm/prometheus/database/pipeline/database.jenkins"
-    }
-  }
-
-  multi_stage_jobs = merge([
+  multi_stage_jobs = length(local.multi_stage_services) == 0 ? {} : merge([
     for service, cfg in local.multi_stage_services : {
       for job_name, job in cfg.jobs :
       "${service}-${job_name}" => {

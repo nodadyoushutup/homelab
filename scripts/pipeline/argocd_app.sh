@@ -11,9 +11,11 @@ ARGOCD_NAMESPACE="argocd"
 ARGOCD_MANIFEST_URL="https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml"
 ARGOCD_ADMIN_USERNAME="admin"
 ARGOCD_ADMIN_PASSWORD="password"
-ARGOCD_SERVER_EXPOSURE_MODE="NodePort"
+ARGOCD_SERVER_EXPOSURE_MODE="LoadBalancer"
 ARGOCD_SERVER_HTTP_NODEPORT="30080"
 ARGOCD_SERVER_HTTPS_NODEPORT="30443"
+ARGOCD_SERVER_LOADBALANCER_IP="${ARGOCD_SERVER_LOADBALANCER_IP:-192.168.1.200}"
+ARGOCD_SERVER_LOADBALANCER_CLASS="${ARGOCD_SERVER_LOADBALANCER_CLASS:-}"
 
 # GitOps app-of-apps settings.
 ARGOCD_GITOPS_APPSET_NAME="${ARGOCD_GITOPS_APPSET_NAME:-homelab-addons}"
@@ -125,6 +127,36 @@ pick_primary_node_ip() {
 
 configure_argocd_service_exposure() {
   case "${ARGOCD_SERVER_EXPOSURE_MODE}" in
+    LoadBalancer|loadbalancer)
+      echo "[STEP] Exposing argocd-server as LoadBalancer (${ARGOCD_SERVER_LOADBALANCER_IP}, class ${ARGOCD_SERVER_LOADBALANCER_CLASS})"
+      kubectl -n "${ARGOCD_NAMESPACE}" delete svc argocd-server --ignore-not-found=true
+      kubectl -n "${ARGOCD_NAMESPACE}" apply -f - <<EOF_LB
+apiVersion: v1
+kind: Service
+metadata:
+  name: argocd-server
+  labels:
+    app.kubernetes.io/component: server
+    app.kubernetes.io/name: argocd-server
+    app.kubernetes.io/part-of: argocd
+spec:
+  type: LoadBalancer
+  loadBalancerIP: ${ARGOCD_SERVER_LOADBALANCER_IP}
+  externalTrafficPolicy: Cluster
+  allocateLoadBalancerNodePorts: false
+  selector:
+    app.kubernetes.io/name: argocd-server
+  ports:
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: 8080
+    - name: https
+      port: 443
+      protocol: TCP
+      targetPort: 8080
+EOF_LB
+      ;;
     NodePort|nodeport)
       echo "[STEP] Exposing argocd-server as NodePort (${ARGOCD_SERVER_HTTP_NODEPORT}/${ARGOCD_SERVER_HTTPS_NODEPORT})"
       kubectl -n "${ARGOCD_NAMESPACE}" patch svc argocd-server \
@@ -397,15 +429,24 @@ main() {
     wait_for_argocd_application_synced_healthy "${app}" 240 5
   done
 
-  local access_ip=""
-  access_ip="$(pick_primary_node_ip)"
+  local lan_url=""
+  case "${ARGOCD_SERVER_EXPOSURE_MODE}" in
+    LoadBalancer|loadbalancer)
+      lan_url="https://${ARGOCD_SERVER_LOADBALANCER_IP}"
+      ;;
+    *)
+      local access_ip=""
+      access_ip="$(pick_primary_node_ip)"
+      lan_url="https://${access_ip}:${ARGOCD_SERVER_HTTPS_NODEPORT}"
+      ;;
+  esac
 
   cat <<EOF_DONE
 [DONE] Argo CD is installed and app-of-apps is configured.
 Admin username: ${ARGOCD_ADMIN_USERNAME}
 Admin password: ${ARGOCD_ADMIN_PASSWORD}
 Namespace: ${ARGOCD_NAMESPACE}
-LAN URL: https://${access_ip}:${ARGOCD_SERVER_HTTPS_NODEPORT}
+LAN URL: ${lan_url}
 ApplicationSet: ${ARGOCD_GITOPS_APPSET_NAME}
 GitOps repo: ${ARGOCD_GITOPS_REPO_URL}
 GitOps revision: ${ARGOCD_GITOPS_REPO_REVISION}
