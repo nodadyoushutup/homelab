@@ -234,7 +234,7 @@
       },
       "targets": [
         {
-          "expr": "avg(sum by (instance) (\n  (\n    rate(node_disk_read_bytes_total{instance=~\"$node\"}[5m]) +\n    rate(node_disk_written_bytes_total{instance=~\"$node\"}[5m])\n  )\n  and on(instance, device)\n  label_replace(\n    node_filesystem_size_bytes{instance=~\"$node\", mountpoint=\"/\", fstype!~\"tmpfs|overlay|aufs|fuse.lxcfs|squashfs\"},\n    \"device\", \"$1\", \"device\", \".*/(.*?)(p[0-9]+)?$\"\n  )\n))",
+          "expr": "avg(sum by (instance) (\n  (\n    rate(node_disk_read_bytes_total{instance=~\"$node\"}[5m]) +\n    rate(node_disk_written_bytes_total{instance=~\"$node\"}[5m])\n  )\n  and on(instance, device)\n  label_replace(\n    (\n      node_filesystem_size_bytes{instance=~\"$node\", platform!=\"kubernetes\", mountpoint=\"/\", fstype!~\"tmpfs|overlay|aufs|fuse.lxcfs|squashfs\"}\n      or\n      node_filesystem_size_bytes{instance=~\"$node\", platform=\"kubernetes\", mountpoint=\"/var\", fstype!~\"tmpfs|overlay|aufs|fuse.lxcfs|squashfs\"}\n    ),\n    \"device\", \"$1\", \"device\", \".*/(.*?)(p?[0-9]+)?$\"\n  )\n))",
           "legendFormat": "",
           "refId": "A"
         }
@@ -573,7 +573,7 @@
       },
       "targets": [
         {
-          "expr": "100 - (node_filesystem_avail_bytes{instance=~\"$node\", mountpoint=\"/\", fstype!~\"tmpfs|overlay|aufs|fuse.lxcfs\"} * 100 / node_filesystem_size_bytes{instance=~\"$node\", mountpoint=\"/\", fstype!~\"tmpfs|overlay|aufs|fuse.lxcfs\"})",
+          "expr": "100 - ((\n  (\n    node_filesystem_avail_bytes{instance=~\"$node\", platform!=\"kubernetes\", mountpoint=\"/\", fstype!~\"tmpfs|overlay|aufs|fuse.lxcfs\"}\n    or\n    node_filesystem_avail_bytes{instance=~\"$node\", platform=\"kubernetes\", mountpoint=\"/var\", fstype!~\"tmpfs|overlay|aufs|fuse.lxcfs\"}\n  ) * 100 /\n  (\n    node_filesystem_size_bytes{instance=~\"$node\", platform!=\"kubernetes\", mountpoint=\"/\", fstype!~\"tmpfs|overlay|aufs|fuse.lxcfs\"}\n    or\n    node_filesystem_size_bytes{instance=~\"$node\", platform=\"kubernetes\", mountpoint=\"/var\", fstype!~\"tmpfs|overlay|aufs|fuse.lxcfs\"}\n  )\n))",
           "legendFormat": "{{instance}} /",
           "refId": "A"
         }
@@ -614,7 +614,7 @@
       },
       "targets": [
         {
-          "expr": "sum by (instance) (\n  (\n    rate(node_disk_read_bytes_total{instance=~\"$node\"}[5m]) +\n    rate(node_disk_written_bytes_total{instance=~\"$node\"}[5m])\n  )\n  and on(instance, device)\n  label_replace(\n    node_filesystem_size_bytes{instance=~\"$node\", mountpoint=\"/\", fstype!~\"tmpfs|overlay|aufs|fuse.lxcfs|squashfs\"},\n    \"device\", \"$1\", \"device\", \".*/(.*?)(p[0-9]+)?$\"\n  )\n)",
+          "expr": "sum by (instance) (\n  (\n    rate(node_disk_read_bytes_total{instance=~\"$node\"}[5m]) +\n    rate(node_disk_written_bytes_total{instance=~\"$node\"}[5m])\n  )\n  and on(instance, device)\n  label_replace(\n    (\n      node_filesystem_size_bytes{instance=~\"$node\", platform!=\"kubernetes\", mountpoint=\"/\", fstype!~\"tmpfs|overlay|aufs|fuse.lxcfs|squashfs\"}\n      or\n      node_filesystem_size_bytes{instance=~\"$node\", platform=\"kubernetes\", mountpoint=\"/var\", fstype!~\"tmpfs|overlay|aufs|fuse.lxcfs|squashfs\"}\n    ),\n    \"device\", \"$1\", \"device\", \".*/(.*?)(p?[0-9]+)?$\"\n  )\n)",
           "legendFormat": "{{instance}} root io",
           "refId": "A"
         }
