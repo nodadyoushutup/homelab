@@ -38,7 +38,7 @@ resource "docker_service" "mcp_atlassian" {
         "--port", tostring(local.internal_port),
         "--path", local.http_path,
         "--read-only",
-        "--toolsets", "jira,confluence",
+        "--toolsets", "all",
       ]
 
       env = {
@@ -63,7 +63,7 @@ resource "docker_service" "mcp_atlassian" {
           "CMD",
           "python",
           "-c",
-          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/mcp', timeout=5)",
+          "import urllib.error, urllib.request; req=urllib.request.Request('http://127.0.0.1:8000/mcp', headers={'Accept':'text/event-stream'}); code=0\ntry:\n  urllib.request.urlopen(req, timeout=5)\nexcept urllib.error.HTTPError as e:\n  code=e.code\nexcept Exception:\n  raise SystemExit(1)\nraise SystemExit(0 if code < 500 else 1)",
         ]
         interval     = "30s"
         timeout      = "10s"
