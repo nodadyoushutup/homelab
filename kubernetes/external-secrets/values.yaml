@@ -1,3 +1,6 @@
 installCRDs: true
 webhook:
+  create: false
   failurePolicy: Ignore
+certController:
+  create: false
