@@ -25,12 +25,19 @@ spec:
         - name: bootstrap-user
           image: ghcr.io/thelounge/thelounge:latest
           imagePullPolicy: IfNotPresent
-          envFrom:
-            - secretRef:
-                name: thelounge-bootstrap
           env:
             - name: THELOUNGE_HOME
               value: /var/opt/thelounge
+            - name: TL_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: thelounge-bootstrap
+                  key: TL_USERNAME
+            - name: TL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: thelounge-bootstrap
+                  key: TL_PASSWORD
           command:
             - /bin/sh
             - -lc
@@ -39,10 +46,16 @@ spec:
               : "${TL_USERNAME:?TL_USERNAME is required}"
               : "${TL_PASSWORD:?TL_PASSWORD is required}"
               user_file="/var/opt/thelounge/users/${TL_USERNAME}.json"
+              profile_file="/bootstrap/profile"
               mkdir -p /var/opt/thelounge/users
               if [ ! -f "$user_file" ]; then
-                echo "Creating The Lounge user ${TL_USERNAME}"
-                thelounge add --password "${TL_PASSWORD}" "${TL_USERNAME}"
+                if [ -s "$profile_file" ]; then
+                  echo "Seeding The Lounge user profile for ${TL_USERNAME} from Vault-backed secret"
+                  cp "$profile_file" "$user_file"
+                else
+                  echo "Creating The Lounge user ${TL_USERNAME}"
+                  thelounge add --password "${TL_PASSWORD}" "${TL_USERNAME}"
+                fi
               else
                 echo "The Lounge user ${TL_USERNAME} exists; keeping profile and syncing password."
               fi
@@ -59,6 +72,9 @@ spec:
           volumeMounts:
             - name: thelounge-data
               mountPath: /var/opt/thelounge
+            - name: bootstrap-secret
+              mountPath: /bootstrap
+              readOnly: true
       containers:
         - name: thelounge
           image: ghcr.io/thelounge/thelounge:latest
@@ -83,6 +99,9 @@ spec:
             initialDelaySeconds: 30
             periodSeconds: 20
       volumes:
+        - name: bootstrap-secret
+          secret:
+            secretName: thelounge-bootstrap
         - name: thelounge-data
           persistentVolumeClaim:
             claimName: thelounge-data

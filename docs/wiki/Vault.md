@@ -65,6 +65,14 @@ secrets = {
     }
   }
 }
+
+secret_files = {
+  k8s = {
+    thelounge = {
+      profile = "/mnt/eapp/.tfvars/vault/thelounge-profile.json"
+    }
+  }
+}
 ```
 
 ## Safety and behavior notes
