@@ -55,6 +55,11 @@ spec:
             chartVersion: 2.1.0
             gitPath: kubernetes/external-secrets
             syncWave: "27"
+          - name: node-exporter-k8s
+            appType: manifests
+            destinationNamespace: monitoring
+            gitPath: kubernetes/node-exporter
+            syncWave: "28"
           - name: thelounge
             appType: manifests
             destinationNamespace: thelounge
