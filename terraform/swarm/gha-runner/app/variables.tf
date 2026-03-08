@@ -16,6 +16,19 @@ variable "github_runner_token" {
   default     = "__SET_ME__"
 }
 
+variable "github_runner_access_token" {
+  description = "Optional GitHub access token used to mint registration/remove tokens at runner startup (recommended for replicated runners)."
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "github_runner_image" {
+  description = "Container image reference for the runner service (prefer GHCR tag builds from workflow_dispatch)."
+  type        = string
+  default     = "ghcr.io/nodadyoushutup/gha-runner:latest"
+}
+
 variable "github_runner_name" {
   description = "Runner display name prefix in GitHub; Task slot is appended."
   type        = string

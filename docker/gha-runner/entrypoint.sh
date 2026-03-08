@@ -8,14 +8,77 @@ bool_true() {
   [[ "${value}" == "1" || "${value}" == "true" || "${value}" == "yes" || "${value}" == "on" ]]
 }
 
+trim_trailing_slash() {
+  local value="${1:-}"
+  value="${value%/}"
+  echo "${value}"
+}
+
+build_runner_token_endpoint() {
+  local runner_url="$1"
+  local action="$2"
+  local api_base="$3"
+  local path=""
+
+  path="${runner_url#https://github.com/}"
+  path="${path#http://github.com/}"
+  path="$(trim_trailing_slash "${path}")"
+
+  if [[ -z "${path}" || "${path}" == "${runner_url}" ]]; then
+    return 1
+  fi
+
+  if [[ "${path}" == */* ]]; then
+    echo "${api_base}/repos/${path}/actions/runners/${action}"
+    return 0
+  fi
+
+  echo "${api_base}/orgs/${path}/actions/runners/${action}"
+}
+
+request_runner_token() {
+  local runner_url="$1"
+  local action="$2"
+  local access_token="$3"
+  local api_base="$4"
+  local endpoint
+  local response
+  local token
+
+  endpoint="$(build_runner_token_endpoint "${runner_url}" "${action}" "${api_base}")" || return 1
+
+  response="$(curl -fsSL -X POST \
+    -H "Accept: application/vnd.github+json" \
+    -H "Authorization: Bearer ${access_token}" \
+    -H "X-GitHub-Api-Version: 2022-11-28" \
+    "${endpoint}")" || return 1
+
+  token="$(jq -r '.token // empty' <<<"${response}")"
+  [[ -n "${token}" ]] || return 1
+
+  echo "${token}"
+}
+
 cd "${RUNNER_HOME:-/home/runner/actions-runner}"
 touch /tmp/gha-runner-ready
 
 runner_url="${GH_RUNNER_URL:-}"
 runner_token="${GH_RUNNER_TOKEN:-}"
+runner_access_token="${GH_RUNNER_ACCESS_TOKEN:-}"
+github_api_url="$(trim_trailing_slash "${GH_API_URL:-https://api.github.com}")"
 
-if [[ -z "${runner_url}" || -z "${runner_token}" || "${runner_url}" == "__SET_ME__" || "${runner_token}" == "__SET_ME__" ]]; then
-  echo "[INFO] GH_RUNNER_URL and GH_RUNNER_TOKEN are not set to usable values. Staying in standby mode."
+if [[ -z "${runner_url}" || "${runner_url}" == "__SET_ME__" ]]; then
+  echo "[INFO] GH_RUNNER_URL is not set to a usable value. Staying in standby mode."
+  exec sleep infinity
+fi
+
+if [[ -n "${runner_access_token}" && "${runner_access_token}" != "__SET_ME__" ]]; then
+  echo "[INFO] Requesting fresh GitHub Actions runner registration token from API."
+  runner_token="$(request_runner_token "${runner_url}" "registration-token" "${runner_access_token}" "${github_api_url}" || true)"
+fi
+
+if [[ -z "${runner_token}" || "${runner_token}" == "__SET_ME__" ]]; then
+  echo "[INFO] GH_RUNNER_TOKEN is not set and GH_RUNNER_ACCESS_TOKEN could not mint a registration token. Staying in standby mode."
   exec sleep infinity
 fi
 
@@ -47,8 +110,18 @@ fi
 ./config.sh "${config_args[@]}"
 
 cleanup() {
-  if [[ -n "${GH_RUNNER_REMOVE_TOKEN:-}" && -f .runner ]]; then
-    ./config.sh remove --unattended --token "${GH_RUNNER_REMOVE_TOKEN}" || true
+  local remove_token="${GH_RUNNER_REMOVE_TOKEN:-}"
+
+  if [[ ! -f .runner ]]; then
+    return 0
+  fi
+
+  if [[ -z "${remove_token}" && -n "${runner_access_token}" && "${runner_access_token}" != "__SET_ME__" ]]; then
+    remove_token="$(request_runner_token "${runner_url}" "remove-token" "${runner_access_token}" "${github_api_url}" || true)"
+  fi
+
+  if [[ -n "${remove_token}" ]]; then
+    ./config.sh remove --unattended --token "${remove_token}" || true
   fi
 }
 

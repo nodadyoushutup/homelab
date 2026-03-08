@@ -14,16 +14,28 @@ The Dockerfile uses repo-level install scripts under `scripts/install/` as sourc
 ```bash
 cd docker/gha-runner
 cp .env.example .env
-# Fill GH_RUNNER_URL and GH_RUNNER_TOKEN
+# Fill GH_RUNNER_URL and either GH_RUNNER_ACCESS_TOKEN (recommended) or GH_RUNNER_TOKEN
 docker compose up -d --build
 ```
+
+## GHCR publish workflow
+
+- Use GitHub Actions workflow: `.github/workflows/gha_runner_build_push.yml`
+- Trigger `workflow_dispatch` with required input `version`.
+- Workflow publishes:
+  - `ghcr.io/<owner>/gha-runner:<version>`
+  - `ghcr.io/<owner>/gha-runner:latest`
+
+For Swarm/Terraform deployment, set `github_runner_image` to the exact published tag (recommended), not `latest`.
 
 ## Required env vars
 
 - `GH_RUNNER_URL`: repo or org URL
-- `GH_RUNNER_TOKEN`: registration token from GitHub
+- one of:
+  - `GH_RUNNER_ACCESS_TOKEN` (recommended): PAT/App token that can call GitHub runner token APIs
+  - `GH_RUNNER_TOKEN`: one-time registration token from GitHub
 
-If either required value is unset (or set to `__SET_ME__`), the container stays in standby mode so the service can remain online before credentials are provided.
+If `GH_RUNNER_URL` is unset, or no usable runner registration token can be resolved, the container stays in standby mode so the service can remain online before credentials are provided.
 
 ## Optional env vars
 
@@ -32,11 +44,11 @@ If either required value is unset (or set to `__SET_ME__`), the container stays 
 - `GH_RUNNER_WORKDIR` (default: `_work`)
 - `GH_RUNNER_EPHEMERAL` (default: `false`)
 - `GH_RUNNER_DISABLEUPDATE` (default: `true`)
-- `GH_RUNNER_REMOVE_TOKEN` (optional; used only for clean deregistration on exit)
+- `GH_RUNNER_REMOVE_TOKEN` (optional; if omitted and `GH_RUNNER_ACCESS_TOKEN` is set, a remove token is minted automatically on shutdown)
 - `RUNNER_VERSION` (build arg; default: `2.332.0`)
 
 ## Notes
 
-- The token passed in `GH_RUNNER_TOKEN` is the one your frontend/API flow can inject at runtime.
+- `GH_RUNNER_TOKEN` is a single-use registration token; for replicated services use `GH_RUNNER_ACCESS_TOKEN` to mint fresh tokens per task startup.
 - If you set `GH_RUNNER_EPHEMERAL=true`, the runner accepts a single job and exits.
 - Local compose mounts `/var/run/docker.sock` and runs as root so Docker Buildx/QEMU actions can access the host daemon.

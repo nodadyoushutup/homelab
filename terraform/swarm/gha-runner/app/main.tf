@@ -22,12 +22,13 @@ resource "docker_service" "gha_runner" {
     }
 
     container_spec {
-      image = "homelab/gha-runner:2026.03.08.4"
+      image = var.github_runner_image
       user  = "0:0"
 
       env = {
         GH_RUNNER_URL           = var.github_runner_url
         GH_RUNNER_TOKEN         = var.github_runner_token
+        GH_RUNNER_ACCESS_TOKEN  = var.github_runner_access_token
         GH_RUNNER_NAME          = "${var.github_runner_name}-{{.Task.Slot}}"
         GH_RUNNER_LABELS        = var.github_runner_labels
         GH_RUNNER_WORKDIR       = var.github_runner_workdir
