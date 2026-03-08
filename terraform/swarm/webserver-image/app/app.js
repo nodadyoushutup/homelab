@@ -2,7 +2,19 @@
   const listingBody = document.getElementById("listing");
   const statusEl = document.getElementById("status");
   const backButton = document.getElementById("back-button");
+  const addButton = document.getElementById("add-button");
   const refreshButton = document.getElementById("refresh-button");
+  const uploadModal = document.getElementById("upload-modal");
+  const uploadCloseButton = document.getElementById("upload-close");
+  const uploadCancelButton = document.getElementById("upload-cancel");
+  const uploadSubmitButton = document.getElementById("upload-submit");
+  const uploadInput = document.getElementById("upload-input");
+  const uploadDropzone = document.getElementById("upload-dropzone");
+  const uploadSelection = document.getElementById("upload-selection");
+  const uploadStatus = document.getElementById("upload-status");
+
+  let selectedFiles = [];
+  let uploading = false;
 
   const params = new URLSearchParams(window.location.search);
   const currentPath = normalizePath(params.get("path") || "");
@@ -19,6 +31,75 @@
 
   refreshButton.addEventListener("click", () => {
     loadDirectory(currentPath);
+  });
+
+  addButton.addEventListener("click", () => {
+    openUploadModal();
+  });
+
+  uploadCloseButton.addEventListener("click", closeUploadModal);
+  uploadCancelButton.addEventListener("click", closeUploadModal);
+  uploadSubmitButton.addEventListener("click", uploadSelectedFiles);
+
+  uploadInput.addEventListener("change", (event) => {
+    const files = Array.from(event.target.files || []);
+    setSelectedFiles(files);
+  });
+
+  uploadDropzone.addEventListener("dragover", (event) => {
+    event.preventDefault();
+    uploadDropzone.classList.add("border-amber-400", "bg-amber-500/5");
+  });
+
+  uploadDropzone.addEventListener("dragleave", () => {
+    uploadDropzone.classList.remove("border-amber-400", "bg-amber-500/5");
+  });
+
+  uploadDropzone.addEventListener("drop", (event) => {
+    event.preventDefault();
+    uploadDropzone.classList.remove("border-amber-400", "bg-amber-500/5");
+    const files = Array.from(event.dataTransfer?.files || []);
+    setSelectedFiles(files);
+  });
+
+  uploadModal.addEventListener("click", (event) => {
+    if (event.target === uploadModal) {
+      closeUploadModal();
+    }
+  });
+
+  listingBody.addEventListener("click", async (event) => {
+    const deleteButton = event.target.closest(".delete-entry");
+    if (!deleteButton) {
+      return;
+    }
+
+    const targetPath = deleteButton.dataset.targetPath;
+    const targetName = deleteButton.dataset.targetName || targetPath;
+    if (!targetPath) {
+      return;
+    }
+
+    const confirmed = window.confirm(`Delete "${targetName}"? This cannot be undone.`);
+    if (!confirmed) {
+      return;
+    }
+
+    deleteButton.disabled = true;
+    statusEl.textContent = `Deleting ${targetName}...`;
+
+    try {
+      const response = await fetch(targetPath, { method: "DELETE" });
+      if (!response.ok) {
+        throw new Error(`Delete failed with ${response.status}`);
+      }
+
+      statusEl.textContent = `Deleted ${targetName}`;
+      await loadDirectory(currentPath);
+    } catch (error) {
+      statusEl.textContent = `Delete failed for ${targetName}: ${error.message}`;
+      deleteButton.disabled = false;
+    }
   });
 
   loadDirectory(currentPath);
@@ -82,7 +163,7 @@
       });
 
     if (visibleRows.length === 0) {
-      listingBody.innerHTML = '<tr><td class="px-4 py-4 text-slate-400" colspan="4">This directory is empty.</td></tr>';
+      listingBody.innerHTML = '<tr><td class="px-4 py-4 text-slate-400" colspan="5">This directory is empty.</td></tr>';
       return;
     }
 
@@ -100,6 +181,7 @@
     const href = isDirectory
       ? `/?path=${encodeURIComponent(nextPath)}`
       : "/" + encodePath(nextPath);
+    const deletePath = "/" + encodePath(nextPath) + (isDirectory ? "/" : "");
 
     const modified = entry.mtime ? formatDate(entry.mtime) : "-";
     const size = isDirectory ? "-" : formatSize(Number(entry.size) || 0);
@@ -109,6 +191,18 @@
       <td class="px-4 py-3 text-slate-300">${isDirectory ? "Directory" : "File"}</td>
       <td class="px-4 py-3 text-slate-300">${escapeHtml(size)}</td>
       <td class="px-4 py-3 text-slate-400">${escapeHtml(modified)}</td>
+      <td class="px-4 py-3 text-right">
+        <button
+          type="button"
+          class="delete-entry inline-flex items-center rounded-lg border border-rose-700/60 bg-rose-900/30 px-2.5 py-1.5 text-xs text-rose-200 transition hover:border-rose-500 hover:text-rose-100 disabled:cursor-not-allowed disabled:opacity-50"
+          data-target-path="${escapeHtml(deletePath)}"
+          data-target-name="${escapeHtml(cleanedName)}"
+          title="Delete"
+          aria-label="Delete ${escapeHtml(cleanedName)}"
+        >
+          <i class="fa-solid fa-trash"></i>
+        </button>
+      </td>
     </tr>`;
   }
 
@@ -149,5 +243,102 @@
       .replaceAll(">", "&gt;")
       .replaceAll('"', "&quot;")
       .replaceAll("'", "&#39;");
+  }
+
+  function openUploadModal() {
+    if (uploading) {
+      return;
+    }
+
+    selectedFiles = [];
+    uploadInput.value = "";
+    updateUploadSelection();
+    uploadStatus.textContent = "";
+    uploadModal.classList.remove("hidden");
+    uploadModal.classList.add("flex");
+  }
+
+  function closeUploadModal(forceClose = false) {
+    if (uploading && !forceClose) {
+      return;
+    }
+
+    uploadModal.classList.add("hidden");
+    uploadModal.classList.remove("flex");
+  }
+
+  function setSelectedFiles(files) {
+    selectedFiles = files.filter((file) => file && file.name);
+    updateUploadSelection();
+  }
+
+  function updateUploadSelection() {
+    if (selectedFiles.length === 0) {
+      uploadSelection.textContent = "No files selected.";
+      uploadSubmitButton.disabled = true;
+      return;
+    }
+
+    const names = selectedFiles.slice(0, 3).map((file) => file.name);
+    const remaining = selectedFiles.length - names.length;
+    const suffix = remaining > 0 ? ` and ${remaining} more` : "";
+    uploadSelection.textContent = `${selectedFiles.length} file(s): ${names.join(", ")}${suffix}`;
+    uploadSubmitButton.disabled = false;
+  }
+
+  async function uploadSelectedFiles() {
+    if (uploading || selectedFiles.length === 0) {
+      return;
+    }
+
+    uploading = true;
+    uploadSubmitButton.disabled = true;
+    uploadCancelButton.disabled = true;
+    uploadCloseButton.disabled = true;
+
+    try {
+      let uploadedCount = 0;
+
+      for (const file of selectedFiles) {
+        const safeName = sanitizeFileName(file.name);
+        const targetPath = currentPath
+          ? `/${encodePath(currentPath)}/${encodeURIComponent(safeName)}`
+          : `/${encodeURIComponent(safeName)}`;
+
+        uploadStatus.textContent = `Uploading ${safeName}...`;
+        const response = await fetch(targetPath, {
+          method: "PUT",
+          body: file,
+          headers: {
+            "Content-Type": "application/octet-stream",
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`${safeName} failed with ${response.status}`);
+        }
+
+        uploadedCount += 1;
+      }
+
+      uploadStatus.textContent = `Uploaded ${uploadedCount} file(s).`;
+      statusEl.textContent = `Uploaded ${uploadedCount} file(s)`;
+      selectedFiles = [];
+      uploadInput.value = "";
+      closeUploadModal(true);
+      await loadDirectory(currentPath);
+    } catch (error) {
+      uploadStatus.textContent = `Upload failed: ${error.message}`;
+      statusEl.textContent = `Upload failed: ${error.message}`;
+    } finally {
+      uploading = false;
+      uploadCancelButton.disabled = false;
+      uploadCloseButton.disabled = false;
+      updateUploadSelection();
+    }
+  }
+
+  function sanitizeFileName(name) {
+    return String(name).replaceAll("/", "_").replaceAll("\\", "_").trim() || "upload.bin";
   }
 })();
