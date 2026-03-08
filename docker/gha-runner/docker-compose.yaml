@@ -4,7 +4,7 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        RUNNER_VERSION: "${RUNNER_VERSION:-2.326.0}"
+        RUNNER_VERSION: "${RUNNER_VERSION:-2.332.0}"
     environment:
       GH_RUNNER_URL: "${GH_RUNNER_URL}"
       GH_RUNNER_TOKEN: "${GH_RUNNER_TOKEN}"

@@ -1,0 +1,21 @@
+name: Self-Hosted Hello World
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  hello:
+    runs-on: [self-hosted, linux, homelab]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Hello from homelab runner
+        run: |
+          echo "Hello from the homelab self-hosted GitHub Actions runner"
+          uname -a
+          python3 --version
+          pip --version

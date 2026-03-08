@@ -22,7 +22,7 @@ resource "docker_service" "gha_runner" {
     }
 
     container_spec {
-      image = "homelab/gha-runner:2026.03.08.1"
+      image = "homelab/gha-runner:2026.03.08.3"
 
       env = {
         GH_RUNNER_URL           = var.github_runner_url

@@ -1,7 +1,7 @@
 FROM ubuntu:24.04
 
 ARG TARGETARCH
-ARG RUNNER_VERSION=2.326.0
+ARG RUNNER_VERSION=2.332.0
 
 ENV DEBIAN_FRONTEND=noninteractive \
     RUNNER_HOME=/home/runner/actions-runner \

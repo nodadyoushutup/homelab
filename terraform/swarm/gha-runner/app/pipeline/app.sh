@@ -20,7 +20,7 @@ APPLY_ARGS_EXTRA=()
 PIPELINE_ARGS=("$@")
 
 build_gha_runner_image() {
-  local image_name="homelab/gha-runner:2026.03.08.1"
+  local image_name="homelab/gha-runner:2026.03.08.3"
   local image_context_dir="${ROOT_DIR}/docker/gha-runner"
   local docker_host="${DOCKER_SWARM_CP:-ssh://swarm-cp-0.local}"
 

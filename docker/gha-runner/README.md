@@ -32,7 +32,7 @@ If either required value is unset (or set to `__SET_ME__`), the container stays 
 - `GH_RUNNER_EPHEMERAL` (default: `false`)
 - `GH_RUNNER_DISABLEUPDATE` (default: `true`)
 - `GH_RUNNER_REMOVE_TOKEN` (optional; used only for clean deregistration on exit)
-- `RUNNER_VERSION` (build arg; default: `2.326.0`)
+- `RUNNER_VERSION` (build arg; default: `2.332.0`)
 
 ## Notes
 
