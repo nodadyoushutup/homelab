@@ -32,7 +32,7 @@ placement = {
 }
 ```
 
-- Optional: omit `dns_nameservers` or `placement` to let Docker defaults apply; the rest of the service config is set in `terraform/swarm/node_exporter/app/main.tf`.
+- Optional: omit `dns_nameservers` or `placement` to let Docker defaults apply; the rest of the service config is set in `terraform/docker/node_exporter/app/main.tf`.
 
 - Prometheus (or another scraper) reachable on the published ingress port (default `9100`).
 
@@ -40,14 +40,14 @@ placement = {
 
 ```bash
 cd /path/to/homelab
-./terraform/swarm/node_exporter/app/pipeline/app.sh \
+./terraform/docker/node_exporter/app/pipeline/app.sh \
   --tfvars ~/.tfvars/node_exporter/app.tfvars \
   --backend ~/.tfvars/minio.backend.hcl
 ```
 
 What happens:
 1. Helper scripts verify Terraform/python availability and resolve tfvars/backend paths.
-2. Terraform initializes the `terraform/swarm/node_exporter/app` stack, planning + applying the direct `docker_network`/`docker_service` resources.
+2. Terraform initializes the `terraform/docker/node_exporter/app` stack, planning + applying the direct `docker_network`/`docker_service` resources.
 3. A `node-exporter` overlay network plus a global `docker_service` is created; each node binds `/proc`, `/sys`, `/` read-only and exposes `:9100`.
 
 ### Validation checklist
@@ -58,7 +58,7 @@ What happens:
 
 ## Deploy via Jenkins
 
-1. In Jenkins, navigate to the `node_exporter` job (script path `terraform/swarm/node_exporter/app/pipeline/app.jenkins`).
+1. In Jenkins, navigate to the `node_exporter` job (script path `terraform/docker/node_exporter/app/pipeline/app.jenkins`).
 2. Kick off a build; optionally override `TFVARS_FILE` or `BACKEND_FILE` parameters to point at non-default locations.
 3. The pipeline stages mirror the bash script (Env Check → Resolve Inputs → Init → Plan → Apply) and emit the same Terraform logs.
 
@@ -80,7 +80,7 @@ Adjust to match however you route traffic (load balancer, DNS, etc.).
 
 ## Changing the published port
 
-- Edit `terraform/swarm/node_exporter/app/main.tf`:
+- Edit `terraform/docker/node_exporter/app/main.tf`:
   - Update `endpoint_spec.ports[0].target_port` if the container should listen elsewhere.
   - Update `endpoint_spec.ports[0].published_port` to change the exposed ingress port.
 - Re-run the pipeline to roll out the new mapping, then update Prometheus/firewall rules accordingly.

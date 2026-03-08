@@ -25,13 +25,13 @@ Vault runs as a single-node Docker Swarm service with integrated Raft storage an
 Deploy/refresh app stage (includes automatic bootstrap):
 
 ```bash
-./terraform/swarm/vault/app/pipeline/app.sh
+./terraform/docker/vault/app/pipeline/app.sh
 ```
 
 If running from a non-manager control host, set manager target for script-based docker actions:
 
 ```bash
-VAULT_SWARM_MANAGER_HOST="user@swarm-cp-0" ./terraform/swarm/vault/app/pipeline/app.sh
+VAULT_SWARM_MANAGER_HOST="user@swarm-cp-0" ./terraform/docker/vault/app/pipeline/app.sh
 ```
 
 Manual unseal (standalone, non-interactive):
@@ -51,7 +51,7 @@ Standard secret updates (Terraform-managed):
 ```bash
 # 1) edit /mnt/eapp/.tfvars/vault/config.tfvars
 # 2) run config pipeline
-./terraform/swarm/vault/config/pipeline/config.sh
+./terraform/docker/vault/config/pipeline/config.sh
 ```
 
 Config tfvars grouped secret shape (day-1 example):

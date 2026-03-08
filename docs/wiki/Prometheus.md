@@ -20,21 +20,21 @@ provider_config = {
 }
 
 ```
-Terraform renders the Docker config from `terraform/swarm/prometheus/app/prometheus.yaml`.
+Terraform renders the Docker config from `terraform/docker/prometheus/app/prometheus.yaml`.
 
 ## Pipelines
 
-### Bash deployment (`terraform/swarm/prometheus/app/pipeline/app.sh`)
+### Bash deployment (`terraform/docker/prometheus/app/pipeline/app.sh`)
 
 ```bash
 cd /path/to/homelab
-./terraform/swarm/prometheus/app/pipeline/app.sh \
+./terraform/docker/prometheus/app/pipeline/app.sh \
   --tfvars ~/.tfvars/prometheus/app.tfvars \
   --backend ~/.tfvars/minio.backend.hcl
 ```
 
 - Shared helpers verify Terraform availability and resolve input paths.
-- `terraform init/plan/apply` runs against `terraform/swarm/prometheus/app`, updating the service, network, volume definitions, and the rendered Docker config from `terraform/swarm/prometheus/app/prometheus.yaml` in a single pass.
+- `terraform init/plan/apply` runs against `terraform/docker/prometheus/app`, updating the service, network, volume definitions, and the rendered Docker config from `terraform/docker/prometheus/app/prometheus.yaml` in a single pass.
 
 ### Jenkins deployment (`prometheus`)
 
@@ -50,13 +50,13 @@ cd /path/to/homelab
 
 ## Editing scrape configs
 
-1. Update target entries in `terraform/swarm/prometheus/app/prometheus.yaml` if nodes change.
+1. Update target entries in `terraform/docker/prometheus/app/prometheus.yaml` if nodes change.
 2. Re-run the Prometheus pipeline (bash or Jenkins). Terraform detects the config change, uploads a new Docker config, and rolling-updates the service.
 3. Use `curl http://<host>:9090/-/config` or the UI to verify changes.
 
 ## Changing ports or persistence
 
-- To adjust the Prometheus web port, edit `endpoint_spec.ports` in `terraform/swarm/prometheus/app/main.tf`.
+- To adjust the Prometheus web port, edit `endpoint_spec.ports` in `terraform/docker/prometheus/app/main.tf`.
 - To change TSDB retention or flags, edit the `args` list in the same file.
 - Re-run the pipeline to roll out changes; remember to update firewalls and any load balancers.
 

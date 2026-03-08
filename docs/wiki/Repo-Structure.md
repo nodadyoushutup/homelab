@@ -24,5 +24,5 @@
 
 - Place documentation alongside the code it explains. If a new service needs a runbook, create `docs/wiki/<Service>.md` and link it from the sidebar.
 - Add supporting scripts under a service-specific directory (for example, `docker/<service>/` or `scripts/purge/<service>.sh`).
-- Keep Terraform/pipeline work reproducible; entrypoints live under `terraform/swarm/<service>/<stage>/pipeline` while helpers stay in `scripts/pipeline/`.
+- Keep Terraform/pipeline work reproducible; entrypoints live under `terraform/docker/<service>/<stage>/pipeline` while helpers stay in `scripts/pipeline/`.
 - Keep this file updated as services and directories evolve.

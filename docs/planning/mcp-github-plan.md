@@ -1,12 +1,12 @@
 # MCP GitHub (Swarm) plan
 
-This plan tracks adding a GitHub MCP server in Docker Swarm using the direct stack pattern under `terraform/swarm/mcp-github/app`.
+This plan tracks adding a GitHub MCP server in Docker Swarm using the direct stack pattern under `terraform/docker/mcp-github/app`.
 
 ## Stage 0 - scope, references, and tfvars/backend
 
-- [x] Taxonomy locked: app-only Swarm service (`terraform/swarm/mcp-github/app`) with one state.
+- [x] Taxonomy locked: app-only Swarm service (`terraform/docker/mcp-github/app`) with one state.
   Mark complete when: service path and stage boundary are explicit in this plan.
-- [x] Reference implementation chosen: `terraform/swarm/mcp-atlassian/app` plus `terraform/swarm/dozzle/app`.
+- [x] Reference implementation chosen: `terraform/docker/mcp-atlassian/app` plus `terraform/docker/dozzle/app`.
   Mark complete when: new stack follows the same `provider.tf`, `variables.tf`, `main.tf`, and `pipeline/app.sh` surfaces.
 - [x] Tfvars/backend paths locked and created:
   - backend: `/mnt/eapp/.tfvars/minio.backend.hcl`
@@ -22,10 +22,10 @@ This plan tracks adding a GitHub MCP server in Docker Swarm using the direct sta
 ## Stage 1 - stack scaffold
 
 - [x] Create stack files:
-  - `terraform/swarm/mcp-github/app/provider.tf`
-  - `terraform/swarm/mcp-github/app/variables.tf`
-  - `terraform/swarm/mcp-github/app/main.tf`
-  - `terraform/swarm/mcp-github/app/pipeline/app.sh`
+  - `terraform/docker/mcp-github/app/provider.tf`
+  - `terraform/docker/mcp-github/app/variables.tf`
+  - `terraform/docker/mcp-github/app/main.tf`
+  - `terraform/docker/mcp-github/app/pipeline/app.sh`
   Mark complete when: Terraform init/validate and shell syntax checks pass.
 - [x] App runtime spec implemented:
   - overlay network + replicated service
@@ -56,7 +56,7 @@ This plan tracks adding a GitHub MCP server in Docker Swarm using the direct sta
   - behavior: proxy passes server-side `GITHUB_PERSONAL_ACCESS_TOKEN` to stdio server so Codex clients do not need `bearer_token_env_var`.
   Mark complete when: unauthenticated MCP client `initialize` request succeeds end-to-end against the proxy.
 - [x] Extend app pipeline pre-step to build proxy image on swarm manager:
-  - `terraform/swarm/mcp-github/app/pipeline/app.sh`
+  - `terraform/docker/mcp-github/app/pipeline/app.sh`
   - env override: `MCP_GITHUB_REBUILD_IMAGE=1` forces rebuild.
   Mark complete when: pipeline can reuse or rebuild `homelab/mcp-github:2026.03.08.4` before Terraform apply.
 
@@ -64,16 +64,16 @@ This plan tracks adding a GitHub MCP server in Docker Swarm using the direct sta
 
 - Date: 2026-03-08
 - Commands run:
-  - `terraform fmt -recursive terraform/swarm/mcp-github/app`
-  - `terraform -chdir=terraform/swarm/mcp-github/app init -backend=false -input=false`
-  - `terraform -chdir=terraform/swarm/mcp-github/app validate`
-  - `bash -n terraform/swarm/mcp-github/app/pipeline/app.sh scripts/purge/mcp-github.sh scripts/purge/purge.sh`
+  - `terraform fmt -recursive terraform/docker/mcp-github/app`
+  - `terraform -chdir=terraform/docker/mcp-github/app init -backend=false -input=false`
+  - `terraform -chdir=terraform/docker/mcp-github/app validate`
+  - `bash -n terraform/docker/mcp-github/app/pipeline/app.sh scripts/purge/mcp-github.sh scripts/purge/purge.sh`
   - `ls -ld /mnt/eapp/.tfvars/mcp-github /mnt/eapp/.tfvars/mcp-github/app.tfvars`
   - `docker manifest inspect ghcr.io/github/github-mcp-server:latest | jq -r '.manifests[]?.platform | "\(.os)/\(.architecture)"'`
   - `docker run --rm ghcr.io/github/github-mcp-server --help`
   - `docker run --rm ghcr.io/github/github-mcp-server http --help`
   - `docker run --rm ghcr.io/github/github-mcp-server list-scopes --toolsets=all --output=summary`
-  - `terraform/swarm/mcp-github/app/pipeline/app.sh`
+  - `terraform/docker/mcp-github/app/pipeline/app.sh`
   - `docker build -t homelab/mcp-github:2026.03.08.4 docker/mcp-github`
   - `docker run --rm -d -p 38087:8082 -e GITHUB_PERSONAL_ACCESS_TOKEN=<github-pat> homelab/mcp-github:2026.03.08.4`
   - `curl -X POST http://127.0.0.1:38087/mcp -H 'content-type: application/json' -H 'accept: application/json, text/event-stream' --data '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-03-26","capabilities":{},"clientInfo":{"name":"debug","version":"1.0"}}}'`

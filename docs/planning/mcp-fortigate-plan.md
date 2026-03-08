@@ -1,12 +1,12 @@
 # MCP FortiGate (Swarm) plan
 
-This plan tracks adding a FortiGate MCP server in Docker Swarm using the direct stack pattern under `terraform/swarm/mcp-fortigate/app`.
+This plan tracks adding a FortiGate MCP server in Docker Swarm using the direct stack pattern under `terraform/docker/mcp-fortigate/app`.
 
 ## Stage 0 - scope, references, and tfvars/backend
 
-- [x] Taxonomy locked: app-only Swarm service (`terraform/swarm/mcp-fortigate/app`) with one state.
+- [x] Taxonomy locked: app-only Swarm service (`terraform/docker/mcp-fortigate/app`) with one state.
   Mark complete when: service path and stage boundary are explicit in this plan.
-- [x] Reference implementation chosen: `terraform/swarm/mcp-atlassian/app` plus `terraform/swarm/mcp-github/app`.
+- [x] Reference implementation chosen: `terraform/docker/mcp-atlassian/app` plus `terraform/docker/mcp-github/app`.
   Mark complete when: new stack follows the same `provider.tf`, `variables.tf`, `main.tf`, and `pipeline/app.sh` surfaces.
 - [x] Tfvars/backend paths locked and created:
   - backend: `/mnt/eapp/.tfvars/minio.backend.hcl`
@@ -21,10 +21,10 @@ This plan tracks adding a FortiGate MCP server in Docker Swarm using the direct 
 ## Stage 1 - stack scaffold
 
 - [x] Create stack files:
-  - `terraform/swarm/mcp-fortigate/app/provider.tf`
-  - `terraform/swarm/mcp-fortigate/app/variables.tf`
-  - `terraform/swarm/mcp-fortigate/app/main.tf`
-  - `terraform/swarm/mcp-fortigate/app/pipeline/app.sh`
+  - `terraform/docker/mcp-fortigate/app/provider.tf`
+  - `terraform/docker/mcp-fortigate/app/variables.tf`
+  - `terraform/docker/mcp-fortigate/app/main.tf`
+  - `terraform/docker/mcp-fortigate/app/pipeline/app.sh`
   Mark complete when: Terraform init/validate and shell syntax checks pass.
 - [x] App runtime spec implemented:
   - overlay network + replicated service
@@ -52,15 +52,15 @@ This plan tracks adding a FortiGate MCP server in Docker Swarm using the direct 
 
 - Date: 2026-03-08
 - Commands run:
-  - `terraform fmt -recursive terraform/swarm/mcp-fortigate/app terraform/module/nginx_proxy_manager/config`
-  - `terraform -chdir=terraform/swarm/mcp-fortigate/app init -backend=false -input=false`
-  - `terraform -chdir=terraform/swarm/mcp-fortigate/app validate`
-  - `terraform -chdir=terraform/swarm/nginx_proxy_manager/config init -backend=false -input=false`
-  - `terraform -chdir=terraform/swarm/nginx_proxy_manager/config validate`
-  - `bash -n terraform/swarm/mcp-fortigate/app/pipeline/app.sh scripts/purge/mcp-fortigate.sh scripts/purge/purge.sh`
+  - `terraform fmt -recursive terraform/docker/mcp-fortigate/app terraform/module/nginx_proxy_manager/config`
+  - `terraform -chdir=terraform/docker/mcp-fortigate/app init -backend=false -input=false`
+  - `terraform -chdir=terraform/docker/mcp-fortigate/app validate`
+  - `terraform -chdir=terraform/docker/nginx_proxy_manager/config init -backend=false -input=false`
+  - `terraform -chdir=terraform/docker/nginx_proxy_manager/config validate`
+  - `bash -n terraform/docker/mcp-fortigate/app/pipeline/app.sh scripts/purge/mcp-fortigate.sh scripts/purge/purge.sh`
   - `ls -ld /mnt/eapp/.tfvars/mcp-fortigate /mnt/eapp/.tfvars/mcp-fortigate/app.tfvars`
-  - `MCP_FORTIGATE_REBUILD_IMAGE=1 terraform/swarm/mcp-fortigate/app/pipeline/app.sh`
-  - `terraform/swarm/nginx_proxy_manager/config/pipeline/config.sh`
+  - `MCP_FORTIGATE_REBUILD_IMAGE=1 terraform/docker/mcp-fortigate/app/pipeline/app.sh`
+  - `terraform/docker/nginx_proxy_manager/config/pipeline/config.sh`
   - `docker -H ssh://swarm-cp-0.local service inspect mcp-fortigate --format '{{.Spec.TaskTemplate.ContainerSpec.Image}}'`
   - `docker -H ssh://swarm-cp-0.local service ls --format 'table {{.Name}}\t{{.Replicas}}\t{{.Ports}}' | rg 'mcp-fortigate|nginx-proxy-manager'`
   - `docker -H ssh://swarm-cp-0.local service ps mcp-fortigate --no-trunc --format 'table {{.Name}}\t{{.Node}}\t{{.DesiredState}}\t{{.CurrentState}}\t{{.Error}}'`
@@ -68,7 +68,7 @@ This plan tracks adding a FortiGate MCP server in Docker Swarm using the direct 
   - `curl --resolve mcp.fortigate.nodadyoushutup.com:443:192.168.1.26 -k -X POST https://mcp.fortigate.nodadyoushutup.com/mcp ... initialize`
 
 - Notes:
-  - `terraform/swarm/nginx_proxy_manager/config` initially failed because `terraform/module/nginx_proxy_manager/config` was missing from the repo; module files were restored under that path before re-running the config pipeline.
+  - `terraform/docker/nginx_proxy_manager/config` initially failed because `terraform/module/nginx_proxy_manager/config` was missing from the repo; module files were restored under that path before re-running the config pipeline.
   - Upstream `juststank/ftg_mcp` currently pulls `mcp` from GitHub `main`; this was incompatible with `fastmcp` at runtime. Image build now pins `mcp==1.24.0` after installing upstream package to keep `server_http` bootable.
 
 ## Tfvars schema (sanitized)

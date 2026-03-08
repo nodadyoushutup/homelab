@@ -24,7 +24,7 @@ provider_config = {
 
 ```bash
 cd /home/nodadyoushutup/code/homelab
-./terraform/swarm/graphite/app/pipeline/app.sh \
+./terraform/docker/graphite/app/pipeline/app.sh \
   --tfvars ~/.tfvars/graphite/app.tfvars \
   --backend ~/.tfvars/minio.backend.hcl
 ```
@@ -38,7 +38,7 @@ Set `TF_CLI_ARGS_plan` or `TF_LOG` before running if you need extra Terraform fl
 
 ## Deploy via Jenkins
 
-1. Open the `graphite` job under the Jenkins root (script path `terraform/swarm/graphite/app/pipeline/app.jenkins`).
+1. Open the `graphite` job under the Jenkins root (script path `terraform/docker/graphite/app/pipeline/app.jenkins`).
 2. Override `TFVARS_FILE` / `BACKEND_FILE` only if the defaults (`~/.tfvars/graphite/app.tfvars`, `~/.tfvars/minio.backend.hcl`) differ.
 3. Build the job; stages mirror the bash script (Env Check → Resolve Inputs → Init → Stack Plan/Apply).
 
