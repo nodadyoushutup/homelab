@@ -33,6 +33,10 @@ data:
     - when: app.status != nil and app.status.operationState != nil and app.status.operationState.phase in ['Error', 'Failed']
       send:
         - app-sync-status-discord
+  trigger.on-sync-unknown-discord: |
+    - when: app.status != nil and app.status.sync != nil and app.status.sync.status == 'Unknown'
+      send:
+        - app-sync-status-discord
   trigger.on-health-degraded-discord: |
     - when: app.status != nil and app.status.health != nil and app.status.health.status == 'Degraded'
       send:
@@ -42,4 +46,5 @@ data:
         - discord
       triggers:
         - on-sync-failed-discord
+        - on-sync-unknown-discord
         - on-health-degraded-discord
