@@ -4,6 +4,18 @@ locals {
   internal_port  = 8000
   published_port = 18080
   http_path      = "/mcp"
+  base_args = [
+    "--transport", "streamable-http",
+    "--host", "0.0.0.0",
+    "--port", tostring(local.internal_port),
+    "--path", local.http_path,
+    "--read-only",
+    "--toolsets", "all",
+  ]
+  filter_args = concat(
+    var.jira_projects_filter == null || trimspace(var.jira_projects_filter) == "" ? [] : ["--jira-projects-filter", var.jira_projects_filter],
+    var.confluence_spaces_filter == null || trimspace(var.confluence_spaces_filter) == "" ? [] : ["--confluence-spaces-filter", var.confluence_spaces_filter],
+  )
 }
 
 resource "docker_network" "mcp_atlassian" {
@@ -32,14 +44,7 @@ resource "docker_service" "mcp_atlassian" {
     container_spec {
       image = "ghcr.io/sooperset/mcp-atlassian:latest@sha256:6c4f96725b0e775a014a0b3016d358efdab58efd57c37ad7c2050136545b0e00"
 
-      args = [
-        "--transport", "streamable-http",
-        "--host", "0.0.0.0",
-        "--port", tostring(local.internal_port),
-        "--path", local.http_path,
-        "--read-only",
-        "--toolsets", "jira,confluence",
-      ]
+      args = concat(local.base_args, local.filter_args)
 
       env = {
         JIRA_URL             = var.jira_url
@@ -63,7 +68,7 @@ resource "docker_service" "mcp_atlassian" {
           "CMD",
           "python",
           "-c",
-          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/mcp', timeout=5)",
+          "import urllib.error, urllib.request; req=urllib.request.Request('http://127.0.0.1:8000/mcp', headers={'Accept':'text/event-stream'}); code=0\ntry:\n  urllib.request.urlopen(req, timeout=5)\nexcept urllib.error.HTTPError as e:\n  code=e.code\nexcept Exception:\n  raise SystemExit(1)\nraise SystemExit(0 if code < 500 else 1)",
         ]
         interval     = "30s"
         timeout      = "10s"

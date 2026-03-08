@@ -34,3 +34,15 @@ variable "confluence_api_token" {
   type        = string
   sensitive   = true
 }
+
+variable "jira_projects_filter" {
+  description = "Comma-separated Jira project keys to allow."
+  type        = string
+  default     = null
+}
+
+variable "confluence_spaces_filter" {
+  description = "Comma-separated Confluence space keys to allow."
+  type        = string
+  default     = null
+}

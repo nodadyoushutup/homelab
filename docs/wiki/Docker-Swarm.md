@@ -5,9 +5,9 @@ Source of truth for Swarm workflows, pipelines, Terraform state, and supporting 
 ## Control endpoints & state
 
 - Repo path: `~/code/homelab` on every host (NFS from `truenas.internal`).
-- Default Docker host: `ssh://swarm-cp-0.internal` (`DOCKER_SWARM_CP` in `.env`).
-- Terraform backend: `~/.tfvars/minio.backend.hcl` (MinIO on `medusa.internal`).
-- Compose-only stacks (MinIO backend + Renovate): run from `medusa.internal` at `docker/minio/` and `docker/renovate/`; ensure images support `linux/aarch64`.
+- Default Docker host: `ssh://swarm-cp-0.local` (`DOCKER_SWARM_CP` in `.env`).
+- Terraform backend: `~/.tfvars/minio.backend.hcl` (MinIO on `swarm-cp-0.local`, endpoint currently `http://192.168.1.26:9000`).
+- Compose-only stacks (MinIO backend + Renovate): run from `swarm-cp-0.local` at `docker/minio/` and `docker/renovate/`; ensure images support `linux/aarch64`.
 
 ## Application taxonomy & provider expectations
 - **App + config** – multi-stage (for example, Jenkins controller/agent/config; Grafana app/config). Multiple pipelines/states.
