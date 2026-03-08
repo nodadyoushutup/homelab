@@ -1,154 +1,156 @@
 locals {
-  legacy_default_certificate_email = "admin@nodadyoushutup.com"
+  default_site_404_html = templatefile("${path.module}/default-site-404.html.tftpl", {})
 
-  legacy_default_dns_challenge = {
-    enabled             = true
-    provider            = "cloudflare"
-    credentials         = var.dns_provider_credentials
-    propagation_seconds = 60
+  effective_config = jsondecode(jsonencode(var.config))
+
+  default_certificate_email = try(local.effective_config.default_certificate_email, null)
+  default_dns_challenge     = try(local.effective_config.default_dns_challenge, {})
+
+  certificate_specs = {
+    for cert in try(local.effective_config.certificates, []) :
+    cert.name => cert
   }
 
-  legacy_certificates = [
-    {
-      name         = "nodadyoushutup"
-      domain_names = ["nodadyoushutup.com", "www.nodadyoushutup.com"]
-    },
-    {
-      name         = "irc"
-      domain_names = ["irc.nodadyoushutup.com"]
-    },
-    {
-      name         = "nginx_proxy_manager"
-      domain_names = ["nginx-proxy-manager.nodadyoushutup.com"]
-    },
-    {
-      name         = "dozzle"
-      domain_names = ["dozzle.nodadyoushutup.com"]
-    },
-    {
-      name         = "grafana"
-      domain_names = ["grafana.nodadyoushutup.com"]
-    },
-    {
-      name         = "minio"
-      domain_names = ["minio.nodadyoushutup.com"]
-    },
-    {
-      name         = "prometheus"
-      domain_names = ["prometheus.nodadyoushutup.com"]
-    },
-    {
-      name         = "tautulli"
-      domain_names = ["tautulli.nodadyoushutup.com"]
-    },
-    {
-      name         = "graphite"
-      domain_names = ["graphite.nodadyoushutup.com"]
-    },
-  ]
-
-  legacy_proxy_hosts = [
-    {
-      name         = "nodadyoushutup"
-      domain_names = ["nodadyoushutup.com", "www.nodadyoushutup.com"]
-      scheme       = "http"
-      forward_host = "192.168.1.100"
-      forward_port = 9055
-      certificate  = "nodadyoushutup"
-    },
-    {
-      name         = "irc"
-      domain_names = ["irc.nodadyoushutup.com"]
-      scheme       = "http"
-      forward_host = "192.168.1.100"
-      forward_port = 9009
-      certificate  = "irc"
-    },
-    {
-      name         = "nginx_proxy_manager"
-      domain_names = ["nginx-proxy-manager.nodadyoushutup.com"]
-      scheme       = "http"
-      forward_host = "192.168.1.26"
-      forward_port = 81
-      certificate  = "nginx_proxy_manager"
-    },
-    {
-      name         = "dozzle_nodadyoushutup_com"
-      domain_names = ["dozzle.nodadyoushutup.com"]
-      scheme       = "http"
-      forward_host = "192.168.1.26"
-      forward_port = 8888
-      certificate  = "dozzle"
-    },
-    {
-      name         = "grafana_nodadyoushutup_com"
-      domain_names = ["grafana.nodadyoushutup.com"]
-      scheme       = "http"
-      forward_host = "192.168.1.26"
-      forward_port = 3000
-      certificate  = "grafana"
-    },
-    {
-      name         = "minio_nodadyoushutup_com"
-      domain_names = ["minio.nodadyoushutup.com"]
-      scheme       = "http"
-      forward_host = "192.168.1.26"
-      forward_port = 9001
-      certificate  = "minio"
-    },
-    {
-      name         = "prometheus_nodadyoushutup_com"
-      domain_names = ["prometheus.nodadyoushutup.com"]
-      scheme       = "http"
-      forward_host = "192.168.1.26"
-      forward_port = 9090
-      certificate  = "prometheus"
-    },
-    {
-      name         = "tautulli_nodadyoushutup_com"
-      domain_names = ["tautulli.nodadyoushutup.com"]
-      scheme       = "http"
-      forward_host = "192.168.1.100"
-      forward_port = 9181
-      certificate  = "tautulli"
-    },
-    {
-      name         = "graphite_nodadyoushutup_com"
-      domain_names = ["graphite.nodadyoushutup.com"]
-      scheme       = "http"
-      forward_host = "192.168.1.26"
-      forward_port = 8081
-      certificate  = "graphite"
-    },
-  ]
-
-  legacy_config = {
-    default_certificate_email = local.legacy_default_certificate_email
-    default_dns_challenge     = local.legacy_default_dns_challenge
-    certificates              = local.legacy_certificates
-    proxy_hosts               = local.legacy_proxy_hosts
-    access_lists              = []
-    streams                   = []
-    redirections              = []
+  access_list_specs = {
+    for access_list in try(local.effective_config.access_lists, []) :
+    access_list.name => access_list
   }
 
-  effective_config = jsondecode(var.config != null ? jsonencode(var.config) : jsonencode(local.legacy_config))
+  proxy_host_specs = {
+    for proxy_host in try(local.effective_config.proxy_hosts, []) :
+    proxy_host.name => proxy_host
+  }
 
-  app_state = var.remote_state_backend == null ? null : try(data.terraform_remote_state.app[0].outputs, null)
+  redirection_specs = {
+    for redirection in try(local.effective_config.redirections, []) :
+    redirection.name => redirection
+  }
+
+  stream_specs = {
+    for stream in try(local.effective_config.streams, []) :
+    stream.name => stream
+  }
 }
 
-data "terraform_remote_state" "app" {
-  count   = var.remote_state_backend == null ? 0 : 1
-  backend = "s3"
-  config = merge(var.remote_state_backend, {
-    key = "nginx-proxy-manager-app.tfstate"
-  })
+resource "nginxproxymanager_certificate_letsencrypt" "this" {
+  for_each = local.certificate_specs
+
+  domain_names      = toset(each.value.domain_names)
+  letsencrypt_email = coalesce(try(each.value.letsencrypt_email, null), local.default_certificate_email)
+  letsencrypt_agree = try(each.value.letsencrypt_agree, true)
+
+  dns_challenge            = try(each.value.dns_challenge.enabled, each.value.dns_challenge, try(local.default_dns_challenge.enabled, false))
+  dns_provider             = try(each.value.dns_challenge.provider, try(local.default_dns_challenge.provider, null))
+  dns_provider_credentials = try(each.value.dns_challenge.credentials, try(local.default_dns_challenge.credentials, null))
+  propagation_seconds      = try(each.value.dns_challenge.propagation_seconds, try(local.default_dns_challenge.propagation_seconds, null))
 }
 
-module "nginx_proxy_manager_config" {
-  source = "../../../module/nginx_proxy_manager/config"
+resource "nginxproxymanager_access_list" "this" {
+  for_each = local.access_list_specs
 
-  provider_config = var.provider_config
-  config          = local.effective_config
-  app_state       = local.app_state
+  name        = each.value.name
+  satisfy_any = try(each.value.satisfy_any, null)
+  pass_auth   = try(each.value.pass_auth, null)
+  authorizations = try([
+    for auth in each.value.authorizations : {
+      username = auth.username
+      password = auth.password
+    }
+  ], null)
+  access = try([
+    for rule in each.value.access : {
+      directive = rule.directive
+      address   = rule.address
+    }
+  ], null)
+}
+
+resource "nginxproxymanager_proxy_host" "this" {
+  for_each = local.proxy_host_specs
+
+  domain_names   = toset(each.value.domain_names)
+  forward_scheme = try(each.value.forward_scheme, each.value.scheme)
+  forward_host   = each.value.forward_host
+  forward_port   = tonumber(each.value.forward_port)
+
+  certificate_id = try(
+    each.value.certificate_id,
+    nginxproxymanager_certificate_letsencrypt.this[each.value.certificate].id,
+    null
+  )
+
+  access_list_id = try(
+    each.value.access_list_id,
+    nginxproxymanager_access_list.this[each.value.access_list].id,
+    null
+  )
+
+  enabled                 = try(each.value.enabled, true)
+  block_exploits          = try(each.value.block_exploits, true)
+  caching_enabled         = try(each.value.caching_enabled, false)
+  allow_websocket_upgrade = try(each.value.allow_websocket_upgrade, true)
+  http2_support           = try(each.value.http2_support, true)
+  ssl_forced              = try(each.value.ssl_forced, true)
+  hsts_enabled            = try(each.value.hsts_enabled, false)
+  hsts_subdomains         = try(each.value.hsts_subdomains, false)
+  advanced_config         = try(each.value.advanced_config, "")
+  locations = try([
+    for location in each.value.locations : {
+      path            = location.path
+      forward_scheme  = try(location.forward_scheme, location.scheme)
+      forward_host    = location.forward_host
+      forward_port    = tonumber(location.forward_port)
+      advanced_config = try(location.advanced_config, "")
+    }
+  ], null)
+}
+
+resource "nginxproxymanager_redirection_host" "this" {
+  for_each = local.redirection_specs
+
+  domain_names = toset(each.value.domain_names)
+
+  forward_domain_name = try(each.value.forward_domain_name, each.value.domain_name)
+  forward_scheme      = try(each.value.forward_scheme, "auto")
+  forward_http_code   = try(each.value.forward_http_code, 301)
+  preserve_path       = try(each.value.preserve_path, true)
+
+  certificate_id = try(
+    each.value.certificate_id,
+    nginxproxymanager_certificate_letsencrypt.this[each.value.certificate].id,
+    null
+  )
+
+  enabled         = try(each.value.enabled, true)
+  block_exploits  = try(each.value.block_exploits, true)
+  http2_support   = try(each.value.http2_support, true)
+  ssl_forced      = try(each.value.ssl_forced, true)
+  hsts_enabled    = try(each.value.hsts_enabled, false)
+  hsts_subdomains = try(each.value.hsts_subdomains, false)
+  advanced_config = try(each.value.advanced_config, "")
+}
+
+resource "nginxproxymanager_stream" "this" {
+  for_each = local.stream_specs
+
+  incoming_port   = tonumber(each.value.incoming_port)
+  forwarding_host = each.value.forwarding_host
+  forwarding_port = tonumber(each.value.forwarding_port)
+
+  certificate_id = try(
+    each.value.certificate_id,
+    nginxproxymanager_certificate_letsencrypt.this[each.value.certificate].id,
+    null
+  )
+
+  enabled        = try(each.value.enabled, true)
+  tcp_forwarding = try(each.value.tcp_forwarding, true)
+  udp_forwarding = try(each.value.udp_forwarding, false)
+}
+
+resource "nginxproxymanager_settings" "default_site" {
+  default_site = {
+    page = "html"
+    html = local.default_site_404_html
+  }
 }

@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Webserver Image</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <script>
+      tailwind = {
+        config: {
+          darkMode: "class",
+        },
+      };
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+      integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <script src="/app.js" defer></script>
+  </head>
+  <body class="min-h-screen bg-slate-950 text-slate-100 antialiased">
+    <main class="w-full min-h-screen p-3 md:p-4">
+      <section class="mb-3 flex items-center justify-between rounded-xl border border-slate-800 bg-slate-900/80 p-2 backdrop-blur">
+        <button
+          id="back-button"
+          type="button"
+          class="inline-flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm font-medium text-slate-100 transition hover:border-amber-400 hover:text-amber-300"
+        >
+          <i class="fa-solid fa-arrow-left"></i>
+          <span>Back</span>
+        </button>
+        <button
+          id="refresh-button"
+          type="button"
+          class="inline-flex items-center rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-base text-slate-100 transition hover:border-amber-400 hover:text-amber-300"
+          title="Refresh"
+          aria-label="Refresh"
+        >
+          <i class="fa-solid fa-rotate-right"></i>
+        </button>
+      </section>
+
+      <section class="overflow-hidden rounded-xl border border-slate-800 bg-slate-900/70">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm">
+            <thead>
+              <tr class="border-b border-slate-800 bg-slate-900/95 text-slate-300">
+                <th class="px-4 py-3 font-semibold">Name</th>
+                <th class="px-4 py-3 font-semibold">Type</th>
+                <th class="px-4 py-3 font-semibold">Size</th>
+                <th class="px-4 py-3 font-semibold">Modified</th>
+              </tr>
+            </thead>
+            <tbody id="listing" class="divide-y divide-slate-800"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <p id="status" class="mt-2 text-xs text-slate-400">Loading...</p>
+    </main>
+  </body>
+</html>

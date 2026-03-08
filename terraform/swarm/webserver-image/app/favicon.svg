@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Webserver Image icon">
+  <rect x="4" y="6" width="56" height="52" rx="8" fill="#1466b8" />
+  <rect x="12" y="14" width="40" height="24" rx="4" fill="#ffffff" />
+  <circle cx="22" cy="26" r="5" fill="#54a3f0" />
+  <path d="M36 22l6 8h-12z" fill="#1466b8" />
+  <rect x="12" y="43" width="40" height="7" rx="3" fill="#c8e0f6" />
+</svg>

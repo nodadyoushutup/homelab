@@ -10,20 +10,7 @@ variable "provider_config" {
   })
 }
 
-variable "dns_provider_credentials" {
-  description = "Legacy fallback Cloudflare credential token used only when var.config is unset"
-  type        = string
-  default     = null
-}
-
 variable "config" {
-  description = "Declarative NPM config payload; when null, stack uses legacy built-in defaults"
+  description = "Declarative NPM config payload sourced from tfvars"
   type        = any
-  default     = null
-}
-
-variable "remote_state_backend" {
-  description = "Backend config map used to load app-stage remote state"
-  type        = any
-  default     = null
 }
