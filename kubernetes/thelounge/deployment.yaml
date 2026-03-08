@@ -3,6 +3,8 @@ kind: Deployment
 metadata:
   name: thelounge
   namespace: thelounge
+  annotations:
+    argocd.argoproj.io/sync-wave: "20"
 spec:
   replicas: 1
   strategy:
@@ -20,38 +22,12 @@ spec:
       nodeSelector:
         kubernetes.io/hostname: k8s-wk-0
       initContainers:
-        - name: fetch-bootstrap-secret
-          image: hashicorp/vault:1.21.4
-          imagePullPolicy: IfNotPresent
-          env:
-            - name: VAULT_ADDR
-              valueFrom:
-                secretKeyRef:
-                  name: thelounge-vault-reader
-                  key: VAULT_ADDR
-            - name: VAULT_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  name: thelounge-vault-reader
-                  key: VAULT_TOKEN
-          command:
-            - /bin/sh
-            - -lc
-            - |
-              set -eu
-              TL_USERNAME="$(vault kv get -field=username secret/k8s/thelounge)"
-              TL_PASSWORD="$(vault kv get -field=password secret/k8s/thelounge)"
-              printf 'TL_USERNAME=%s\nTL_PASSWORD=%s\n' "${TL_USERNAME}" "${TL_PASSWORD}" > /work/bootstrap.env
-              chown 1000:1000 /work/bootstrap.env
-              chmod 0640 /work/bootstrap.env
-          securityContext:
-            allowPrivilegeEscalation: false
-          volumeMounts:
-            - name: bootstrap-env
-              mountPath: /work
         - name: bootstrap-user
           image: ghcr.io/thelounge/thelounge:latest
           imagePullPolicy: IfNotPresent
+          envFrom:
+            - secretRef:
+                name: thelounge-bootstrap
           env:
             - name: THELOUNGE_HOME
               value: /var/opt/thelounge
@@ -60,10 +36,6 @@ spec:
             - -lc
             - |
               set -eu
-              if [ -f /work/bootstrap.env ]; then
-                . /work/bootstrap.env
-                export TL_USERNAME TL_PASSWORD
-              fi
               : "${TL_USERNAME:?TL_USERNAME is required}"
               : "${TL_PASSWORD:?TL_PASSWORD is required}"
               user_file="/var/opt/thelounge/users/${TL_USERNAME}.json"
@@ -87,8 +59,6 @@ spec:
           volumeMounts:
             - name: thelounge-data
               mountPath: /var/opt/thelounge
-            - name: bootstrap-env
-              mountPath: /work
       containers:
         - name: thelounge
           image: ghcr.io/thelounge/thelounge:latest
@@ -113,8 +83,6 @@ spec:
             initialDelaySeconds: 30
             periodSeconds: 20
       volumes:
-        - name: bootstrap-env
-          emptyDir: {}
         - name: thelounge-data
           persistentVolumeClaim:
             claimName: thelounge-data

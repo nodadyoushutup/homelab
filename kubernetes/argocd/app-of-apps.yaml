@@ -46,6 +46,15 @@ spec:
             chartVersion: 0.15.1
             gitPath: kubernetes/democratic-csi-nfs
             syncWave: "26"
+          - name: external-secrets
+            appType: helm
+            helmReleaseName: external-secrets
+            destinationNamespace: external-secrets
+            chartRepo: https://charts.external-secrets.io
+            chartName: external-secrets
+            chartVersion: 2.1.0
+            gitPath: kubernetes/external-secrets
+            syncWave: "27"
           - name: thelounge
             appType: manifests
             destinationNamespace: thelounge
