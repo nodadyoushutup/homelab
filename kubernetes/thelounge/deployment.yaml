@@ -42,7 +42,8 @@ spec:
               TL_USERNAME="$(vault kv get -field=username secret/k8s/thelounge)"
               TL_PASSWORD="$(vault kv get -field=password secret/k8s/thelounge)"
               printf 'TL_USERNAME=%s\nTL_PASSWORD=%s\n' "${TL_USERNAME}" "${TL_PASSWORD}" > /work/bootstrap.env
-              chmod 0600 /work/bootstrap.env
+              chown 1000:1000 /work/bootstrap.env
+              chmod 0640 /work/bootstrap.env
           securityContext:
             allowPrivilegeEscalation: false
           volumeMounts:
