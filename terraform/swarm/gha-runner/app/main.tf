@@ -6,6 +6,16 @@ resource "docker_network" "gha_runner" {
 resource "docker_service" "gha_runner" {
   name = "gha-runner"
 
+  dynamic "auth" {
+    for_each = try(var.provider_config.registry_auth, null) == null ? [] : [var.provider_config.registry_auth]
+
+    content {
+      server_address = try(auth.value.address, "ghcr.io")
+      username       = auth.value.username
+      password       = auth.value.password
+    }
+  }
+
   task_spec {
     placement {
       constraints = ["node.labels.role==swarm-cp-0"]

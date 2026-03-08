@@ -26,7 +26,7 @@ variable "github_runner_access_token" {
 variable "github_runner_image" {
   description = "Container image reference for the runner service (prefer GHCR tag builds from workflow_dispatch)."
   type        = string
-  default     = "ghcr.io/nodadyoushutup/gha-runner:latest"
+  default     = "ghcr.io/nodadyoushutup/gha-runner:0.0.1"
 }
 
 variable "github_runner_name" {
