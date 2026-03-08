@@ -68,16 +68,18 @@ spec:
               : "${TL_PASSWORD:?TL_PASSWORD is required}"
               user_file="/var/opt/thelounge/users/${TL_USERNAME}.json"
               mkdir -p /var/opt/thelounge/users
-              if [ -f "$user_file" ]; then
-                echo "The Lounge user ${TL_USERNAME} already exists; skipping bootstrap."
-                exit 0
+              if [ ! -f "$user_file" ]; then
+                echo "Creating The Lounge user ${TL_USERNAME}"
+                thelounge add --password "${TL_PASSWORD}" "${TL_USERNAME}"
+              else
+                echo "The Lounge user ${TL_USERNAME} exists; keeping profile and syncing password."
               fi
-              echo "Creating The Lounge user ${TL_USERNAME}"
-              thelounge add --password "${TL_PASSWORD}" "${TL_USERNAME}"
               if [ ! -f "$user_file" ]; then
                 echo "Failed to bootstrap The Lounge user ${TL_USERNAME}" >&2
                 exit 1
               fi
+              echo "Syncing password for ${TL_USERNAME} from Vault secret"
+              thelounge reset --password "${TL_PASSWORD}" "${TL_USERNAME}"
           securityContext:
             runAsUser: 1000
             runAsGroup: 1000
