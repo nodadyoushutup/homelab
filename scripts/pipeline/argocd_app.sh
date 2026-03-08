@@ -389,10 +389,10 @@ main() {
   kubectl -n "${ARGOCD_NAMESPACE}" rollout status deployment/argocd-redis --timeout=10m
   kubectl -n "${ARGOCD_NAMESPACE}" rollout status deployment/argocd-applicationset-controller --timeout=10m
 
-  echo "[STEP] Ensuring admin account and web terminal are enabled"
+  echo "[STEP] Ensuring admin account capabilities and web terminal are enabled"
   kubectl -n "${ARGOCD_NAMESPACE}" patch configmap argocd-cm \
     --type merge \
-    -p '{"data":{"admin.enabled":"true","exec.enabled":"true"}}'
+    -p '{"data":{"admin.enabled":"true","accounts.admin":"apiKey, login","exec.enabled":"true"}}'
 
   ensure_argocd_terminal_exec_rbac
 
