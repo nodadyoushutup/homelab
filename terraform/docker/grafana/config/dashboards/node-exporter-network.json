@@ -788,6 +788,31 @@
   "templating": {
     "list": [
       {
+        "name": "platform",
+        "label": "Platform",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
+        "definition": "label_values(up{job=\"node_exporter\"}, platform)",
+        "query": "label_values(up{job=\"node_exporter\"}, platform)",
+        "includeAll": true,
+        "allValue": ".*",
+        "multi": true,
+        "refresh": 2,
+        "sort": 1,
+        "options": [],
+        "regex": "",
+        "hide": 0,
+        "skipUrlSync": false,
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        }
+      },
+      {
         "name": "node",
         "label": "Node exporter",
         "type": "query",
@@ -795,8 +820,8 @@
           "type": "prometheus",
           "uid": "prometheus"
         },
-        "definition": "label_values(up{job=\"node_exporter\"}, instance)",
-        "query": "label_values(up{job=\"node_exporter\"}, instance)",
+        "definition": "label_values(up{job=\"node_exporter\", platform=~\"$platform\"}, instance)",
+        "query": "label_values(up{job=\"node_exporter\", platform=~\"$platform\"}, instance)",
         "includeAll": true,
         "allValue": ".*",
         "multi": true,
