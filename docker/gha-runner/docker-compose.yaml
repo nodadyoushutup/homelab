@@ -1,0 +1,17 @@
+services:
+  gha-runner:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        RUNNER_VERSION: "${RUNNER_VERSION:-2.326.0}"
+    environment:
+      GH_RUNNER_URL: "${GH_RUNNER_URL}"
+      GH_RUNNER_TOKEN: "${GH_RUNNER_TOKEN}"
+      GH_RUNNER_NAME: "${GH_RUNNER_NAME:-homelab-gha-runner}"
+      GH_RUNNER_LABELS: "${GH_RUNNER_LABELS:-self-hosted,linux,homelab}"
+      GH_RUNNER_WORKDIR: "${GH_RUNNER_WORKDIR:-_work}"
+      GH_RUNNER_EPHEMERAL: "${GH_RUNNER_EPHEMERAL:-false}"
+      GH_RUNNER_DISABLEUPDATE: "${GH_RUNNER_DISABLEUPDATE:-true}"
+      GH_RUNNER_REMOVE_TOKEN: "${GH_RUNNER_REMOVE_TOKEN:-}"
+    restart: unless-stopped

@@ -6,9 +6,15 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BASE_LIB="${SCRIPT_DIR}/base.sh"
-KNOWN_SERVICES=(dozzle grafana graphite jenkins mcp-argocd mcp-atlassian mcp-cloudflare mcp-fortigate mcp-github minio nginx-proxy-manager node-exporter prometheus webserver-image)
+KNOWN_SERVICES=(dozzle gha-runner grafana graphite jenkins mcp-argocd mcp-atlassian mcp-cloudflare mcp-fortigate mcp-github minio nginx-proxy-manager node-exporter prometheus webserver-image)
 declare -A SERVICE_MAP=(
   [dozzle]="dozzle"
+  [gha-runner]="gha-runner"
+  [gha_runner]="gha-runner"
+  [github-actions-runner]="gha-runner"
+  [github_actions_runner]="gha-runner"
+  [actions-runner]="gha-runner"
+  [actions_runner]="gha-runner"
   [grafana]="grafana"
   [graphite]="graphite"
   [webserver-image]="webserver-image"

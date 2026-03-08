@@ -9,15 +9,12 @@ variable "zone_id" {
 }
 
 variable "records" {
-  description = "DNS records managed in Cloudflare."
+  description = "A records managed in Cloudflare."
   type = list(object({
-    key       = string
-    record_id = string
-    name      = string
-    type      = string
-    content   = string
-    ttl       = number
-    proxied   = bool
-    priority  = optional(number)
+    key     = string
+    name    = string
+    content = string
+    ttl     = number
+    proxied = bool
   }))
 }
