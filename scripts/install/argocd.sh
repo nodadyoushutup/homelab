@@ -11,10 +11,10 @@ ARGOCD_NAMESPACE="${ARGOCD_NAMESPACE:-argocd}"
 ARGOCD_MANIFEST_URL="${ARGOCD_MANIFEST_URL:-https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml}"
 ARGOCD_ADMIN_USERNAME="${ARGOCD_ADMIN_USERNAME:-}"
 ARGOCD_ADMIN_PASSWORD="${ARGOCD_ADMIN_PASSWORD:-}"
-ARGOCD_SERVER_EXPOSURE_MODE="${ARGOCD_SERVER_EXPOSURE_MODE:-LoadBalancer}"
+ARGOCD_SERVER_EXPOSURE_MODE="${ARGOCD_SERVER_EXPOSURE_MODE:-ClusterIP}"
 ARGOCD_SERVER_HTTP_NODEPORT="${ARGOCD_SERVER_HTTP_NODEPORT:-30080}"
 ARGOCD_SERVER_HTTPS_NODEPORT="${ARGOCD_SERVER_HTTPS_NODEPORT:-30443}"
-ARGOCD_SERVER_LOADBALANCER_IP="${ARGOCD_SERVER_LOADBALANCER_IP:-192.168.1.200}"
+ARGOCD_SERVER_LOADBALANCER_IP="${ARGOCD_SERVER_LOADBALANCER_IP:-}"
 ARGOCD_SERVER_LOADBALANCER_CLASS="${ARGOCD_SERVER_LOADBALANCER_CLASS:-}"
 
 # GitOps app-of-apps settings.
@@ -28,14 +28,6 @@ ARGOCD_GITOPS_REPO_SECRET_NAME="${ARGOCD_GITOPS_REPO_SECRET_NAME:-homelab-gitops
 ARGOCD_GITOPS_REPO_USERNAME="${ARGOCD_GITOPS_REPO_USERNAME:-}"
 ARGOCD_GITOPS_REPO_PASSWORD="${ARGOCD_GITOPS_REPO_PASSWORD:-}"
 ARGOCD_GITOPS_REPO_SSH_PRIVATE_KEY="${ARGOCD_GITOPS_REPO_SSH_PRIVATE_KEY:-}"
-
-GITOPS_CHILD_APPS=(
-  "metallb"
-  "ingress-nginx"
-  "democratic-csi-iscsi"
-  "democratic-csi-nfs"
-  "thelounge"
-)
 
 wait_for_secret() {
   local ns="$1"
@@ -134,9 +126,81 @@ pick_primary_node_ip() {
   kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}'
 }
 
+validate_loadbalancer_ip_in_metallb_pools() {
+  local requested_ip="$1"
+  python3 - "${requested_ip}" <<'PY'
+import ipaddress
+import json
+import subprocess
+import sys
+
+requested = sys.argv[1].strip()
+if not requested:
+    print("[ERR] ARGOCD_SERVER_LOADBALANCER_IP must be set when ARGOCD_SERVER_EXPOSURE_MODE=LoadBalancer.", file=sys.stderr)
+    sys.exit(1)
+
+try:
+    requested_ip = ipaddress.ip_address(requested)
+except ValueError:
+    print(f"[ERR] Invalid ARGOCD_SERVER_LOADBALANCER_IP: {requested}", file=sys.stderr)
+    sys.exit(1)
+
+try:
+    pools_raw = subprocess.check_output(
+        ["kubectl", "get", "ipaddresspools.metallb.io", "-A", "-o", "json"],
+        text=True,
+    )
+except subprocess.CalledProcessError as exc:
+    print(f"[ERR] Failed to query MetalLB IPAddressPools: {exc}", file=sys.stderr)
+    sys.exit(1)
+
+pools = json.loads(pools_raw).get("items", [])
+if not pools:
+    print("[ERR] No MetalLB IPAddressPools found; refusing invalid Argo CD LoadBalancer configuration.", file=sys.stderr)
+    sys.exit(1)
+
+def ip_matches_range(candidate_ip, raw_range):
+    value = raw_range.strip()
+    if "-" in value:
+        start_raw, end_raw = [part.strip() for part in value.split("-", 1)]
+        start_ip = ipaddress.ip_address(start_raw)
+        end_ip = ipaddress.ip_address(end_raw)
+        if start_ip.version != candidate_ip.version or end_ip.version != candidate_ip.version:
+            return False
+        if int(start_ip) > int(end_ip):
+            start_ip, end_ip = end_ip, start_ip
+        return int(start_ip) <= int(candidate_ip) <= int(end_ip)
+
+    network = ipaddress.ip_network(value, strict=False)
+    return network.version == candidate_ip.version and candidate_ip in network
+
+for pool in pools:
+    namespace = pool.get("metadata", {}).get("namespace", "?")
+    name = pool.get("metadata", {}).get("name", "?")
+    addresses = pool.get("spec", {}).get("addresses", [])
+    for address_range in addresses:
+        try:
+            if ip_matches_range(requested_ip, address_range):
+                print(f"[INFO] Using Argo CD LoadBalancer IP {requested_ip} from MetalLB pool {namespace}/{name} ({address_range}).")
+                sys.exit(0)
+        except ValueError:
+            continue
+
+print(f"[ERR] ARGOCD_SERVER_LOADBALANCER_IP {requested_ip} is outside all configured MetalLB pools.", file=sys.stderr)
+print("[ERR] Available MetalLB pools/ranges:", file=sys.stderr)
+for pool in pools:
+    namespace = pool.get("metadata", {}).get("namespace", "?")
+    name = pool.get("metadata", {}).get("name", "?")
+    for address_range in pool.get("spec", {}).get("addresses", []):
+        print(f"  - {namespace}/{name}: {address_range}", file=sys.stderr)
+sys.exit(1)
+PY
+}
+
 configure_argocd_service_exposure() {
   case "${ARGOCD_SERVER_EXPOSURE_MODE}" in
     LoadBalancer|loadbalancer)
+      validate_loadbalancer_ip_in_metallb_pools "${ARGOCD_SERVER_LOADBALANCER_IP}"
       echo "[STEP] Exposing argocd-server as LoadBalancer (${ARGOCD_SERVER_LOADBALANCER_IP}, class ${ARGOCD_SERVER_LOADBALANCER_CLASS})"
       kubectl -n "${ARGOCD_NAMESPACE}" delete svc argocd-server --ignore-not-found=true
       kubectl -n "${ARGOCD_NAMESPACE}" apply -f - <<EOF_LB
@@ -439,24 +503,21 @@ main() {
 
   wait_for_argocd_applicationset_present "${ARGOCD_GITOPS_APPSET_NAME}" 120 2
 
-  local app
-  for app in "${GITOPS_CHILD_APPS[@]}"; do
-    wait_for_argocd_application_present "${app}" 180 2
-  done
-
-  for app in "${GITOPS_CHILD_APPS[@]}"; do
-    wait_for_argocd_application_synced_healthy "${app}" 240 5
-  done
-
   local lan_url=""
   case "${ARGOCD_SERVER_EXPOSURE_MODE}" in
     LoadBalancer|loadbalancer)
       lan_url="https://${ARGOCD_SERVER_LOADBALANCER_IP}"
       ;;
-    *)
+    NodePort|nodeport)
       local access_ip=""
       access_ip="$(pick_primary_node_ip)"
       lan_url="https://${access_ip}:${ARGOCD_SERVER_HTTPS_NODEPORT}"
+      ;;
+    ClusterIP|clusterip)
+      lan_url="ClusterIP only (access via ingress or kubectl port-forward)."
+      ;;
+    *)
+      lan_url="Unknown exposure mode (${ARGOCD_SERVER_EXPOSURE_MODE})"
       ;;
   esac
 
@@ -472,13 +533,6 @@ ApplicationSet: ${ARGOCD_GITOPS_APPSET_NAME}
 GitOps repo: ${ARGOCD_GITOPS_REPO_URL}
 GitOps revision: ${ARGOCD_GITOPS_REPO_REVISION}
 GitOps app-of-apps file: ${ARGOCD_GITOPS_APPS_FILE}
-
-Argo CD child apps now reconcile from git commits:
-- metallb
-- ingress-nginx
-- democratic-csi-iscsi
-- democratic-csi-nfs
-- thelounge
 EOF_DONE
 }
 
