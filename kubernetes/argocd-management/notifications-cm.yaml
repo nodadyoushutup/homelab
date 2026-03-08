@@ -21,30 +21,69 @@ data:
           {
             "content": ":arrows_counterclockwise: **{{.app.metadata.name}}** sync={{.app.status.sync.status}} health={{.app.status.health.status}}. {{.context.argocdUrl}}/applications/{{.app.metadata.name}}"
           }
-  template.app-health-degraded-discord: |
+  template.app-health-status-discord: |
     webhook:
       discord:
         method: POST
         body: |
           {
-            "content": ":warning: **{{.app.metadata.name}}** health degraded. {{.context.argocdUrl}}/applications/{{.app.metadata.name}}"
+            "content": ":heartbeat: **{{.app.metadata.name}}** health={{.app.status.health.status}} sync={{.app.status.sync.status}}. {{.context.argocdUrl}}/applications/{{.app.metadata.name}}"
           }
+  trigger.on-sync-running-discord: |
+    - when: app.status != nil and app.status.operationState != nil and app.status.operationState.phase == 'Running'
+      oncePer: app.status.operationState.startedAt
+      send:
+        - app-sync-status-discord
+  trigger.on-sync-succeeded-discord: |
+    - when: app.status != nil and app.status.operationState != nil and app.status.operationState.phase == 'Succeeded'
+      oncePer: app.status.operationState.finishedAt
+      send:
+        - app-sync-status-discord
   trigger.on-sync-failed-discord: |
     - when: app.status != nil and app.status.operationState != nil and app.status.operationState.phase in ['Error', 'Failed']
+      oncePer: app.status.operationState.finishedAt
       send:
         - app-sync-status-discord
   trigger.on-sync-unknown-discord: |
     - when: app.status != nil and app.status.sync != nil and app.status.sync.status == 'Unknown'
+      oncePer: app.status.reconciledAt
       send:
         - app-sync-status-discord
+  trigger.on-health-healthy-discord: |
+    - when: app.status != nil and app.status.health != nil and app.status.health.status == 'Healthy'
+      oncePer: app.status.sync.revision
+      send:
+        - app-health-status-discord
   trigger.on-health-degraded-discord: |
     - when: app.status != nil and app.status.health != nil and app.status.health.status == 'Degraded'
+      oncePer: app.status.reconciledAt
       send:
-        - app-health-degraded-discord
+        - app-health-status-discord
+  trigger.on-health-progressing-discord: |
+    - when: app.status != nil and app.status.health != nil and app.status.health.status == 'Progressing'
+      oncePer: app.status.reconciledAt
+      send:
+        - app-health-status-discord
+  trigger.on-health-missing-discord: |
+    - when: app.status != nil and app.status.health != nil and app.status.health.status == 'Missing'
+      oncePer: app.status.reconciledAt
+      send:
+        - app-health-status-discord
+  trigger.on-health-suspended-discord: |
+    - when: app.status != nil and app.status.health != nil and app.status.health.status == 'Suspended'
+      oncePer: app.status.reconciledAt
+      send:
+        - app-health-status-discord
   subscriptions: |
     - recipients:
         - discord
       triggers:
+        - on-sync-running-discord
+        - on-sync-succeeded-discord
         - on-sync-failed-discord
         - on-sync-unknown-discord
+        - on-health-healthy-discord
         - on-health-degraded-discord
+        - on-health-progressing-discord
+        - on-health-missing-discord
+        - on-health-suspended-discord
