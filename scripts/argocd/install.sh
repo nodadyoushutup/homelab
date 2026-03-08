@@ -3,17 +3,17 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
-PIPELINE_SCRIPT_ROOT="${ROOT_DIR}/scripts/pipeline"
+PIPELINE_SCRIPT_ROOT="${ROOT_DIR}/scripts/terraform"
 source "${PIPELINE_SCRIPT_ROOT}/load_root_env.sh"
 
-# Temporary plaintext constants (replace with secret management later).
-ARGOCD_NAMESPACE="argocd"
-ARGOCD_MANIFEST_URL="https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml"
-ARGOCD_ADMIN_USERNAME="admin"
-ARGOCD_ADMIN_PASSWORD="password"
-ARGOCD_SERVER_EXPOSURE_MODE="LoadBalancer"
-ARGOCD_SERVER_HTTP_NODEPORT="30080"
-ARGOCD_SERVER_HTTPS_NODEPORT="30443"
+# Runtime configuration.
+ARGOCD_NAMESPACE="${ARGOCD_NAMESPACE:-argocd}"
+ARGOCD_MANIFEST_URL="${ARGOCD_MANIFEST_URL:-https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml}"
+ARGOCD_ADMIN_USERNAME="${ARGOCD_ADMIN_USERNAME:-}"
+ARGOCD_ADMIN_PASSWORD="${ARGOCD_ADMIN_PASSWORD:-}"
+ARGOCD_SERVER_EXPOSURE_MODE="${ARGOCD_SERVER_EXPOSURE_MODE:-LoadBalancer}"
+ARGOCD_SERVER_HTTP_NODEPORT="${ARGOCD_SERVER_HTTP_NODEPORT:-30080}"
+ARGOCD_SERVER_HTTPS_NODEPORT="${ARGOCD_SERVER_HTTPS_NODEPORT:-30443}"
 ARGOCD_SERVER_LOADBALANCER_IP="${ARGOCD_SERVER_LOADBALANCER_IP:-192.168.1.200}"
 ARGOCD_SERVER_LOADBALANCER_CLASS="${ARGOCD_SERVER_LOADBALANCER_CLASS:-}"
 
@@ -22,6 +22,8 @@ ARGOCD_GITOPS_APPSET_NAME="${ARGOCD_GITOPS_APPSET_NAME:-homelab-addons}"
 ARGOCD_GITOPS_REPO_URL="${ARGOCD_GITOPS_REPO_URL:-git@github.com:nodadyoushutup/homelab.git}"
 ARGOCD_GITOPS_REPO_REVISION="${ARGOCD_GITOPS_REPO_REVISION:-HEAD}"
 ARGOCD_GITOPS_APPS_FILE="${ARGOCD_GITOPS_APPS_FILE:-${ROOT_DIR}/kubernetes/argocd/app-of-apps.yaml}"
+ARGOCD_GITOPS_ROOT_APP_NAME="${ARGOCD_GITOPS_ROOT_APP_NAME:-argocd-bootstrap}"
+ARGOCD_GITOPS_ROOT_APP_FILE="${ARGOCD_GITOPS_ROOT_APP_FILE:-${ROOT_DIR}/kubernetes/bootstrap/argocd-bootstrap-app.yaml}"
 ARGOCD_GITOPS_REPO_SECRET_NAME="${ARGOCD_GITOPS_REPO_SECRET_NAME:-homelab-gitops-repo}"
 ARGOCD_GITOPS_REPO_USERNAME="${ARGOCD_GITOPS_REPO_USERNAME:-}"
 ARGOCD_GITOPS_REPO_PASSWORD="${ARGOCD_GITOPS_REPO_PASSWORD:-}"
@@ -58,6 +60,13 @@ require_command() {
   local cmd="$1"
   if ! command -v "${cmd}" >/dev/null 2>&1; then
     echo "[ERR] Missing required command: ${cmd}" >&2
+    exit 1
+  fi
+}
+
+require_argocd_credentials() {
+  if [[ -z "${ARGOCD_ADMIN_USERNAME}" || -z "${ARGOCD_ADMIN_PASSWORD}" ]]; then
+    echo "[ERR] ARGOCD_ADMIN_USERNAME and ARGOCD_ADMIN_PASSWORD must be set (loaded from ${ROOT_DIR}/.env)." >&2
     exit 1
   fi
 }
@@ -345,7 +354,12 @@ cleanup_legacy_gitops_objects() {
   done
 }
 
-apply_app_of_apps_manifest() {
+apply_gitops_root_application() {
+  if [[ ! -f "${ARGOCD_GITOPS_ROOT_APP_FILE}" ]]; then
+    echo "[ERR] Missing root Argo CD application manifest: ${ARGOCD_GITOPS_ROOT_APP_FILE}" >&2
+    exit 1
+  fi
+
   if [[ ! -f "${ARGOCD_GITOPS_APPS_FILE}" ]]; then
     echo "[ERR] Missing app-of-apps manifest: ${ARGOCD_GITOPS_APPS_FILE}" >&2
     exit 1
@@ -354,11 +368,12 @@ apply_app_of_apps_manifest() {
   local rendered_file=""
   rendered_file="$(mktemp)"
   sed \
+    -e "s|__ARGOCD_GITOPS_ROOT_APP_NAME__|$(escape_sed_replacement "${ARGOCD_GITOPS_ROOT_APP_NAME}")|g" \
     -e "s|__ARGOCD_GITOPS_REPO_URL__|$(escape_sed_replacement "${ARGOCD_GITOPS_REPO_URL}")|g" \
     -e "s|__ARGOCD_GITOPS_REPO_REVISION__|$(escape_sed_replacement "${ARGOCD_GITOPS_REPO_REVISION}")|g" \
-    "${ARGOCD_GITOPS_APPS_FILE}" > "${rendered_file}"
+    "${ARGOCD_GITOPS_ROOT_APP_FILE}" > "${rendered_file}"
 
-  echo "[STEP] Applying app-of-apps manifest (${ARGOCD_GITOPS_APPS_FILE})"
+  echo "[STEP] Applying bootstrap Argo CD Application (${ARGOCD_GITOPS_ROOT_APP_NAME})"
   kubectl -n "${ARGOCD_NAMESPACE}" apply -f "${rendered_file}"
   rm -f "${rendered_file}"
 }
@@ -366,6 +381,7 @@ apply_app_of_apps_manifest() {
 main() {
   require_command kubectl
   require_command python3
+  require_argocd_credentials
   ensure_bcrypt_available
 
   export KUBECONFIG="$(pick_kubeconfig)"
@@ -416,7 +432,10 @@ main() {
   auto_load_gitops_ssh_key_if_available
   configure_gitops_repo_secret_if_needed
   cleanup_legacy_gitops_objects
-  apply_app_of_apps_manifest
+  apply_gitops_root_application
+
+  wait_for_argocd_application_present "${ARGOCD_GITOPS_ROOT_APP_NAME}" 120 2
+  wait_for_argocd_application_synced_healthy "${ARGOCD_GITOPS_ROOT_APP_NAME}" 240 5
 
   wait_for_argocd_applicationset_present "${ARGOCD_GITOPS_APPSET_NAME}" 120 2
 
@@ -442,11 +461,13 @@ main() {
   esac
 
   cat <<EOF_DONE
-[DONE] Argo CD is installed and app-of-apps is configured.
+[DONE] Argo CD is installed and bootstrap GitOps is configured.
 Admin username: ${ARGOCD_ADMIN_USERNAME}
 Admin password: ${ARGOCD_ADMIN_PASSWORD}
 Namespace: ${ARGOCD_NAMESPACE}
 LAN URL: ${lan_url}
+Root app: ${ARGOCD_GITOPS_ROOT_APP_NAME}
+Root app manifest: ${ARGOCD_GITOPS_ROOT_APP_FILE}
 ApplicationSet: ${ARGOCD_GITOPS_APPSET_NAME}
 GitOps repo: ${ARGOCD_GITOPS_REPO_URL}
 GitOps revision: ${ARGOCD_GITOPS_REPO_REVISION}

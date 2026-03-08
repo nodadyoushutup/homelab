@@ -33,9 +33,9 @@ This plan tracks adding the first MCP server in Docker Swarm using the direct st
 ## Stage 2 - operational parity
 
 - [x] Add purge script and command routing:
-  - `scripts/purge/mcp-atlassian.sh`
-  - aliases in `scripts/purge/purge.sh` for `mcp-atlassian` and legacy spelling variants
-  Mark complete when: `scripts/purge/purge.sh mcp-atlassian` resolves correctly.
+  - `scripts/docker/purge/mcp-atlassian.sh`
+  - aliases in `scripts/docker/purge/purge.sh` for `mcp-atlassian` and legacy spelling variants
+  Mark complete when: `scripts/docker/purge/purge.sh mcp-atlassian` resolves correctly.
 
 ## Validation notes
 
@@ -44,7 +44,7 @@ This plan tracks adding the first MCP server in Docker Swarm using the direct st
   - `terraform fmt -recursive terraform/docker/mcp-atlassian/app`
   - `terraform -chdir=terraform/docker/mcp-atlassian/app init -backend=false -input=false`
   - `terraform -chdir=terraform/docker/mcp-atlassian/app validate`
-  - `bash -n terraform/docker/mcp-atlassian/app/pipeline/app.sh scripts/purge/mcp-atlassian.sh scripts/purge/purge.sh`
+  - `bash -n terraform/docker/mcp-atlassian/app/pipeline/app.sh scripts/docker/purge/mcp-atlassian.sh scripts/docker/purge/purge.sh`
   - `ls -ld /mnt/eapp/.tfvars/mcp-atlassian /mnt/eapp/.tfvars/mcp-atlassian/app.tfvars`
 
 ## Tfvars schema (sanitized)

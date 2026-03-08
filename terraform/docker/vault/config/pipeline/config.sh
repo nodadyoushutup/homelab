@@ -3,7 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/../../../../.." && pwd)"
-PIPELINE_SCRIPT_ROOT="${ROOT_DIR}/scripts/pipeline"
+PIPELINE_SCRIPT_ROOT="${ROOT_DIR}/scripts/terraform"
 source "${PIPELINE_SCRIPT_ROOT}/load_root_env.sh"
 
 if [[ $# -gt 0 ]]; then
@@ -13,7 +13,7 @@ if [[ $# -gt 0 ]]; then
   exit 2
 fi
 
-VAULT_UNSEAL_SCRIPT="${ROOT_DIR}/scripts/vault_unseal.sh"
+VAULT_UNSEAL_SCRIPT="${ROOT_DIR}/scripts/vault/unseal.sh"
 VAULT_TFVARS_HOME="${TFVARS_HOME_DIR:-${TFVARS_DIR:-/mnt/eapp/.tfvars}}"
 VAULT_TFVARS_DIR="${VAULT_TFVARS_HOME}/vault"
 VAULT_ENV_FILE="${VAULT_TFVARS_DIR}/.env"
@@ -74,7 +74,7 @@ assert_unsealed() {
     return 0
   fi
 
-  echo "[ERR] Vault remains sealed after auto-unseal attempt. Run scripts/vault_unseal.sh manually and retry." >&2
+  echo "[ERR] Vault remains sealed after auto-unseal attempt. Run scripts/vault/unseal.sh manually and retry." >&2
   exit 1
 }
 
@@ -93,7 +93,7 @@ pipeline_pre_terraform() {
   assert_vault_reachable
 
   if ! "${VAULT_UNSEAL_SCRIPT}"; then
-    echo "[ERR] Auto-unseal failed in config pipeline. Run scripts/vault_unseal.sh manually and retry." >&2
+    echo "[ERR] Auto-unseal failed in config pipeline. Run scripts/vault/unseal.sh manually and retry." >&2
     exit 1
   fi
 

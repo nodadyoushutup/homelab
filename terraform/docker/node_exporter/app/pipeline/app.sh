@@ -3,7 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/../../../../.." && pwd)"
-PIPELINE_SCRIPT_ROOT="${ROOT_DIR}/scripts/pipeline"
+PIPELINE_SCRIPT_ROOT="${ROOT_DIR}/scripts/terraform"
 source "${PIPELINE_SCRIPT_ROOT}/load_root_env.sh"
 
 SERVICE_NAME="node_exporter"

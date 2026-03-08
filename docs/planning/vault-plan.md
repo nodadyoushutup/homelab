@@ -18,7 +18,7 @@ This plan tracks introducing HashiCorp Vault into Docker Swarm using the existin
 - [x] Confirm provider/tooling approach:
   - `kreuzwerker/docker` for app stage resources.
   - `hashicorp/vault` for config stage resources.
-  - shell scripts for bootstrap/unseal/seal (`scripts/vault_bootstrap.sh`, `scripts/vault_unseal.sh`, `scripts/vault_seal.sh`).
+  - shell scripts for bootstrap/unseal/seal (`scripts/vault/bootstrap.sh`, `scripts/vault/unseal.sh`, `scripts/vault/seal.sh`).
   Mark complete when: provider choices and script responsibilities are explicitly documented here.
 - [x] Define tfvars/backend paths and verify existence/readiness:
   - backend: `/mnt/eapp/.tfvars/minio.backend.hcl`
@@ -39,17 +39,17 @@ This plan tracks introducing HashiCorp Vault into Docker Swarm using the existin
 - [x] Storage durability: persisted data volume is required.
   Mark complete when: app stage defines persistent Docker volume(s) for Vault storage and restart preserves data.
 - [x] Bootstrap execution mode: automatic after app deploy.
-  Mark complete when: `vault/app` pipeline invokes `scripts/vault_bootstrap.sh` after successful Terraform apply, and reruns are safe/idempotent.
+  Mark complete when: `vault/app` pipeline invokes `scripts/vault/bootstrap.sh` after successful Terraform apply, and reruns are safe/idempotent.
 - [x] Unseal/seal execution mode: unseal runs automatically in config pipeline, with standalone manual scripts available; seal remains manual by operator.
-  Mark complete when: `config.sh` runs `vault_unseal.sh` automatically, while `vault_unseal.sh` and `vault_seal.sh` remain directly runnable for manual operations.
+  Mark complete when: `config.sh` runs `unseal.sh` automatically, while `unseal.sh` and `seal.sh` remain directly runnable for manual operations.
 - [x] Config authentication source: root token from bootstrap artifacts for now.
   Mark complete when: `vault/config` uses root token sourced from local bootstrap artifacts/env (no repo-committed token).
 - [x] Config safety gate: hard-fail when Vault is sealed.
-  Mark complete when: config pipeline attempts auto-unseal first, then exits with a clear message to run `scripts/vault_unseal.sh` manually if Vault remains sealed.
+  Mark complete when: config pipeline attempts auto-unseal first, then exits with a clear message to run `scripts/vault/unseal.sh` manually if Vault remains sealed.
 - [x] Unseal behavior: fully automatic (non-interactive) using required key shares from `init.json`.
-  Mark complete when: `scripts/vault_unseal.sh` runs non-interactively and no-ops when already unsealed.
+  Mark complete when: `scripts/vault/unseal.sh` runs non-interactively and no-ops when already unsealed.
 - [x] Seal behavior default: local Vault target only.
-  Mark complete when: `scripts/vault_seal.sh` defaults to local service endpoint without requiring a host argument.
+  Mark complete when: `scripts/vault/seal.sh` defaults to local service endpoint without requiring a host argument.
 - [x] Network exposure: publish Vault port externally for now.
   Mark complete when: app stage publishes Vault API/UI port on the chosen node.
 - [x] Published port selection: use default Vault port `8200` unless conflict is detected.
@@ -61,13 +61,13 @@ This plan tracks introducing HashiCorp Vault into Docker Swarm using the existin
 - [x] Config apply trigger mode: manual invocation only (not chained from app pipeline).
   Mark complete when: app pipeline stops after bootstrap and does not run config automatically.
 - [x] Config pipeline behavior: auto-run unseal before Terraform config apply.
-  Mark complete when: `vault/config/pipeline/config.sh` invokes `scripts/vault_unseal.sh` before Terraform operations and proceeds when already unsealed.
+  Mark complete when: `vault/config/pipeline/config.sh` invokes `scripts/vault/unseal.sh` before Terraform operations and proceeds when already unsealed.
 - [x] Config pipeline failure policy: fail fast when auto-unseal fails.
   Mark complete when: `config.sh` exits immediately on unseal failure and does not run any Terraform commands.
-- [x] Script reuse model: `vault_unseal.sh` and `vault_seal.sh` are standalone operator tools and reusable by pipelines.
+- [x] Script reuse model: `unseal.sh` and `seal.sh` are standalone operator tools and reusable by pipelines.
   Mark complete when: scripts support direct manual execution and are called by pipeline steps without code duplication.
 - [x] Unseal no-op UX: emit explicit status when Vault is already unsealed.
-  Mark complete when: `vault_unseal.sh` and config pipeline logs clearly state "already unsealed, continuing" on no-op path.
+  Mark complete when: `unseal.sh` and config pipeline logs clearly state "already unsealed, continuing" on no-op path.
 - [x] Image policy: pin an explicit current stable Vault image tag at implementation time.
   Mark complete when: Terraform resource references an explicit Vault image tag directly (no local indirection).
 - [x] Day-1 transport mode: internal HTTP only (TLS deferred).
@@ -83,7 +83,7 @@ This plan tracks introducing HashiCorp Vault into Docker Swarm using the existin
 - [x] Input path policy: fixed tfvars/backend naming for Vault (no per-run overrides).
   Mark complete when: app/config pipelines resolve only the canonical Vault tfvars/backend paths and reject/ignore override flags.
 - [x] Unseal env fallback policy: if `/mnt/eapp/.tfvars/vault/.env` is missing, use default `VAULT_ADDR=http://swarm-cp-0.local:8200` with an explicit warning message.
-  Mark complete when: `vault_unseal.sh` logs fallback usage and continues with the default address.
+  Mark complete when: `unseal.sh` logs fallback usage and continues with the default address.
 - [x] Config env fallback policy: if `/mnt/eapp/.tfvars/vault/.env` is missing, use default `VAULT_ADDR=http://swarm-cp-0.local:8200` with warning; hard-fail if `VAULT_TOKEN` is unavailable.
   Mark complete when: `config.sh` can proceed with address fallback but exits before Terraform when token input is missing.
 - [x] Vault storage backend: integrated Raft.
@@ -117,7 +117,7 @@ This plan tracks introducing HashiCorp Vault into Docker Swarm using the existin
 - [x] Secret rotation workflow: Terraform-managed via tfvars updates.
   Mark complete when: docs/runbook specify editing `/mnt/eapp/.tfvars/vault/config.tfvars` then rerunning `terraform/docker/vault/config/pipeline/config.sh` (instead of manual `vault kv put`) for standard secret updates.
 - [x] Seal script UX: no confirmation flag/prompt required.
-  Mark complete when: `scripts/vault_seal.sh` performs immediate seal action on execution (with status logging) without `--yes` gating.
+  Mark complete when: `scripts/vault/seal.sh` performs immediate seal action on execution (with status logging) without `--yes` gating.
 - [x] Config pipeline execution mode: single-run `terraform init/plan/apply` (same as existing Swarm pipelines).
   Mark complete when: `terraform/docker/vault/config/pipeline/config.sh` performs init, plan, and apply in one invocation after successful auto-unseal.
 
@@ -143,7 +143,7 @@ This plan tracks introducing HashiCorp Vault into Docker Swarm using the existin
 ## Stage 2 - operational scripts (bootstrap/unseal/seal)
 
 - [x] Add bootstrap script:
-  - `scripts/vault_bootstrap.sh`
+  - `scripts/vault/bootstrap.sh`
   - waits for Vault readiness
   - auto-creates `/mnt/eapp/.tfvars/vault/` when missing
   - checks initialization status first (idempotent no-op when already initialized)
@@ -153,13 +153,13 @@ This plan tracks introducing HashiCorp Vault into Docker Swarm using the existin
   - sets local artifact permissions per temporary policy (`chmod 775`)
   Mark complete when: rerunning bootstrap does not reinitialize Vault and all expected local files are created/validated.
 - [x] Wire bootstrap execution into app deploy flow.
-  Mark complete when: `terraform/docker/vault/app/pipeline/app.sh` automatically runs `scripts/vault_bootstrap.sh` after successful apply.
+  Mark complete when: `terraform/docker/vault/app/pipeline/app.sh` automatically runs `scripts/vault/bootstrap.sh` after successful apply.
 - [x] Add app pipeline preflight checks.
   Mark complete when: `terraform/docker/vault/app/pipeline/app.sh` validates target node/port assumptions (including host port `8200` availability) before Terraform apply.
 - [x] Add app pipeline post-deploy health validation.
   Mark complete when: `terraform/docker/vault/app/pipeline/app.sh` validates Vault health endpoint after apply/bootstrap and fails with actionable diagnostics on unhealthy state.
 - [x] Add unseal script:
-  - `scripts/vault_unseal.sh`
+  - `scripts/vault/unseal.sh`
   - waits for Vault readiness
   - checks seal status first (idempotent no-op when already unsealed)
   - sources `/mnt/eapp/.tfvars/vault/.env` when present; otherwise logs fallback and uses `VAULT_ADDR=http://swarm-cp-0.local:8200`
@@ -168,7 +168,7 @@ This plan tracks introducing HashiCorp Vault into Docker Swarm using the existin
   - runs non-interactively using the required number of key shares
   Mark complete when: running script twice is safe and second run no-ops cleanly.
 - [x] Add seal script:
-  - `scripts/vault_seal.sh`
+  - `scripts/vault/seal.sh`
   - defaults to local Vault service target
   - executes immediately without interactive confirmation prompt
   - validates target and authentication before sealing
@@ -177,7 +177,7 @@ This plan tracks introducing HashiCorp Vault into Docker Swarm using the existin
   - where keys/tokens live (outside git, local-only under `/mnt/eapp/.tfvars/vault`)
   - expected operator flow: app apply (auto bootstrap) -> config apply (auto unseal + terraform apply)
   - standard secret updates: edit `/mnt/eapp/.tfvars/vault/config.tfvars` and rerun `config.sh`
-  - manual fallback flow: `scripts/vault_unseal.sh` -> `config.sh`
+  - manual fallback flow: `scripts/vault/unseal.sh` -> `config.sh`
   - no container mount of host `/mnt/eapp/.tfvars`; bootstrap captures output to host via `docker exec ... > /mnt/eapp/.tfvars/vault/init.json`
   - temporary artifact permission policy (`775`) and follow-up hardening task
   Mark complete when: docs include exact command examples and secret-handling warnings.
@@ -220,14 +220,14 @@ This plan tracks introducing HashiCorp Vault into Docker Swarm using the existin
   Mark complete when: Jenkins wrappers/registry entries targeted by this effort are removed or clearly disabled, and no Vault work depends on Jenkins.
 - [x] Define bash-first deployment runbook order in docs:
   - app pipeline (`app.sh`)
-  - automatic bootstrap script invocation (`vault_bootstrap.sh`) from app pipeline
-  - config pipeline (`config.sh`) with automatic unseal invocation (`vault_unseal.sh`)
-  - optional manual script usage (`vault_unseal.sh`, `vault_seal.sh`) for operator interventions
+  - automatic bootstrap script invocation (`bootstrap.sh`) from app pipeline
+  - config pipeline (`config.sh`) with automatic unseal invocation (`unseal.sh`)
+  - optional manual script usage (`unseal.sh`, `seal.sh`) for operator interventions
   Mark complete when: sequence is documented in wiki/planning with copy/paste commands.
 - [x] Ensure shell pipeline entrypoints use fixed Vault tfvars/backend inputs.
   Mark complete when: `app.sh` and `config.sh` use canonical `/mnt/eapp/.tfvars/vault/{app.tfvars,config.tfvars}` plus `/mnt/eapp/.tfvars/minio.backend.hcl` without per-run override switches.
 - [x] Wire unseal into config pipeline flow.
-  Mark complete when: `terraform/docker/vault/config/pipeline/config.sh` calls `scripts/vault_unseal.sh` before Terraform `init/plan/apply`, logs explicit no-op when already unsealed, and exits immediately (without Terraform) if unseal fails.
+  Mark complete when: `terraform/docker/vault/config/pipeline/config.sh` calls `scripts/vault/unseal.sh` before Terraform `init/plan/apply`, logs explicit no-op when already unsealed, and exits immediately (without Terraform) if unseal fails.
 
 ## Stage 5 - validation and handoff
 
@@ -256,7 +256,7 @@ This plan tracks introducing HashiCorp Vault into Docker Swarm using the existin
   - `terraform -chdir=terraform/docker/vault/app init -backend=false -input=false`
   - `terraform -chdir=terraform/docker/vault/app validate` (pass)
   - image pin lookup: `docker buildx imagetools inspect hashicorp/vault:1.21.4`
-  - `bash -n scripts/vault_bootstrap.sh scripts/vault_unseal.sh scripts/vault_seal.sh terraform/docker/vault/app/pipeline/app.sh` (pass)
+  - `bash -n scripts/vault/bootstrap.sh scripts/vault/unseal.sh scripts/vault/seal.sh terraform/docker/vault/app/pipeline/app.sh` (pass)
   - `bash -n terraform/docker/vault/config/pipeline/config.sh` (pass)
   - `terraform -chdir=terraform/docker/vault/config init -backend=false -input=false`
   - `terraform -chdir=terraform/docker/vault/config validate` (pass)
@@ -282,8 +282,8 @@ This plan tracks introducing HashiCorp Vault into Docker Swarm using the existin
     - `VAULT_SWARM_MANAGER_HOST=nodadyoushutup@192.168.1.26 ./terraform/docker/vault/config/pipeline/config.sh` (pass; auto-unseal + KV mount + `secret/k8s/thelounge` apply)
     - repeated `config.sh` run returned no diff (`No changes`) and completed successfully
   - standalone script validation:
-    - `./scripts/vault_seal.sh` (pass)
-    - `VAULT_SWARM_MANAGER_HOST=nodadyoushutup@192.168.1.26 ./scripts/vault_unseal.sh` (pass)
+    - `./scripts/vault/seal.sh` (pass)
+    - `VAULT_SWARM_MANAGER_HOST=nodadyoushutup@192.168.1.26 ./scripts/vault/unseal.sh` (pass)
     - second unseal run: no-op message confirmed ("already unsealed")
   - API/UI and secret validation:
     - `curl ... /v1/sys/health` via tunnel returned `200` (unsealed)
@@ -292,7 +292,7 @@ This plan tracks introducing HashiCorp Vault into Docker Swarm using the existin
   - restart behavior validation:
     - `docker service update --force vault` (via SSH manager)
     - post-restart `vault status` showed `Initialized=true`, `Sealed=true`
-    - `vault_unseal.sh` restored unsealed state successfully
+    - `unseal.sh` restored unsealed state successfully
 - Open risks/follow-ups:
   - Day-1 environment currently uses local SSH tunnel (`127.0.0.1:18200`) from this control host to reach Vault API on `swarm-cp-0`; direct host-route reachability may vary by operator machine/network.
   - Temporary `775` artifact permissions remain intentionally permissive; tighten in a hardening follow-up.

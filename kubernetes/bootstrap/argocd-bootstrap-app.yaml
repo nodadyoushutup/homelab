@@ -1,0 +1,21 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: __ARGOCD_GITOPS_ROOT_APP_NAME__
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  source:
+    repoURL: __ARGOCD_GITOPS_REPO_URL__
+    targetRevision: __ARGOCD_GITOPS_REPO_REVISION__
+    path: kubernetes/argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

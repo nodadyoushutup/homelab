@@ -140,7 +140,7 @@ This plan transitions homelab web entry to Nginx Proxy Manager (NPM) as the glob
     - kube-vip annotations removed from `argocd-server` service.
   - Repo artifacts removed/updated:
     - deleted `kubernetes/kube-vip/*`
-    - removed kube-vip references from `scripts/pipeline/argocd_app.sh`
+    - removed kube-vip references from `scripts/argocd/install.sh`
     - removed kube-vip ApplicationSet entry in `kubernetes/argocd/app-of-apps.yaml`.
   - Post-change repair: app-of-apps placeholders were reintroduced by raw apply and caused `ComparisonError`; fixed by setting repo URL to `git@github.com:nodadyoushutup/homelab.git` and revision `HEAD` in `kubernetes/argocd/app-of-apps.yaml`, then reapplied.
 - Stage 5 validation evidence:

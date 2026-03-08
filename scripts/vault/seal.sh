@@ -2,13 +2,13 @@
 set -euo pipefail
 
 if [[ $# -gt 0 ]]; then
-  echo "[ERR] vault_seal.sh does not accept positional arguments." >&2
+  echo "[ERR] seal.sh does not accept positional arguments." >&2
   exit 2
 fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
-ROOT_ENV_LOADER="${ROOT_DIR}/scripts/pipeline/load_root_env.sh"
+ROOT_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+ROOT_ENV_LOADER="${ROOT_DIR}/scripts/terraform/load_root_env.sh"
 if [[ -f "${ROOT_ENV_LOADER}" ]]; then
   # shellcheck source=/dev/null
   source "${ROOT_ENV_LOADER}"

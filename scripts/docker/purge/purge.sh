@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Wrapper to run service-specific purge scripts locally or via SSH on a swarm
-# manager. Usage: ./scripts/purge/purge.sh <service|all> [manager_host]
+# manager. Usage: ./scripts/docker/purge/purge.sh <service|all> [manager_host]
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BASE_LIB="${SCRIPT_DIR}/base.sh"

@@ -37,9 +37,9 @@ This plan tracks adding a FortiGate MCP server in Docker Swarm using the direct 
 ## Stage 2 - operational parity
 
 - [x] Add purge script and command routing:
-  - `scripts/purge/mcp-fortigate.sh`
-  - aliases in `scripts/purge/purge.sh` for `mcp-fortigate` and common variants
-  Mark complete when: `scripts/purge/purge.sh mcp-fortigate` resolves correctly.
+  - `scripts/docker/purge/mcp-fortigate.sh`
+  - aliases in `scripts/docker/purge/purge.sh` for `mcp-fortigate` and common variants
+  Mark complete when: `scripts/docker/purge/purge.sh mcp-fortigate` resolves correctly.
 
 ## Stage 3 - HTTPS edge in NPM
 
@@ -57,7 +57,7 @@ This plan tracks adding a FortiGate MCP server in Docker Swarm using the direct 
   - `terraform -chdir=terraform/docker/mcp-fortigate/app validate`
   - `terraform -chdir=terraform/docker/nginx_proxy_manager/config init -backend=false -input=false`
   - `terraform -chdir=terraform/docker/nginx_proxy_manager/config validate`
-  - `bash -n terraform/docker/mcp-fortigate/app/pipeline/app.sh scripts/purge/mcp-fortigate.sh scripts/purge/purge.sh`
+  - `bash -n terraform/docker/mcp-fortigate/app/pipeline/app.sh scripts/docker/purge/mcp-fortigate.sh scripts/docker/purge/purge.sh`
   - `ls -ld /mnt/eapp/.tfvars/mcp-fortigate /mnt/eapp/.tfvars/mcp-fortigate/app.tfvars`
   - `MCP_FORTIGATE_REBUILD_IMAGE=1 terraform/docker/mcp-fortigate/app/pipeline/app.sh`
   - `terraform/docker/nginx_proxy_manager/config/pipeline/config.sh`

@@ -3,7 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/../../../../.." && pwd)"
-PIPELINE_SCRIPT_ROOT="${ROOT_DIR}/scripts/pipeline"
+PIPELINE_SCRIPT_ROOT="${ROOT_DIR}/scripts/terraform"
 source "${PIPELINE_SCRIPT_ROOT}/load_root_env.sh"
 
 if [[ $# -gt 0 ]]; then
@@ -13,7 +13,7 @@ if [[ $# -gt 0 ]]; then
   exit 2
 fi
 
-VAULT_BOOTSTRAP_SCRIPT="${ROOT_DIR}/scripts/vault_bootstrap.sh"
+VAULT_BOOTSTRAP_SCRIPT="${ROOT_DIR}/scripts/vault/bootstrap.sh"
 DEFAULT_VAULT_ADDR="${DEFAULT_VAULT_ADDR:-http://swarm-cp-0.local:8200}"
 VAULT_PUBLISHED_PORT="8200"
 

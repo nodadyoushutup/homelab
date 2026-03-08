@@ -3,7 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/../../../../.." && pwd)"
-PIPELINE_SCRIPT_ROOT="${ROOT_DIR}/scripts/pipeline"
+PIPELINE_SCRIPT_ROOT="${ROOT_DIR}/scripts/terraform"
 source "${PIPELINE_SCRIPT_ROOT}/load_root_env.sh"
 
 SERVICE_NAME="mcp-argocd"
@@ -81,8 +81,8 @@ build_argocd_core_kubeconfig() {
 
 bootstrap_argocd_token_for_pipeline() {
   local tfvars_file="$1"
-  local token_id="${ARGOCD_MCP_TOKEN_ID:-mcp-argocd-swarm}"
-  local token_ttl="${ARGOCD_MCP_TOKEN_EXPIRES_IN:-0s}"
+  local token_id="mcp-argocd-swarm"
+  local token_ttl="0s"
   local core_kubeconfig=""
   local existing_token_count=""
   local generated_token=""

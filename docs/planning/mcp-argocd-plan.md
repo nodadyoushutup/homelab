@@ -41,9 +41,9 @@ This plan tracks adding an Argo CD MCP server in Docker Swarm using the direct s
 ## Stage 2 - operational parity
 
 - [x] Add purge script and command routing:
-  - `scripts/purge/mcp-argocd.sh`
-  - aliases in `scripts/purge/purge.sh` for `mcp-argocd` and common name variants
-  Mark complete when: `scripts/purge/purge.sh mcp-argocd` resolves correctly.
+  - `scripts/docker/purge/mcp-argocd.sh`
+  - aliases in `scripts/docker/purge/purge.sh` for `mcp-argocd` and common name variants
+  Mark complete when: `scripts/docker/purge/purge.sh mcp-argocd` resolves correctly.
 
 ## Validation notes
 
@@ -52,7 +52,7 @@ This plan tracks adding an Argo CD MCP server in Docker Swarm using the direct s
   - `terraform fmt -recursive terraform/docker/mcp-argocd/app`
   - `terraform -chdir=terraform/docker/mcp-argocd/app init -backend=false -input=false`
   - `terraform -chdir=terraform/docker/mcp-argocd/app validate`
-  - `bash -n terraform/docker/mcp-argocd/app/pipeline/app.sh scripts/purge/mcp-argocd.sh scripts/purge/purge.sh`
+  - `bash -n terraform/docker/mcp-argocd/app/pipeline/app.sh scripts/docker/purge/mcp-argocd.sh scripts/docker/purge/purge.sh`
   - `ls -ld /mnt/eapp/.tfvars/mcp-argocd /mnt/eapp/.tfvars/mcp-argocd/app.tfvars`
   - `docker buildx imagetools inspect ghcr.io/argoproj-labs/mcp-for-argocd:latest`
   - `npx -y argocd-mcp@0.5.0 http --help`

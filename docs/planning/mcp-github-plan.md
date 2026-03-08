@@ -43,9 +43,9 @@ This plan tracks adding a GitHub MCP server in Docker Swarm using the direct sta
 ## Stage 2 - operational parity
 
 - [x] Add purge script and command routing:
-  - `scripts/purge/mcp-github.sh`
-  - aliases in `scripts/purge/purge.sh` for `mcp-github` and underscore/common name variants
-  Mark complete when: `scripts/purge/purge.sh mcp-github` resolves correctly.
+  - `scripts/docker/purge/mcp-github.sh`
+  - aliases in `scripts/docker/purge/purge.sh` for `mcp-github` and underscore/common name variants
+  Mark complete when: `scripts/docker/purge/purge.sh mcp-github` resolves correctly.
 
 ## Stage 3 - no-client-auth proxy variant
 
@@ -67,7 +67,7 @@ This plan tracks adding a GitHub MCP server in Docker Swarm using the direct sta
   - `terraform fmt -recursive terraform/docker/mcp-github/app`
   - `terraform -chdir=terraform/docker/mcp-github/app init -backend=false -input=false`
   - `terraform -chdir=terraform/docker/mcp-github/app validate`
-  - `bash -n terraform/docker/mcp-github/app/pipeline/app.sh scripts/purge/mcp-github.sh scripts/purge/purge.sh`
+  - `bash -n terraform/docker/mcp-github/app/pipeline/app.sh scripts/docker/purge/mcp-github.sh scripts/docker/purge/purge.sh`
   - `ls -ld /mnt/eapp/.tfvars/mcp-github /mnt/eapp/.tfvars/mcp-github/app.tfvars`
   - `docker manifest inspect ghcr.io/github/github-mcp-server:latest | jq -r '.manifests[]?.platform | "\(.os)/\(.architecture)"'`
   - `docker run --rm ghcr.io/github/github-mcp-server --help`
