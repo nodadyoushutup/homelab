@@ -34,7 +34,7 @@ This plan tracks deploying Picsur in Kubernetes with Vault-backed External Secre
 
 ## Stage 4 - validation
 
-- [ ] Verify Kubernetes rollout (`pods`, `svc`, `ingress`, `externalsecret`) is healthy.
+- [x] Verify Kubernetes rollout (`pods`, `svc`, `ingress`, `externalsecret`) is healthy.
   Mark complete when: picsur + postgres pods are Ready and ingress resolves internally.
-- [ ] Verify public HTTPS reachability and login page at `https://picsur.nodadyoushutup.com`.
+- [x] Verify public HTTPS reachability and login page at `https://picsur.nodadyoushutup.com`.
   Mark complete when: endpoint returns HTTP 200 and serves Picsur UI.
