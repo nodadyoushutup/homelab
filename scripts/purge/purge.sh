@@ -6,7 +6,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BASE_LIB="${SCRIPT_DIR}/base.sh"
-KNOWN_SERVICES=(dozzle grafana graphite jenkins minio nginx-proxy-manager node-exporter prometheus)
+KNOWN_SERVICES=(dozzle grafana graphite jenkins mcp-atlassian minio nginx-proxy-manager node-exporter prometheus)
 declare -A SERVICE_MAP=(
   [dozzle]="dozzle"
   [grafana]="grafana"
@@ -26,6 +26,14 @@ declare -A SERVICE_MAP=(
   [node-exporter]="node-exporter"
   [node_exporter]="node-exporter"
   [prometheus]="prometheus"
+  [mcp-atlassian]="mcp-atlassian"
+  [mcp_atlassian]="mcp-atlassian"
+  [sooperset-atlassian-mcp]="mcp-atlassian"
+  [sooperset_atlassian_mcp]="mcp-atlassian"
+  [somerset-atlassian-mcp]="mcp-atlassian"
+  [somerset_atlassian_mcp]="mcp-atlassian"
+  [soomerset-atlassian-mcp]="mcp-atlassian"
+  [soomerset_atlassian_mcp]="mcp-atlassian"
 )
 
 usage() {
