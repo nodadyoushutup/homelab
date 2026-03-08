@@ -9,10 +9,12 @@ ENV DEBIAN_FRONTEND=noninteractive \
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-COPY packages.apt /tmp/packages.apt
-RUN apt-get update \
-    && xargs -r apt-get install -y --no-install-recommends < /tmp/packages.apt \
-    && rm -rf /var/lib/apt/lists/*
+COPY scripts/install/packages.sh /tmp/install-scripts/packages.sh
+COPY scripts/install/docker.sh /tmp/install-scripts/docker.sh
+RUN chmod 0755 /tmp/install-scripts/packages.sh /tmp/install-scripts/docker.sh \
+    && /tmp/install-scripts/packages.sh ca-certificates curl git jq libicu74 python3 python3-pip python3-venv unzip zip \
+    && INSTALL_DOCKER_PROFILE=cli DOCKER_CONFIGURE_USER=0 DOCKER_ENABLE_SERVICE=0 DOCKER_VERIFY=0 /tmp/install-scripts/docker.sh \
+    && rm -rf /var/lib/apt/lists/* /tmp/install-scripts
 
 RUN useradd --create-home --shell /bin/bash runner
 
@@ -27,13 +29,13 @@ RUN case "${TARGETARCH}" in \
     && rm actions-runner.tar.gz \
     && ./bin/installdependencies.sh
 
-COPY requirements.txt /tmp/requirements.txt
+COPY docker/gha-runner/requirements.txt /tmp/requirements.txt
 RUN python3 -m venv /opt/runner-venv \
     && /opt/runner-venv/bin/pip install --upgrade pip setuptools wheel \
     && /opt/runner-venv/bin/pip install -r /tmp/requirements.txt \
     && rm /tmp/requirements.txt
 
-COPY entrypoint.sh /usr/local/bin/gha-runner-entrypoint
+COPY docker/gha-runner/entrypoint.sh /usr/local/bin/gha-runner-entrypoint
 RUN chmod 0755 /usr/local/bin/gha-runner-entrypoint \
     && chown -R runner:runner /home/runner /opt/runner-venv
 

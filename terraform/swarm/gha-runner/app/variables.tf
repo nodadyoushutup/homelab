@@ -17,9 +17,15 @@ variable "github_runner_token" {
 }
 
 variable "github_runner_name" {
-  description = "Runner display name in GitHub."
+  description = "Runner display name prefix in GitHub; Task slot is appended."
   type        = string
   default     = "homelab-gha-runner"
+}
+
+variable "github_runner_replicas" {
+  description = "Number of runner replicas to run in Swarm."
+  type        = number
+  default     = 2
 }
 
 variable "github_runner_labels" {

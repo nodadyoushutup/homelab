@@ -11,7 +11,7 @@ spec:
   source:
     repoURL: __ARGOCD_GITOPS_REPO_URL__
     targetRevision: __ARGOCD_GITOPS_REPO_REVISION__
-    path: kubernetes/argocd
+    path: kubernetes/argocd-management
   syncPolicy:
     automated:
       prune: true
@@ -19,3 +19,4 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
+      - SkipDryRunOnMissingResource=true

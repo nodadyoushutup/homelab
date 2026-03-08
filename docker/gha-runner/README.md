@@ -1,10 +1,11 @@
 # Custom GitHub Actions Runner (Ubuntu 24.04)
 
 This directory builds a self-hosted GitHub Actions runner image from `ubuntu:24.04`.
+The Dockerfile uses repo-level install scripts under `scripts/install/` as source-of-truth.
 
 ## What is configurable
 
-- APT packages: `packages.apt`
+- APT packages: `scripts/install/packages.sh` arguments in `docker/gha-runner/Dockerfile`
 - Python packages: `requirements.txt`
 - Runner registration/settings: `.env` values (copy from `.env.example`)
 
@@ -38,3 +39,4 @@ If either required value is unset (or set to `__SET_ME__`), the container stays 
 
 - The token passed in `GH_RUNNER_TOKEN` is the one your frontend/API flow can inject at runtime.
 - If you set `GH_RUNNER_EPHEMERAL=true`, the runner accepts a single job and exits.
+- Local compose mounts `/var/run/docker.sock` and runs as root so Docker Buildx/QEMU actions can access the host daemon.

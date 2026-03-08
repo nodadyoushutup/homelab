@@ -1,0 +1,45 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-notifications-cm
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "20"
+data:
+  context: |
+    argocdUrl: https://argocd.nodadyoushutup.com
+  service.webhook.discord: |
+    url: $discord-webhook-url
+    headers:
+      - name: Content-Type
+        value: application/json
+  template.app-sync-status-discord: |
+    webhook:
+      discord:
+        method: POST
+        body: |
+          {
+            "content": ":arrows_counterclockwise: **{{.app.metadata.name}}** sync={{.app.status.sync.status}} health={{.app.status.health.status}}. {{.context.argocdUrl}}/applications/{{.app.metadata.name}}"
+          }
+  template.app-health-degraded-discord: |
+    webhook:
+      discord:
+        method: POST
+        body: |
+          {
+            "content": ":warning: **{{.app.metadata.name}}** health degraded. {{.context.argocdUrl}}/applications/{{.app.metadata.name}}"
+          }
+  trigger.on-sync-failed-discord: |
+    - when: app.status != nil and app.status.operationState != nil and app.status.operationState.phase in ['Error', 'Failed']
+      send:
+        - app-sync-status-discord
+  trigger.on-health-degraded-discord: |
+    - when: app.status != nil and app.status.health != nil and app.status.health.status == 'Degraded'
+      send:
+        - app-health-degraded-discord
+  subscriptions: |
+    - recipients:
+        - discord
+      triggers:
+        - on-sync-failed-discord
+        - on-health-degraded-discord

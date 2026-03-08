@@ -22,17 +22,19 @@ resource "docker_service" "gha_runner" {
     }
 
     container_spec {
-      image = "homelab/gha-runner:2026.03.08.3"
+      image = "homelab/gha-runner:2026.03.08.4"
+      user  = "0:0"
 
       env = {
         GH_RUNNER_URL           = var.github_runner_url
         GH_RUNNER_TOKEN         = var.github_runner_token
-        GH_RUNNER_NAME          = var.github_runner_name
+        GH_RUNNER_NAME          = "${var.github_runner_name}-{{.Task.Slot}}"
         GH_RUNNER_LABELS        = var.github_runner_labels
         GH_RUNNER_WORKDIR       = var.github_runner_workdir
         GH_RUNNER_EPHEMERAL     = tostring(var.github_runner_ephemeral)
         GH_RUNNER_DISABLEUPDATE = tostring(var.github_runner_disableupdate)
         GH_RUNNER_REMOVE_TOKEN  = var.github_runner_remove_token
+        RUNNER_ALLOW_RUNASROOT  = "1"
       }
 
       dns_config {
@@ -41,6 +43,12 @@ resource "docker_service" "gha_runner" {
           "1.1.1.1",
           "8.8.8.8",
         ]
+      }
+
+      mounts {
+        target = "/var/run/docker.sock"
+        source = "/var/run/docker.sock"
+        type   = "bind"
       }
 
       healthcheck {
@@ -56,7 +64,7 @@ resource "docker_service" "gha_runner" {
 
   mode {
     replicated {
-      replicas = 1
+      replicas = var.github_runner_replicas
     }
   }
 }

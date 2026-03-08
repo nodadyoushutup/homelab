@@ -29,10 +29,24 @@ This plan tracks adding a custom self-hosted GitHub Actions runner in Docker Swa
 - [x] Apply Terraform stack and verify service reaches healthy running state.
 - [ ] Update `github_runner_url` and `github_runner_token` in tfvars and re-apply for real GitHub registration.
 
+## Stage 3 - docker buildx readiness (multi-arch)
+
+- [x] Install source-of-truth scripts added under `scripts/install/`:
+  - `scripts/install/docker.sh` (Docker install with host + container-friendly modes)
+  - `scripts/install/packages.sh` (OS-detected package installer; currently Debian/Ubuntu apt)
+- [x] `docker/gha-runner/Dockerfile` switched from `packages.apt` to install scripts.
+- [x] Removed `docker/gha-runner/packages.apt` (script-based package installation only).
+- [x] Runner runtime wired for Docker access:
+  - bind mount `/var/run/docker.sock`
+  - set `RUNNER_ALLOW_RUNASROOT=1`
+  - run task user as `0:0` so Docker socket access is reliable for Buildx/QEMU setup.
+- [ ] Rebuild/redeploy `gha-runner` image + service and re-run failing Jenkins build workflow.
+
 ## Validation notes
 
 - Date: 2026-03-08
 - Commands run:
+  - `bash -n scripts/install/docker.sh scripts/install/packages.sh`
   - `terraform fmt terraform/swarm/gha-runner/app`
   - `bash -n terraform/swarm/gha-runner/app/pipeline/app.sh docker/gha-runner/entrypoint.sh scripts/docker/purge/gha-runner.sh scripts/docker/purge/purge.sh`
   - `terraform -chdir=terraform/swarm/gha-runner/app init -backend=false -input=false`

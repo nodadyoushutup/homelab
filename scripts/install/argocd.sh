@@ -17,13 +17,11 @@ ARGOCD_SERVER_HTTPS_NODEPORT="${ARGOCD_SERVER_HTTPS_NODEPORT:-30443}"
 ARGOCD_SERVER_LOADBALANCER_IP="${ARGOCD_SERVER_LOADBALANCER_IP:-}"
 ARGOCD_SERVER_LOADBALANCER_CLASS="${ARGOCD_SERVER_LOADBALANCER_CLASS:-}"
 
-# GitOps app-of-apps settings.
-ARGOCD_GITOPS_APPSET_NAME="${ARGOCD_GITOPS_APPSET_NAME:-homelab-addons}"
+# GitOps root app settings.
 ARGOCD_GITOPS_REPO_URL="${ARGOCD_GITOPS_REPO_URL:-git@github.com:nodadyoushutup/homelab.git}"
 ARGOCD_GITOPS_REPO_REVISION="${ARGOCD_GITOPS_REPO_REVISION:-HEAD}"
-ARGOCD_GITOPS_APPS_FILE="${ARGOCD_GITOPS_APPS_FILE:-${ROOT_DIR}/kubernetes/argocd/app-of-apps.yaml}"
-ARGOCD_GITOPS_ROOT_APP_NAME="${ARGOCD_GITOPS_ROOT_APP_NAME:-argocd-bootstrap}"
-ARGOCD_GITOPS_ROOT_APP_FILE="${ARGOCD_GITOPS_ROOT_APP_FILE:-${ROOT_DIR}/kubernetes/bootstrap/argocd-bootstrap-app.yaml}"
+ARGOCD_GITOPS_ROOT_APP_NAME="${ARGOCD_GITOPS_ROOT_APP_NAME:-argocd-management}"
+ARGOCD_GITOPS_ROOT_APP_FILE="${ARGOCD_GITOPS_ROOT_APP_FILE:-${ROOT_DIR}/kubernetes/bootstrap/argocd-management-app.yaml}"
 ARGOCD_GITOPS_REPO_SECRET_NAME="${ARGOCD_GITOPS_REPO_SECRET_NAME:-homelab-gitops-repo}"
 ARGOCD_GITOPS_REPO_USERNAME="${ARGOCD_GITOPS_REPO_USERNAME:-}"
 ARGOCD_GITOPS_REPO_PASSWORD="${ARGOCD_GITOPS_REPO_PASSWORD:-}"
@@ -249,18 +247,6 @@ EOF_LB
   esac
 }
 
-ensure_argocd_terminal_exec_rbac() {
-  if kubectl get clusterrole argocd-server -o jsonpath='{range .rules[*].resources[*]}{.}{"\n"}{end}' | grep -qx 'pods/exec'; then
-    echo "[INFO] argocd-server ClusterRole already includes pods/exec"
-    return 0
-  fi
-
-  echo "[STEP] Patching argocd-server ClusterRole for pods/exec"
-  kubectl patch clusterrole argocd-server \
-    --type='json' \
-    -p='[{"op":"add","path":"/rules/-","value":{"apiGroups":[""],"resources":["pods/exec"],"verbs":["create"]}}]'
-}
-
 wait_for_argocd_application_synced_healthy() {
   local app_name="$1"
   local max_attempts="${2:-180}"
@@ -316,24 +302,6 @@ wait_for_argocd_application_present() {
   done
 
   echo "[ERR] Timed out waiting for Argo CD application ${app_name}" >&2
-  return 1
-}
-
-wait_for_argocd_applicationset_present() {
-  local appset_name="$1"
-  local max_attempts="${2:-120}"
-  local sleep_seconds="${3:-2}"
-  local attempt=1
-
-  while (( attempt <= max_attempts )); do
-    if kubectl -n "${ARGOCD_NAMESPACE}" get applicationset "${appset_name}" >/dev/null 2>&1; then
-      return 0
-    fi
-    sleep "${sleep_seconds}"
-    ((attempt++))
-  done
-
-  echo "[ERR] Timed out waiting for Argo CD ApplicationSet ${appset_name}" >&2
   return 1
 }
 
@@ -424,11 +392,6 @@ apply_gitops_root_application() {
     exit 1
   fi
 
-  if [[ ! -f "${ARGOCD_GITOPS_APPS_FILE}" ]]; then
-    echo "[ERR] Missing app-of-apps manifest: ${ARGOCD_GITOPS_APPS_FILE}" >&2
-    exit 1
-  fi
-
   local rendered_file=""
   rendered_file="$(mktemp)"
   sed \
@@ -469,12 +432,10 @@ main() {
   kubectl -n "${ARGOCD_NAMESPACE}" rollout status deployment/argocd-redis --timeout=10m
   kubectl -n "${ARGOCD_NAMESPACE}" rollout status deployment/argocd-applicationset-controller --timeout=10m
 
-  echo "[STEP] Ensuring admin account capabilities and web terminal are enabled"
+  echo "[STEP] Ensuring admin account is enabled for bootstrap login"
   kubectl -n "${ARGOCD_NAMESPACE}" patch configmap argocd-cm \
     --type merge \
-    -p '{"data":{"admin.enabled":"true","accounts.admin":"apiKey, login","exec.enabled":"true"}}'
-
-  ensure_argocd_terminal_exec_rbac
+    -p '{"data":{"admin.enabled":"true","accounts.admin":"apiKey, login"}}'
 
   echo "[STEP] Waiting for argocd-secret"
   wait_for_secret "${ARGOCD_NAMESPACE}" "argocd-secret" 120 2
@@ -500,8 +461,6 @@ main() {
 
   wait_for_argocd_application_present "${ARGOCD_GITOPS_ROOT_APP_NAME}" 120 2
   wait_for_argocd_application_synced_healthy "${ARGOCD_GITOPS_ROOT_APP_NAME}" 240 5
-
-  wait_for_argocd_applicationset_present "${ARGOCD_GITOPS_APPSET_NAME}" 120 2
 
   local lan_url=""
   case "${ARGOCD_SERVER_EXPOSURE_MODE}" in
@@ -529,10 +488,8 @@ Namespace: ${ARGOCD_NAMESPACE}
 LAN URL: ${lan_url}
 Root app: ${ARGOCD_GITOPS_ROOT_APP_NAME}
 Root app manifest: ${ARGOCD_GITOPS_ROOT_APP_FILE}
-ApplicationSet: ${ARGOCD_GITOPS_APPSET_NAME}
 GitOps repo: ${ARGOCD_GITOPS_REPO_URL}
 GitOps revision: ${ARGOCD_GITOPS_REPO_REVISION}
-GitOps app-of-apps file: ${ARGOCD_GITOPS_APPS_FILE}
 EOF_DONE
 }
 
