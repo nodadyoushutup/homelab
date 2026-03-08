@@ -114,9 +114,13 @@ resource "argocd_application_set" "homelab_addons" {
             syncWave             = "27"
           },
           {
-            appType              = "manifests"
+            appType              = "helm"
+            chartName            = "prometheus-node-exporter"
+            chartRepo            = "https://prometheus-community.github.io/helm-charts"
+            chartVersion         = "4.52.0"
             destinationNamespace = "monitoring"
             gitPath              = "kubernetes/node-exporter"
+            helmReleaseName      = "node-exporter"
             name                 = "node-exporter-k8s"
             syncWave             = "28"
           },

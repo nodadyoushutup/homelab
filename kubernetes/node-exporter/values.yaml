@@ -1,0 +1,61 @@
+fullnameOverride: node-exporter
+
+image:
+  registry: docker.io
+  repository: prom/node-exporter
+  tag: v1.10.2
+  digest: sha256:3ac34ce007accad95afed72149e0d2b927b7e42fd1c866149b945b84737c62c3
+
+service:
+  type: ClusterIP
+  clusterIP: None
+  port: 9100
+  targetPort: 9100
+  portName: metrics
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "9100"
+
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "9100"
+
+serviceAccount:
+  name: node-exporter
+  automountServiceAccountToken: false
+
+hostNetwork: true
+hostPID: true
+dnsPolicy: ClusterFirstWithHostNet
+
+nodeSelector:
+  kubernetes.io/os: linux
+
+tolerations:
+  - operator: Exists
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    memory: 256Mi
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 65534
+  seccompProfile:
+    type: RuntimeDefault
+
+extraArgs:
+  - --collector.filesystem.mount-points-exclude=^/(dev|proc|sys|var/lib/docker/.+|var/lib/containerd/.+|var/lib/kubelet/.+)($|/)
+  - --collector.filesystem.fs-types-exclude=^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|iso9660|mqueue|nsfs|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|selinuxfs|squashfs|sysfs|tracefs)$
+
+extraHostVolumeMounts:
+  - name: run-udev
+    hostPath: /run/udev
+    type: DirectoryOrCreate
+    mountPath: /run/udev
+    readOnly: true
