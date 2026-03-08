@@ -9,6 +9,7 @@ Use this as a directory to the source-of-truth docs agents need.
 - Swarm node onboarding (manual worker/manager add, prerequisites, labels, validation): `docs/wiki/Swarm-Node-Onboarding.md`.
 - Planning docs for active changes: `docs/planning/<service>-plan.md` (complete before merging).
 - Repo path is `~/code/homelab` everywhere via NFS from `truenas.internal` (see Machines for export details).
+- `_old/` rule (HARD RULE): always treat all code under `_old/` as out-of-scope legacy content. Do not read, modify, refactor, lint, test, or include `_old/` files in agent changes unless a human explicitly asks for `_old/` work. Do not add `_old/` to `.gitignore`.
 - Compose-only stacks (MinIO backend + Renovate) run on `swarm-cp-0.local` under `docker/minio/` and `docker/renovate/`; images must support `linux/aarch64`.
 - NFS root_squash note: running repo scripts directly via `sudo` can return “Permission denied”; pipe them into `sudo bash -s` or copy to `/tmp` first.
 - Python note: use `python3` explicitly; no `python` shim is assumed across hosts.
