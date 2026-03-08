@@ -1,12 +1,12 @@
 # MCP Atlassian (Swarm) plan
 
-This plan tracks adding the first MCP server in Docker Swarm using the direct stack pattern under `terraform/docker/mcp-atlassian/app`.
+This plan tracks adding the first MCP server in Docker Swarm using the direct stack pattern under `terraform/swarm/mcp-atlassian/app`.
 
 ## Stage 0 - scope, references, and tfvars/backend
 
-- [x] Taxonomy locked: app-only Swarm service (`terraform/docker/mcp-atlassian/app`) with one state.
+- [x] Taxonomy locked: app-only Swarm service (`terraform/swarm/mcp-atlassian/app`) with one state.
   Mark complete when: service path and stage boundary are explicit in this plan.
-- [x] Reference implementation chosen: `terraform/docker/dozzle/app` and `terraform/docker/graphite/app`.
+- [x] Reference implementation chosen: `terraform/swarm/dozzle/app` and `terraform/swarm/graphite/app`.
   Mark complete when: new stack follows the same `provider.tf`, `variables.tf`, `main.tf`, and `pipeline/app.sh` surfaces.
 - [x] Tfvars/backend paths locked and created:
   - backend: `/mnt/eapp/.tfvars/minio.backend.hcl`
@@ -16,10 +16,10 @@ This plan tracks adding the first MCP server in Docker Swarm using the direct st
 ## Stage 1 - stack scaffold
 
 - [x] Create stack files:
-  - `terraform/docker/mcp-atlassian/app/provider.tf`
-  - `terraform/docker/mcp-atlassian/app/variables.tf`
-  - `terraform/docker/mcp-atlassian/app/main.tf`
-  - `terraform/docker/mcp-atlassian/app/pipeline/app.sh`
+  - `terraform/swarm/mcp-atlassian/app/provider.tf`
+  - `terraform/swarm/mcp-atlassian/app/variables.tf`
+  - `terraform/swarm/mcp-atlassian/app/main.tf`
+  - `terraform/swarm/mcp-atlassian/app/pipeline/app.sh`
   Mark complete when: Terraform init/validate and shell syntax checks pass.
 - [x] App runtime spec implemented:
   - overlay network + replicated service
@@ -41,10 +41,10 @@ This plan tracks adding the first MCP server in Docker Swarm using the direct st
 
 - Date: 2026-03-07
 - Commands run:
-  - `terraform fmt -recursive terraform/docker/mcp-atlassian/app`
-  - `terraform -chdir=terraform/docker/mcp-atlassian/app init -backend=false -input=false`
-  - `terraform -chdir=terraform/docker/mcp-atlassian/app validate`
-  - `bash -n terraform/docker/mcp-atlassian/app/pipeline/app.sh scripts/docker/purge/mcp-atlassian.sh scripts/docker/purge/purge.sh`
+  - `terraform fmt -recursive terraform/swarm/mcp-atlassian/app`
+  - `terraform -chdir=terraform/swarm/mcp-atlassian/app init -backend=false -input=false`
+  - `terraform -chdir=terraform/swarm/mcp-atlassian/app validate`
+  - `bash -n terraform/swarm/mcp-atlassian/app/pipeline/app.sh scripts/docker/purge/mcp-atlassian.sh scripts/docker/purge/purge.sh`
   - `ls -ld /mnt/eapp/.tfvars/mcp-atlassian /mnt/eapp/.tfvars/mcp-atlassian/app.tfvars`
 
 ## Tfvars schema (sanitized)

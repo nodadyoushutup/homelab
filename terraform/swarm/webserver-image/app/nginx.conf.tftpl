@@ -1,0 +1,61 @@
+user root;
+worker_processes auto;
+
+error_log /var/log/nginx/error.log notice;
+pid /var/run/nginx.pid;
+
+events {
+  worker_connections 1024;
+}
+
+http {
+  include /etc/nginx/mime.types;
+  default_type application/octet-stream;
+
+  sendfile on;
+  keepalive_timeout 65;
+  client_max_body_size 20g;
+
+  server {
+    listen ${listen_port};
+    server_name _;
+
+    root ${data_root};
+    autoindex on;
+    autoindex_exact_size off;
+    autoindex_localtime on;
+    create_full_put_path on;
+
+    # Convert POST uploads to WebDAV PUT for clients that only support POST.
+    error_page 418 = @post_to_put;
+    if ($request_method = POST) {
+      return 418;
+    }
+
+    location @post_to_put {
+      internal;
+      proxy_method PUT;
+      proxy_pass http://127.0.0.1:${listen_port}$request_uri;
+      proxy_set_header Host $host;
+      proxy_set_header Content-Length $content_length;
+      proxy_set_header Content-Type $content_type;
+    }
+
+    location / {
+      dav_methods PUT DELETE MKCOL COPY MOVE;
+      dav_access user:rw group:rw all:r;
+
+      limit_except GET HEAD PUT POST DELETE MKCOL COPY MOVE OPTIONS {
+        deny all;
+      }
+
+      add_header Access-Control-Allow-Origin "*" always;
+      add_header Access-Control-Allow-Methods "GET,HEAD,POST,PUT,DELETE,OPTIONS,MKCOL,COPY,MOVE" always;
+      add_header Access-Control-Allow-Headers "*" always;
+
+      if ($request_method = OPTIONS) {
+        return 204;
+      }
+    }
+  }
+}

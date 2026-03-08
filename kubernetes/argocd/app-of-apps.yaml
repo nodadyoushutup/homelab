@@ -65,6 +65,11 @@ spec:
             destinationNamespace: thelounge
             gitPath: kubernetes/thelounge
             syncWave: "30"
+          - name: picsur
+            appType: manifests
+            destinationNamespace: picsur
+            gitPath: kubernetes/picsur
+            syncWave: "31"
   template:
     metadata:
       name: '{{.name}}'

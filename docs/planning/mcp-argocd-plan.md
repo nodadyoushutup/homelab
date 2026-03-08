@@ -1,12 +1,12 @@
 # MCP ArgoCD (Swarm) plan
 
-This plan tracks adding an Argo CD MCP server in Docker Swarm using the direct stack pattern under `terraform/docker/mcp-argocd/app`.
+This plan tracks adding an Argo CD MCP server in Docker Swarm using the direct stack pattern under `terraform/swarm/mcp-argocd/app`.
 
 ## Stage 0 - scope, references, and tfvars/backend
 
-- [x] Taxonomy locked: app-only Swarm service (`terraform/docker/mcp-argocd/app`) with one state.
+- [x] Taxonomy locked: app-only Swarm service (`terraform/swarm/mcp-argocd/app`) with one state.
   Mark complete when: service path and stage boundary are explicit in this plan.
-- [x] Reference implementation chosen: `terraform/docker/mcp-atlassian/app` plus `terraform/docker/mcp-github/app`.
+- [x] Reference implementation chosen: `terraform/swarm/mcp-atlassian/app` plus `terraform/swarm/mcp-github/app`.
   Mark complete when: new stack follows the same `provider.tf`, `variables.tf`, `main.tf`, and `pipeline/app.sh` surfaces.
 - [x] Tfvars/backend paths locked:
   - backend: `/mnt/eapp/.tfvars/minio.backend.hcl`
@@ -22,10 +22,10 @@ This plan tracks adding an Argo CD MCP server in Docker Swarm using the direct s
 ## Stage 1 - stack scaffold
 
 - [x] Create stack files:
-  - `terraform/docker/mcp-argocd/app/provider.tf`
-  - `terraform/docker/mcp-argocd/app/variables.tf`
-  - `terraform/docker/mcp-argocd/app/main.tf`
-  - `terraform/docker/mcp-argocd/app/pipeline/app.sh`
+  - `terraform/swarm/mcp-argocd/app/provider.tf`
+  - `terraform/swarm/mcp-argocd/app/variables.tf`
+  - `terraform/swarm/mcp-argocd/app/main.tf`
+  - `terraform/swarm/mcp-argocd/app/pipeline/app.sh`
   Mark complete when: Terraform init/validate and shell syntax checks pass.
 - [x] App runtime spec implemented:
   - overlay network + replicated service
@@ -49,10 +49,10 @@ This plan tracks adding an Argo CD MCP server in Docker Swarm using the direct s
 
 - Date: 2026-03-08
 - Commands run:
-  - `terraform fmt -recursive terraform/docker/mcp-argocd/app`
-  - `terraform -chdir=terraform/docker/mcp-argocd/app init -backend=false -input=false`
-  - `terraform -chdir=terraform/docker/mcp-argocd/app validate`
-  - `bash -n terraform/docker/mcp-argocd/app/pipeline/app.sh scripts/docker/purge/mcp-argocd.sh scripts/docker/purge/purge.sh`
+  - `terraform fmt -recursive terraform/swarm/mcp-argocd/app`
+  - `terraform -chdir=terraform/swarm/mcp-argocd/app init -backend=false -input=false`
+  - `terraform -chdir=terraform/swarm/mcp-argocd/app validate`
+  - `bash -n terraform/swarm/mcp-argocd/app/pipeline/app.sh scripts/docker/purge/mcp-argocd.sh scripts/docker/purge/purge.sh`
   - `ls -ld /mnt/eapp/.tfvars/mcp-argocd /mnt/eapp/.tfvars/mcp-argocd/app.tfvars`
   - `docker buildx imagetools inspect ghcr.io/argoproj-labs/mcp-for-argocd:latest`
   - `npx -y argocd-mcp@0.5.0 http --help`

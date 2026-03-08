@@ -115,17 +115,17 @@ This plan tracks introducing HashiCorp Vault into Docker Swarm using the existin
 - [x] Day-1 TheLounge seed values: use placeholders (`username = "admin"`, `password = "password"`).
   Mark complete when: initial `/mnt/eapp/.tfvars/vault/config.tfvars` example/seed uses placeholder values and docs include a follow-up step to rotate to real credentials.
 - [x] Secret rotation workflow: Terraform-managed via tfvars updates.
-  Mark complete when: docs/runbook specify editing `/mnt/eapp/.tfvars/vault/config.tfvars` then rerunning `terraform/docker/vault/config/pipeline/config.sh` (instead of manual `vault kv put`) for standard secret updates.
+  Mark complete when: docs/runbook specify editing `/mnt/eapp/.tfvars/vault/config.tfvars` then rerunning `terraform/swarm/vault/config/pipeline/config.sh` (instead of manual `vault kv put`) for standard secret updates.
 - [x] Seal script UX: no confirmation flag/prompt required.
   Mark complete when: `scripts/vault/seal.sh` performs immediate seal action on execution (with status logging) without `--yes` gating.
 - [x] Config pipeline execution mode: single-run `terraform init/plan/apply` (same as existing Swarm pipelines).
-  Mark complete when: `terraform/docker/vault/config/pipeline/config.sh` performs init, plan, and apply in one invocation after successful auto-unseal.
+  Mark complete when: `terraform/swarm/vault/config/pipeline/config.sh` performs init, plan, and apply in one invocation after successful auto-unseal.
 
 ## Stage 1 - app stage scaffold (Terraform)
 
 - [x] Create stack entrypoint layout:
-  - `terraform/docker/vault/app`
-  - `terraform/docker/vault/app/pipeline/app.sh`
+  - `terraform/swarm/vault/app`
+  - `terraform/swarm/vault/app/pipeline/app.sh`
   Mark complete when: directories/files exist and wire up through shared swarm pipeline helpers (bash path only) without module indirection.
 - [x] Implement Swarm app resources:
   - overlay network
@@ -153,11 +153,11 @@ This plan tracks introducing HashiCorp Vault into Docker Swarm using the existin
   - sets local artifact permissions per temporary policy (`chmod 775`)
   Mark complete when: rerunning bootstrap does not reinitialize Vault and all expected local files are created/validated.
 - [x] Wire bootstrap execution into app deploy flow.
-  Mark complete when: `terraform/docker/vault/app/pipeline/app.sh` automatically runs `scripts/vault/bootstrap.sh` after successful apply.
+  Mark complete when: `terraform/swarm/vault/app/pipeline/app.sh` automatically runs `scripts/vault/bootstrap.sh` after successful apply.
 - [x] Add app pipeline preflight checks.
-  Mark complete when: `terraform/docker/vault/app/pipeline/app.sh` validates target node/port assumptions (including host port `8200` availability) before Terraform apply.
+  Mark complete when: `terraform/swarm/vault/app/pipeline/app.sh` validates target node/port assumptions (including host port `8200` availability) before Terraform apply.
 - [x] Add app pipeline post-deploy health validation.
-  Mark complete when: `terraform/docker/vault/app/pipeline/app.sh` validates Vault health endpoint after apply/bootstrap and fails with actionable diagnostics on unhealthy state.
+  Mark complete when: `terraform/swarm/vault/app/pipeline/app.sh` validates Vault health endpoint after apply/bootstrap and fails with actionable diagnostics on unhealthy state.
 - [x] Add unseal script:
   - `scripts/vault/unseal.sh`
   - waits for Vault readiness
@@ -185,8 +185,8 @@ This plan tracks introducing HashiCorp Vault into Docker Swarm using the existin
 ## Stage 3 - config stage scaffold (Terraform Vault provider)
 
 - [x] Create stack entrypoint layout:
-  - `terraform/docker/vault/config`
-  - `terraform/docker/vault/config/pipeline/config.sh`
+  - `terraform/swarm/vault/config`
+  - `terraform/swarm/vault/config/pipeline/config.sh`
   Mark complete when: directories/files exist and pipeline wiring matches existing app/config services (bash path only) without module indirection.
 - [x] Implement provider configuration and bootstrap inputs:
   - Vault address and root token sourced from local bootstrap artifacts/env (not repo-committed values)
@@ -212,9 +212,9 @@ This plan tracks introducing HashiCorp Vault into Docker Swarm using the existin
 ## Stage 4 - pipeline strategy and Jenkins retirement
 
 - [x] Inventory known Jenkins pipeline surfaces currently in repo:
-  - `*.jenkins` wrappers under `terraform/docker/**/pipeline/`
+  - `*.jenkins` wrappers under `terraform/swarm/**/pipeline/`
   - Jenkins job registry definitions under `terraform/module/jenkins/config`
-  - wiki references that imply Jenkins is the primary path
+  - documentation references that imply Jenkins is the primary path
   Mark complete when: an explicit inventory list is captured in implementation notes.
 - [x] Remove or disable known Jenkins pipeline surfaces for now.
   Mark complete when: Jenkins wrappers/registry entries targeted by this effort are removed or clearly disabled, and no Vault work depends on Jenkins.
@@ -223,11 +223,11 @@ This plan tracks introducing HashiCorp Vault into Docker Swarm using the existin
   - automatic bootstrap script invocation (`bootstrap.sh`) from app pipeline
   - config pipeline (`config.sh`) with automatic unseal invocation (`unseal.sh`)
   - optional manual script usage (`unseal.sh`, `seal.sh`) for operator interventions
-  Mark complete when: sequence is documented in wiki/planning with copy/paste commands.
+  Mark complete when: sequence is documented in planning docs with copy/paste commands.
 - [x] Ensure shell pipeline entrypoints use fixed Vault tfvars/backend inputs.
   Mark complete when: `app.sh` and `config.sh` use canonical `/mnt/eapp/.tfvars/vault/{app.tfvars,config.tfvars}` plus `/mnt/eapp/.tfvars/minio.backend.hcl` without per-run override switches.
 - [x] Wire unseal into config pipeline flow.
-  Mark complete when: `terraform/docker/vault/config/pipeline/config.sh` calls `scripts/vault/unseal.sh` before Terraform `init/plan/apply`, logs explicit no-op when already unsealed, and exits immediately (without Terraform) if unseal fails.
+  Mark complete when: `terraform/swarm/vault/config/pipeline/config.sh` calls `scripts/vault/unseal.sh` before Terraform `init/plan/apply`, logs explicit no-op when already unsealed, and exits immediately (without Terraform) if unseal fails.
 
 ## Stage 5 - validation and handoff
 
@@ -242,9 +242,9 @@ This plan tracks introducing HashiCorp Vault into Docker Swarm using the existin
   - restart scenario test (confirm expected reseal/unseal behavior for chosen mode)
   Mark complete when: each test has explicit outcome and date.
 - [x] Final docs update:
-  - add/update `docs/wiki/Vault.md` (or equivalent section)
-  - cross-link from `docs/wiki/Home.md` and relevant workflow pages
-  Mark complete when: wiki links resolve and reflect actual implemented behavior.
+  - add/update Vault docs in the current docs structure (or equivalent section)
+  - cross-link from relevant workflow pages
+  Mark complete when: documentation links resolve and reflect actual implemented behavior.
 
 ## Implementation notes (update as work progresses)
 
@@ -252,18 +252,18 @@ This plan tracks introducing HashiCorp Vault into Docker Swarm using the existin
 - Operator: Codex (with user direction)
 - Scope change notes: Stage 1 through Stage 3 executed in sequence using direct stack resources only (module indirection removed). Stage 4 Jenkins-retirement cleanup completed. Stage 5 validation completed with additional runtime hardening fixes discovered during live rollout (Vault raft path alignment, entrypoint arg fix, healthcheck behavior, remote-docker script support).
 - Command evidence (redacted):
-  - `terraform fmt -recursive terraform/docker/vault/app terraform/docker/vault/config`
-  - `terraform -chdir=terraform/docker/vault/app init -backend=false -input=false`
-  - `terraform -chdir=terraform/docker/vault/app validate` (pass)
+  - `terraform fmt -recursive terraform/swarm/vault/app terraform/swarm/vault/config`
+  - `terraform -chdir=terraform/swarm/vault/app init -backend=false -input=false`
+  - `terraform -chdir=terraform/swarm/vault/app validate` (pass)
   - image pin lookup: `docker buildx imagetools inspect hashicorp/vault:1.21.4`
-  - `bash -n scripts/vault/bootstrap.sh scripts/vault/unseal.sh scripts/vault/seal.sh terraform/docker/vault/app/pipeline/app.sh` (pass)
-  - `bash -n terraform/docker/vault/config/pipeline/config.sh` (pass)
-  - `terraform -chdir=terraform/docker/vault/config init -backend=false -input=false`
-  - `terraform -chdir=terraform/docker/vault/config validate` (pass)
+  - `bash -n scripts/vault/bootstrap.sh scripts/vault/unseal.sh scripts/vault/seal.sh terraform/swarm/vault/app/pipeline/app.sh` (pass)
+  - `bash -n terraform/swarm/vault/config/pipeline/config.sh` (pass)
+  - `terraform -chdir=terraform/swarm/vault/config init -backend=false -input=false`
+  - `terraform -chdir=terraform/swarm/vault/config validate` (pass)
   - Jenkins inventory + removal:
     - removed all `terraform/**/*.jenkins` wrapper files (17 files across `cluster` + `swarm`)
     - set `local.jenkins_jobs`, `local.multi_stage_services`, and `local.single_stage_jobs` to empty maps in `terraform/module/jenkins/config/main.tf`
-    - updated `docs/wiki/Docker-Swarm.md` to document bash-first workflow and Jenkins-wrapper disabled status
+    - updated Docker Swarm workflow documentation to reflect bash-first workflow and Jenkins-wrapper disabled status
   - `terraform -chdir=terraform/module/jenkins/config init -backend=false -input=false`
   - `terraform -chdir=terraform/module/jenkins/config validate` (pass)
   - tfvars path proof:
@@ -277,9 +277,9 @@ This plan tracks introducing HashiCorp Vault into Docker Swarm using the existin
     - app preflight now fails on unreachable SSH manager target
     - bootstrap/unseal scripts auto-select local vs remote docker runtime (via SSH manager host)
   - live app pipeline validation:
-    - `VAULT_SWARM_MANAGER_HOST=nodadyoushutup@192.168.1.26 VAULT_ADDR=http://127.0.0.1:18200 ./terraform/docker/vault/app/pipeline/app.sh` (pass; no changes; bootstrap idempotent; health gate passed with HTTP 503)
+    - `VAULT_SWARM_MANAGER_HOST=nodadyoushutup@192.168.1.26 VAULT_ADDR=http://127.0.0.1:18200 ./terraform/swarm/vault/app/pipeline/app.sh` (pass; no changes; bootstrap idempotent; health gate passed with HTTP 503)
   - live config pipeline validation:
-    - `VAULT_SWARM_MANAGER_HOST=nodadyoushutup@192.168.1.26 ./terraform/docker/vault/config/pipeline/config.sh` (pass; auto-unseal + KV mount + `secret/k8s/thelounge` apply)
+    - `VAULT_SWARM_MANAGER_HOST=nodadyoushutup@192.168.1.26 ./terraform/swarm/vault/config/pipeline/config.sh` (pass; auto-unseal + KV mount + `secret/k8s/thelounge` apply)
     - repeated `config.sh` run returned no diff (`No changes`) and completed successfully
   - standalone script validation:
     - `./scripts/vault/seal.sh` (pass)

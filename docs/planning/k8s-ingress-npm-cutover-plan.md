@@ -23,7 +23,7 @@ This plan transitions homelab web entry to Nginx Proxy Manager (NPM) as the glob
 
 ## Stage 1 - NPM config surface refactor (tfvars-driven)
 
-- [x] Replace hardcoded NPM resources in `terraform/docker/nginx_proxy_manager/config/main.tf` with a module call to `terraform/module/nginx_proxy_manager/config`.
+- [x] Replace hardcoded NPM resources in `terraform/swarm/nginx_proxy_manager/config/main.tf` with a module call to `terraform/module/nginx_proxy_manager/config`.
   Mark complete when: stack `main.tf` no longer declares per-domain `nginxproxymanager_certificate_letsencrypt` / `nginxproxymanager_proxy_host` resources directly.
 - [x] Align stack variables with module inputs so this stack reads host/certificate definitions from `~/.tfvars/nginx-proxy-manager/config.tfvars`.
   Mark complete when: stack consumes `provider_config`, `config.default_dns_challenge`, `config.certificates`, and `config.proxy_hosts` from tfvars.
@@ -50,8 +50,8 @@ This plan transitions homelab web entry to Nginx Proxy Manager (NPM) as the glob
   Mark complete when: `~/.tfvars/nginx-proxy-manager/config.tfvars` includes both domains and uses the shared DNS challenge settings.
 - [x] Run NPM config pipeline plan and apply.
   Mark complete when:
-  - `terraform/docker/nginx_proxy_manager/config/pipeline/config.sh --plan` is clean/expected
-  - `terraform/docker/nginx_proxy_manager/config/pipeline/config.sh` completes successfully.
+  - `terraform/swarm/nginx_proxy_manager/config/pipeline/config.sh --plan` is clean/expected
+  - `terraform/swarm/nginx_proxy_manager/config/pipeline/config.sh` completes successfully.
 
 ## Stage 4 - Remove kube-vip from app ingress
 
@@ -101,14 +101,14 @@ This plan transitions homelab web entry to Nginx Proxy Manager (NPM) as the glob
   - The Lounge ingress host is currently `thelounge.internal` and must be updated.
   - Argo CD ingress manifest for public hostname is not yet present.
 - Stage 1 execution evidence:
-  - Refactor complete: `terraform/docker/nginx_proxy_manager/config/main.tf` now calls `module ../../../module/nginx_proxy_manager/config` and uses tfvars-driven `config` input.
+  - Refactor complete: `terraform/swarm/nginx_proxy_manager/config/main.tf` now calls `module ../../../module/nginx_proxy_manager/config` and uses tfvars-driven `config` input.
   - Compatibility fallback added: if `var.config` is null, stack uses legacy defaults equivalent to previous hardcoded domains.
   - State migration executed (no resource recreation path): moved 18 resources from root addresses to `module.nginx_proxy_manager_config.*` via `terraform state mv`.
   - Post-migration state list shows only module-scoped NPM certificate/proxy resources.
   - Resolved former blocker (`2026-03-08`): restored NPM database path by creating `mysql` service (`nginx_proxy_manager/database`) and waiting for NPM health to converge; `POST http://192.168.1.26:81/api/tokens` now returns `200`.
-  - Incident fix during recovery: corrected backend key collision in `terraform/docker/grafana/database/provider.tf` (`nginx-proxy-manager-database.tfstate` -> `grafana-database.tfstate`), split state ownership, and restored `grafana-database` service.
+  - Incident fix during recovery: corrected backend key collision in `terraform/swarm/grafana/database/provider.tf` (`nginx-proxy-manager-database.tfstate` -> `grafana-database.tfstate`), split state ownership, and restored `grafana-database` service.
   - Post-recovery service health: `mysql 1/1`, `grafana-database 1/1`, `nginx-proxy-manager 1/1`.
-  - Post-refactor no-destroy proof (`terraform/docker/nginx_proxy_manager/config`): `Plan: 18 to add, 0 to change, 0 to destroy` (resource recreation only; no proxy/cert deletes).
+  - Post-refactor no-destroy proof (`terraform/swarm/nginx_proxy_manager/config`): `Plan: 18 to add, 0 to change, 0 to destroy` (resource recreation only; no proxy/cert deletes).
 - Stage 2 execution evidence:
   - `ingress-nginx-controller` service confirmed stable at `EXTERNAL-IP 192.168.1.241`.
   - Added/updated ingress manifests:
@@ -123,9 +123,9 @@ This plan transitions homelab web entry to Nginx Proxy Manager (NPM) as the glob
   - `~/.tfvars/nginx-proxy-manager/config.tfvars` refactored to module-native `config` object and includes certificates/proxy hosts for:
     - `argocd.nodadyoushutup.com`
     - `thelounge.nodadyoushutup.com`
-  - Terraform plan (`terraform/docker/nginx_proxy_manager/config`) after tfvars update: `Plan: 22 to add, 0 to change, 0 to destroy`.
-  - Terraform apply (`terraform/docker/nginx_proxy_manager/config`) completed: `Apply complete! Resources: 22 added, 0 changed, 0 destroyed.`
-  - Follow-up type-safety fix: `effective_config` in `terraform/docker/nginx_proxy_manager/config/main.tf` changed to `jsondecode(jsonencode(...))` normalization so optional tfvars fields do not break conditional typing.
+  - Terraform plan (`terraform/swarm/nginx_proxy_manager/config`) after tfvars update: `Plan: 22 to add, 0 to change, 0 to destroy`.
+  - Terraform apply (`terraform/swarm/nginx_proxy_manager/config`) completed: `Apply complete! Resources: 22 added, 0 changed, 0 destroyed.`
+  - Follow-up type-safety fix: `effective_config` in `terraform/swarm/nginx_proxy_manager/config/main.tf` changed to `jsondecode(jsonencode(...))` normalization so optional tfvars fields do not break conditional typing.
   - Follow-up targeted apply for The Lounge proxy host custom header rule completed (`0 added, 1 changed, 0 destroyed`).
   - Note: stage commands were executed via direct `terraform plan/apply` because pipeline wrapper currently runs plan+apply together and does not support safe plan-only mode.
 - Stage 4 execution evidence:

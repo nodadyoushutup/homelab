@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: picsur
+  namespace: picsur
+  annotations:
+    argocd.argoproj.io/sync-wave: "30"
+spec:
+  replicas: 1
+  revisionHistoryLimit: 0
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: picsur
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: picsur
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: k8s-wk-0
+      containers:
+        - name: picsur
+          image: ghcr.io/caramelfur/picsur-alpha:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: PICSUR_HOST
+              value: 0.0.0.0
+            - name: PICSUR_PORT
+              value: "8080"
+            - name: PICSUR_DB_HOST
+              value: picsur-postgres
+            - name: PICSUR_DB_PORT
+              value: "5432"
+            - name: PICSUR_DB_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: picsur-secrets
+                  key: PICSUR_DB_DATABASE
+            - name: PICSUR_DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: picsur-secrets
+                  key: PICSUR_DB_USERNAME
+            - name: PICSUR_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: picsur-secrets
+                  key: PICSUR_DB_PASSWORD
+            - name: PICSUR_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: picsur-secrets
+                  key: PICSUR_ADMIN_PASSWORD
+            - name: PICSUR_JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: picsur-secrets
+                  key: PICSUR_JWT_SECRET
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 20
