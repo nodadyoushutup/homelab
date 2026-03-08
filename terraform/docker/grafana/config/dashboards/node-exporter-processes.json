@@ -447,7 +447,7 @@
       }
     }
   ],
-  "title": "Node Exporter \u2013 Processes",
+  "title": "Node Exporter – Processes",
   "uid": "node-exp-proc",
   "version": 3,
   "templating": {
@@ -488,7 +488,6 @@
         "definition": "label_values(up{job=\"node_exporter\", platform=~\"$platform\"}, instance)",
         "query": "label_values(up{job=\"node_exporter\", platform=~\"$platform\"}, instance)",
         "includeAll": true,
-        "allValue": ".*",
         "multi": true,
         "refresh": 2,
         "sort": 1,

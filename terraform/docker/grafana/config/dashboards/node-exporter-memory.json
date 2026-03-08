@@ -620,7 +620,7 @@
       }
     }
   ],
-  "title": "Node Exporter \u2013 Memory",
+  "title": "Node Exporter – Memory",
   "uid": "node-exp-mem",
   "version": 5,
   "templating": {
@@ -661,7 +661,6 @@
         "definition": "label_values(up{job=\"node_exporter\", platform=~\"$platform\"}, instance)",
         "query": "label_values(up{job=\"node_exporter\", platform=~\"$platform\"}, instance)",
         "includeAll": true,
-        "allValue": ".*",
         "multi": true,
         "refresh": 2,
         "sort": 1,

@@ -545,7 +545,7 @@
       }
     }
   ],
-  "title": "Node Exporter \u2013 Disk",
+  "title": "Node Exporter – Disk",
   "uid": "node-exp-storage",
   "version": 4,
   "templating": {
@@ -586,7 +586,6 @@
         "definition": "label_values(up{job=\"node_exporter\", platform=~\"$platform\"}, instance)",
         "query": "label_values(up{job=\"node_exporter\", platform=~\"$platform\"}, instance)",
         "includeAll": true,
-        "allValue": ".*",
         "multi": true,
         "refresh": 2,
         "sort": 1,
