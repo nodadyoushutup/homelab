@@ -1,7 +1,0 @@
-- Add wiki docs for creating a docker swarm, how to init the swarm, how to join worker nodes, how to label each node
-    - Labels: cicd, monitoring, database, s3
-- Add wiki docs for the tfvars (example jenkins.tfvars) 
-    - Each .tfvars file in the .tfvars dir will get its own write up of what the tfvars example will look like
-- Add wiki docs for how to use the pipelines
-    - bash pipeline and jenkins pipeline both functional for all apps
-    - jenkins bash pipeline includes the app infra and config, the jenkins pipeline for it only includes the config so it doesnt un-deploy itself mid-terraform build. jenkins is the only app we need to do this for because its the app that builds the terraform controller and runners (jenkins). once jenkins is online, we can use it to deploy any other job / app without worrying it'll kill itself like it can when deploying jenkins itself.
