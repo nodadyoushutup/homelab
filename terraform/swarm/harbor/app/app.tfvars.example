@@ -1,0 +1,45 @@
+provider_config = {
+  docker = {
+    host     = "ssh://nodadyoushutup@swarm-cp-0.local"
+    ssh_opts = ["-o", "StrictHostKeyChecking=accept-new"]
+  }
+}
+
+# Keep these aligned with the host where Harbor data/config currently live.
+harbor_install_path = "/mnt/eapp/harbor-manual/harbor"
+harbor_data_path    = "/mnt/eapp/harbor-manual/data"
+harbor_log_path     = "/mnt/eapp/harbor-manual/log"
+
+# Option A (recommended): point Terraform runner at env files that already exist.
+env_file_paths = {
+  db          = "/mnt/eapp/harbor-manual/harbor/common/config/db/env"
+  core        = "/mnt/eapp/harbor-manual/harbor/common/config/core/env"
+  registryctl = "/mnt/eapp/harbor-manual/harbor/common/config/registryctl/env"
+  jobservice  = "/mnt/eapp/harbor-manual/harbor/common/config/jobservice/env"
+  trivy       = "/mnt/eapp/harbor-manual/harbor/common/config/trivy-adapter/env"
+}
+
+# Option B: provide explicit env maps (overrides env_file_paths for non-empty maps).
+# env = {
+#   db = {
+#     POSTGRES_PASSWORD = "replace-me"
+#   }
+#   core = {}
+#   registryctl = {}
+#   jobservice = {}
+#   trivy = {}
+# }
+
+# Override images if you want different local/custom tags.
+# images = {
+#   log           = "goharbor/harbor-log:v2.14.2"
+#   registry      = "goharbor/registry-photon:v2.14.2"
+#   registryctl   = "goharbor/harbor-registryctl:v2.14.2"
+#   db            = "goharbor/harbor-db:v2.14.2"
+#   core          = "goharbor/harbor-core:v2.14.2"
+#   portal        = "goharbor/harbor-portal:v2.14.2"
+#   jobservice    = "goharbor/harbor-jobservice:v2.14.2"
+#   redis         = "goharbor/redis-photon:v2.14.2"
+#   proxy         = "goharbor/nginx-photon:v2.14.2"
+#   trivy_adapter = "goharbor/trivy-adapter-photon:v2.14.2"
+# }

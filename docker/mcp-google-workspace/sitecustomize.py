@@ -58,15 +58,15 @@ def _normalize_scopes(scopes: Iterable[str]) -> Tuple[str, ...]:
     return tuple(deduped)
 
 
-def _refresh_credentials(credentials) -> bool:
+def _refresh_credentials(credentials) -> tuple[bool, Optional[str]]:
     try:
         from google.auth.transport.requests import Request
 
         credentials.refresh(Request())
-        return True
-    except Exception:
+        return True, None
+    except Exception as exc:
         logger.exception("Failed refreshing delegated service-account credentials")
-        return False
+        return False, str(exc)
 
 
 @lru_cache(maxsize=128)
@@ -84,10 +84,12 @@ def _build_service_account_credentials(
     return credentials
 
 
-def _load_service_account_credentials(required_scopes: Iterable[str]):
+def _load_service_account_credentials(
+    required_scopes: Iterable[str],
+) -> tuple[object | None, Optional[str]]:
     service_account_file, delegated_user = _get_service_account_config()
     if not service_account_file or not delegated_user:
-        return None
+        return None, "service-account configuration is missing or invalid"
 
     scopes = _normalize_scopes(required_scopes)
 
@@ -97,14 +99,15 @@ def _load_service_account_credentials(required_scopes: Iterable[str]):
             delegated_user,
             scopes,
         )
-    except Exception:
+    except Exception as exc:
         logger.exception("Failed creating delegated service-account credentials")
-        return None
+        return None, str(exc)
 
-    if _refresh_credentials(credentials):
-        return credentials
+    ok, refresh_error = _refresh_credentials(credentials)
+    if ok:
+        return credentials, None
 
-    return None
+    return None, refresh_error
 
 
 def _apply_patch() -> None:
@@ -128,11 +131,6 @@ def _apply_patch() -> None:
         logger.exception("Service-account patch could not import auth.google_auth")
         return
 
-    original_get_credentials = google_auth_module.get_credentials
-    original_get_authenticated_google_service = (
-        google_auth_module.get_authenticated_google_service
-    )
-
     def patched_get_credentials(
         user_google_email,
         required_scopes,
@@ -140,13 +138,11 @@ def _apply_patch() -> None:
         credentials_base_dir=google_auth_module.DEFAULT_CREDENTIALS_DIR,
         session_id=None,
     ):
-        credentials = _load_service_account_credentials(required_scopes)
+        credentials, error = _load_service_account_credentials(required_scopes)
         if credentials:
             return credentials
 
-        logger.error(
-            "Service-account mode enabled but delegated credentials could not be loaded"
-        )
+        logger.error("Service-account mode enabled but delegated credentials could not be loaded: %s", error)
         return None
 
     async def patched_get_authenticated_google_service(
@@ -161,14 +157,33 @@ def _apply_patch() -> None:
         if delegated_user:
             user_google_email = delegated_user
 
-        return await original_get_authenticated_google_service(
-            service_name=service_name,
-            version=version,
-            tool_name=tool_name,
-            user_google_email=user_google_email,
-            required_scopes=required_scopes,
-            session_id=session_id,
-        )
+        credentials, error = _load_service_account_credentials(required_scopes)
+        if not credentials:
+            message = (
+                f"[{tool_name}] Service-account authentication failed: "
+                f"{error or 'unable to load delegated credentials'}"
+            )
+            logger.error(message)
+            raise google_auth_module.GoogleAuthenticationError(message)
+
+        try:
+            from googleapiclient.discovery import build
+
+            service = build(service_name, version, credentials=credentials)
+            logger.info(
+                "[%s] Successfully authenticated %s service for user: %s (service-account mode)",
+                tool_name,
+                service_name,
+                user_google_email,
+            )
+            return service, user_google_email
+        except Exception as exc:
+            message = (
+                f"[{tool_name}] Failed to build {service_name} service in "
+                f"service-account mode: {exc}"
+            )
+            logger.error(message, exc_info=True)
+            raise google_auth_module.GoogleAuthenticationError(message)
 
     google_auth_module.get_credentials = patched_get_credentials
     google_auth_module.get_authenticated_google_service = (

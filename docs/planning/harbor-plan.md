@@ -9,10 +9,16 @@ This plan tracks building and publishing custom multi-arch Harbor images for Doc
 - [ ] Run first real push for all Harbor runtime components to the target registry namespace.
 
 ## Stage 2 - Swarm Terraform stack
-- [ ] Create direct Swarm stages under `terraform/swarm/harbor/<stage>` (no module abstraction).
+- [x] Create direct Swarm stages under `terraform/swarm/harbor/<stage>` (no module abstraction).
 - [ ] Deploy Harbor data services (DB/Redis) and app services with pinned custom image tags.
 - [ ] Configure persistent volumes, overlay networks, secrets/config, and health checks.
-- [ ] Add pipeline entrypoints under `terraform/swarm/harbor/*/pipeline/`.
+- [x] Add pipeline entrypoints under `terraform/swarm/harbor/*/pipeline/`.
+
+### Stage 2 progress notes
+- Terraform scaffolding now exists at:
+  - `terraform/swarm/harbor/app` (Docker Swarm runtime services)
+  - `terraform/swarm/harbor/config` (Harbor API provider config resources)
+- Runtime apply/validation against swarm manager remains pending.
 
 ## Stage 3 - ingress and validation
 - [ ] Add Nginx Proxy Manager cert/proxy config for Harbor hostname(s).

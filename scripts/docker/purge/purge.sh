@@ -6,7 +6,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BASE_LIB="${SCRIPT_DIR}/base.sh"
-KNOWN_SERVICES=(dozzle gha-runner grafana graphite jenkins mcp-argocd mcp-atlassian mcp-cloudflare mcp-fortigate mcp-github mcp-google-workspace minio nginx-proxy-manager node-exporter prometheus webserver-image)
+KNOWN_SERVICES=(dozzle gha-runner grafana graphite jenkins mcp-argocd mcp-atlassian mcp-cloudflare mcp-fortigate mcp-github mcp-google-workspace minio nginx-proxy-manager node-exporter prometheus telegraf-docker-metrics webserver-image)
 declare -A SERVICE_MAP=(
   [dozzle]="dozzle"
   [gha-runner]="gha-runner"
@@ -38,6 +38,11 @@ declare -A SERVICE_MAP=(
   [node-exporter]="node-exporter"
   [node_exporter]="node-exporter"
   [prometheus]="prometheus"
+  [telegraf-docker-metrics]="telegraf-docker-metrics"
+  [telegraf_docker_metrics]="telegraf-docker-metrics"
+  [telegraf]="telegraf-docker-metrics"
+  [docker-metrics]="telegraf-docker-metrics"
+  [docker_metrics]="telegraf-docker-metrics"
   [mcp-argocd]="mcp-argocd"
   [mcp_argocd]="mcp-argocd"
   [argocd-mcp]="mcp-argocd"

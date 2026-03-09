@@ -1,0 +1,67 @@
+provider_config = {
+  harbor = {
+    url      = "http://swarm-cp-0.local:35080"
+    username = "admin"
+    password = "replace-me"
+    insecure = true
+  }
+}
+
+projects = [
+  {
+    name                   = "homelab"
+    public                 = false
+    vulnerability_scanning = true
+  }
+]
+
+# Optional local users
+# users = [
+#   {
+#     username  = "ci-user"
+#     email     = "ci-user@example.com"
+#     full_name = "CI User"
+#     password  = "replace-me"
+#     admin     = false
+#   }
+# ]
+
+# Optional membership (project_name must exist in projects)
+# project_members = [
+#   {
+#     project_name = "homelab"
+#     user_name    = "ci-user"
+#     role         = "developer"
+#   }
+# ]
+
+# Optional robot account example
+# robot_accounts = [
+#   {
+#     name  = "ci-push"
+#     level = "project"
+#     permissions = [
+#       {
+#         kind      = "project"
+#         namespace = "homelab"
+#         access = [
+#           {
+#             action   = "push"
+#             resource = "repository"
+#           },
+#           {
+#             action   = "pull"
+#             resource = "repository"
+#           }
+#         ]
+#       }
+#     ]
+#   }
+# ]
+
+# Optional system config (only applied when enabled)
+# manage_system_config = true
+# system_config = {
+#   robot_name_prefix      = "robot$"
+#   robot_token_expiration = 30
+# }

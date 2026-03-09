@@ -98,6 +98,10 @@ resource "docker_service" "prometheus" {
     }
   }
 
+  update_config {
+    order = "stop-first"
+  }
+
   endpoint_spec {
     ports {
       target_port    = 9090
