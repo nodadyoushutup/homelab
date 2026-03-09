@@ -9,7 +9,7 @@ variable "workspace_delegated_user" {
 }
 
 variable "workspace_service_account_file" {
-  description = "Absolute host path to service_account.json mounted into the container."
+  description = "Absolute local path on the Terraform runner to service_account.json, used to create a Docker secret."
   type        = string
 }
 

@@ -33,7 +33,7 @@ This plan tracks adding a Google Workspace MCP server in Docker Swarm using the 
   - arm64 placement default on `swarm-cp-0`
   - local pinned image tag `homelab/mcp-google-workspace:2026.03.09.1`
   - HTTP transport on `/mcp` with published port `18092`
-  - service-account auth from tfvars (`workspace_service_account_file`, `workspace_delegated_user`)
+  - service-account auth from tfvars (`workspace_service_account_file`, `workspace_delegated_user`) with Docker secret injection (no host bind mount on Swarm node)
   Mark complete when: stack is deployable with tfvars values populated.
 
 ## Stage 2 - operational parity
@@ -59,7 +59,7 @@ This plan tracks adding a Google Workspace MCP server in Docker Swarm using the 
   - `terraform -chdir=terraform/swarm/mcp-google-workspace/app validate`
   - `bash -n terraform/swarm/mcp-google-workspace/app/pipeline/app.sh scripts/docker/purge/mcp-google-workspace.sh docker/mcp-google-workspace/entrypoint.sh`
   - `docker build -t homelab/mcp-google-workspace:2026.03.09.1 docker/mcp-google-workspace`
-  - `docker run --rm -d -p 38086:8086 -e WORKSPACE_MCP_DELEGATED_USER=user@example.com -e WORKSPACE_MCP_SERVICE_ACCOUNT_FILE=/run/workspace-mcp/service_account.json -v $(pwd)/.tmp/service_account.json:/run/workspace-mcp/service_account.json:ro homelab/mcp-google-workspace:2026.03.09.1`
+  - `docker run --rm -d -p 38086:8086 -e WORKSPACE_MCP_DELEGATED_USER=user@example.com -e WORKSPACE_MCP_SERVICE_ACCOUNT_FILE=/run/secrets/service_account.json -v $(pwd)/.tmp/service_account.json:/run/secrets/service_account.json:ro homelab/mcp-google-workspace:2026.03.09.1`
   - `curl -sS http://127.0.0.1:38086/health`
   - `curl -sS -X POST http://127.0.0.1:38086/mcp -H 'content-type: application/json' -H 'accept: application/json, text/event-stream' --data '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-03-26","capabilities":{},"clientInfo":{"name":"debug","version":"1.0"}}}'`
 

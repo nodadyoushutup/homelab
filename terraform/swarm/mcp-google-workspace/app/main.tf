@@ -1,15 +1,30 @@
 locals {
-  service_name            = "mcp-google-workspace"
-  network_name            = "mcp-google-workspace"
-  internal_port           = 8086
-  published_port          = 18092
-  service_account_target  = "/run/workspace-mcp/service_account.json"
-  has_workspace_tools_env = var.workspace_tools != null && trimspace(var.workspace_tools) != ""
+  service_name                     = "mcp-google-workspace"
+  network_name                     = "mcp-google-workspace"
+  internal_port                    = 8086
+  published_port                   = 18092
+  service_account_target           = "/run/secrets/service_account.json"
+  service_account_secret_file_name = "service_account.json"
+  service_account_file_content = (
+    trimspace(var.workspace_service_account_file) != "" && fileexists(var.workspace_service_account_file)
+  ) ? file(var.workspace_service_account_file) : ""
+  service_account_secret_data_base64 = base64encode(local.service_account_file_content)
+  service_account_secret_name        = "mcp-google-workspace-sa-${substr(sha256(local.service_account_file_content), 0, 12)}"
+  has_workspace_tools_env            = var.workspace_tools != null && trimspace(var.workspace_tools) != ""
 }
 
 resource "docker_network" "mcp_google_workspace" {
   name   = local.network_name
   driver = "overlay"
+}
+
+resource "docker_secret" "workspace_service_account" {
+  name = local.service_account_secret_name
+  data = local.service_account_secret_data_base64
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "docker_service" "mcp_google_workspace" {
@@ -64,11 +79,10 @@ resource "docker_service" "mcp_google_workspace" {
         ]
       }
 
-      mounts {
-        type      = "bind"
-        source    = var.workspace_service_account_file
-        target    = local.service_account_target
-        read_only = true
+      secrets {
+        secret_id   = docker_secret.workspace_service_account.id
+        secret_name = docker_secret.workspace_service_account.name
+        file_name   = local.service_account_secret_file_name
       }
 
       healthcheck {
@@ -109,8 +123,11 @@ resource "docker_service" "mcp_google_workspace" {
     }
 
     precondition {
-      condition     = trimspace(var.workspace_service_account_file) != ""
-      error_message = "workspace_service_account_file must be set to the host path of service_account.json."
+      condition     = trimspace(var.workspace_service_account_file) != "" && fileexists(var.workspace_service_account_file)
+      error_message = "workspace_service_account_file must be set to an existing local file path on the Terraform runner."
     }
+    replace_triggered_by = [
+      docker_secret.workspace_service_account
+    ]
   }
 }
