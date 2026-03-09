@@ -6,7 +6,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BASE_LIB="${SCRIPT_DIR}/base.sh"
-KNOWN_SERVICES=(dozzle gha-runner grafana graphite jenkins mcp-argocd mcp-atlassian mcp-cloudflare mcp-fortigate mcp-github minio nginx-proxy-manager node-exporter prometheus webserver-image)
+KNOWN_SERVICES=(dozzle gha-runner grafana graphite jenkins mcp-argocd mcp-atlassian mcp-cloudflare mcp-fortigate mcp-github mcp-google-workspace minio nginx-proxy-manager node-exporter prometheus webserver-image)
 declare -A SERVICE_MAP=(
   [dozzle]="dozzle"
   [gha-runner]="gha-runner"
@@ -68,6 +68,14 @@ declare -A SERVICE_MAP=(
   [github_mcp]="mcp-github"
   [github-mcp-server]="mcp-github"
   [github_mcp_server]="mcp-github"
+  [mcp-google-workspace]="mcp-google-workspace"
+  [mcp_google_workspace]="mcp-google-workspace"
+  [google-workspace-mcp]="mcp-google-workspace"
+  [google_workspace_mcp]="mcp-google-workspace"
+  [workspace-mcp]="mcp-google-workspace"
+  [workspace_mcp]="mcp-google-workspace"
+  [google_workspace_mcp_server]="mcp-google-workspace"
+  [google-workspace-mcp-server]="mcp-google-workspace"
   [sooperset-atlassian-mcp]="mcp-atlassian"
   [sooperset_atlassian_mcp]="mcp-atlassian"
   [somerset-atlassian-mcp]="mcp-atlassian"
