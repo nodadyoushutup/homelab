@@ -32,7 +32,7 @@ This plan tracks adding a Google Workspace MCP server in Docker Swarm using the 
   - overlay network + replicated service
   - arm64 placement default on `swarm-cp-0`
   - local pinned image tag `homelab/mcp-google-workspace:2026.03.09.1`
-  - HTTP transport on `/mcp` with published port `18086`
+  - HTTP transport on `/mcp` with published port `18092`
   - service-account auth from tfvars (`workspace_service_account_file`, `workspace_delegated_user`)
   Mark complete when: stack is deployable with tfvars values populated.
 

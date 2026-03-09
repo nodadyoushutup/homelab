@@ -2,7 +2,7 @@ locals {
   service_name            = "mcp-google-workspace"
   network_name            = "mcp-google-workspace"
   internal_port           = 8086
-  published_port          = 18086
+  published_port          = 18092
   service_account_target  = "/run/workspace-mcp/service_account.json"
   has_workspace_tools_env = var.workspace_tools != null && trimspace(var.workspace_tools) != ""
 }
