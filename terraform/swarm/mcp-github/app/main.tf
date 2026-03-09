@@ -13,6 +13,16 @@ resource "docker_network" "mcp_github" {
 resource "docker_service" "mcp_github" {
   name = local.service_name
 
+  dynamic "auth" {
+    for_each = try(var.provider_config.registry_auth, null) == null ? [] : [var.provider_config.registry_auth]
+
+    content {
+      server_address = try(auth.value.address, "ghcr.io")
+      username       = auth.value.username
+      password       = auth.value.password
+    }
+  }
+
   task_spec {
     placement {
       constraints = ["node.labels.role==swarm-cp-0"]
@@ -29,7 +39,7 @@ resource "docker_service" "mcp_github" {
     }
 
     container_spec {
-      image = "homelab/mcp-github:2026.03.08.4"
+      image = "ghcr.io/nodadyoushutup/mcp-github:0.0.1"
 
       env = {
         GITHUB_PERSONAL_ACCESS_TOKEN = var.github_personal_access_token

@@ -20,6 +20,16 @@ resource "docker_network" "mcp_fortigate" {
 resource "docker_service" "mcp_fortigate" {
   name = local.service_name
 
+  dynamic "auth" {
+    for_each = try(var.provider_config.registry_auth, null) == null ? [] : [var.provider_config.registry_auth]
+
+    content {
+      server_address = try(auth.value.address, "ghcr.io")
+      username       = auth.value.username
+      password       = auth.value.password
+    }
+  }
+
   task_spec {
     placement {
       constraints = ["node.labels.role==swarm-cp-0"]
@@ -36,7 +46,7 @@ resource "docker_service" "mcp_fortigate" {
     }
 
     container_spec {
-      image = "homelab/mcp-fortigate:2026.03.08.6"
+      image = "ghcr.io/nodadyoushutup/mcp-fortigate:0.0.1"
 
       env = merge(
         {

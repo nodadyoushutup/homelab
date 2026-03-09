@@ -15,6 +15,16 @@ resource "docker_network" "mcp_cloudflare" {
 resource "docker_service" "mcp_cloudflare" {
   name = local.service_name
 
+  dynamic "auth" {
+    for_each = try(var.provider_config.registry_auth, null) == null ? [] : [var.provider_config.registry_auth]
+
+    content {
+      server_address = try(auth.value.address, "ghcr.io")
+      username       = auth.value.username
+      password       = auth.value.password
+    }
+  }
+
   task_spec {
     placement {
       constraints = ["node.labels.role==swarm-cp-0"]
@@ -31,7 +41,7 @@ resource "docker_service" "mcp_cloudflare" {
     }
 
     container_spec {
-      image = "homelab/mcp-cloudflare:2026.03.08.1"
+      image = "ghcr.io/nodadyoushutup/mcp-cloudflare:0.0.1"
 
       env = merge(
         {
