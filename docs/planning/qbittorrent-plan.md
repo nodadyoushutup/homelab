@@ -34,7 +34,7 @@ This plan tracks deploying qBittorrent to Kubernetes with reusable Kustomize bas
 
 - [x] Verify Kubernetes rollout and storage binding.
   Mark complete when: both qBittorrent pods are Ready and all PVCs are `Bound`.
-- [ ] Verify Argo CD app status from Git source.
+- [x] Verify Argo CD app status from Git source.
   Mark complete when: both qBittorrent applications show `sync=Synced` and `health=Healthy` after commit/push.
 - [x] Verify public HTTPS reachability.
   Mark complete when: both qBittorrent URLs respond successfully with valid TLS.
