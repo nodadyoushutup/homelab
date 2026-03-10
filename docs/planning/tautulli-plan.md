@@ -31,3 +31,12 @@ This plan tracks deploying Tautulli to Kubernetes with iSCSI-backed persistent s
   Mark complete when: `tautulli-config` PVC is `Bound`.
 - [x] Verify Argo CD app is `Synced` and `Healthy` from Git source.
   Mark complete when: Argo CD `application/tautulli` shows `sync=Synced` and `health=Healthy`.
+
+## Stage 4 - edge routing
+
+- [x] Ensure Cloudflare DNS points `tautulli.nodadyoushutup.com` at the public homelab edge IP.
+  Mark complete when: public resolvers return `96.253.53.3`.
+- [x] Ensure Nginx Proxy Manager proxy host for `tautulli.nodadyoushutup.com` forwards to Kubernetes ingress (`192.168.1.241:80`).
+  Mark complete when: NPM proxy host forward target is `192.168.1.241:80`.
+- [x] Verify public HTTPS reachability.
+  Mark complete when: `https://tautulli.nodadyoushutup.com` returns an app response and serves a valid cert.
