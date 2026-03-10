@@ -29,5 +29,5 @@ This plan tracks deploying Tautulli to Kubernetes with iSCSI-backed persistent s
   Mark complete when: deployment is Available and pod Ready.
 - [x] Verify storage binding.
   Mark complete when: `tautulli-config` PVC is `Bound`.
-- [ ] Verify Argo CD app is `Synced` and `Healthy` from Git source.
+- [x] Verify Argo CD app is `Synced` and `Healthy` from Git source.
   Mark complete when: Argo CD `application/tautulli` shows `sync=Synced` and `health=Healthy`.
