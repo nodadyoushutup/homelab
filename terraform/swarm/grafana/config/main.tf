@@ -62,6 +62,30 @@ locals {
   truenas_k3s_diagnostics_file_path = "${path.module}/dashboards/truenas-k3s-diagnostics.json"
   truenas_k3s_diagnostics_file_hash = filemd5(local.truenas_k3s_diagnostics_file_path)
   truenas_k3s_diagnostics_content   = file(local.truenas_k3s_diagnostics_file_path)
+
+  telegraf_docker_overview_file_path = "${path.module}/dashboards/telegraf-docker-metrics-overview.json"
+  telegraf_docker_overview_file_hash = filemd5(local.telegraf_docker_overview_file_path)
+  telegraf_docker_overview_content   = file(local.telegraf_docker_overview_file_path)
+
+  telegraf_docker_cpu_file_path = "${path.module}/dashboards/telegraf-docker-metrics-cpu.json"
+  telegraf_docker_cpu_file_hash = filemd5(local.telegraf_docker_cpu_file_path)
+  telegraf_docker_cpu_content   = file(local.telegraf_docker_cpu_file_path)
+
+  telegraf_docker_memory_file_path = "${path.module}/dashboards/telegraf-docker-metrics-memory.json"
+  telegraf_docker_memory_file_hash = filemd5(local.telegraf_docker_memory_file_path)
+  telegraf_docker_memory_content   = file(local.telegraf_docker_memory_file_path)
+
+  telegraf_docker_network_file_path = "${path.module}/dashboards/telegraf-docker-metrics-network.json"
+  telegraf_docker_network_file_hash = filemd5(local.telegraf_docker_network_file_path)
+  telegraf_docker_network_content   = file(local.telegraf_docker_network_file_path)
+
+  telegraf_docker_storage_file_path = "${path.module}/dashboards/telegraf-docker-metrics-storage.json"
+  telegraf_docker_storage_file_hash = filemd5(local.telegraf_docker_storage_file_path)
+  telegraf_docker_storage_content   = file(local.telegraf_docker_storage_file_path)
+
+  telegraf_docker_processes_file_path = "${path.module}/dashboards/telegraf-docker-metrics-processes.json"
+  telegraf_docker_processes_file_hash = filemd5(local.telegraf_docker_processes_file_path)
+  telegraf_docker_processes_content   = file(local.telegraf_docker_processes_file_path)
 }
 
 resource "terraform_data" "node_exporter_overview_file_hash" {
@@ -128,6 +152,30 @@ resource "terraform_data" "truenas_k3s_diagnostics_file_hash" {
   triggers_replace = local.truenas_k3s_diagnostics_file_hash
 }
 
+resource "terraform_data" "telegraf_docker_overview_file_hash" {
+  triggers_replace = local.telegraf_docker_overview_file_hash
+}
+
+resource "terraform_data" "telegraf_docker_cpu_file_hash" {
+  triggers_replace = local.telegraf_docker_cpu_file_hash
+}
+
+resource "terraform_data" "telegraf_docker_memory_file_hash" {
+  triggers_replace = local.telegraf_docker_memory_file_hash
+}
+
+resource "terraform_data" "telegraf_docker_network_file_hash" {
+  triggers_replace = local.telegraf_docker_network_file_hash
+}
+
+resource "terraform_data" "telegraf_docker_storage_file_hash" {
+  triggers_replace = local.telegraf_docker_storage_file_hash
+}
+
+resource "terraform_data" "telegraf_docker_processes_file_hash" {
+  triggers_replace = local.telegraf_docker_processes_file_hash
+}
+
 resource "grafana_data_source" "prometheus" {
   name              = "Prometheus"
   uid               = "prometheus"
@@ -155,6 +203,11 @@ resource "grafana_folder" "node_exporter" {
 resource "grafana_folder" "truenas" {
   title = "TrueNAS"
   uid   = "truenas-folder"
+}
+
+resource "grafana_folder" "docker" {
+  title = "Docker"
+  uid   = "docker-folder"
 }
 
 resource "grafana_dashboard" "node_exporter_overview" {
@@ -224,6 +277,66 @@ resource "grafana_dashboard" "node_exporter_hardware" {
 
   lifecycle {
     replace_triggered_by = [terraform_data.node_exporter_hardware_file_hash]
+  }
+}
+
+resource "grafana_dashboard" "telegraf_docker_overview" {
+  folder      = grafana_folder.docker.id
+  overwrite   = true
+  config_json = local.telegraf_docker_overview_content
+
+  lifecycle {
+    replace_triggered_by = [terraform_data.telegraf_docker_overview_file_hash]
+  }
+}
+
+resource "grafana_dashboard" "telegraf_docker_cpu" {
+  folder      = grafana_folder.docker.id
+  overwrite   = true
+  config_json = local.telegraf_docker_cpu_content
+
+  lifecycle {
+    replace_triggered_by = [terraform_data.telegraf_docker_cpu_file_hash]
+  }
+}
+
+resource "grafana_dashboard" "telegraf_docker_memory" {
+  folder      = grafana_folder.docker.id
+  overwrite   = true
+  config_json = local.telegraf_docker_memory_content
+
+  lifecycle {
+    replace_triggered_by = [terraform_data.telegraf_docker_memory_file_hash]
+  }
+}
+
+resource "grafana_dashboard" "telegraf_docker_network" {
+  folder      = grafana_folder.docker.id
+  overwrite   = true
+  config_json = local.telegraf_docker_network_content
+
+  lifecycle {
+    replace_triggered_by = [terraform_data.telegraf_docker_network_file_hash]
+  }
+}
+
+resource "grafana_dashboard" "telegraf_docker_storage" {
+  folder      = grafana_folder.docker.id
+  overwrite   = true
+  config_json = local.telegraf_docker_storage_content
+
+  lifecycle {
+    replace_triggered_by = [terraform_data.telegraf_docker_storage_file_hash]
+  }
+}
+
+resource "grafana_dashboard" "telegraf_docker_processes" {
+  folder      = grafana_folder.docker.id
+  overwrite   = true
+  config_json = local.telegraf_docker_processes_content
+
+  lifecycle {
+    replace_triggered_by = [terraform_data.telegraf_docker_processes_file_hash]
   }
 }
 

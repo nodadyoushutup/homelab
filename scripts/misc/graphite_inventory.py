@@ -5,9 +5,9 @@ and write the sorted list to a file so operators can diff new datapoints over ti
 
 Usage:
     python3 scripts/graphite_inventory.py \
-        --base-url http://swarm-cp-0:8081 \
+        --base-url http://swarm-cp-0.local:8081 \
         --prefix truenas.nas \
-        --output /tmp/truenas_metrics.txt
+        --output /tmp/metrics.txt
 """
 from __future__ import annotations
 
@@ -83,11 +83,11 @@ def inventory(
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Enumerate Graphite metrics under a prefix.")
-    parser.add_argument("--base-url", default="http://swarm-cp-0:8081",
-                        help="Graphite HTTP endpoint (defaults to http://swarm-cp-0:8081).")
+    parser.add_argument("--base-url", default="http://swarm-cp-0.local:8081",
+                        help="Graphite HTTP endpoint (defaults to http://swarm-cp-0.local:8081).")
     parser.add_argument("--prefix", default="truenas.nas",
                         help="Metric namespace prefix to walk (default: truenas.nas).")
-    parser.add_argument("--output", default="/tmp/truenas_metrics.txt",
+    parser.add_argument("--output", default="/tmp/metrics.txt",
                         help="Destination file for the sorted metrics list.")
     parser.add_argument("--timeout", type=int, default=10,
                         help="HTTP timeout in seconds for each Graphite request.")
