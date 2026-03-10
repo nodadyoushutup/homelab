@@ -4,7 +4,7 @@ metadata:
   name: qbittorrent
 spec:
   rules:
-    - host: qbittorrent-torrents.nodadyoushutup.com
+    - host: qbittorrent.television.nodadyoushutup.com
       http:
         paths:
           - path: /

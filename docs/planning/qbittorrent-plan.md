@@ -1,6 +1,6 @@
 # qBittorrent Kubernetes rollout plan
 
-This plan tracks deploying qBittorrent to Kubernetes with reusable Kustomize base templates and separate overlays for two instances (`movies`, `torrents`), including iSCSI-backed storage, Argo CD management, and public routing through Cloudflare + Nginx Proxy Manager.
+This plan tracks deploying qBittorrent to Kubernetes with reusable Kustomize base templates and separate overlays for two instances (`movies`, `torrents`), including iSCSI-backed storage, Argo CD management, and public routing through Cloudflare + Nginx Proxy Manager. Public URL naming uses `qbittorrent.movies.nodadyoushutup.com` and `qbittorrent.television.nodadyoushutup.com`.
 
 ## Stage 0 - scope lock
 
@@ -25,7 +25,7 @@ This plan tracks deploying qBittorrent to Kubernetes with reusable Kustomize bas
 
 ## Stage 3 - edge routing
 
-- [x] Ensure Cloudflare DNS points `qbittorrent-movies.nodadyoushutup.com` and `qbittorrent-torrents.nodadyoushutup.com` at the public homelab edge IP.
+- [x] Ensure Cloudflare DNS points `qbittorrent.movies.nodadyoushutup.com` and `qbittorrent.television.nodadyoushutup.com` at the public homelab edge IP.
   Mark complete when: public resolvers return `96.253.53.3` for both records.
 - [x] Ensure Nginx Proxy Manager proxy hosts for both domains forward to Kubernetes ingress (`192.168.1.241:80`) with TLS certs.
   Mark complete when: NPM config has certificate + proxy host entries for both qBittorrent domains.
