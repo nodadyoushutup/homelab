@@ -1,0 +1,23 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: qbittorrent
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "38"
+spec:
+  description: qBittorrent instances managed from homelab GitOps repo
+  sourceRepos:
+    - git@github.com:nodadyoushutup/homelab.git
+    - https://github.com/nodadyoushutup/homelab.git
+  destinations:
+    - namespace: qbittorrent-movies
+      server: https://kubernetes.default.svc
+    - namespace: qbittorrent-torrents
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+  namespaceResourceWhitelist:
+    - group: "*"
+      kind: "*"
