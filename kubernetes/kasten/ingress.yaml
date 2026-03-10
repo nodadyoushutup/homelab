@@ -1,17 +1,17 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: k10
+  name: kasten
   namespace: kasten-io
   annotations:
-    nginx.ingress.kubernetes.io/app-root: /k10/
+    nginx.ingress.kubernetes.io/app-root: /kasten/
 spec:
   ingressClassName: nginx
   rules:
-    - host: k10.nodadyoushutup.com
+    - host: kasten.nodadyoushutup.com
       http:
         paths:
-          - path: /k10
+          - path: /kasten
             pathType: Prefix
             backend:
               service:

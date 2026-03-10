@@ -3,6 +3,10 @@ kind: Application
 metadata:
   name: qbittorrent-torrents
   namespace: argocd
+  labels:
+    app.kubernetes.io/name: qbittorrent
+    app.kubernetes.io/part-of: qbittorrent
+    app.kubernetes.io/instance: torrents
   annotations:
     argocd.argoproj.io/sync-wave: "40"
 spec:

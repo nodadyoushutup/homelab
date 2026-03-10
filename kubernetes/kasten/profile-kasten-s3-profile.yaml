@@ -1,7 +1,7 @@
 apiVersion: config.kio.kasten.io/v1alpha1
 kind: Profile
 metadata:
-  name: k10-s3-profile
+  name: kasten-s3-profile
   namespace: kasten-io
 spec:
   type: Location
@@ -11,11 +11,11 @@ spec:
       secret:
         apiVersion: v1
         kind: Secret
-        name: k10-s3-secret
+        name: kasten-s3-secret
         namespace: kasten-io
     type: ObjectStore
     objectStore:
-      name: k10-backups
+      name: kasten-backups
       objectStoreType: S3
       endpoint: http://192.168.1.26:9000
       region: us-east-1

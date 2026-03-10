@@ -3,6 +3,9 @@ kind: AppProject
 metadata:
   name: qbittorrent
   namespace: argocd
+  labels:
+    app.kubernetes.io/name: qbittorrent
+    app.kubernetes.io/part-of: qbittorrent
   annotations:
     argocd.argoproj.io/sync-wave: "38"
 spec:

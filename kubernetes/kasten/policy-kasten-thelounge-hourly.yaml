@@ -1,7 +1,7 @@
 apiVersion: config.kio.kasten.io/v1alpha1
 kind: Policy
 metadata:
-  name: k10-thelounge-hourly
+  name: kasten-thelounge-hourly
   namespace: kasten-io
 spec:
   comment: Hourly backup and export policy for thelounge namespace
@@ -18,7 +18,7 @@ spec:
       exportParameters:
         frequency: '@hourly'
         profile:
-          name: k10-s3-profile
+          name: kasten-s3-profile
           namespace: kasten-io
   selector:
     matchLabels:
