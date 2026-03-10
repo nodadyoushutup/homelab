@@ -9,6 +9,7 @@ Use this as a directory to the source-of-truth docs agents need.
 - Compose-only stacks (MinIO backend + Renovate) run on `swarm-cp-0.local` under `docker/minio/` and `docker/renovate/`; images must support `linux/aarch64`.
 - NFS root_squash note: running repo scripts directly via `sudo` can return “Permission denied”; pipe them into `sudo bash -s` or copy to `/tmp` first.
 - Python note: use `python3` explicitly; no `python` shim is assumed across hosts.
+- Multi-agent git rule: if unrelated untracked/modified files from other agents are present, ignore them and only stage/commit/push files relevant to the current task unless a human explicitly asks otherwise.
 - Never abstract a container image to locals in terraform. Always have the image directly in the resource.
 - Docker Swarm Terraform note (current policy): `terraform/module/<service>` abstraction is deprecated for new Swarm apps. For new Swarm work, define resources directly in `terraform/swarm/<service>/<stage>` and reference existing working direct-stack services as implementation examples.
 - Never use Terraform `moved` blocks in this repo unless the user explicitly asks for them in that task.
