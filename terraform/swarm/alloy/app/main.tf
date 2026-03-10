@@ -78,15 +78,9 @@ resource "docker_service" "alloy" {
       }
 
       healthcheck {
-        test = [
-          "CMD-SHELL",
-          "wget -q -O- http://127.0.0.1:12345/-/ready | grep -q 'ready'",
-        ]
-        interval     = "15s"
-        timeout      = "5s"
-        retries      = 10
-        start_period = "45s"
+        test = ["NONE"]
       }
+
     }
   }
 

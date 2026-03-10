@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: kasten
+  name: k10
   namespace: argocd
   annotations:
     argocd.argoproj.io/sync-wave: "34"
@@ -15,7 +15,7 @@ spec:
     chart: k10
     targetRevision: 8.5.4
     helm:
-      releaseName: kasten
+      releaseName: k10
       values: |
         eula:
           accept: true

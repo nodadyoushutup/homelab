@@ -94,6 +94,10 @@ locals {
   proxmox_storage_overview_file_path = "${path.module}/dashboards/proxmox-storage-overview.json"
   proxmox_storage_overview_file_hash = filemd5(local.proxmox_storage_overview_file_path)
   proxmox_storage_overview_content   = file(local.proxmox_storage_overview_file_path)
+
+  loki_swarm_logs_overview_file_path = "${path.module}/dashboards/loki-swarm-logs-overview.json"
+  loki_swarm_logs_overview_file_hash = filemd5(local.loki_swarm_logs_overview_file_path)
+  loki_swarm_logs_overview_content   = file(local.loki_swarm_logs_overview_file_path)
 }
 
 resource "terraform_data" "node_exporter_overview_file_hash" {
@@ -192,6 +196,10 @@ resource "terraform_data" "proxmox_storage_overview_file_hash" {
   triggers_replace = local.proxmox_storage_overview_file_hash
 }
 
+resource "terraform_data" "loki_swarm_logs_overview_file_hash" {
+  triggers_replace = local.loki_swarm_logs_overview_file_hash
+}
+
 resource "grafana_data_source" "prometheus" {
   name              = "Prometheus"
   uid               = "prometheus"
@@ -208,6 +216,15 @@ resource "grafana_data_source" "graphite" {
   url               = "http://192.168.1.26:8081"
   is_default        = false
   json_data_encoded = jsonencode({ httpMethod = "POST" })
+}
+
+resource "grafana_data_source" "loki" {
+  name              = "Loki"
+  uid               = "loki"
+  type              = "loki"
+  url               = "http://192.168.1.26:3100"
+  is_default        = false
+  json_data_encoded = jsonencode({ maxLines = 2000 })
 }
 
 
@@ -229,6 +246,11 @@ resource "grafana_folder" "docker" {
 resource "grafana_folder" "proxmox" {
   title = "Proxmox"
   uid   = "proxmox-folder"
+}
+
+resource "grafana_folder" "logs" {
+  title = "Logs"
+  uid   = "logs-folder"
 }
 
 resource "grafana_dashboard" "node_exporter_overview" {
@@ -468,5 +490,15 @@ resource "grafana_dashboard" "truenas_k3s_diagnostics" {
 
   lifecycle {
     replace_triggered_by = [terraform_data.truenas_k3s_diagnostics_file_hash]
+  }
+}
+
+resource "grafana_dashboard" "loki_swarm_logs_overview" {
+  folder      = grafana_folder.logs.id
+  overwrite   = true
+  config_json = local.loki_swarm_logs_overview_content
+
+  lifecycle {
+    replace_triggered_by = [terraform_data.loki_swarm_logs_overview_file_hash]
   }
 }
