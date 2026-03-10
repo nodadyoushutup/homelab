@@ -1,0 +1,19 @@
+controller:
+  image:
+    tag: v8.2.1
+
+  volumeSnapshotClasses:
+    - name: truenas-iscsi-snapclass
+      annotations:
+        snapshot.storage.kubernetes.io/is-default-class: "true"
+      labels:
+        velero.io/csi-volumesnapshot-class: "true"
+      driver: org.democratic-csi.truenas-iscsi
+      deletionPolicy: Delete
+    - name: truenas-nfs-snapclass
+      annotations:
+        snapshot.storage.kubernetes.io/is-default-class: "true"
+      labels:
+        velero.io/csi-volumesnapshot-class: "true"
+      driver: org.democratic-csi.truenas-nfs
+      deletionPolicy: Delete

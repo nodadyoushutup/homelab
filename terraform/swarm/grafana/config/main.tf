@@ -86,6 +86,14 @@ locals {
   telegraf_docker_processes_file_path = "${path.module}/dashboards/telegraf-docker-metrics-processes.json"
   telegraf_docker_processes_file_hash = filemd5(local.telegraf_docker_processes_file_path)
   telegraf_docker_processes_content   = file(local.telegraf_docker_processes_file_path)
+
+  proxmox_qemu_overview_file_path = "${path.module}/dashboards/proxmox-qemu-overview.json"
+  proxmox_qemu_overview_file_hash = filemd5(local.proxmox_qemu_overview_file_path)
+  proxmox_qemu_overview_content   = file(local.proxmox_qemu_overview_file_path)
+
+  proxmox_storage_overview_file_path = "${path.module}/dashboards/proxmox-storage-overview.json"
+  proxmox_storage_overview_file_hash = filemd5(local.proxmox_storage_overview_file_path)
+  proxmox_storage_overview_content   = file(local.proxmox_storage_overview_file_path)
 }
 
 resource "terraform_data" "node_exporter_overview_file_hash" {
@@ -176,6 +184,14 @@ resource "terraform_data" "telegraf_docker_processes_file_hash" {
   triggers_replace = local.telegraf_docker_processes_file_hash
 }
 
+resource "terraform_data" "proxmox_qemu_overview_file_hash" {
+  triggers_replace = local.proxmox_qemu_overview_file_hash
+}
+
+resource "terraform_data" "proxmox_storage_overview_file_hash" {
+  triggers_replace = local.proxmox_storage_overview_file_hash
+}
+
 resource "grafana_data_source" "prometheus" {
   name              = "Prometheus"
   uid               = "prometheus"
@@ -208,6 +224,11 @@ resource "grafana_folder" "truenas" {
 resource "grafana_folder" "docker" {
   title = "Docker"
   uid   = "docker-folder"
+}
+
+resource "grafana_folder" "proxmox" {
+  title = "Proxmox"
+  uid   = "proxmox-folder"
 }
 
 resource "grafana_dashboard" "node_exporter_overview" {
@@ -337,6 +358,26 @@ resource "grafana_dashboard" "telegraf_docker_processes" {
 
   lifecycle {
     replace_triggered_by = [terraform_data.telegraf_docker_processes_file_hash]
+  }
+}
+
+resource "grafana_dashboard" "proxmox_qemu_overview" {
+  folder      = grafana_folder.proxmox.id
+  overwrite   = true
+  config_json = local.proxmox_qemu_overview_content
+
+  lifecycle {
+    replace_triggered_by = [terraform_data.proxmox_qemu_overview_file_hash]
+  }
+}
+
+resource "grafana_dashboard" "proxmox_storage_overview" {
+  folder      = grafana_folder.proxmox.id
+  overwrite   = true
+  config_json = local.proxmox_storage_overview_content
+
+  lifecycle {
+    replace_triggered_by = [terraform_data.proxmox_storage_overview_file_hash]
   }
 }
 

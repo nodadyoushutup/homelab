@@ -426,7 +426,7 @@
         "refresh": 2,
         "sort": 1,
         "options": [],
-        "regex": "",
+        "regex": "^(?!Machine$).*$",
         "hide": 0,
         "skipUrlSync": false,
         "current": {

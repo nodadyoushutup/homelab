@@ -1,0 +1,340 @@
+{
+  "refresh": "10s",
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "schemaVersion": 39,
+  "liveNow": false,
+  "graphTooltip": 0,
+  "weekStart": "",
+  "timezone": "",
+  "style": "dark",
+  "editable": true,
+  "links": [],
+  "fiscalYearStartMonth": 0,
+  "tags": [
+    "homelab",
+    "proxmox",
+    "graphite",
+    "storage"
+  ],
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "timepicker": {
+    "time_options": [
+      "1h",
+      "6h",
+      "24h",
+      "7d",
+      "30d"
+    ]
+  },
+  "id": null,
+  "panels": [
+    {
+      "id": 1,
+      "title": "Storage Used",
+      "type": "timeseries",
+      "description": "Raw used bytes per Proxmox storage target.",
+      "datasource": {
+        "type": "graphite",
+        "uid": "graphite"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "target": "aliasByNode(proxmox.storages.$node.$storage.used,2,3)",
+          "textEditor": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": [
+            "max",
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 2,
+      "title": "Storage Available",
+      "type": "timeseries",
+      "description": "Raw available bytes per Proxmox storage target.",
+      "datasource": {
+        "type": "graphite",
+        "uid": "graphite"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "target": "aliasByNode(proxmox.storages.$node.$storage.avail,2,3)",
+          "textEditor": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": [
+            "max",
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 3,
+      "title": "Storage Total",
+      "type": "timeseries",
+      "description": "Raw total bytes per Proxmox storage target.",
+      "datasource": {
+        "type": "graphite",
+        "uid": "graphite"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "target": "aliasByNode(proxmox.storages.$node.$storage.total,2,3)",
+          "textEditor": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": [
+            "max",
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 4,
+      "title": "Storage Utilization",
+      "type": "timeseries",
+      "description": "Used percentage derived from used/total for each storage.",
+      "datasource": {
+        "type": "graphite",
+        "uid": "graphite"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "target": "aliasByNode(asPercent(proxmox.storages.$node.$storage.used,proxmox.storages.$node.$storage.total),2,3)",
+          "textEditor": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": [
+            "max",
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 5,
+      "title": "Storage State Flags",
+      "type": "timeseries",
+      "description": "active/enabled/shared flags from Proxmox storage inventory.",
+      "datasource": {
+        "type": "graphite",
+        "uid": "graphite"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 16
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "target": "aliasByNode(proxmox.storages.$node.$storage.active,2,3,4)",
+          "textEditor": true
+        },
+        {
+          "refId": "B",
+          "target": "aliasByNode(proxmox.storages.$node.$storage.enabled,2,3,4)",
+          "textEditor": true
+        },
+        {
+          "refId": "C",
+          "target": "aliasByNode(proxmox.storages.$node.$storage.shared,2,3,4)",
+          "textEditor": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "min": 0,
+          "max": 1
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    }
+  ],
+  "title": "Proxmox - Storage Overview",
+  "uid": "proxmox-storage-overview",
+  "version": 1,
+  "templating": {
+    "list": [
+      {
+        "name": "node",
+        "label": "Node",
+        "type": "query",
+        "datasource": {
+          "type": "graphite",
+          "uid": "graphite"
+        },
+        "definition": "proxmox.storages.*",
+        "query": "proxmox.storages.*",
+        "regex": "/^proxmox\\.storages\\.([^.]+)/",
+        "includeAll": true,
+        "multi": false,
+        "refresh": 2,
+        "sort": 1,
+        "options": [],
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "hide": 0,
+        "skipUrlSync": false,
+        "allValue": "*"
+      },
+      {
+        "name": "storage",
+        "label": "Storage",
+        "type": "query",
+        "datasource": {
+          "type": "graphite",
+          "uid": "graphite"
+        },
+        "definition": "proxmox.storages.$node.*",
+        "query": "proxmox.storages.$node.*",
+        "regex": "/^proxmox\\.storages\\.[^.]+\\.([^.]+)/",
+        "includeAll": true,
+        "allValue": "*",
+        "multi": true,
+        "refresh": 2,
+        "sort": 1,
+        "options": [],
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "hide": 0,
+        "skipUrlSync": false
+      }
+    ]
+  }
+}

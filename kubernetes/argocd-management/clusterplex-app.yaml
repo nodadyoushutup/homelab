@@ -1,0 +1,90 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: clusterplex
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "31"
+spec:
+  project: clusterplex
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: clusterplex
+  source:
+    repoURL: https://pabloromeo.github.io/clusterplex
+    chart: clusterplex
+    targetRevision: 1.1.10
+    helm:
+      releaseName: clusterplex
+      values: |
+        global:
+          timezone: America/New_York
+          PUID: 1000
+          PGID: 1000
+          sharedStorage:
+            media:
+              enabled: true
+              existingClaim: clusterplex-media
+            transcode:
+              enabled: true
+              storageClass: truenas-nfs-csi-retain
+              size: 50Gi
+        pms:
+          config:
+            transcodeOperatingMode: both
+            localRelayEnabled: true
+            version: docker
+          configVolume:
+            storageClass: truenas-iscsi-csi-retain
+            size: 40Gi
+          ingressConfig:
+            enabled: true
+            ingressClassName: nginx
+            annotations:
+              nginx.ingress.kubernetes.io/proxy-buffering: "off"
+              nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+              nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+            hosts:
+              - host: clusterplex.nodadyoushutup.com
+                paths:
+                  - path: /
+                    pathType: Prefix
+          resources:
+            requests:
+              cpu: 1000m
+              memory: 2Gi
+            limits:
+              cpu: 4000m
+              memory: 8Gi
+        orchestrator:
+          config:
+            workerSelectionStrategy: LOAD_RANK
+          resources:
+            requests:
+              cpu: 100m
+            limits:
+              cpu: 500m
+              memory: 256Mi
+        worker:
+          config:
+            replicas: 2
+            type: statefulset
+            eaeSupport: 1
+          codecVolumes:
+            enabled: true
+            size: 2Gi
+            storageClass: truenas-iscsi-csi-retain
+          resources:
+            requests:
+              cpu: 1000m
+              memory: 2Gi
+            limits:
+              cpu: 4000m
+              memory: 6Gi
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

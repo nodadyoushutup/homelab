@@ -1,0 +1,55 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: k10
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "34"
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kasten-io
+  source:
+    repoURL: https://charts.kasten.io/
+    chart: k10
+    targetRevision: 8.5.4
+    helm:
+      releaseName: k10
+      values: |
+        eula:
+          accept: true
+          company: NoDad Homelab
+          email: admin@nodadyoushutup.com
+
+        clusterName: homelab
+
+        multicluster:
+          enabled: false
+
+        networkPolicy:
+          create: false
+
+        global:
+          persistence:
+            storageClass: truenas-nfs-csi-retain
+            size: 20Gi
+            metering:
+              size: 2Gi
+
+        prometheus:
+          server:
+            persistentVolume:
+              storageClass: truenas-nfs-csi-retain
+              size: 8Gi
+
+        apiservices:
+          deployed: false
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - SkipDryRunOnMissingResource=true

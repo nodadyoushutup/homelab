@@ -1,0 +1,28 @@
+eula:
+  accept: true
+  company: NoDad Homelab
+  email: admin@nodadyoushutup.com
+
+clusterName: homelab
+
+multicluster:
+  enabled: false
+
+networkPolicy:
+  create: false
+
+global:
+  persistence:
+    storageClass: truenas-nfs-csi-retain
+    size: 20Gi
+    metering:
+      size: 2Gi
+
+prometheus:
+  server:
+    persistentVolume:
+      storageClass: truenas-nfs-csi-retain
+      size: 8Gi
+
+apiservices:
+  deployed: false
