@@ -2,6 +2,8 @@ global:
   timezone: America/New_York
   PUID: 1000
   PGID: 1000
+  plexImage:
+    imagePullPolicy: Always
   sharedStorage:
     media:
       enabled: true
@@ -51,7 +53,7 @@ orchestrator:
 
 worker:
   config:
-    replicas: 2
+    replicas: 6
     type: statefulset
     eaeSupport: 1
   codecVolumes:
