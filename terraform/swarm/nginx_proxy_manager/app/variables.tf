@@ -3,6 +3,12 @@ variable "provider_config" {
   type        = any
 }
 
+variable "db_mysql_host" {
+  description = "Internal MySQL hostname for NPM (defaults to Swarm service DNS name)"
+  type        = string
+  default     = "mysql"
+}
+
 variable "env" {
   description = "Additional environment variables to pass to the Nginx Proxy Manager container"
   type        = map(string)

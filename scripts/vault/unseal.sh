@@ -56,17 +56,36 @@ resolve_vault_addr() {
 }
 
 detect_swarm_manager_host() {
-  local host
+  local host docker_swarm_cp
+  local -a candidates
+
   host="${VAULT_SWARM_MANAGER_HOST:-}"
   if [[ -n "${host}" ]]; then
     echo "${host}"
     return 0
   fi
 
-  host="${DOCKER_SWARM_CP:-ssh://swarm-cp-0.internal}"
-  host="${host#ssh://}"
-  host="${host%%/*}"
-  echo "${host}"
+  docker_swarm_cp="${DOCKER_SWARM_CP:-}"
+  if [[ -n "${docker_swarm_cp}" ]]; then
+    host="${docker_swarm_cp#ssh://}"
+    host="${host%%/*}"
+    if [[ -n "${host}" ]]; then
+      candidates+=("${host}")
+    fi
+  fi
+
+  candidates+=("swarm-cp-0.local" "swarm-cp-0.internal")
+
+  if command -v ssh >/dev/null 2>&1; then
+    for host in "${candidates[@]}"; do
+      if ssh -o BatchMode=yes -o ConnectTimeout=3 "${host}" true >/dev/null 2>&1; then
+        echo "${host}"
+        return 0
+      fi
+    done
+  fi
+
+  echo "${candidates[0]}"
 }
 
 wait_for_vault_api() {

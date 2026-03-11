@@ -3,6 +3,10 @@ locals {
   image_reference = "jc21/nginx-proxy-manager:2.12.6@sha256:6ab097814f54b1362d5fd3c5884a01ddd5878aaae9992ffd218439180f0f92f3"
 }
 
+data "docker_network" "nginx_proxy_manager_mysql" {
+  name = "nginx-proxy-manager-mysql"
+}
+
 resource "docker_network" "nginx_proxy_manager" {
   name   = "nginx-proxy-manager"
   driver = "overlay"
@@ -35,16 +39,21 @@ resource "docker_service" "nginx_proxy_manager" {
       aliases = ["nginx-proxy-manager"]
     }
 
+    networks_advanced {
+      name    = data.docker_network.nginx_proxy_manager_mysql.id
+      aliases = []
+    }
+
     container_spec {
       image = local.image_reference
       env = {
         INITIAL_ADMIN_EMAIL    = var.env.INITIAL_ADMIN_EMAIL
         INITIAL_ADMIN_PASSWORD = var.env.INITIAL_ADMIN_PASSWORD
-        DB_MYSQL_HOST = var.env.DB_MYSQL_HOST
-        DB_MYSQL_NAME = var.env.DB_MYSQL_NAME
-        DB_MYSQL_PORT = var.env.DB_MYSQL_PORT
-        DB_MYSQL_USER = var.env.DB_MYSQL_USER
-        DB_MYSQL_PASSWORD = var.env.DB_MYSQL_PASSWORD
+        DB_MYSQL_HOST          = var.db_mysql_host
+        DB_MYSQL_NAME          = var.env.DB_MYSQL_NAME
+        DB_MYSQL_PORT          = var.env.DB_MYSQL_PORT
+        DB_MYSQL_USER          = var.env.DB_MYSQL_USER
+        DB_MYSQL_PASSWORD      = var.env.DB_MYSQL_PASSWORD
       }
 
       dns_config {

@@ -1,5 +1,7 @@
-resource "docker_network" "mysql" {
-  name   = "mysql"
+resource "docker_network" "nginx_proxy_manager_mysql" {
+  # Keep network name distinct from service name. Using identical names causes
+  # Swarm DNS lookups for the service to return NXDOMAIN on this network.
+  name   = "nginx-proxy-manager-mysql"
   driver = "overlay"
 }
 
@@ -21,16 +23,16 @@ resource "docker_service" "mysql" {
     }
 
     networks_advanced {
-      name    = docker_network.mysql.id
+      name    = docker_network.nginx_proxy_manager_mysql.id
       aliases = ["mysql"]
     }
 
     container_spec {
       image = "jc21/mariadb-aria:10.11.5"
       env = {
-        MYSQL_DATABASE    = var.env.MYSQL_DATABASE
-        MYSQL_USER = var.env.MYSQL_USER
-        MYSQL_PASSWORD = var.env.MYSQL_PASSWORD
+        MYSQL_DATABASE       = var.env.MYSQL_DATABASE
+        MYSQL_USER           = var.env.MYSQL_USER
+        MYSQL_PASSWORD       = var.env.MYSQL_PASSWORD
         MARIADB_AUTO_UPGRADE = var.env.MARIADB_AUTO_UPGRADE
       }
 

@@ -3,7 +3,11 @@
 Use this as a directory to the source-of-truth docs agents need.
 
 - Legacy wiki docs were intentionally removed and are being rebuilt; do not reference old wiki paths until new docs are added.
-- Planning docs for active changes: `docs/planning/<service>-plan.md` (complete before merging).
+- Planning docs workflow:
+  - `docs/planning/pending/<service>-plan.md`: planned/proposed work not currently being executed.
+  - `docs/planning/active/<service>-plan.md`: work in progress right now (must be completed before merging related changes).
+  - `docs/planning/archive/<service>-plan.md`: completed, cancelled, or superseded plans kept for history/reference.
+  - Agents should move plans between these folders as state changes; do not keep active plans in the top-level `docs/planning/`.
 - Repo path is `~/code/homelab` everywhere via NFS from `truenas.internal`.
 - `_old/` rule (HARD RULE): always treat all code under `_old/` as out-of-scope legacy content. Do not read, modify, refactor, lint, test, or include `_old/` files in agent changes unless a human explicitly asks for `_old/` work. Do not add `_old/` to `.gitignore`.
 - Compose-only stacks (MinIO backend + Renovate) run on `swarm-cp-0.local` under `docker/minio/` and `docker/renovate/`; images must support `linux/aarch64`.

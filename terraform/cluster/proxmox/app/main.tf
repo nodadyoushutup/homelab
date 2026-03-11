@@ -315,7 +315,7 @@ resource "proxmox_virtual_environment_vm" "development_vm" {
   bios      = "ovmf"
   machine   = "q35"
   started   = true
-  on_boot   = false
+  on_boot   = true
 
   operating_system {
     type = "l26"
@@ -371,11 +371,11 @@ resource "proxmox_virtual_environment_vm" "k8s_cp_0_vm" {
   bios      = "ovmf"
   machine   = "q35"
   boot_order = [
-    "ide2",
     "scsi0",
+    "ide2",
   ]
   started = true
-  on_boot = false
+  on_boot = true
 
   operating_system {
     type = "l26"
@@ -436,11 +436,11 @@ resource "proxmox_virtual_environment_vm" "k8s_wk_0_vm" {
   bios      = "ovmf"
   machine   = "q35"
   boot_order = [
-    "ide2",
     "scsi0",
+    "ide2",
   ]
   started = true
-  on_boot = false
+  on_boot = true
 
   operating_system {
     type = "l26"
@@ -501,11 +501,11 @@ resource "proxmox_virtual_environment_vm" "k8s_wk_1_vm" {
   bios      = "ovmf"
   machine   = "q35"
   boot_order = [
-    "ide2",
     "scsi0",
+    "ide2",
   ]
   started = true
-  on_boot = false
+  on_boot = true
 
   operating_system {
     type = "l26"
@@ -566,11 +566,11 @@ resource "proxmox_virtual_environment_vm" "k8s_wk_2_vm" {
   bios      = "ovmf"
   machine   = "q35"
   boot_order = [
-    "ide2",
     "scsi0",
+    "ide2",
   ]
   started = true
-  on_boot = false
+  on_boot = true
 
   operating_system {
     type = "l26"
@@ -631,11 +631,11 @@ resource "proxmox_virtual_environment_vm" "k8s_wk_3_vm" {
   bios      = "ovmf"
   machine   = "q35"
   boot_order = [
-    "ide2",
     "scsi0",
+    "ide2",
   ]
   started = true
-  on_boot = false
+  on_boot = true
 
   operating_system {
     type = "l26"
@@ -696,11 +696,11 @@ resource "proxmox_virtual_environment_vm" "k8s_wk_4_vm" {
   bios      = "ovmf"
   machine   = "q35"
   boot_order = [
-    "ide2",
     "scsi0",
+    "ide2",
   ]
   started = true
-  on_boot = false
+  on_boot = true
 
   operating_system {
     type = "l26"
@@ -761,11 +761,11 @@ resource "proxmox_virtual_environment_vm" "k8s_wk_5_vm" {
   bios      = "ovmf"
   machine   = "q35"
   boot_order = [
-    "ide2",
     "scsi0",
+    "ide2",
   ]
   started = true
-  on_boot = false
+  on_boot = true
 
   operating_system {
     type = "l26"
@@ -826,11 +826,11 @@ resource "proxmox_virtual_environment_vm" "k8s_wk_6_vm" {
   bios      = "ovmf"
   machine   = "q35"
   boot_order = [
-    "ide2",
     "scsi0",
+    "ide2",
   ]
   started = true
-  on_boot = false
+  on_boot = true
 
   operating_system {
     type = "l26"
@@ -891,11 +891,11 @@ resource "proxmox_virtual_environment_vm" "k8s_wk_7_vm" {
   bios      = "ovmf"
   machine   = "q35"
   boot_order = [
-    "ide2",
     "scsi0",
+    "ide2",
   ]
   started = true
-  on_boot = false
+  on_boot = true
 
   operating_system {
     type = "l26"
@@ -956,11 +956,11 @@ resource "proxmox_virtual_environment_vm" "k8s_wk_8_vm" {
   bios      = "ovmf"
   machine   = "q35"
   boot_order = [
-    "ide2",
     "scsi0",
+    "ide2",
   ]
   started = true
-  on_boot = false
+  on_boot = true
 
   operating_system {
     type = "l26"
@@ -1021,11 +1021,11 @@ resource "proxmox_virtual_environment_vm" "k8s_wk_9_vm" {
   bios      = "ovmf"
   machine   = "q35"
   boot_order = [
-    "ide2",
     "scsi0",
+    "ide2",
   ]
   started = true
-  on_boot = false
+  on_boot = true
 
   operating_system {
     type = "l26"
@@ -1086,11 +1086,11 @@ resource "proxmox_virtual_environment_vm" "k8s_wk_10_vm" {
   bios      = "ovmf"
   machine   = "q35"
   boot_order = [
-    "ide2",
     "scsi0",
+    "ide2",
   ]
   started = true
-  on_boot = false
+  on_boot = true
 
   operating_system {
     type = "l26"
