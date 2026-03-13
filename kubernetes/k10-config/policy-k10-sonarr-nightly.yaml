@@ -1,0 +1,24 @@
+apiVersion: config.kio.kasten.io/v1alpha1
+kind: Policy
+metadata:
+  name: k10-sonarr-nightly
+  namespace: kasten-io
+spec:
+  comment: Nightly backup and export policy for sonarr namespace
+  frequency: '@daily'
+  retention:
+    daily: 14
+    weekly: 8
+    monthly: 12
+    yearly: 2
+  actions:
+    - action: backup
+    - action: export
+      exportParameters:
+        frequency: '@daily'
+        profile:
+          name: k10-s3-profile
+          namespace: kasten-io
+  selector:
+    matchLabels:
+      k10.kasten.io/appNamespace: sonarr
