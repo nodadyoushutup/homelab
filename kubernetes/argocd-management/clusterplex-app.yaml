@@ -14,6 +14,12 @@ spec:
     repoURL: git@github.com:nodadyoushutup/homelab.git
     targetRevision: HEAD
     path: kubernetes/clusterplex
+  ignoreDifferences:
+    - group: apps
+      kind: StatefulSet
+      name: clusterplex-worker
+      jsonPointers:
+        - /spec/volumeClaimTemplates
   syncPolicy:
     automated:
       prune: true
