@@ -4,8 +4,9 @@ metadata:
   name: sonarr
   namespace: sonarr
   annotations:
-    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
-    nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-next-upstream: "off"
 spec:
   ingressClassName: nginx
   rules:
