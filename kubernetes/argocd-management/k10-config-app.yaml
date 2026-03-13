@@ -7,6 +7,12 @@ metadata:
     argocd.argoproj.io/sync-wave: "35"
 spec:
   project: default
+  ignoreDifferences:
+    - group: config.kio.kasten.io
+      kind: Policy
+      jqPathExpressions:
+        - .spec.actions[]?.exportParameters?.migrationToken
+        - .spec.actions[]?.exportParameters?.receiveString
   destination:
     server: https://kubernetes.default.svc
     namespace: kasten-io
