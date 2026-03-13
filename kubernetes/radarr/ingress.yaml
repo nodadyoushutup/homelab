@@ -3,6 +3,9 @@ kind: Ingress
 metadata:
   name: radarr
   namespace: radarr
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
 spec:
   ingressClassName: nginx
   rules:

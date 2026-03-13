@@ -1,25 +1,24 @@
 apiVersion: config.kio.kasten.io/v1alpha1
 kind: Policy
 metadata:
-  name: k10-thelounge-hourly
+  name: k10-prowlarr-nightly
   namespace: kasten-io
 spec:
-  comment: Hourly backup and export policy for thelounge namespace
-  frequency: '@hourly'
+  comment: Nightly backup and export policy for prowlarr namespace
+  frequency: '@daily'
   retention:
-    hourly: 24
-    daily: 7
-    weekly: 4
+    daily: 14
+    weekly: 8
     monthly: 12
     yearly: 2
   actions:
     - action: backup
     - action: export
       exportParameters:
-        frequency: '@hourly'
+        frequency: '@daily'
         profile:
           name: k10-s3-profile
           namespace: kasten-io
   selector:
     matchLabels:
-      k10.kasten.io/appNamespace: thelounge
+      k10.kasten.io/appNamespace: prowlarr
