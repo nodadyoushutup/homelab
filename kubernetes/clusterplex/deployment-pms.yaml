@@ -22,6 +22,29 @@ spec:
         app.kubernetes.io/name: pms
     spec:
       initContainers:
+        - name: set-transcoder-tempdir
+          image: busybox:1.36.1
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - -c
+            - |
+              PREF="/config/Library/Application Support/Plex Media Server/Preferences.xml"
+              if [ ! -f "$PREF" ]; then
+                echo "Preferences.xml not found yet; skipping TranscoderTempDirectory update"
+                exit 0
+              fi
+
+              if grep -q 'TranscoderTempDirectory="' "$PREF"; then
+                sed -i 's#TranscoderTempDirectory="[^"]*"#TranscoderTempDirectory="/transcode"#' "$PREF"
+              else
+                sed -i 's#<Preferences #<Preferences TranscoderTempDirectory="/transcode" #' "$PREF"
+              fi
+
+              echo "Ensured TranscoderTempDirectory=/transcode in Preferences.xml"
+          volumeMounts:
+            - name: config
+              mountPath: /config
         - name: set-transcode-permissions
           image: busybox:1.36.1
           imagePullPolicy: IfNotPresent
