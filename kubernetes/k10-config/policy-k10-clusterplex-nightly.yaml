@@ -13,6 +13,17 @@ spec:
     yearly: 2
   actions:
     - action: backup
+      backupParameters:
+        filters:
+          excludeResources:
+            - group: ""
+              version: v1
+              resource: persistentvolumeclaims
+              name: clusterplex-media
+            - group: ""
+              version: v1
+              resource: persistentvolumeclaims
+              name: clusterplex-transcode
     - action: export
       exportParameters:
         frequency: '@daily'
