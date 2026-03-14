@@ -41,7 +41,13 @@ spec:
                 sed -i 's#<Preferences #<Preferences TranscoderTempDirectory="/transcode" #' "$PREF"
               fi
 
-              echo "Ensured TranscoderTempDirectory=/transcode in Preferences.xml"
+              if grep -q 'allowedNetworks="' "$PREF"; then
+                sed -i 's#allowedNetworks="[^"]*"#allowedNetworks="10.244.0.0/16,127.0.0.1/8"#' "$PREF"
+              else
+                sed -i 's#<Preferences #<Preferences allowedNetworks="10.244.0.0/16,127.0.0.1/8" #' "$PREF"
+              fi
+
+              echo "Ensured TranscoderTempDirectory=/transcode and allowedNetworks in Preferences.xml"
           volumeMounts:
             - name: config
               mountPath: /config

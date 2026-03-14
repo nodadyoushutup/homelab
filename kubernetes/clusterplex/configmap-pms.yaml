@@ -8,8 +8,9 @@ metadata:
     app.kubernetes.io/name: pms
 data:
   DOCKER_MODS: ghcr.io/pabloromeo/clusterplex_dockermod:1.4.16
-  LOCAL_RELAY_ENABLED: "1"
+  LOCAL_RELAY_ENABLED: "0"
   LOCAL_RELAY_PORT: "32499"
+  ALLOWED_NETWORKS: 10.244.0.0/16,127.0.0.1/8
   ORCHESTRATOR_URL: http://clusterplex-orchestrator:3500
   PGID: "1000"
   PMS_PORT: "32400"
