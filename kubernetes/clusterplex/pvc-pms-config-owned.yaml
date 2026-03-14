@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: clusterplex-pms-config-owned
+  namespace: clusterplex
+  labels:
+    app.kubernetes.io/instance: clusterplex
+    app.kubernetes.io/name: pms
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 40Gi
+  storageClassName: truenas-iscsi-csi-retain
