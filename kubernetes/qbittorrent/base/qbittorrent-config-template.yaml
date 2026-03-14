@@ -1,0 +1,85 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: qbittorrent-config-template
+data:
+  qBittorrent.conf.tmpl: |
+    [Application]
+    FileLogger\Age=1
+    FileLogger\AgeType=1
+    FileLogger\Backup=true
+    FileLogger\DeleteOld=true
+    FileLogger\Enabled=true
+    FileLogger\MaxSizeBytes=66560
+    FileLogger\Path=/config/qBittorrent/logs
+    MemoryWorkingSetLimit=16384
+
+    [BitTorrent]
+    Session\AddExtensionToIncompleteFiles=true
+    Session\AlternativeGlobalDLSpeedLimit=0
+    Session\AlternativeGlobalUPSpeedLimit=0
+    Session\BTProtocol=TCP
+    Session\BandwidthSchedulerEnabled=false
+    Session\CheckingMemUsageSize=4096
+    Session\DHTEnabled=false
+    Session\DefaultSavePath=/media/storage
+    Session\ExcludedFileNames=
+    Session\FinishedTorrentExportDirectory=/torrents
+    Session\GlobalDLSpeedLimit=0
+    Session\GlobalUPSpeedLimit=0
+    Session\IgnoreLimitsOnLAN=true
+    Session\IgnoreSlowTorrentsForQueueing=true
+    Session\LSDEnabled=false
+    Session\MaxActiveCheckingTorrents=5
+    Session\MaxActiveDownloads=20
+    Session\MaxActiveTorrents=100000
+    Session\MaxActiveUploads=100000
+    Session\MaxConcurrentHTTPAnnounces=300
+    Session\MaxConnections=-1
+    Session\MaxConnectionsPerTorrent=-1
+    Session\MaxUploads=-1
+    Session\MaxUploadsPerTorrent=-1
+    Session\PeXEnabled=false
+    Session\Port=__TORRENTING_PORT__
+    Session\QueueingSystemEnabled=true
+    Session\ResumeDataStorageType=SQLite
+    Session\SaveResumeDataInterval=15
+    Session\SlowTorrentsDownloadRate=1024
+    Session\SlowTorrentsUploadRate=100
+    Session\Tags=vob, avi, unregistered, cross-seed, mp4, multi-file, bdmv
+    Session\TempPath=/downloads/temp
+    Session\TorrentStopCondition=None
+    Session\UseAlternativeGlobalSpeedLimit=true
+
+    [Core]
+    AutoDeleteAddedTorrentFile=Never
+
+    [LegalNotice]
+    Accepted=true
+
+    [Meta]
+    MigrationVersion=6
+
+    [Network]
+    PortForwardingEnabled=false
+    Proxy\HostnameLookupEnabled=false
+    Proxy\Profiles\BitTorrent=true
+    Proxy\Profiles\Misc=true
+    Proxy\Profiles\RSS=true
+
+    [Preferences]
+    General\Locale=en
+    MailNotification\req_auth=true
+    Scheduler\end_time=@Variant(\0\0\0\xf\x1\xb7t\0)
+    Scheduler\start_time=@Variant(\0\0\0\xf\0\0\0\0)
+    WebUI\AuthSubnetWhitelist=192.168.1.0/24
+    WebUI\AuthSubnetWhitelistEnabled=true
+    WebUI\HostHeaderValidation=false
+    WebUI\LocalHostAuth=false
+    WebUI\Password_PBKDF2=__WEBUI_PASSWORD_PBKDF2__
+    WebUI\Port=__WEBUI_PORT__
+    WebUI\UseUPnP=false
+
+    [RSS]
+    AutoDownloader\DownloadRepacks=true
+    AutoDownloader\SmartEpisodeFilter=s(\\d+)e(\\d+), (\\d+)x(\\d+), "(\\d{4}[.\\-]\\d{1,2}[.\\-]\\d{1,2})", "(\\d{1,2}[.\\-]\\d{1,2}[.\\-]\\d{4})"

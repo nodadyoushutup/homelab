@@ -12,9 +12,9 @@ spec:
       targetPort: http
     - name: bittorrent-tcp
       protocol: TCP
-      port: 6881
+      port: 10096
       targetPort: bittorrent-tcp
     - name: bittorrent-udp
       protocol: UDP
-      port: 6881
+      port: 10096
       targetPort: bittorrent-udp

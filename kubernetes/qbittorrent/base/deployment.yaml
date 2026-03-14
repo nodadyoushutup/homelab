@@ -23,9 +23,55 @@ spec:
           type: RuntimeDefault
       nodeSelector:
         kubernetes.io/hostname: k8s-wk-0
+      initContainers:
+        - name: render-qbittorrent-config
+          image: busybox:1.36
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/sh
+            - -lc
+            - |
+              set -eu
+              mkdir -p /config/qBittorrent
+              cp /config-template/qBittorrent.conf.tmpl /tmp/qBittorrent.conf
+
+              escape_sed_replacement() {
+                printf '%s' "$1" | sed -e 's/[\\/&]/\\&/g'
+              }
+
+              sed -i \
+                -e "s/__WEBUI_PASSWORD_PBKDF2__/$(escape_sed_replacement "$WEBUI_PASSWORD_PBKDF2")/g" \
+                -e "s/__WEBUI_PORT__/$(escape_sed_replacement "$WEBUI_PORT")/g" \
+                -e "s/__TORRENTING_PORT__/$(escape_sed_replacement "$TORRENTING_PORT")/g" \
+                /tmp/qBittorrent.conf
+
+              cp /tmp/qBittorrent.conf /config/qBittorrent/qBittorrent.conf
+              chmod 600 /config/qBittorrent/qBittorrent.conf
+          env:
+            - name: WEBUI_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: qbittorrent-runtime
+                  key: WEBUI_PORT
+            - name: TORRENTING_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: qbittorrent-runtime
+                  key: TORRENTING_PORT
+            - name: WEBUI_PASSWORD_PBKDF2
+              valueFrom:
+                secretKeyRef:
+                  name: qbittorrent-secrets
+                  key: WEBUI_PASSWORD_PBKDF2
+          volumeMounts:
+            - name: qbittorrent-config
+              mountPath: /config
+            - name: qbittorrent-config-template
+              mountPath: /config-template
+              readOnly: true
       containers:
         - name: qbittorrent
-          image: lscr.io/linuxserver/qbittorrent:latest
+          image: lscr.io/linuxserver/qbittorrent:4.6.7
           imagePullPolicy: IfNotPresent
           env:
             - name: TZ
@@ -35,18 +81,24 @@ spec:
             - name: PGID
               value: "1000"
             - name: WEBUI_PORT
-              value: "8080"
+              valueFrom:
+                configMapKeyRef:
+                  name: qbittorrent-runtime
+                  key: WEBUI_PORT
             - name: TORRENTING_PORT
-              value: "6881"
+              valueFrom:
+                configMapKeyRef:
+                  name: qbittorrent-runtime
+                  key: TORRENTING_PORT
           ports:
             - name: http
               containerPort: 8080
               protocol: TCP
             - name: bittorrent-tcp
-              containerPort: 6881
+              containerPort: 10096
               protocol: TCP
             - name: bittorrent-udp
-              containerPort: 6881
+              containerPort: 10096
               protocol: UDP
           volumeMounts:
             - name: qbittorrent-config
@@ -72,3 +124,6 @@ spec:
         - name: qbittorrent-downloads
           persistentVolumeClaim:
             claimName: qbittorrent-downloads
+        - name: qbittorrent-config-template
+          configMap:
+            name: qbittorrent-config-template
