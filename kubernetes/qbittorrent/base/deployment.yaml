@@ -109,14 +109,18 @@ spec:
             httpGet:
               path: /
               port: http
-            initialDelaySeconds: 15
+            initialDelaySeconds: 30
             periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 12
           livenessProbe:
             httpGet:
               path: /
               port: http
-            initialDelaySeconds: 45
+            initialDelaySeconds: 180
             periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 6
       volumes:
         - name: qbittorrent-config
           persistentVolumeClaim:
