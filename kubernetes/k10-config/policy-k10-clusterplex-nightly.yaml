@@ -16,12 +16,10 @@ spec:
       backupParameters:
         filters:
           excludeResources:
-            - group: ""
-              version: v1
+            - version: v1
               resource: persistentvolumeclaims
               name: clusterplex-media
-            - group: ""
-              version: v1
+            - version: v1
               resource: persistentvolumeclaims
               name: clusterplex-transcode
     - action: export
