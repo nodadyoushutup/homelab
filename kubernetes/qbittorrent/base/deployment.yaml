@@ -105,6 +105,14 @@ spec:
               mountPath: /config
             - name: media
               mountPath: /media
+          startupProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 90
           readinessProbe:
             httpGet:
               path: /
