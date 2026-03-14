@@ -10,5 +10,3 @@ resources:
   - overlays/movie-6
   - overlays/movie-7
   - overlays/movie-8
-  - overlays/movies
-  - overlays/torrents

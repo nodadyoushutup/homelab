@@ -9,7 +9,6 @@ resources:
   - externalsecret.yaml
 patches:
   - path: ingress-patch.yaml
-  - path: pvc-patch.yaml
 replacements:
   - source:
       kind: ConfigMap

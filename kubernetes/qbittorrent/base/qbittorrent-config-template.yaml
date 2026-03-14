@@ -24,7 +24,7 @@ data:
     Session\DHTEnabled=false
     Session\DefaultSavePath=/media/storage
     Session\ExcludedFileNames=
-    Session\FinishedTorrentExportDirectory=/torrents
+    Session\FinishedTorrentExportDirectory=/media/torrents
     Session\GlobalDLSpeedLimit=0
     Session\GlobalUPSpeedLimit=0
     Session\IgnoreLimitsOnLAN=true
@@ -47,7 +47,7 @@ data:
     Session\SlowTorrentsDownloadRate=1024
     Session\SlowTorrentsUploadRate=100
     Session\Tags=vob, avi, unregistered, cross-seed, mp4, multi-file, bdmv
-    Session\TempPath=/downloads/temp
+    Session\TempPath=/media/temp
     Session\TorrentStopCondition=None
     Session\UseAlternativeGlobalSpeedLimit=true
 

@@ -103,8 +103,8 @@ spec:
           volumeMounts:
             - name: qbittorrent-config
               mountPath: /config
-            - name: qbittorrent-downloads
-              mountPath: /downloads
+            - name: media
+              mountPath: /media
           readinessProbe:
             httpGet:
               path: /
@@ -121,9 +121,10 @@ spec:
         - name: qbittorrent-config
           persistentVolumeClaim:
             claimName: qbittorrent-config
-        - name: qbittorrent-downloads
-          persistentVolumeClaim:
-            claimName: qbittorrent-downloads
+        - name: media
+          nfs:
+            server: 192.168.1.100
+            path: /mnt/epool/media
         - name: qbittorrent-config-template
           configMap:
             name: qbittorrent-config-template
