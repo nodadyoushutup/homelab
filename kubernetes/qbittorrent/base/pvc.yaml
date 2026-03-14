@@ -9,15 +9,3 @@ spec:
     requests:
       storage: 10Gi
   storageClassName: truenas-iscsi-csi-retain
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: qbittorrent-downloads
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 50Gi
-  storageClassName: truenas-iscsi-csi-retain
