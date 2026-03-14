@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: qbittorrent-runtime
+data:
+  WEBUI_PORT: "8080"
+  TORRENTING_PORT: "10100"
