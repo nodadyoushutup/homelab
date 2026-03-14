@@ -9,6 +9,7 @@ resources:
   - externalsecret.yaml
 patches:
   - path: ingress-patch.yaml
+  - path: deployment-node-patch.yaml
 replacements:
   - source:
       kind: ConfigMap
