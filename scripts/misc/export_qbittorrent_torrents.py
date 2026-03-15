@@ -19,7 +19,7 @@ from urllib import error, parse, request
 
 SCRIPTS_DIR = Path(__file__).resolve().parents[1]
 REPO_DIR = Path(__file__).resolve().parents[2]
-BASE_URLS = ["http://192.168.1.100:10097", "http://192.168.1.100:41195"]
+BASE_URLS = ["http://192.168.1.100:10195"]
 USERNAME = "admin"
 PASSWORD = "S#nvhs89vher"
 OUTPUT_DIR = REPO_DIR / "exports"
@@ -31,7 +31,7 @@ DATE_FROM: str | None = None  # Inclusive, format YYYY-MM-DD
 DATE_TO: str | None = None  # Inclusive, format YYYY-MM-DD
 DATE_SORT_ORDER: str | None = "asc"  # "asc"=oldest->newest, "desc"=newest->oldest, None=preserve API order
 EXPORT_LIMIT: int | None = None  # Example: 10
-BATCH_SIZE: int | None = 5000  # Example: 100 (creates batch_XXXX subdirectories)
+BATCH_SIZE: int | None = None  # Example: 100 (creates batch_XXXX subdirectories)
 
 
 def safe_filename(name: str) -> str:
