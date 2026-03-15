@@ -6,9 +6,21 @@ locals {
     vip.name => vip
   }
 
+  virtual_ip_import_specs = {
+    for vip in try(local.effective_config.virtual_ips, []) :
+    vip.name => vip
+    if try(vip.import_existing, false)
+  }
+
   firewall_policy_specs = {
     for policy in try(local.effective_config.firewall_policies, []) :
     tostring(policy.policyid) => policy
+  }
+
+  firewall_policy_import_specs = {
+    for policy in try(local.effective_config.firewall_policies, []) :
+    tostring(policy.policyid) => policy
+    if try(policy.import_existing, false)
   }
 }
 
@@ -100,13 +112,13 @@ resource "fortios_firewall_policy" "this" {
 }
 
 import {
-  for_each = local.virtual_ip_specs
+  for_each = local.virtual_ip_import_specs
   to       = fortios_firewall_vip.this[each.key]
   id       = each.value.name
 }
 
 import {
-  for_each = local.firewall_policy_specs
+  for_each = local.firewall_policy_import_specs
   to       = fortios_firewall_policy.this[each.key]
   id       = tostring(each.value.policyid)
 }

@@ -5,6 +5,7 @@ resources:
   - qbittorrent-config-template.yaml
   - deployment.yaml
   - service.yaml
+  - service-torrent-nodeport.yaml
   - ingress.yaml
 labels:
   - pairs:

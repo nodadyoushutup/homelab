@@ -45,8 +45,13 @@ spec:
                 -e "s/__TORRENTING_PORT__/$(escape_sed_replacement "$TORRENTING_PORT")/g" \
                 /tmp/qBittorrent.conf
 
-              cp /tmp/qBittorrent.conf /config/qBittorrent/qBittorrent.conf
-              chmod 600 /config/qBittorrent/qBittorrent.conf
+              if ! cp /tmp/qBittorrent.conf /config/qBittorrent/qBittorrent.conf; then
+                # Some existing PVCs reject overwriting this file; keep the current config instead of crash-looping.
+                echo "WARN: could not overwrite /config/qBittorrent/qBittorrent.conf; using existing file" >&2
+              fi
+              if [ -f /config/qBittorrent/qBittorrent.conf ]; then
+                chmod 600 /config/qBittorrent/qBittorrent.conf || true
+              fi
           env:
             - name: WEBUI_PORT
               valueFrom:

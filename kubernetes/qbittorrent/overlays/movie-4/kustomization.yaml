@@ -48,6 +48,33 @@ replacements:
         fieldPaths:
           - spec.ports.[name=bittorrent-tcp].port
           - spec.ports.[name=bittorrent-udp].port
+
+      - select:
+          kind: Service
+          name: qbittorrent-torrent
+        fieldPaths:
+          - spec.ports.[name=bittorrent-tcp].port
+          - spec.ports.[name=bittorrent-udp].port
+  - source:
+      kind: ConfigMap
+      name: qbittorrent-runtime
+      fieldPath: data.TORRENTING_NODE_PORT_TCP
+    targets:
+      - select:
+          kind: Service
+          name: qbittorrent-torrent
+        fieldPaths:
+          - spec.ports.[name=bittorrent-tcp].nodePort
+  - source:
+      kind: ConfigMap
+      name: qbittorrent-runtime
+      fieldPath: data.TORRENTING_NODE_PORT_UDP
+    targets:
+      - select:
+          kind: Service
+          name: qbittorrent-torrent
+        fieldPaths:
+          - spec.ports.[name=bittorrent-udp].nodePort
 labels:
   - pairs:
       app.kubernetes.io/instance: movie-4
