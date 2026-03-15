@@ -47,6 +47,16 @@ spec:
           volumeMounts:
             - name: transcode
               mountPath: /transcode
+        - name: set-tmp-permissions
+          image: busybox:1.36.1
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - -c
+            - chown -R 1000:1000 /run/plex-temp && chmod 0777 -R /run/plex-temp && echo "Configured /run/plex-temp permissions"
+          volumeMounts:
+            - name: worker-tmpfs
+              mountPath: /run/plex-temp
       containers:
         - name: clusterplex-worker
           image: linuxserver/plex:latest
