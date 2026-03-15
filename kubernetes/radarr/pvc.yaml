@@ -8,7 +8,20 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 30Gi
+      storage: 150Gi
+  storageClassName: truenas-iscsi-csi-retain
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: radarr-config-v2
+  namespace: radarr
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 150Gi
   storageClassName: truenas-iscsi-csi-retain
 ---
 apiVersion: v1
