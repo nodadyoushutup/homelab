@@ -36,6 +36,12 @@ spec:
       server: https://kubernetes.default.svc
     - namespace: qbittorrent-movie-10
       server: https://kubernetes.default.svc
+    - namespace: qbittorrent-television-0
+      server: https://kubernetes.default.svc
+    - namespace: qbittorrent-television-1
+      server: https://kubernetes.default.svc
+    - namespace: qbittorrent-television-2
+      server: https://kubernetes.default.svc
   clusterResourceWhitelist:
     - group: ""
       kind: Namespace

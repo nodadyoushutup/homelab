@@ -12,3 +12,6 @@ resources:
   - overlays/movie-8
   - overlays/movie-9
   - overlays/movie-10
+  - overlays/television-0
+  - overlays/television-1
+  - overlays/television-2
