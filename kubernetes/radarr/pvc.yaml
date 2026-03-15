@@ -8,7 +8,7 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 10Gi
+      storage: 30Gi
   storageClassName: truenas-iscsi-csi-retain
 ---
 apiVersion: v1
