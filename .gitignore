@@ -49,3 +49,6 @@ planning/**
 
 # Environment
 *.env
+
+# Exports
+exports/**
