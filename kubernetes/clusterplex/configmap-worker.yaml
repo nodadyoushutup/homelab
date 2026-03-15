@@ -8,7 +8,7 @@ metadata:
     app.kubernetes.io/name: worker
 data:
   DOCKER_MODS: ghcr.io/pabloromeo/clusterplex_worker_dockermod:1.4.16
-  EAE_SUPPORT: "1"
+  EAE_SUPPORT: "0"
   LISTENING_PORT: "3501"
   ORCHESTRATOR_URL: http://clusterplex-orchestrator:3500
   PGID: "1000"
