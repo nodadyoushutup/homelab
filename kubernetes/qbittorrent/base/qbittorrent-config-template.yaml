@@ -21,7 +21,7 @@ data:
     Session\BTProtocol=TCP
     Session\BandwidthSchedulerEnabled=false
     Session\CheckingMemUsageSize=4096
-    Session\DHTEnabled=false
+    Session\DHTEnabled=true
     Session\DefaultSavePath=/media/storage
     Session\ExcludedFileNames=
     Session\FinishedTorrentExportDirectory=/media/torrents
@@ -29,7 +29,7 @@ data:
     Session\GlobalUPSpeedLimit=0
     Session\IgnoreLimitsOnLAN=true
     Session\IgnoreSlowTorrentsForQueueing=true
-    Session\LSDEnabled=false
+    Session\LSDEnabled=true
     Session\MaxActiveCheckingTorrents=5
     Session\MaxActiveDownloads=20
     Session\MaxActiveTorrents=100000
@@ -39,7 +39,7 @@ data:
     Session\MaxConnectionsPerTorrent=-1
     Session\MaxUploads=-1
     Session\MaxUploadsPerTorrent=-1
-    Session\PeXEnabled=false
+    Session\PeXEnabled=true
     Session\Port=__TORRENTING_PORT__
     Session\QueueingSystemEnabled=true
     Session\ResumeDataStorageType=SQLite
