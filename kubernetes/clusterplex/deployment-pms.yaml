@@ -57,7 +57,7 @@ spec:
           command:
             - sh
             - -c
-            - chown -R 1000:1000 /transcode && chmod 0755 -R /transcode && echo "Configured /transcode permissions"
+            - chown -R 1000:1000 /transcode && chmod 0777 -R /transcode && echo "Configured /transcode permissions"
           volumeMounts:
             - name: transcode
               mountPath: /transcode
