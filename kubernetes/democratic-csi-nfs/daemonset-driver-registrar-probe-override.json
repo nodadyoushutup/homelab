@@ -4,7 +4,6 @@
   "metadata": {
     "annotations": {
       "argocd.argoproj.io/tracking-id": "democratic-csi-nfs:apps/DaemonSet:democratic-csi-nfs/democratic-csi-nfs-node",
-      "deprecated.daemonset.template.generation": "1",
       "argocd.argoproj.io/sync-wave": "30"
     },
     "labels": {
