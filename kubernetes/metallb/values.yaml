@@ -1,5 +1,14 @@
 speaker:
   frr:
     enabled: false
+  livenessProbe:
+    timeoutSeconds: 5
+  readinessProbe:
+    timeoutSeconds: 5
+controller:
+  livenessProbe:
+    timeoutSeconds: 5
+  readinessProbe:
+    timeoutSeconds: 5
 crds:
   validationFailurePolicy: Ignore
