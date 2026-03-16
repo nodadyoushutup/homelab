@@ -1,0 +1,377 @@
+{
+  "apiVersion": "apps/v1",
+  "kind": "DaemonSet",
+  "metadata": {
+    "annotations": {
+      "argocd.argoproj.io/tracking-id": "democratic-csi-nfs:apps/DaemonSet:democratic-csi-nfs/democratic-csi-nfs-node",
+      "deprecated.daemonset.template.generation": "1",
+      "argocd.argoproj.io/sync-wave": "30"
+    },
+    "labels": {
+      "app.kubernetes.io/component": "node-linux",
+      "app.kubernetes.io/csi-role": "node",
+      "app.kubernetes.io/instance": "democratic-csi-nfs",
+      "app.kubernetes.io/managed-by": "Helm",
+      "app.kubernetes.io/name": "democratic-csi",
+      "helm.sh/chart": "democratic-csi-0.15.1"
+    },
+    "name": "democratic-csi-nfs-node",
+    "namespace": "democratic-csi-nfs"
+  },
+  "spec": {
+    "revisionHistoryLimit": 10,
+    "selector": {
+      "matchLabels": {
+        "app.kubernetes.io/component": "node-linux",
+        "app.kubernetes.io/csi-role": "node",
+        "app.kubernetes.io/instance": "democratic-csi-nfs",
+        "app.kubernetes.io/managed-by": "Helm",
+        "app.kubernetes.io/name": "democratic-csi"
+      }
+    },
+    "template": {
+      "metadata": {
+        "annotations": {
+          "checksum/configmap": "21ec1d0b89d7f5e423227b37e191a3c7d729f9375d50b98c6c11bc07147287f2",
+          "checksum/secret": "6d0c723bfa30e65c3c96844792eb88436ef40da823b43e221f72b9a7bbdd6d23"
+        },
+        "labels": {
+          "app.kubernetes.io/component": "node-linux",
+          "app.kubernetes.io/csi-role": "node",
+          "app.kubernetes.io/instance": "democratic-csi-nfs",
+          "app.kubernetes.io/managed-by": "Helm",
+          "app.kubernetes.io/name": "democratic-csi"
+        }
+      },
+      "spec": {
+        "containers": [
+          {
+            "args": [
+              "--csi-version=1.5.0",
+              "--csi-name=org.democratic-csi.truenas-nfs",
+              "--driver-config-file=/config/driver-config-file.yaml",
+              "--log-level=info",
+              "--csi-mode=node",
+              "--server-socket=/csi-data/csi.sock.internal"
+            ],
+            "env": [
+              {
+                "name": "CSI_NODE_ID",
+                "valueFrom": {
+                  "fieldRef": {
+                    "apiVersion": "v1",
+                    "fieldPath": "spec.nodeName"
+                  }
+                }
+              },
+              {
+                "name": "NODE_EXTRA_CA_CERTS",
+                "value": "/tmp/certs/extra-ca-certs.crt"
+              }
+            ],
+            "image": "ghcr.io/democratic-csi/democratic-csi:latest",
+            "imagePullPolicy": "Always",
+            "livenessProbe": {
+              "exec": {
+                "command": [
+                  "bin/liveness-probe",
+                  "--csi-version=1.5.0",
+                  "--csi-address=/csi-data/csi.sock.internal"
+                ]
+              },
+              "failureThreshold": 3,
+              "initialDelaySeconds": 10,
+              "periodSeconds": 60,
+              "successThreshold": 1,
+              "timeoutSeconds": 15
+            },
+            "name": "csi-driver",
+            "resources": {},
+            "securityContext": {
+              "allowPrivilegeEscalation": true,
+              "capabilities": {
+                "add": [
+                  "SYS_ADMIN"
+                ]
+              },
+              "privileged": true
+            },
+            "terminationMessagePath": "/tmp/termination-log",
+            "terminationMessagePolicy": "File",
+            "volumeMounts": [
+              {
+                "mountPath": "/csi-data",
+                "name": "socket-dir"
+              },
+              {
+                "mountPath": "/var/lib/kubelet",
+                "mountPropagation": "Bidirectional",
+                "name": "kubelet-dir"
+              },
+              {
+                "mountPath": "/lib/modules",
+                "name": "modules-dir",
+                "readOnly": true
+              },
+              {
+                "mountPath": "/etc/localtime",
+                "name": "localtime",
+                "readOnly": true
+              },
+              {
+                "mountPath": "/run/udev",
+                "name": "udev-data"
+              },
+              {
+                "mountPath": "/host",
+                "mountPropagation": "Bidirectional",
+                "name": "host-dir"
+              },
+              {
+                "mountPath": "/sys",
+                "name": "sys-dir"
+              },
+              {
+                "mountPath": "/dev",
+                "name": "dev-dir"
+              },
+              {
+                "mountPath": "/config",
+                "name": "config"
+              },
+              {
+                "mountPath": "/tmp/certs",
+                "name": "extra-ca-certs"
+              }
+            ]
+          },
+          {
+            "env": [
+              {
+                "name": "BIND_TO",
+                "value": "unix:///csi-data/csi.sock"
+              },
+              {
+                "name": "PROXY_TO",
+                "value": "unix:///csi-data/csi.sock.internal"
+              }
+            ],
+            "image": "ghcr.io/democratic-csi/csi-grpc-proxy:v0.5.7",
+            "imagePullPolicy": "IfNotPresent",
+            "name": "csi-proxy",
+            "resources": {},
+            "terminationMessagePath": "/dev/termination-log",
+            "terminationMessagePolicy": "File",
+            "volumeMounts": [
+              {
+                "mountPath": "/csi-data",
+                "name": "socket-dir"
+              }
+            ]
+          },
+          {
+            "args": [
+              "--v=5",
+              "--csi-address=/csi-data/csi.sock",
+              "--kubelet-registration-path=/var/lib/kubelet/plugins/org.democratic-csi.truenas-nfs/csi.sock"
+            ],
+            "env": [
+              {
+                "name": "KUBE_NODE_NAME",
+                "valueFrom": {
+                  "fieldRef": {
+                    "apiVersion": "v1",
+                    "fieldPath": "spec.nodeName"
+                  }
+                }
+              }
+            ],
+            "image": "registry.k8s.io/sig-storage/csi-node-driver-registrar:v2.9.0",
+            "imagePullPolicy": "IfNotPresent",
+            "livenessProbe": {
+              "exec": {
+                "command": [
+                  "/csi-node-driver-registrar",
+                  "--kubelet-registration-path=/var/lib/kubelet/plugins/org.democratic-csi.truenas-nfs/csi.sock",
+                  "--mode=kubelet-registration-probe"
+                ]
+              },
+              "failureThreshold": 3,
+              "periodSeconds": 10,
+              "successThreshold": 1,
+              "timeoutSeconds": 5,
+              "initialDelaySeconds": 10
+            },
+            "name": "driver-registrar",
+            "resources": {},
+            "terminationMessagePath": "/dev/termination-log",
+            "terminationMessagePolicy": "File",
+            "volumeMounts": [
+              {
+                "mountPath": "/csi-data",
+                "name": "socket-dir"
+              },
+              {
+                "mountPath": "/registration",
+                "name": "registration-dir"
+              },
+              {
+                "mountPath": "/var/lib/kubelet",
+                "name": "kubelet-dir"
+              }
+            ]
+          },
+          {
+            "args": [
+              "while true; do sleep 2; done;"
+            ],
+            "command": [
+              "/bin/sh",
+              "-c",
+              "--"
+            ],
+            "image": "docker.io/busybox:1.37.0",
+            "imagePullPolicy": "IfNotPresent",
+            "lifecycle": {
+              "preStop": {
+                "exec": {
+                  "command": [
+                    "/bin/sh",
+                    "-c",
+                    "rm -rf /plugins/org.democratic-csi.truenas-nfs /registration/org.democratic-csi.truenas-nfs-reg.sock"
+                  ]
+                }
+              }
+            },
+            "name": "cleanup",
+            "resources": {},
+            "terminationMessagePath": "/dev/termination-log",
+            "terminationMessagePolicy": "File",
+            "volumeMounts": [
+              {
+                "mountPath": "/plugins",
+                "name": "plugins-dir"
+              },
+              {
+                "mountPath": "/registration",
+                "name": "registration-dir"
+              }
+            ]
+          }
+        ],
+        "dnsPolicy": "ClusterFirstWithHostNet",
+        "hostIPC": true,
+        "hostNetwork": true,
+        "nodeSelector": {
+          "kubernetes.io/os": "linux"
+        },
+        "priorityClassName": "system-node-critical",
+        "restartPolicy": "Always",
+        "schedulerName": "default-scheduler",
+        "securityContext": {},
+        "serviceAccount": "democratic-csi-nfs-node-sa",
+        "serviceAccountName": "democratic-csi-nfs-node-sa",
+        "terminationGracePeriodSeconds": 30,
+        "volumes": [
+          {
+            "hostPath": {
+              "path": "/var/lib/kubelet/plugins/org.democratic-csi.truenas-nfs",
+              "type": "DirectoryOrCreate"
+            },
+            "name": "socket-dir"
+          },
+          {
+            "hostPath": {
+              "path": "/var/lib/kubelet/plugins",
+              "type": "Directory"
+            },
+            "name": "plugins-dir"
+          },
+          {
+            "hostPath": {
+              "path": "/var/lib/kubelet/plugins_registry",
+              "type": "DirectoryOrCreate"
+            },
+            "name": "registration-dir"
+          },
+          {
+            "hostPath": {
+              "path": "/var/lib/kubelet",
+              "type": "Directory"
+            },
+            "name": "kubelet-dir"
+          },
+          {
+            "hostPath": {
+              "path": "/dev",
+              "type": "Directory"
+            },
+            "name": "dev-dir"
+          },
+          {
+            "hostPath": {
+              "path": "/lib/modules",
+              "type": ""
+            },
+            "name": "modules-dir"
+          },
+          {
+            "hostPath": {
+              "path": "/etc/localtime",
+              "type": ""
+            },
+            "name": "localtime"
+          },
+          {
+            "hostPath": {
+              "path": "/run/udev",
+              "type": ""
+            },
+            "name": "udev-data"
+          },
+          {
+            "hostPath": {
+              "path": "/sys",
+              "type": "Directory"
+            },
+            "name": "sys-dir"
+          },
+          {
+            "hostPath": {
+              "path": "/",
+              "type": "Directory"
+            },
+            "name": "host-dir"
+          },
+          {
+            "name": "config",
+            "secret": {
+              "defaultMode": 420,
+              "secretName": "democratic-csi-nfs-driver-config"
+            }
+          },
+          {
+            "configMap": {
+              "defaultMode": 420,
+              "items": [
+                {
+                  "key": "extra-ca-certs",
+                  "path": "extra-ca-certs.crt"
+                }
+              ],
+              "name": "democratic-csi-nfs"
+            },
+            "name": "extra-ca-certs"
+          }
+        ]
+      }
+    },
+    "updateStrategy": {
+      "rollingUpdate": {
+        "maxSurge": 0,
+        "maxUnavailable": 1
+      },
+      "type": "RollingUpdate"
+    }
+  }
+}
