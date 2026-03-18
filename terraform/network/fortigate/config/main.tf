@@ -22,6 +22,11 @@ locals {
     tostring(policy.policyid) => policy
     if try(policy.import_existing, false)
   }
+
+  dhcp_server_reservation_specs = {
+    for dhcp in try(local.effective_config.dhcp_server_reservations, []) :
+    tostring(dhcp.fosid) => dhcp
+  }
 }
 
 resource "fortios_firewall_vip" "this" {
@@ -109,6 +114,26 @@ resource "fortios_firewall_policy" "this" {
   lifecycle {
     ignore_changes = [dynamic_sort_subtable, get_all_tables, comments]
   }
+}
+
+resource "fortios_json_generic_api" "dhcp_server_reservations" {
+  for_each = local.dhcp_server_reservation_specs
+
+  method = try(each.value.method, "PUT")
+  path   = "/api/v2/cmdb/system.dhcp/server/${each.value.fosid}"
+
+  json = jsonencode({
+    "reserved-address" = [
+      for reservation in try(each.value.reserved_address, []) : {
+        id          = try(reservation.id, null)
+        type        = try(reservation.type, "mac")
+        ip          = reservation.ip
+        mac         = reservation.mac
+        action      = try(reservation.action, "reserved")
+        description = try(reservation.description, null)
+      }
+    ]
+  })
 }
 
 import {

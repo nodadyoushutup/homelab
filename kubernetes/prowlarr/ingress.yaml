@@ -3,6 +3,10 @@ kind: Ingress
 metadata:
   name: prowlarr
   namespace: prowlarr
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-next-upstream: "off"
 spec:
   ingressClassName: nginx
   rules:

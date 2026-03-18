@@ -8,7 +8,7 @@ metadata:
     app.kubernetes.io/name: worker
 spec:
   serviceName: clusterplex-worker
-  replicas: 6
+  replicas: 10
   podManagementPolicy: OrderedReady
   revisionHistoryLimit: 3
   selector:

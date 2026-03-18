@@ -84,7 +84,7 @@ spec:
             - name: PUID
               value: "1000"
             - name: PGID
-              value: "568"
+              value: "1000"
             - name: WEBUI_PORT
               valueFrom:
                 configMapKeyRef:
