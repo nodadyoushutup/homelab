@@ -1,0 +1,80 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: qbittorrent-cross-seed-blu
+resources:
+  - ../../base
+  - namespace.yaml
+  - runtime-config.yaml
+  - secretstore.yaml
+  - externalsecret.yaml
+patches:
+  - path: ingress-patch.yaml
+  - path: deployment-node-patch.yaml
+replacements:
+  - source:
+      kind: ConfigMap
+      name: qbittorrent-runtime
+      fieldPath: data.WEBUI_PORT
+    targets:
+      - select:
+          kind: Deployment
+          name: qbittorrent
+        fieldPaths:
+          - spec.template.spec.containers.[name=qbittorrent].ports.[name=http].containerPort
+      - select:
+          kind: Service
+          name: qbittorrent
+        fieldPaths:
+          - spec.ports.[name=http].port
+      - select:
+          kind: Ingress
+          name: qbittorrent
+        fieldPaths:
+          - spec.rules.0.http.paths.0.backend.service.port.number
+  - source:
+      kind: ConfigMap
+      name: qbittorrent-runtime
+      fieldPath: data.TORRENTING_PORT
+    targets:
+      - select:
+          kind: Deployment
+          name: qbittorrent
+        fieldPaths:
+          - spec.template.spec.containers.[name=qbittorrent].ports.[name=bittorrent-tcp].containerPort
+          - spec.template.spec.containers.[name=qbittorrent].ports.[name=bittorrent-udp].containerPort
+      - select:
+          kind: Service
+          name: qbittorrent
+        fieldPaths:
+          - spec.ports.[name=bittorrent-tcp].port
+          - spec.ports.[name=bittorrent-udp].port
+
+      - select:
+          kind: Service
+          name: qbittorrent-torrent
+        fieldPaths:
+          - spec.ports.[name=bittorrent-tcp].port
+          - spec.ports.[name=bittorrent-udp].port
+  - source:
+      kind: ConfigMap
+      name: qbittorrent-runtime
+      fieldPath: data.TORRENTING_NODE_PORT_TCP
+    targets:
+      - select:
+          kind: Service
+          name: qbittorrent-torrent
+        fieldPaths:
+          - spec.ports.[name=bittorrent-tcp].nodePort
+  - source:
+      kind: ConfigMap
+      name: qbittorrent-runtime
+      fieldPath: data.TORRENTING_NODE_PORT_UDP
+    targets:
+      - select:
+          kind: Service
+          name: qbittorrent-torrent
+        fieldPaths:
+          - spec.ports.[name=bittorrent-udp].nodePort
+labels:
+  - pairs:
+      app.kubernetes.io/instance: cross-seed-blu

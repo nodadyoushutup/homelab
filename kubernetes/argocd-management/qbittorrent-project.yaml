@@ -42,6 +42,30 @@ spec:
       server: https://kubernetes.default.svc
     - namespace: qbittorrent-television-2
       server: https://kubernetes.default.svc
+    - namespace: qbittorrent-cross-seed-ab
+      server: https://kubernetes.default.svc
+    - namespace: qbittorrent-cross-seed-ant
+      server: https://kubernetes.default.svc
+    - namespace: qbittorrent-cross-seed-ath
+      server: https://kubernetes.default.svc
+    - namespace: qbittorrent-cross-seed-bhd
+      server: https://kubernetes.default.svc
+    - namespace: qbittorrent-cross-seed-blu
+      server: https://kubernetes.default.svc
+    - namespace: qbittorrent-cross-seed-cg
+      server: https://kubernetes.default.svc
+    - namespace: qbittorrent-cross-seed-hdb
+      server: https://kubernetes.default.svc
+    - namespace: qbittorrent-cross-seed-kg
+      server: https://kubernetes.default.svc
+    - namespace: qbittorrent-cross-seed-sc
+      server: https://kubernetes.default.svc
+    - namespace: qbittorrent-upload
+      server: https://kubernetes.default.svc
+    - namespace: qbittorrent-xxx
+      server: https://kubernetes.default.svc
+    - namespace: qbittorrent-freeleech
+      server: https://kubernetes.default.svc
   clusterResourceWhitelist:
     - group: ""
       kind: Namespace

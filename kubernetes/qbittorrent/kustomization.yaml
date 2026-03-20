@@ -15,3 +15,15 @@ resources:
   - overlays/television-0
   - overlays/television-1
   - overlays/television-2
+  - overlays/cross-seed-ab
+  - overlays/cross-seed-ant
+  - overlays/cross-seed-ath
+  - overlays/cross-seed-bhd
+  - overlays/cross-seed-blu
+  - overlays/cross-seed-cg
+  - overlays/cross-seed-hdb
+  - overlays/cross-seed-kg
+  - overlays/cross-seed-sc
+  - overlays/upload
+  - overlays/xxx
+  - overlays/freeleech

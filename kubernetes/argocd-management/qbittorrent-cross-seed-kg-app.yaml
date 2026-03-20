@@ -1,0 +1,27 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: qbittorrent-cross-seed-kg
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: qbittorrent
+    app.kubernetes.io/part-of: qbittorrent
+    app.kubernetes.io/instance: cross-seed-kg
+  annotations:
+    argocd.argoproj.io/sync-wave: "87"
+spec:
+  project: qbittorrent
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: qbittorrent-cross-seed-kg
+  source:
+    repoURL: git@github.com:nodadyoushutup/homelab.git
+    targetRevision: HEAD
+    path: kubernetes/qbittorrent/overlays/cross-seed-kg
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
