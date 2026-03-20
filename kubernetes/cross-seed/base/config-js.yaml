@@ -1,0 +1,77 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cross-seed-config-js
+data:
+  config.js: |
+    "use strict";
+
+    const getEnv = (name, fallback = "") => process.env[name] || fallback;
+    const encode = encodeURIComponent;
+
+    const qbitUser = getEnv("CROSS_SEED_QBIT_USERNAME", "admin");
+    const qbitReadonlyPassword = getEnv("CROSS_SEED_QBIT_READONLY_PASSWORD", "CHANGE_ME");
+    const qbitBhdPassword = getEnv("CROSS_SEED_QBIT_BHD_PASSWORD", "CHANGE_ME");
+
+    const qbitReadonlyNamespaces = [
+      "qbittorrent-movie-0",
+      "qbittorrent-movie-1",
+      "qbittorrent-movie-2",
+      "qbittorrent-movie-3",
+      "qbittorrent-movie-4",
+      "qbittorrent-movie-5",
+      "qbittorrent-movie-6",
+      "qbittorrent-movie-7",
+      "qbittorrent-movie-8",
+      "qbittorrent-movie-9",
+      "qbittorrent-movie-10",
+      "qbittorrent-television-0",
+      "qbittorrent-television-1",
+      "qbittorrent-television-2",
+    ];
+
+    const readonlyTorrentClients = qbitReadonlyNamespaces.map(
+      (namespace) =>
+        `qbittorrent:readonly:http://${encode(qbitUser)}:${encode(qbitReadonlyPassword)}@qbittorrent.${namespace}.svc.cluster.local:8080`,
+    );
+
+    const bhdInjectionClient = `qbittorrent:http://${encode(qbitUser)}:${encode(qbitBhdPassword)}@qbittorrent.qbittorrent-cross-seed-bhd.svc.cluster.local:8080`;
+
+    module.exports = {
+      apiKey: getEnv("CROSS_SEED_API_KEY", "REPLACE_WITH_24_CHAR_OR_LONGER_API_KEY"),
+      torznab: [getEnv("CROSS_SEED_TORZNAB_BHD_URL")].filter(Boolean),
+      sonarr: [getEnv("CROSS_SEED_SONARR_URL")].filter(Boolean),
+      radarr: [getEnv("CROSS_SEED_RADARR_URL")].filter(Boolean),
+      host: getEnv("CROSS_SEED_HOST", "0.0.0.0"),
+      port: Number.parseInt(getEnv("CROSS_SEED_PORT", "2468"), 10),
+      notificationWebhookUrls: [],
+      torrentClients: [...readonlyTorrentClients, bhdInjectionClient],
+      useClientTorrents: true,
+      delay: 120,
+      dataDirs: null,
+      linkCategory: "cross-seed-link",
+      linkDirs: ["/media/hardlink/cross-seed"],
+      linkType: "hardlink",
+      flatLinking: false,
+      matchMode: "flexible",
+      skipRecheck: true,
+      autoResumeMaxDownload: 52428800,
+      ignoreNonRelevantFilesToResume: false,
+      maxDataDepth: 2,
+      torrentDir: null,
+      outputDir: null,
+      includeSingleEpisodes: false,
+      includeNonVideos: false,
+      seasonFromEpisodes: null,
+      fuzzySizeThreshold: 0.02,
+      excludeOlder: "2 weeks",
+      excludeRecentSearch: "3 days",
+      action: "inject",
+      duplicateCategories: false,
+      rssCadence: null,
+      searchCadence: null,
+      snatchTimeout: "30 seconds",
+      searchTimeout: "2 minutes",
+      searchLimit: null,
+      blockList: [],
+    };

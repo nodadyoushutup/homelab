@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cross-seed-runtime
+data:
+  CROSS_SEED_HOST: "0.0.0.0"
+  CROSS_SEED_PORT: "2468"

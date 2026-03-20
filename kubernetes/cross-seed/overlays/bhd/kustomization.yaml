@@ -1,0 +1,13 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: cross-seed-bhd
+resources:
+  - ../../base
+  - namespace.yaml
+  - runtime-config.yaml
+  - secret.yaml
+patches:
+  - path: deployment-node-patch.yaml
+labels:
+  - pairs:
+      app.kubernetes.io/instance: bhd
