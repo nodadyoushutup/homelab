@@ -19,7 +19,7 @@ resource "docker_service" "mcp_cloudflare" {
     for_each = try(var.provider_config.registry_auth, null) == null ? [] : [var.provider_config.registry_auth]
 
     content {
-      server_address = try(auth.value.address, "ghcr.io")
+      server_address = try(auth.value.address, "harbor.nodadyoushutup.com")
       username       = auth.value.username
       password       = auth.value.password
     }
@@ -41,7 +41,7 @@ resource "docker_service" "mcp_cloudflare" {
     }
 
     container_spec {
-      image = "ghcr.io/nodadyoushutup/mcp-cloudflare:0.0.1"
+      image = "harbor.nodadyoushutup.com/mcp-cloudflare/mcp-cloudflare:0.0.1"
 
       env = merge(
         {
