@@ -20,10 +20,28 @@ spec:
     spec:
       securityContext:
         fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
         seccompProfile:
           type: RuntimeDefault
       nodeSelector:
         kubernetes.io/hostname: k8s-wk-0
+      initContainers:
+        - name: fix-config-permissions
+          image: busybox:1.36.1
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - -c
+            - |
+              if find /config \( ! -user 1000 -o ! -group 1000 \) -print -quit | grep -q .; then
+                echo "Repairing /config ownership to 1000:1000"
+                find /config \( ! -user 1000 -o ! -group 1000 \) -print0 | xargs -0 chown 1000:1000
+              else
+                echo "No ownership repair needed for /config"
+              fi
+          volumeMounts:
+            - name: tautulli-config
+              mountPath: /config
       containers:
         - name: tautulli
           image: tautulli/tautulli:v2.16.1

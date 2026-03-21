@@ -19,7 +19,7 @@ from urllib import error, parse, request
 
 SCRIPTS_DIR = Path(__file__).resolve().parents[1]
 REPO_DIR = Path(__file__).resolve().parents[2]
-BASE_URLS = ["http://192.168.1.100:10195"]
+BASE_URLS = ["http://192.168.1.100:10895"]
 USERNAME = "admin"
 PASSWORD = "S#nvhs89vher"
 OUTPUT_DIR = REPO_DIR / "exports"
@@ -31,7 +31,7 @@ DATE_FROM: str | None = None  # Inclusive, format YYYY-MM-DD
 DATE_TO: str | None = None  # Inclusive, format YYYY-MM-DD
 DATE_SORT_ORDER: str | None = "asc"  # "asc"=oldest->newest, "desc"=newest->oldest, None=preserve API order
 EXPORT_LIMIT: int | None = None  # Example: 10
-BATCH_SIZE: int | None = None  # Example: 100 (creates batch_XXXX subdirectories)
+BATCH_SIZE: int | None = None  # Example: 100 (creates batch subdirectories)
 
 
 def safe_filename(name: str) -> str:
@@ -247,14 +247,26 @@ def export_selected_torrents(
 
     total = len(selected_torrents)
     total_batches = ((total + batch_size - 1) // batch_size) if batch_size else 0
+    single_batch_dir: Path | None = None
     if batch_size:
         print(f"[INFO] Batching enabled: {total_batches} batch(es) of up to {batch_size} torrent(s)")
+    else:
+        # Keep non-batched exports under a single batch-like folder so exports always
+        # land in a directory and downstream consumers can treat both modes uniformly.
+        single_batch_dir = output_dir / batch_folder_name(
+            base_url=base_url,
+            batch_number=0,
+            batch_start=0,
+            batch_end=max(total - 1, 0),
+        )
+        single_batch_dir.mkdir(parents=True, exist_ok=True)
+        print(f"[INFO] Batching disabled: writing to {single_batch_dir.name}")
 
     try:
         for index, item in enumerate(selected_torrents, start=1):
             torrent_hash = str(item.get("hash", "")).strip()
             name = str(item.get("name", "")).strip() or torrent_hash
-            batch_dir = output_dir
+            batch_dir = single_batch_dir if single_batch_dir else output_dir
             batch_note = ""
             if batch_size:
                 # Use zero-based batch indexing so the first batch is 0000.
