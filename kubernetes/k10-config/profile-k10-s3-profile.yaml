@@ -17,6 +17,6 @@ spec:
     objectStore:
       name: k10-backups
       objectStoreType: S3
-      endpoint: http://192.168.1.22:9000
+      endpoint: http://192.168.1.120:9000
       region: us-east-1
       skipSSLVerify: true

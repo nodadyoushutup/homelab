@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Constants: edit these only if host/service naming changes.
-DOCKER_HOST_URI="ssh://nodadyoushutup@192.168.1.26"
+DOCKER_HOST_URI="ssh://swarm-cp-0.local"
 SERVICE_NAME="docker-volume-backup"
 
 need_cmd() {

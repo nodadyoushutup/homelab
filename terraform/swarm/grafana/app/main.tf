@@ -3,6 +3,10 @@ locals {
   grafana_ini_force_update = parseint(substr(local.grafana_ini_hash, 0, 8), 16)
 }
 
+data "docker_network" "grafana_database" {
+  name = "grafana-database"
+}
+
 resource "docker_network" "grafana_app" {
   name   = "grafana-app"
   driver = "overlay"
@@ -39,6 +43,11 @@ resource "docker_service" "grafana" {
     networks_advanced {
       name    = docker_network.grafana_app.id
       aliases = ["grafana"]
+    }
+
+    networks_advanced {
+      name    = data.docker_network.grafana_database.id
+      aliases = []
     }
 
     container_spec {

@@ -121,7 +121,7 @@ install_via_releases() {
   fi
 
   local tmp; tmp="$(mktemp -d)"
-  trap 'rm -rf "$tmp"' EXIT
+  trap 'rm -rf "${tmp:-}"' EXIT
 
   log "Downloading ${url}…"
   curl -fL --retry 3 -o "${tmp}/${zip}" "${url}"
@@ -136,6 +136,8 @@ install_via_releases() {
   log "Extracting and installing to ${INSTALL_DIR}/${BIN}…"
   unzip -q -o "${tmp}/${zip}" -d "${tmp}"
   sudo install -m 0755 -o root -g root -T "${tmp}/${BIN}" "${INSTALL_DIR}/${BIN}"
+  rm -rf "${tmp}"
+  trap - EXIT
 
   log "Installed $( "${INSTALL_DIR}/${BIN}" version | head -n1 )"
 }

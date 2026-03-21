@@ -6,6 +6,14 @@ on:
       version:
         description: "Version to publish"
         required: true
+      target_registry:
+        description: "Registry target for this publish"
+        required: true
+        default: github
+        type: choice
+        options:
+          - github
+          - harbor
   push:
     tags:
       - "*"
@@ -16,6 +24,7 @@ permissions:
 
 env:
   GHCR_NAMESPACE: ghcr.io/${{ github.repository_owner }}
+  HARBOR_REGISTRY: harbor.nodadyoushutup.com
   IMAGE_NAME: mcp-github
 
 jobs:
@@ -24,6 +33,8 @@ jobs:
     outputs:
       version: ${{ steps.version.outputs.version }}
       digest: ${{ steps.image_metadata.outputs.digest }}
+      target_registry: ${{ steps.publish_target.outputs.target_registry }}
+      image_base: ${{ steps.publish_target.outputs.image_base }}
 
     steps:
       - name: Check out the code
@@ -61,12 +72,57 @@ jobs:
           echo "Preparing MCP GitHub image for version ${{ steps.version.outputs.version }}"
           echo "::notice::Target MCP GitHub image version ${{ steps.version.outputs.version }}"
 
+      - name: Determine publish target
+        id: publish_target
+        run: |
+          target_registry="github"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            target_registry="${{ github.event.inputs.target_registry }}"
+          fi
+
+          case "$target_registry" in
+            github)
+              image_base="${GHCR_NAMESPACE}/${IMAGE_NAME}"
+              ;;
+            harbor)
+              image_base="${HARBOR_REGISTRY}/${IMAGE_NAME}/${IMAGE_NAME}"
+              ;;
+            *)
+              echo "Unsupported target_registry: $target_registry" >&2
+              exit 1
+              ;;
+          esac
+
+          echo "target_registry=$target_registry" >> "$GITHUB_OUTPUT"
+          echo "image_base=$image_base" >> "$GITHUB_OUTPUT"
+          echo "::notice::Publishing image to $image_base"
+
       - name: Log in to GitHub Container Registry
+        if: steps.publish_target.outputs.target_registry == 'github'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Validate Harbor credentials
+        if: steps.publish_target.outputs.target_registry == 'harbor'
+        env:
+          HARBOR_USERNAME: ${{ secrets.HARBOR_ROBOT_USERNAME }}
+          HARBOR_PASSWORD: ${{ secrets.HARBOR_ROBOT_SECRET }}
+        run: |
+          if [ -z "$HARBOR_USERNAME" ] || [ -z "$HARBOR_PASSWORD" ]; then
+            echo "HARBOR_ROBOT_USERNAME and HARBOR_ROBOT_SECRET are required for Harbor publishes." >&2
+            exit 1
+          fi
+
+      - name: Log in to Harbor Registry
+        if: steps.publish_target.outputs.target_registry == 'harbor'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.HARBOR_REGISTRY }}
+          username: ${{ secrets.HARBOR_ROBOT_USERNAME }}
+          password: ${{ secrets.HARBOR_ROBOT_SECRET }}
 
       - name: Build multi-platform image and push by digest
         run: |
@@ -74,7 +130,7 @@ jobs:
             --platform linux/amd64,linux/arm64 \
             --file docker/mcp-github/Dockerfile \
             --metadata-file mcp-github-image-metadata.json \
-            --output=type=image,name=${GHCR_NAMESPACE}/${IMAGE_NAME},push=true,push-by-digest=true \
+            --output=type=image,name=${{ steps.publish_target.outputs.image_base }},push=true,push-by-digest=true \
             docker/mcp-github
 
       - name: Capture image digest
@@ -101,23 +157,33 @@ jobs:
           install: true
 
       - name: Log in to GitHub Container Registry
+        if: needs.build.outputs.target_registry == 'github'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Log in to Harbor Registry
+        if: needs.build.outputs.target_registry == 'harbor'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.HARBOR_REGISTRY }}
+          username: ${{ secrets.HARBOR_ROBOT_USERNAME }}
+          password: ${{ secrets.HARBOR_ROBOT_SECRET }}
+
       - name: Publish multi-platform manifest
         run: |
           digest="${{ needs.build.outputs.digest }}"
           version="${{ needs.build.outputs.version }}"
+          image_base="${{ needs.build.outputs.image_base }}"
 
-          if [ -z "$digest" ] || [ -z "$version" ]; then
-            echo "Digest or version is missing" >&2
+          if [ -z "$digest" ] || [ -z "$version" ] || [ -z "$image_base" ]; then
+            echo "Digest, version, or image base is missing" >&2
             exit 1
           fi
 
           docker buildx imagetools create \
-            --tag ${GHCR_NAMESPACE}/${IMAGE_NAME}:${version} \
-            --tag ${GHCR_NAMESPACE}/${IMAGE_NAME}:latest \
-            ${GHCR_NAMESPACE}/${IMAGE_NAME}:${version}@${digest}
+            --tag ${image_base}:${version} \
+            --tag ${image_base}:latest \
+            ${image_base}:${version}@${digest}

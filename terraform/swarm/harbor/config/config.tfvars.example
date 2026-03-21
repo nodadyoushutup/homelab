@@ -9,7 +9,17 @@ provider_config = {
 
 projects = [
   {
-    name                   = "homelab"
+    name                   = "mcp-atlassian"
+    public                 = false
+    vulnerability_scanning = true
+  },
+  {
+    name                   = "mcp-github"
+    public                 = false
+    vulnerability_scanning = true
+  },
+  {
+    name                   = "mcp-cloudflare"
     public                 = false
     vulnerability_scanning = true
   }
@@ -38,12 +48,12 @@ projects = [
 # Optional robot account example
 # robot_accounts = [
 #   {
-#     name  = "ci-push"
-#     level = "project"
+#     name  = "gha-publish"
+#     level = "system"
 #     permissions = [
 #       {
 #         kind      = "project"
-#         namespace = "homelab"
+#         namespace = "mcp-github"
 #         access = [
 #           {
 #             action   = "push"

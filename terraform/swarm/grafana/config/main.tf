@@ -204,7 +204,7 @@ resource "grafana_data_source" "prometheus" {
   name              = "Prometheus"
   uid               = "prometheus"
   type              = "prometheus"
-  url               = "http://192.168.1.26:9090"
+  url               = "http://192.168.1.120:9090"
   is_default        = true
   json_data_encoded = jsonencode({ httpMethod = "POST" })
 }
@@ -213,7 +213,7 @@ resource "grafana_data_source" "graphite" {
   name              = "Graphite"
   uid               = "graphite"
   type              = "graphite"
-  url               = "http://192.168.1.26:8081"
+  url               = "http://192.168.1.120:8081"
   is_default        = false
   json_data_encoded = jsonencode({ httpMethod = "POST" })
 }
@@ -222,7 +222,7 @@ resource "grafana_data_source" "loki" {
   name              = "Loki"
   uid               = "loki"
   type              = "loki"
-  url               = "http://192.168.1.26:3100"
+  url               = "http://192.168.1.120:3100"
   is_default        = false
   json_data_encoded = jsonencode({ maxLines = 2000 })
 }

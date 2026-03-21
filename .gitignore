@@ -52,3 +52,7 @@ planning/**
 
 # Exports
 exports/**
+
+# Packer generated artifacts/logs
+packer/output/**
+packer/logs/*.log

@@ -6,8 +6,9 @@ die()  { echo "[ERROR] $*" >&2; exit 1; }
 trap 'die "failed at line $LINENO"' ERR
 
 export DEBIAN_FRONTEND=noninteractive
-APT_OPTS=(-y -q --no-install-recommends -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold")
+APT_OPTS=(-y --no-install-recommends -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold")
 SUDO_CMD=()
+PACKAGES=(qemu-guest-agent cloud-guest-utils)
 
 require_cmd() {
   local cmd="$1"
@@ -28,38 +29,13 @@ as_root() {
   "${SUDO_CMD[@]}" "$@"
 }
 
-detect_os() {
-  [[ -f /etc/os-release ]] || die "/etc/os-release not found; unsupported host."
-  # shellcheck disable=SC1091
-  . /etc/os-release
-  OS_ID="${ID:-unknown}"
-}
-
-install_debian_packages() {
-  local packages=("$@")
-  [[ ${#packages[@]} -gt 0 ]] || die "No packages provided."
-
-  log "Installing packages via apt: ${packages[*]}"
-  as_root apt-get update -y -q
-  as_root apt-get install "${APT_OPTS[@]}" "${packages[@]}" >/dev/null
-}
-
 main() {
   init_privilege_command
-  detect_os
+  require_cmd apt-get
 
-  if [[ "$#" -eq 0 ]]; then
-    die "Usage: $0 <package> [package ...]"
-  fi
-
-  case "${OS_ID}" in
-    ubuntu|debian)
-      install_debian_packages "$@"
-      ;;
-    *)
-      die "Unsupported OS: ${OS_ID}. Future versions can add non-apt installers."
-      ;;
-  esac
+  log "Installing apt packages: ${PACKAGES[*]}"
+  as_root apt-get update -y
+  as_root apt-get install "${APT_OPTS[@]}" "${PACKAGES[@]}"
 
   log "Done."
 }
