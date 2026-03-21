@@ -90,7 +90,8 @@ jobs:
               ;;
             gha-runner)
               image_name="gha-runner"
-              docker_context="docker/gha-runner"
+              docker_context="."
+              dockerfile="docker/gha-runner/Dockerfile"
               ;;
             jenkins-agent)
               image_name="jenkins-agent"
@@ -106,7 +107,7 @@ jobs:
               ;;
           esac
 
-          dockerfile="${docker_context}/Dockerfile"
+          dockerfile="${dockerfile:-${docker_context}/Dockerfile}"
 
           if [ ! -f "$dockerfile" ]; then
             echo "Dockerfile not found: $dockerfile" >&2
