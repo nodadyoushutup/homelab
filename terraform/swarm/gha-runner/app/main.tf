@@ -39,7 +39,7 @@ resource "docker_service" "gha_runner" {
         GH_RUNNER_URL           = var.github_runner_url
         GH_RUNNER_TOKEN         = var.github_runner_token
         GH_RUNNER_ACCESS_TOKEN  = var.github_runner_access_token
-        GH_RUNNER_NAME          = "${var.github_runner_name}-{{.Task.Slot}}"
+        GH_RUNNER_NAME          = "${var.github_runner_name}-{{.Task.Slot}}-{{.Task.ID}}"
         GH_RUNNER_LABELS        = var.github_runner_labels
         GH_RUNNER_WORKDIR       = var.github_runner_workdir
         GH_RUNNER_EPHEMERAL     = tostring(var.github_runner_ephemeral)

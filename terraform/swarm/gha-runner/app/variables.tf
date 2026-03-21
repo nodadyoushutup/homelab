@@ -30,7 +30,7 @@ variable "github_runner_image" {
 }
 
 variable "github_runner_name" {
-  description = "Runner display name prefix in GitHub; Task slot is appended."
+  description = "Runner display name prefix in GitHub; Task slot and Task ID are appended."
   type        = string
   default     = "homelab-gha-runner"
 }
@@ -56,7 +56,7 @@ variable "github_runner_workdir" {
 variable "github_runner_ephemeral" {
   description = "Whether the runner should be ephemeral (single-job)."
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "github_runner_disableupdate" {
