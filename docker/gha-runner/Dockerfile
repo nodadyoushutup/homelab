@@ -11,9 +11,27 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 COPY scripts/install/packages.sh /tmp/install-scripts/packages.sh
 COPY scripts/install/docker.sh /tmp/install-scripts/docker.sh
-RUN chmod 0755 /tmp/install-scripts/packages.sh /tmp/install-scripts/docker.sh \
-    && /tmp/install-scripts/packages.sh ca-certificates curl git jq libicu74 python3 python3-pip python3-venv unzip zip \
+COPY scripts/install/terraform.sh /tmp/install-scripts/terraform.sh
+COPY scripts/install/ansible.sh /tmp/install-scripts/ansible.sh
+COPY scripts/install/kubectl.sh /tmp/install-scripts/kubectl.sh
+COPY scripts/install/k9s.sh /tmp/install-scripts/k9s.sh
+COPY scripts/install/packer.sh /tmp/install-scripts/packer.sh
+RUN apt-get update -y \
+    && apt-get install -y --no-install-recommends ca-certificates curl git jq libicu74 python3 python3-pip python3-venv sudo unzip zip \
+    && chmod 0755 /tmp/install-scripts/packages.sh \
+                  /tmp/install-scripts/docker.sh \
+                  /tmp/install-scripts/terraform.sh \
+                  /tmp/install-scripts/ansible.sh \
+                  /tmp/install-scripts/kubectl.sh \
+                  /tmp/install-scripts/k9s.sh \
+                  /tmp/install-scripts/packer.sh \
+    && /tmp/install-scripts/packages.sh \
     && INSTALL_DOCKER_PROFILE=cli DOCKER_CONFIGURE_USER=0 DOCKER_ENABLE_SERVICE=0 DOCKER_VERIFY=0 /tmp/install-scripts/docker.sh \
+    && /tmp/install-scripts/terraform.sh \
+    && /tmp/install-scripts/ansible.sh \
+    && /tmp/install-scripts/kubectl.sh \
+    && /tmp/install-scripts/k9s.sh \
+    && PACKER_CONFIGURE_USER=0 /tmp/install-scripts/packer.sh \
     && rm -rf /var/lib/apt/lists/* /tmp/install-scripts
 
 RUN useradd --create-home --shell /bin/bash runner
