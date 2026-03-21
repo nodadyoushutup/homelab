@@ -1,4 +1,4 @@
-name: MCP - Build and Push Docker Image
+name: Docker - Build and Push Image
 
 on:
   workflow_dispatch:
@@ -14,8 +14,8 @@ on:
         options:
           - github
           - harbor
-      image:
-        description: "MCP image to build and publish"
+      build_target:
+        description: "Predefined build target (or custom)"
         required: true
         type: choice
         options:
@@ -23,6 +23,22 @@ on:
           - mcp-fortigate
           - mcp-github
           - mcp-google-workspace
+          - gha-runner
+          - jenkins-agent
+          - jenkins-controller
+          - custom
+      custom_image_name:
+        description: "Image name for custom target (e.g. my-service)"
+        required: false
+        default: ""
+      custom_docker_context:
+        description: "Docker build context path for custom target (e.g. docker/my-service)"
+        required: false
+        default: ""
+      custom_dockerfile:
+        description: "Dockerfile path for custom target (default: <context>/Dockerfile)"
+        required: false
+        default: ""
 
 permissions:
   contents: write
@@ -61,24 +77,73 @@ jobs:
         run: |
           version="${{ github.event.inputs.version }}"
           target_registry="${{ github.event.inputs.target_registry }}"
-          image_name="${{ github.event.inputs.image }}"
+          build_target="${{ github.event.inputs.build_target }}"
+          custom_image_name="${{ github.event.inputs.custom_image_name }}"
+          custom_docker_context="${{ github.event.inputs.custom_docker_context }}"
+          custom_dockerfile="${{ github.event.inputs.custom_dockerfile }}"
 
           if [ -z "$version" ]; then
             echo "Version could not be determined" >&2
             exit 1
           fi
 
-          case "$image_name" in
-            mcp-cloudflare|mcp-fortigate|mcp-github|mcp-google-workspace)
+          case "$build_target" in
+            mcp-cloudflare)
+              image_name="mcp-cloudflare"
+              docker_context="docker/mcp-cloudflare"
+              ;;
+            mcp-fortigate)
+              image_name="mcp-fortigate"
+              docker_context="docker/mcp-fortigate"
+              ;;
+            mcp-github)
+              image_name="mcp-github"
+              docker_context="docker/mcp-github"
+              ;;
+            mcp-google-workspace)
+              image_name="mcp-google-workspace"
+              docker_context="docker/mcp-google-workspace"
+              ;;
+            gha-runner)
+              image_name="gha-runner"
+              docker_context="docker/gha-runner"
+              ;;
+            jenkins-agent)
+              image_name="jenkins-agent"
+              docker_context="docker/jenkins/agent"
+              ;;
+            jenkins-controller)
+              image_name="jenkins-controller"
+              docker_context="docker/jenkins/controller"
+              ;;
+            custom)
+              image_name="$custom_image_name"
+              docker_context="$custom_docker_context"
               ;;
             *)
-              echo "Unsupported image selection: $image_name" >&2
+              echo "Unsupported build target: $build_target" >&2
               exit 1
               ;;
           esac
 
-          docker_context="docker/${image_name}"
-          dockerfile="${docker_context}/Dockerfile"
+          if [ -z "$image_name" ] || [ -z "$docker_context" ]; then
+            echo "Resolved image name/context is empty. For custom target, set custom_image_name and custom_docker_context." >&2
+            exit 1
+          fi
+
+          if [ "$build_target" = "custom" ]; then
+            if [ -n "$custom_dockerfile" ]; then
+              dockerfile="$custom_dockerfile"
+            else
+              dockerfile="${docker_context}/Dockerfile"
+            fi
+          else
+            if [ -n "$custom_dockerfile" ]; then
+              echo "custom_dockerfile is only valid with build_target=custom" >&2
+              exit 1
+            fi
+            dockerfile="${docker_context}/Dockerfile"
+          fi
 
           if [ ! -f "$dockerfile" ]; then
             echo "Dockerfile not found: $dockerfile" >&2
@@ -104,7 +169,7 @@ jobs:
           echo "docker_context=$docker_context" >> "$GITHUB_OUTPUT"
           echo "dockerfile=$dockerfile" >> "$GITHUB_OUTPUT"
           echo "image_base=$image_base" >> "$GITHUB_OUTPUT"
-          echo "::notice::Preparing ${image_name}:${version} for ${image_base}"
+          echo "::notice::Preparing ${image_name}:${version} from ${docker_context} using ${dockerfile} for ${image_base}"
 
       - name: Log in to GitHub Container Registry
         if: steps.prepare.outputs.target_registry == 'github'
