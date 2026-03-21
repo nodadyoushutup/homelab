@@ -1,0 +1,56 @@
+name: Packer - Build and Push Image
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Image version to build (e.g. 0.0.3)"
+        required: true
+      target:
+        description: "Publish target"
+        required: true
+        type: choice
+        default: webserver
+        options:
+          - webserver
+
+permissions:
+  contents: read
+
+jobs:
+  build_and_push:
+    runs-on: [self-hosted, linux, homelab]
+
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v6
+
+      - name: Resolve publish target
+        id: target
+        run: |
+          set -euo pipefail
+
+          target="${{ github.event.inputs.target }}"
+          case "$target" in
+            webserver)
+              upload_base_url="https://webserver.image.nodadyoushutup.com"
+              upload_fallback_base_url="http://192.168.1.120:18088"
+              ;;
+            *)
+              echo "Unsupported target: $target" >&2
+              exit 1
+              ;;
+          esac
+
+          echo "upload_base_url=${upload_base_url}" >> "$GITHUB_OUTPUT"
+          echo "upload_fallback_base_url=${upload_fallback_base_url}" >> "$GITHUB_OUTPUT"
+
+          echo "::notice::Resolved packer target '${target}' -> ${upload_base_url}"
+
+      - name: Build and publish Packer image artifacts
+        env:
+          UPLOAD_BASE_URL: ${{ steps.target.outputs.upload_base_url }}
+          UPLOAD_FALLBACK_BASE_URL: ${{ steps.target.outputs.upload_fallback_base_url }}
+        run: |
+          set -euo pipefail
+          bash ./packer/build.sh "${{ github.event.inputs.version }}"
