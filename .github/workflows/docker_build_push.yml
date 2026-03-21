@@ -15,7 +15,7 @@ on:
           - github
           - harbor
       build_target:
-        description: "Predefined build target (or custom)"
+        description: "Build target"
         required: true
         type: choice
         options:
@@ -26,19 +26,6 @@ on:
           - gha-runner
           - jenkins-agent
           - jenkins-controller
-          - custom
-      custom_image_name:
-        description: "Image name for custom target (e.g. my-service)"
-        required: false
-        default: ""
-      custom_docker_context:
-        description: "Docker build context path for custom target (e.g. docker/my-service)"
-        required: false
-        default: ""
-      custom_dockerfile:
-        description: "Dockerfile path for custom target (default: <context>/Dockerfile)"
-        required: false
-        default: ""
 
 permissions:
   contents: write
@@ -78,9 +65,6 @@ jobs:
           version="${{ github.event.inputs.version }}"
           target_registry="${{ github.event.inputs.target_registry }}"
           build_target="${{ github.event.inputs.build_target }}"
-          custom_image_name="${{ github.event.inputs.custom_image_name }}"
-          custom_docker_context="${{ github.event.inputs.custom_docker_context }}"
-          custom_dockerfile="${{ github.event.inputs.custom_dockerfile }}"
 
           if [ -z "$version" ]; then
             echo "Version could not be determined" >&2
@@ -116,34 +100,13 @@ jobs:
               image_name="jenkins-controller"
               docker_context="docker/jenkins/controller"
               ;;
-            custom)
-              image_name="$custom_image_name"
-              docker_context="$custom_docker_context"
-              ;;
             *)
               echo "Unsupported build target: $build_target" >&2
               exit 1
               ;;
           esac
 
-          if [ -z "$image_name" ] || [ -z "$docker_context" ]; then
-            echo "Resolved image name/context is empty. For custom target, set custom_image_name and custom_docker_context." >&2
-            exit 1
-          fi
-
-          if [ "$build_target" = "custom" ]; then
-            if [ -n "$custom_dockerfile" ]; then
-              dockerfile="$custom_dockerfile"
-            else
-              dockerfile="${docker_context}/Dockerfile"
-            fi
-          else
-            if [ -n "$custom_dockerfile" ]; then
-              echo "custom_dockerfile is only valid with build_target=custom" >&2
-              exit 1
-            fi
-            dockerfile="${docker_context}/Dockerfile"
-          fi
+          dockerfile="${docker_context}/Dockerfile"
 
           if [ ! -f "$dockerfile" ]; then
             echo "Dockerfile not found: $dockerfile" >&2
