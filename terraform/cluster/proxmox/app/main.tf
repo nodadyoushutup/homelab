@@ -2,8 +2,8 @@ resource "proxmox_virtual_environment_download_file" "ubuntu_24_cloud_image" {
   node_name           = "pve"
   datastore_id        = "local"
   content_type        = "iso"
-  file_name           = "ubuntu-24.04-ndysu-0.0.1-amd64.img"
-  url                 = "https://webserver.image.nodadyoushutup.com/ubuntu-24.04-ndysu-0.0.1-amd64.qcow2"
+  file_name           = "ubuntu-24.04-ndysu-0.0.2-amd64.img"
+  url                 = "https://webserver.image.nodadyoushutup.com/ubuntu-24.04-ndysu-0.0.2-amd64.qcow2"
   verify              = false
   overwrite           = true
   overwrite_unmanaged = true

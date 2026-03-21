@@ -9,7 +9,7 @@ on:
       target_registry:
         description: "Registry target for this publish"
         required: true
-        default: github
+        default: harbor
         type: choice
         options:
           - github
