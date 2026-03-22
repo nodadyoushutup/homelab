@@ -17,7 +17,7 @@ This directory contains a minimal Packer build that:
 - `qemu-system-x86_64`
 - `qemu-system-aarch64`
 - `qemu-img`
-- KVM support for best performance (`amd64` source uses `accelerator=kvm`)
+- KVM support for best performance (`amd64` source defaults to `accelerator=kvm`; you can also use `tcg` or `none`)
 - `arm64` source uses emulation (`accelerator=tcg`) by default
 
 ## Build

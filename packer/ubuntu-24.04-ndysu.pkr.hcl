@@ -21,11 +21,11 @@ variable "kde_profile" {
 variable "amd64_accelerator" {
   type        = string
   default     = "kvm"
-  description = "QEMU accelerator for amd64 builds (kvm or tcg)."
+  description = "QEMU accelerator for amd64 builds (kvm, tcg, or none)."
 
   validation {
-    condition     = contains(["kvm", "tcg"], var.amd64_accelerator)
-    error_message = "The amd64_accelerator value must be either 'kvm' or 'tcg'."
+    condition     = contains(["kvm", "tcg", "none"], var.amd64_accelerator)
+    error_message = "The amd64_accelerator value must be one of 'kvm', 'tcg', or 'none'."
   }
 }
 
@@ -102,7 +102,7 @@ build {
   name = "ubuntu-24.04-ndysu"
   sources = [
     "source.qemu.ubuntu_24_04_amd64",
-    # "source.qemu.ubuntu_24_04_arm64",
+    "source.qemu.ubuntu_24_04_arm64",
   ]
 
   provisioner "file" {

@@ -21,6 +21,16 @@ on:
         options:
           - kvm
           - tcg
+          - none
+      build_arch:
+        description: "Architecture to build"
+        required: true
+        type: choice
+        default: amd64
+        options:
+          - amd64
+          - arm64
+          - both
 
 permissions:
   contents: read
@@ -31,6 +41,7 @@ jobs:
     env:
       VERSION: ${{ github.event.inputs.version }}
       AMD64_ACCELERATOR: ${{ github.event.inputs.amd64_accelerator }}
+      BUILD_ARCH: ${{ github.event.inputs.build_arch }}
       PACKER_DIR: packer
       PACKER_TEMPLATE: packer/ubuntu-24.04-ndysu.pkr.hcl
       PACKER_OUTPUT_DIR: packer/output/ubuntu-24.04-ndysu/${{ github.event.inputs.version }}
@@ -71,8 +82,12 @@ jobs:
           command -v packer >/dev/null 2>&1
           command -v xorriso >/dev/null 2>&1
           command -v qemu-img >/dev/null 2>&1
-          command -v qemu-system-x86_64 >/dev/null 2>&1
-          command -v qemu-system-aarch64 >/dev/null 2>&1
+          if [[ "${BUILD_ARCH}" == "amd64" || "${BUILD_ARCH}" == "both" ]]; then
+            command -v qemu-system-x86_64 >/dev/null 2>&1
+          fi
+          if [[ "${BUILD_ARCH}" == "arm64" || "${BUILD_ARCH}" == "both" ]]; then
+            command -v qemu-system-aarch64 >/dev/null 2>&1
+          fi
           command -v curl >/dev/null 2>&1
           command -v jq >/dev/null 2>&1
 
@@ -83,18 +98,34 @@ jobs:
             echo "Invalid version '${VERSION}'. Expected semantic version like 0.0.1." >&2
             exit 1
           }
-          [[ "${AMD64_ACCELERATOR}" == "kvm" || "${AMD64_ACCELERATOR}" == "tcg" ]] || {
-            echo "Invalid accelerator '${AMD64_ACCELERATOR}'. Expected 'kvm' or 'tcg'." >&2
+          [[ "${AMD64_ACCELERATOR}" == "kvm" || "${AMD64_ACCELERATOR}" == "tcg" || "${AMD64_ACCELERATOR}" == "none" ]] || {
+            echo "Invalid accelerator '${AMD64_ACCELERATOR}'. Expected 'kvm', 'tcg', or 'none'." >&2
             exit 1
           }
+          [[ "${BUILD_ARCH}" == "amd64" || "${BUILD_ARCH}" == "arm64" || "${BUILD_ARCH}" == "both" ]] || {
+            echo "Invalid build_arch '${BUILD_ARCH}'. Expected 'amd64', 'arm64', or 'both'." >&2
+            exit 1
+          }
+
+          PACKER_ONLY_ARGS=()
+          case "${BUILD_ARCH}" in
+            amd64)
+              PACKER_ONLY_ARGS=(-only=ubuntu-24.04-ndysu.qemu.ubuntu_24_04_amd64)
+              ;;
+            arm64)
+              PACKER_ONLY_ARGS=(-only=ubuntu-24.04-ndysu.qemu.ubuntu_24_04_arm64)
+              ;;
+            both)
+              ;;
+          esac
 
           cd "${PACKER_DIR}"
           rm -rf "output/ubuntu-24.04-ndysu/${VERSION}"
 
           packer init "ubuntu-24.04-ndysu.pkr.hcl"
           packer fmt "ubuntu-24.04-ndysu.pkr.hcl"
-          packer validate -var "image_version=${VERSION}" -var "amd64_accelerator=${AMD64_ACCELERATOR}" "ubuntu-24.04-ndysu.pkr.hcl"
-          packer build -force -var "image_version=${VERSION}" -var "amd64_accelerator=${AMD64_ACCELERATOR}" "ubuntu-24.04-ndysu.pkr.hcl"
+          packer validate "${PACKER_ONLY_ARGS[@]}" -var "image_version=${VERSION}" -var "amd64_accelerator=${AMD64_ACCELERATOR}" "ubuntu-24.04-ndysu.pkr.hcl"
+          packer build -force "${PACKER_ONLY_ARGS[@]}" -var "image_version=${VERSION}" -var "amd64_accelerator=${AMD64_ACCELERATOR}" "ubuntu-24.04-ndysu.pkr.hcl"
 
       - name: Push stage - Upload qcow2 artifacts
         env:
