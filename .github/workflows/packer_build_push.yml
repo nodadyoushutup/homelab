@@ -20,6 +20,15 @@ permissions:
 jobs:
   build_and_push:
     runs-on: [self-hosted, linux, homelab]
+    env:
+      VERSION: ${{ github.event.inputs.version }}
+      PACKER_DIR: packer
+      PACKER_TEMPLATE: packer/ubuntu-24.04-ndysu.pkr.hcl
+      PACKER_OUTPUT_DIR: packer/output/ubuntu-24.04-ndysu/${{ github.event.inputs.version }}
+      MAX_UPLOAD_BYTES: "26843545600" # 25 GiB
+    defaults:
+      run:
+        shell: bash
 
     steps:
       - name: Check out the code
@@ -47,10 +56,83 @@ jobs:
 
           echo "::notice::Resolved packer target '${target}' -> ${upload_base_url}"
 
-      - name: Build and publish Packer image artifacts
+      - name: Validate toolchain
+        run: |
+          set -euo pipefail
+          command -v packer >/dev/null 2>&1
+          command -v qemu-img >/dev/null 2>&1
+          command -v qemu-system-x86_64 >/dev/null 2>&1
+          command -v qemu-system-aarch64 >/dev/null 2>&1
+          command -v curl >/dev/null 2>&1
+          command -v jq >/dev/null 2>&1
+
+      - name: Build stage - Packer image artifacts
+        run: |
+          set -euo pipefail
+          [[ "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
+            echo "Invalid version '${VERSION}'. Expected semantic version like 0.0.1." >&2
+            exit 1
+          }
+
+          cd "${PACKER_DIR}"
+          rm -rf "output/ubuntu-24.04-ndysu/${VERSION}"
+
+          packer init "ubuntu-24.04-ndysu.pkr.hcl"
+          packer fmt "ubuntu-24.04-ndysu.pkr.hcl"
+          packer validate -var "image_version=${VERSION}" "ubuntu-24.04-ndysu.pkr.hcl"
+          packer build -force -var "image_version=${VERSION}" "ubuntu-24.04-ndysu.pkr.hcl"
+
+      - name: Push stage - Upload qcow2 artifacts
         env:
           UPLOAD_BASE_URL: ${{ steps.target.outputs.upload_base_url }}
           UPLOAD_FALLBACK_BASE_URL: ${{ steps.target.outputs.upload_fallback_base_url }}
         run: |
           set -euo pipefail
-          bash ./packer/build.sh "${{ github.event.inputs.version }}"
+
+          mapfile -t artifacts < <(find "${PACKER_OUTPUT_DIR}" -type f -name '*.qcow2' | sort)
+          [[ "${#artifacts[@]}" -gt 0 ]] || {
+            echo "No qcow2 artifacts found under ${PACKER_OUTPUT_DIR}" >&2
+            exit 1
+          }
+
+          upload_artifact() {
+            local artifact_path="$1"
+            local url="$2"
+            curl \
+              --progress-bar \
+              --show-error \
+              --output /dev/null \
+              --write-out "%{http_code}" \
+              --request PUT \
+              --header "Content-Type: application/octet-stream" \
+              --upload-file "${artifact_path}" \
+              "${url}"
+          }
+
+          for artifact in "${artifacts[@]}"; do
+            basename="$(basename "${artifact}")"
+            bytes="$(stat -c '%s' "${artifact}")"
+
+            if (( bytes > MAX_UPLOAD_BYTES )); then
+              echo "Artifact ${basename} exceeds 25GiB upload limit." >&2
+              exit 1
+            fi
+
+            target_url="${UPLOAD_BASE_URL}/${basename}"
+            http_code="$(upload_artifact "${artifact}" "${target_url}")"
+
+            if [[ "${http_code}" == "413" ]] && [[ -n "${UPLOAD_FALLBACK_BASE_URL}" ]]; then
+              target_url="${UPLOAD_FALLBACK_BASE_URL}/${basename}"
+              http_code="$(upload_artifact "${artifact}" "${target_url}")"
+            fi
+
+            case "${http_code}" in
+              200|201|204)
+                echo "::notice::Uploaded ${basename} -> ${target_url} (HTTP ${http_code})"
+                ;;
+              *)
+                echo "Upload failed for ${basename}: HTTP ${http_code} (${target_url})" >&2
+                exit 1
+                ;;
+            esac
+          done
