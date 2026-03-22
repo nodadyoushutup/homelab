@@ -174,7 +174,7 @@ install_qemu_kvm_dependencies() {
   log "Installing QEMU/KVM dependencies..."
   as_root apt-get update -y -q
 
-  local packages=(qemu-utils)
+  local packages=(qemu-utils xorriso)
 
   # x86_64 system emulator for amd64 image builds.
   if has_apt_package qemu-system-x86; then
@@ -251,6 +251,7 @@ configure_kvm_access() {
 verify_install() {
   command -v "${PACKER_BIN}" >/dev/null 2>&1 || die "Packer not found after installation."
   command -v qemu-img >/dev/null 2>&1 || die "qemu-img not found after installation."
+  command -v xorriso >/dev/null 2>&1 || die "xorriso not found after installation."
 
   if command -v qemu-system-x86_64 >/dev/null 2>&1; then
     log "qemu-system-x86_64 is installed."

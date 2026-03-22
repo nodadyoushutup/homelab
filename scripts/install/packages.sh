@@ -8,7 +8,7 @@ trap 'die "failed at line $LINENO"' ERR
 export DEBIAN_FRONTEND=noninteractive
 APT_OPTS=(-y --no-install-recommends -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold")
 SUDO_CMD=()
-PACKAGES=(qemu-guest-agent cloud-guest-utils xorriso)
+PACKAGES=(qemu-guest-agent cloud-guest-utils)
 
 require_cmd() {
   local cmd="$1"
