@@ -95,7 +95,8 @@ jobs:
               ;;
             jenkins-agent)
               image_name="jenkins-agent"
-              docker_context="docker/jenkins/agent"
+              docker_context="."
+              dockerfile="docker/jenkins/agent/Dockerfile"
               ;;
             jenkins-controller)
               image_name="jenkins-controller"
