@@ -23,7 +23,6 @@ RUN chmod 0755 /tmp/install-scripts/packages.sh \
                /tmp/install-scripts/packer.sh \
                /tmp/install-scripts/minio_client.sh \
     && /tmp/install-scripts/packages.sh \
-    && pip3 install --break-system-packages boto3 botocore \
     && INSTALL_DOCKER_PROFILE=cli DOCKER_ENABLE_SERVICE=0 DOCKER_VERIFY=0 TARGET_USER=jenkins /tmp/install-scripts/docker.sh \
     && /tmp/install-scripts/terraform.sh \
     && /tmp/install-scripts/ansible.sh \
