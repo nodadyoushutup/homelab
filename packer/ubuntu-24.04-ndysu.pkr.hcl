@@ -18,12 +18,23 @@ variable "kde_profile" {
   description = "Optional KDE profile (desktop|minimal|full). Null disables KDE install."
 }
 
+variable "amd64_accelerator" {
+  type        = string
+  default     = "kvm"
+  description = "QEMU accelerator for amd64 builds (kvm or tcg)."
+
+  validation {
+    condition     = contains(["kvm", "tcg"], var.amd64_accelerator)
+    error_message = "amd64_accelerator must be either 'kvm' or 'tcg'."
+  }
+}
+
 locals {
   kde_profile_effective = var.kde_profile != null ? var.kde_profile : ""
 }
 
 source "qemu" "ubuntu_24_04_amd64" {
-  accelerator  = "kvm"
+  accelerator  = var.amd64_accelerator
   communicator = "ssh"
   cpus         = 2
   memory       = 2048
