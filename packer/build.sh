@@ -9,19 +9,38 @@ set -euo pipefail
 log()  { echo "[INFO] $*"; }
 die()  { echo "[ERROR] $*" >&2; exit 1; }
 
+bool_true() {
+  local value="${1:-}"
+  value="${value,,}"
+  [[ "${value}" == "1" || "${value}" == "true" || "${value}" == "yes" || "${value}" == "on" ]]
+}
+
 require_cmd() {
   local cmd="$1"
   command -v "${cmd}" >/dev/null 2>&1 || die "Missing required command: ${cmd}"
 }
 
 usage() {
-  cat <<'EOF'
-Usage: ./packer/build.sh <version> [--kde_profile=<desktop|minimal|full>] [packer-build-args...]
+  cat <<'EOF_USAGE'
+Usage: ./packer/build.sh --version <version> [options] [packer-build-args...]
 
-Example:
-  ./packer/build.sh 0.0.1
-  ./packer/build.sh 0.0.3 --kde_profile=desktop
-EOF
+Options:
+  --version <X.Y.Z>                       Required image version (semantic version)
+  --target <webserver>                     Publish target (default: webserver)
+  --build_arch <amd64|arm64|both>         Build architecture selector (default: amd64)
+  --amd64_accelerator <kvm|tcg|none>      Accelerator for amd64 source (default: kvm)
+  --arm64_accelerator <kvm|tcg|none>      Accelerator for arm64 source (default: kvm)
+  --kde_profile <desktop|minimal|full>    Optional KDE profile
+  --packer_log                            Enable PACKER_LOG=1 for this run
+  --no_packer_log                         Disable PACKER_LOG for this run
+  --packer_log_path <path>                Optional PACKER_LOG_PATH file location
+  -h, --help                              Show this help
+
+Examples:
+  ./packer/build.sh --version 0.0.3
+  ./packer/build.sh --version 0.0.3 --build_arch both --amd64_accelerator kvm --arm64_accelerator tcg
+  ./packer/build.sh --version 0.0.3 --build_arch arm64 --arm64_accelerator kvm --packer_log
+EOF_USAGE
 }
 
 human_size() {
@@ -41,8 +60,6 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 TEMPLATE="${SCRIPT_DIR}/ubuntu-24.04-ndysu.pkr.hcl"
 KEY_FILE="${SCRIPT_DIR}/keys/packer-nodadyoushutup"
 LOG_DIR="${SCRIPT_DIR}/logs"
-UPLOAD_BASE_URL="${UPLOAD_BASE_URL:-https://webserver.image.nodadyoushutup.com}"
-UPLOAD_FALLBACK_BASE_URL="${UPLOAD_FALLBACK_BASE_URL:-http://192.168.1.120:18088}"
 
 [[ -f "${TEMPLATE}" ]] || die "Template not found: ${TEMPLATE}"
 [[ -f "${KEY_FILE}" ]] || die "SSH private key not found: ${KEY_FILE}"
@@ -52,17 +69,68 @@ if [[ $# -lt 1 ]]; then
   exit 1
 fi
 
-VERSION="$1"
-shift
-if [[ ! "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-  die "Invalid version '${VERSION}'. Expected semantic version like 0.0.1."
-fi
+VERSION=""
+VERSION_SET=0
 
+TARGET="webserver"
+BUILD_ARCH="amd64"
+AMD64_ACCELERATOR="kvm"
+ARM64_ACCELERATOR="kvm"
 KDE_PROFILE=""
 KDE_PROFILE_SET=0
+PACKER_LOG_ENABLED="${PACKER_LOG:-1}"
+PACKER_LOG_FILE="${PACKER_LOG_PATH:-}"
 PACKER_BUILD_ARGS=()
+
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    --version=*)
+      VERSION="${1#--version=}"
+      VERSION_SET=1
+      shift
+      ;;
+    --version)
+      [[ $# -ge 2 ]] || die "--version requires a value: X.Y.Z"
+      VERSION="$2"
+      VERSION_SET=1
+      shift 2
+      ;;
+    --target=*)
+      TARGET="${1#--target=}"
+      shift
+      ;;
+    --target)
+      [[ $# -ge 2 ]] || die "--target requires a value: webserver"
+      TARGET="$2"
+      shift 2
+      ;;
+    --build_arch=*)
+      BUILD_ARCH="${1#--build_arch=}"
+      shift
+      ;;
+    --build_arch)
+      [[ $# -ge 2 ]] || die "--build_arch requires a value: amd64|arm64|both"
+      BUILD_ARCH="$2"
+      shift 2
+      ;;
+    --amd64_accelerator=*)
+      AMD64_ACCELERATOR="${1#--amd64_accelerator=}"
+      shift
+      ;;
+    --amd64_accelerator)
+      [[ $# -ge 2 ]] || die "--amd64_accelerator requires a value: kvm|tcg|none"
+      AMD64_ACCELERATOR="$2"
+      shift 2
+      ;;
+    --arm64_accelerator=*)
+      ARM64_ACCELERATOR="${1#--arm64_accelerator=}"
+      shift
+      ;;
+    --arm64_accelerator)
+      [[ $# -ge 2 ]] || die "--arm64_accelerator requires a value: kvm|tcg|none"
+      ARM64_ACCELERATOR="$2"
+      shift 2
+      ;;
     --kde_profile=*)
       KDE_PROFILE="${1#--kde_profile=}"
       KDE_PROFILE_SET=1
@@ -74,12 +142,86 @@ while [[ $# -gt 0 ]]; do
       KDE_PROFILE_SET=1
       shift 2
       ;;
+    --packer_log)
+      PACKER_LOG_ENABLED="1"
+      shift
+      ;;
+    --no_packer_log)
+      PACKER_LOG_ENABLED="0"
+      shift
+      ;;
+    --packer_log_path=*)
+      PACKER_LOG_FILE="${1#--packer_log_path=}"
+      PACKER_LOG_ENABLED="1"
+      shift
+      ;;
+    --packer_log_path)
+      [[ $# -ge 2 ]] || die "--packer_log_path requires a value"
+      PACKER_LOG_FILE="$2"
+      PACKER_LOG_ENABLED="1"
+      shift 2
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    --)
+      shift
+      PACKER_BUILD_ARGS+=("$@")
+      break
+      ;;
     *)
       PACKER_BUILD_ARGS+=("$1")
       shift
       ;;
   esac
 done
+
+if [[ "${VERSION_SET}" -ne 1 ]]; then
+  die "Missing required --version <X.Y.Z> argument."
+fi
+if [[ ! "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+  die "Invalid --version '${VERSION}'. Expected semantic version like 0.0.1."
+fi
+if bool_true "${PACKER_LOG_ENABLED}"; then
+  PACKER_LOG_ENABLED="1"
+else
+  PACKER_LOG_ENABLED="0"
+fi
+
+case "${TARGET}" in
+  webserver)
+    DEFAULT_UPLOAD_BASE_URL="https://webserver.image.nodadyoushutup.com"
+    DEFAULT_UPLOAD_FALLBACK_BASE_URL="http://192.168.1.120:18088"
+    ;;
+  *)
+    die "Unsupported --target '${TARGET}'. Expected: webserver"
+    ;;
+esac
+
+case "${BUILD_ARCH}" in
+  amd64|arm64|both)
+    ;;
+  *)
+    die "Invalid --build_arch '${BUILD_ARCH}'. Expected: amd64|arm64|both"
+    ;;
+esac
+
+case "${AMD64_ACCELERATOR}" in
+  kvm|tcg|none)
+    ;;
+  *)
+    die "Invalid --amd64_accelerator '${AMD64_ACCELERATOR}'. Expected: kvm|tcg|none"
+    ;;
+esac
+
+case "${ARM64_ACCELERATOR}" in
+  kvm|tcg|none)
+    ;;
+  *)
+    die "Invalid --arm64_accelerator '${ARM64_ACCELERATOR}'. Expected: kvm|tcg|none"
+    ;;
+esac
 
 if [[ "${KDE_PROFILE_SET}" -eq 1 ]]; then
   case "${KDE_PROFILE}" in
@@ -91,11 +233,36 @@ if [[ "${KDE_PROFILE_SET}" -eq 1 ]]; then
   esac
 fi
 
+for arg in "${PACKER_BUILD_ARGS[@]}"; do
+  case "${arg}" in
+    -only|-only=*|-except|-except=*)
+      die "Do not pass ${arg} directly. Use --build_arch amd64|arm64|both instead."
+      ;;
+  esac
+done
+
+UPLOAD_BASE_URL="${UPLOAD_BASE_URL:-${DEFAULT_UPLOAD_BASE_URL}}"
+UPLOAD_FALLBACK_BASE_URL="${UPLOAD_FALLBACK_BASE_URL:-${DEFAULT_UPLOAD_FALLBACK_BASE_URL}}"
+
+PACKER_ONLY_ARGS=()
+case "${BUILD_ARCH}" in
+  amd64)
+    PACKER_ONLY_ARGS=(-only=ubuntu-24.04-ndysu.qemu.ubuntu_24_04_amd64)
+    ;;
+  arm64)
+    PACKER_ONLY_ARGS=(-only=ubuntu-24.04-ndysu.qemu.ubuntu_24_04_arm64)
+    ;;
+  both)
+    ;;
+esac
+
 PACKER_VAR_ARGS=(
   -var "image_version=${VERSION}"
+  -var "amd64_accelerator=${AMD64_ACCELERATOR}"
+  -var "arm64_accelerator=${ARM64_ACCELERATOR}"
 )
 if [[ "${KDE_PROFILE_SET}" -eq 1 ]]; then
-  PACKER_VAR_ARGS+=(-var "kde_profile=${KDE_PROFILE}")
+  PACKER_VAR_ARGS+=( -var "kde_profile=${KDE_PROFILE}" )
 fi
 
 OUTPUT_SUBDIR="output/ubuntu-24.04-ndysu/${VERSION}"
@@ -106,43 +273,71 @@ RUN_TS="$(date -u +%Y%m%dT%H%M%SZ)"
 LOG_FILE="${LOG_DIR}/build-${RUN_TS}-v${VERSION}.log"
 exec > >(tee -a "${LOG_FILE}") 2>&1
 
+if [[ "${PACKER_LOG_ENABLED}" -eq 1 ]]; then
+  if [[ -z "${PACKER_LOG_FILE}" ]]; then
+    PACKER_LOG_FILE="${LOG_DIR}/packer-debug-${RUN_TS}-v${VERSION}.log"
+  fi
+  export PACKER_LOG=1
+  export PACKER_LOG_PATH="${PACKER_LOG_FILE}"
+fi
+
 require_cmd packer
+require_cmd xorriso
 require_cmd qemu-img
 require_cmd curl
+require_cmd jq
 
-NEED_AMD64_QEMU=1
-NEED_ARM64_QEMU=1
-ONLY_EXPR=""
-for ((i = 0; i < ${#PACKER_BUILD_ARGS[@]}; i++)); do
-  arg="${PACKER_BUILD_ARGS[$i]}"
-  if [[ "${arg}" == "-only" ]] && [[ $((i + 1)) -lt ${#PACKER_BUILD_ARGS[@]} ]]; then
-    ONLY_EXPR="${PACKER_BUILD_ARGS[$((i + 1))]}"
-  elif [[ "${arg}" == -only=* ]]; then
-    ONLY_EXPR="${arg#-only=}"
-  fi
-done
-
-if [[ -n "${ONLY_EXPR}" ]]; then
-  NEED_AMD64_QEMU=0
-  NEED_ARM64_QEMU=0
-  IFS=',' read -r -a ONLY_TARGETS <<< "${ONLY_EXPR}"
-  for target in "${ONLY_TARGETS[@]}"; do
-    [[ "${target}" == *amd64* ]] && NEED_AMD64_QEMU=1
-    [[ "${target}" == *arm64* ]] && NEED_ARM64_QEMU=1
-  done
-fi
-
-if [[ "${NEED_AMD64_QEMU}" -eq 1 ]]; then
+if [[ "${BUILD_ARCH}" == "amd64" || "${BUILD_ARCH}" == "both" ]]; then
   require_cmd qemu-system-x86_64
 fi
-if [[ "${NEED_ARM64_QEMU}" -eq 1 ]]; then
+if [[ "${BUILD_ARCH}" == "arm64" || "${BUILD_ARCH}" == "both" ]]; then
   require_cmd qemu-system-aarch64
+fi
+
+HOST_ARCH="$(uname -m)"
+if [[ "${BUILD_ARCH}" == "amd64" || "${BUILD_ARCH}" == "both" ]] && [[ "${AMD64_ACCELERATOR}" == "kvm" ]]; then
+  case "${HOST_ARCH}" in
+    x86_64|amd64)
+      ;;
+    *)
+      die "amd64_accelerator=kvm requires an x86_64 host. Current host architecture is ${HOST_ARCH}."
+      ;;
+  esac
+fi
+if [[ "${BUILD_ARCH}" == "arm64" || "${BUILD_ARCH}" == "both" ]] && [[ "${ARM64_ACCELERATOR}" == "kvm" ]]; then
+  case "${HOST_ARCH}" in
+    aarch64|arm64)
+      ;;
+    *)
+      die "arm64_accelerator=kvm requires an arm64 host. Current host architecture is ${HOST_ARCH}. Use --arm64_accelerator tcg or none on this host."
+      ;;
+  esac
+fi
+
+KVM_REQUIRED=0
+if [[ "${BUILD_ARCH}" == "amd64" || "${BUILD_ARCH}" == "both" ]] && [[ "${AMD64_ACCELERATOR}" == "kvm" ]]; then
+  KVM_REQUIRED=1
+fi
+if [[ "${BUILD_ARCH}" == "arm64" || "${BUILD_ARCH}" == "both" ]] && [[ "${ARM64_ACCELERATOR}" == "kvm" ]]; then
+  KVM_REQUIRED=1
+fi
+if [[ "${KVM_REQUIRED}" -eq 1 ]]; then
+  [[ -e /dev/kvm ]] || die "/dev/kvm is missing but a KVM accelerator was selected."
+  [[ -r /dev/kvm && -w /dev/kvm ]] || die "/dev/kvm is present but not readable/writable by current user."
 fi
 
 cd "${SCRIPT_DIR}"
 
 log "Version: ${VERSION}"
+log "Host arch: ${HOST_ARCH}"
+log "Target: ${TARGET}"
+log "Build arch: ${BUILD_ARCH}"
+log "amd64 accelerator: ${AMD64_ACCELERATOR}"
+log "arm64 accelerator: ${ARM64_ACCELERATOR}"
 log "Log file: ${LOG_FILE}"
+if [[ "${PACKER_LOG_ENABLED}" -eq 1 ]]; then
+  log "Packer debug log: ${PACKER_LOG_PATH}"
+fi
 log "Using template: ${TEMPLATE}"
 if [[ "${KDE_PROFILE_SET}" -eq 1 ]]; then
   log "KDE profile enabled: ${KDE_PROFILE}"
@@ -162,10 +357,10 @@ log "Running: packer fmt"
 packer fmt "${TEMPLATE}"
 
 log "Running: packer validate"
-packer validate "${PACKER_VAR_ARGS[@]}" "${TEMPLATE}"
+packer validate "${PACKER_ONLY_ARGS[@]}" "${PACKER_VAR_ARGS[@]}" "${TEMPLATE}"
 
 log "Running: packer build"
-packer build -force "${PACKER_VAR_ARGS[@]}" "${PACKER_BUILD_ARGS[@]}" "${TEMPLATE}"
+packer build -force "${PACKER_ONLY_ARGS[@]}" "${PACKER_VAR_ARGS[@]}" "${PACKER_BUILD_ARGS[@]}" "${TEMPLATE}"
 
 MAX_UPLOAD_BYTES="$((25 * 1024 * 1024 * 1024))"
 

@@ -10,12 +10,18 @@ log()  { echo "[INFO] $*"; }
 die()  { echo "[ERROR] $*" >&2; exit 1; }
 
 usage() {
-  cat <<'EOF'
-Usage: ./packer/upload.sh <version>
+  cat <<'EOF_USAGE'
+Usage: ./packer/upload.sh <version> [options]
 
-Example:
+Options:
+  --target <webserver>                     Publish target (default: webserver)
+  --build_arch <amd64|arm64|both>         Upload architecture selector (default: both)
+  -h, --help                              Show this help
+
+Examples:
   ./packer/upload.sh 0.0.3
-EOF
+  ./packer/upload.sh 0.0.3 --build_arch amd64
+EOF_USAGE
 }
 
 require_cmd() {
@@ -36,21 +42,83 @@ if [[ "${EUID}" -eq 0 ]]; then
   die "Do not run with sudo/root on this NFS repo (root_squash). Run as your normal user."
 fi
 
-if [[ $# -ne 1 ]]; then
+if [[ $# -lt 1 ]]; then
   usage >&2
   exit 1
 fi
+if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+  usage
+  exit 0
+fi
 
 VERSION="$1"
+shift
 if [[ ! "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
   die "Invalid version '${VERSION}'. Expected semantic version like 0.0.1."
 fi
 
+TARGET="webserver"
+BUILD_ARCH="both"
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --target=*)
+      TARGET="${1#--target=}"
+      shift
+      ;;
+    --target)
+      [[ $# -ge 2 ]] || die "--target requires a value: webserver"
+      TARGET="$2"
+      shift 2
+      ;;
+    --build_arch=*)
+      BUILD_ARCH="${1#--build_arch=}"
+      shift
+      ;;
+    --build_arch)
+      [[ $# -ge 2 ]] || die "--build_arch requires a value: amd64|arm64|both"
+      BUILD_ARCH="$2"
+      shift 2
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      die "Unexpected argument: $1"
+      ;;
+  esac
+done
+
+case "${TARGET}" in
+  webserver)
+    DEFAULT_UPLOAD_BASE_URL="https://webserver.image.nodadyoushutup.com"
+    DEFAULT_UPLOAD_FALLBACK_BASE_URL="http://192.168.1.120:18088"
+    ;;
+  *)
+    die "Unsupported --target '${TARGET}'. Expected: webserver"
+    ;;
+esac
+
+case "${BUILD_ARCH}" in
+  amd64)
+    PATH_FILTER="*/${VERSION}/amd64/*"
+    ;;
+  arm64)
+    PATH_FILTER="*/${VERSION}/arm64/*"
+    ;;
+  both)
+    PATH_FILTER="*/${VERSION}/*"
+    ;;
+  *)
+    die "Invalid --build_arch '${BUILD_ARCH}'. Expected: amd64|arm64|both"
+    ;;
+esac
+
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 OUTPUT_DIR="${SCRIPT_DIR}/output"
 LOG_DIR="${SCRIPT_DIR}/logs"
-UPLOAD_BASE_URL="${UPLOAD_BASE_URL:-https://webserver.image.nodadyoushutup.com}"
-UPLOAD_FALLBACK_BASE_URL="${UPLOAD_FALLBACK_BASE_URL:-http://192.168.1.120:18088}"
+UPLOAD_BASE_URL="${UPLOAD_BASE_URL:-${DEFAULT_UPLOAD_BASE_URL}}"
+UPLOAD_FALLBACK_BASE_URL="${UPLOAD_FALLBACK_BASE_URL:-${DEFAULT_UPLOAD_FALLBACK_BASE_URL}}"
 MAX_UPLOAD_BYTES="$((25 * 1024 * 1024 * 1024))"
 
 [[ -d "${OUTPUT_DIR}" ]] || die "Output directory not found: ${OUTPUT_DIR}"
@@ -61,12 +129,13 @@ LOG_FILE="${LOG_DIR}/upload-${RUN_TS}-v${VERSION}.log"
 exec > >(tee -a "${LOG_FILE}") 2>&1
 
 require_cmd curl
+require_cmd stat
 
 mapfile -t ARTIFACT_PATHS < <(
-  find "${OUTPUT_DIR}" -type f \( -name '*.qcow2' -o -name '*.img' \) -path "*/${VERSION}/*" | sort
+  find "${OUTPUT_DIR}" -type f -name '*.qcow2' -path "${PATH_FILTER}" | sort
 )
 
-[[ "${#ARTIFACT_PATHS[@]}" -gt 0 ]] || die "No artifacts found under ${OUTPUT_DIR} for version ${VERSION}."
+[[ "${#ARTIFACT_PATHS[@]}" -gt 0 ]] || die "No qcow2 artifacts found under ${OUTPUT_DIR} for version ${VERSION} and build_arch ${BUILD_ARCH}."
 
 upload_artifact() {
   local artifact_path="$1"
@@ -83,6 +152,8 @@ upload_artifact() {
 }
 
 log "Version: ${VERSION}"
+log "Target: ${TARGET}"
+log "Build arch: ${BUILD_ARCH}"
 log "Log file: ${LOG_FILE}"
 log "Upload base URL: ${UPLOAD_BASE_URL}"
 
