@@ -62,6 +62,12 @@ resource "docker_service" "gha_runner" {
         type   = "bind"
       }
 
+      mounts {
+        target = "/dev/kvm"
+        source = "/dev/kvm"
+        type   = "bind"
+      }
+
       healthcheck {
         test = ["CMD-SHELL", "test -f /tmp/gha-runner-ready"]
 

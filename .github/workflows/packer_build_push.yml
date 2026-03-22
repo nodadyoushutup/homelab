@@ -22,6 +22,15 @@ on:
           - kvm
           - tcg
           - none
+      arm64_accelerator:
+        description: "ARM64 QEMU accelerator"
+        required: true
+        type: choice
+        default: kvm
+        options:
+          - kvm
+          - tcg
+          - none
       build_arch:
         description: "Architecture to build"
         required: true
@@ -36,11 +45,17 @@ permissions:
   contents: read
 
 jobs:
-  build_and_push:
+  build:
     runs-on: [self-hosted, linux, homelab]
+    outputs:
+      version: ${{ steps.meta.outputs.version }}
+      artifact_name: ${{ steps.meta.outputs.artifact_name }}
+      upload_base_url: ${{ steps.target.outputs.upload_base_url }}
+      upload_fallback_base_url: ${{ steps.target.outputs.upload_fallback_base_url }}
     env:
       VERSION: ${{ github.event.inputs.version }}
       AMD64_ACCELERATOR: ${{ github.event.inputs.amd64_accelerator }}
+      ARM64_ACCELERATOR: ${{ github.event.inputs.arm64_accelerator }}
       BUILD_ARCH: ${{ github.event.inputs.build_arch }}
       PACKER_DIR: packer
       PACKER_TEMPLATE: packer/ubuntu-24.04-ndysu.pkr.hcl
@@ -53,6 +68,13 @@ jobs:
     steps:
       - name: Check out the code
         uses: actions/checkout@v6
+
+      - name: Prepare workflow metadata
+        id: meta
+        run: |
+          set -euo pipefail
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "artifact_name=packer-qcow2-${VERSION}-${BUILD_ARCH}" >> "$GITHUB_OUTPUT"
 
       - name: Resolve publish target
         id: target
@@ -102,6 +124,10 @@ jobs:
             echo "Invalid accelerator '${AMD64_ACCELERATOR}'. Expected 'kvm', 'tcg', or 'none'." >&2
             exit 1
           }
+          [[ "${ARM64_ACCELERATOR}" == "kvm" || "${ARM64_ACCELERATOR}" == "tcg" || "${ARM64_ACCELERATOR}" == "none" ]] || {
+            echo "Invalid accelerator '${ARM64_ACCELERATOR}'. Expected 'kvm', 'tcg', or 'none'." >&2
+            exit 1
+          }
           [[ "${BUILD_ARCH}" == "amd64" || "${BUILD_ARCH}" == "arm64" || "${BUILD_ARCH}" == "both" ]] || {
             echo "Invalid build_arch '${BUILD_ARCH}'. Expected 'amd64', 'arm64', or 'both'." >&2
             exit 1
@@ -124,13 +150,55 @@ jobs:
 
           packer init "ubuntu-24.04-ndysu.pkr.hcl"
           packer fmt "ubuntu-24.04-ndysu.pkr.hcl"
-          packer validate "${PACKER_ONLY_ARGS[@]}" -var "image_version=${VERSION}" -var "amd64_accelerator=${AMD64_ACCELERATOR}" "ubuntu-24.04-ndysu.pkr.hcl"
-          packer build -force "${PACKER_ONLY_ARGS[@]}" -var "image_version=${VERSION}" -var "amd64_accelerator=${AMD64_ACCELERATOR}" "ubuntu-24.04-ndysu.pkr.hcl"
+          packer validate "${PACKER_ONLY_ARGS[@]}" -var "image_version=${VERSION}" -var "amd64_accelerator=${AMD64_ACCELERATOR}" -var "arm64_accelerator=${ARM64_ACCELERATOR}" "ubuntu-24.04-ndysu.pkr.hcl"
+          packer build -force "${PACKER_ONLY_ARGS[@]}" -var "image_version=${VERSION}" -var "amd64_accelerator=${AMD64_ACCELERATOR}" -var "arm64_accelerator=${ARM64_ACCELERATOR}" "ubuntu-24.04-ndysu.pkr.hcl"
+
+      - name: Verify qcow2 artifacts are present
+        run: |
+          set -euo pipefail
+
+          mapfile -t artifacts < <(find "${PACKER_OUTPUT_DIR}" -type f -name '*.qcow2' | sort)
+          [[ "${#artifacts[@]}" -gt 0 ]] || {
+            echo "No qcow2 artifacts found under ${PACKER_OUTPUT_DIR}" >&2
+            exit 1
+          }
+
+      - name: Upload qcow2 artifacts for push job
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.meta.outputs.artifact_name }}
+          path: ${{ env.PACKER_OUTPUT_DIR }}/**/*.qcow2
+          if-no-files-found: error
+          retention-days: 1
+
+  push:
+    runs-on: [self-hosted, linux, homelab]
+    needs: build
+    env:
+      VERSION: ${{ needs.build.outputs.version }}
+      PACKER_OUTPUT_DIR: packer/output/ubuntu-24.04-ndysu/${{ needs.build.outputs.version }}
+      MAX_UPLOAD_BYTES: "26843545600" # 25 GiB
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Download qcow2 artifacts from build job
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.build.outputs.artifact_name }}
+          path: ${{ env.PACKER_OUTPUT_DIR }}
+
+      - name: Validate upload toolchain
+        run: |
+          set -euo pipefail
+          command -v curl >/dev/null 2>&1
+          command -v stat >/dev/null 2>&1
 
       - name: Push stage - Upload qcow2 artifacts
         env:
-          UPLOAD_BASE_URL: ${{ steps.target.outputs.upload_base_url }}
-          UPLOAD_FALLBACK_BASE_URL: ${{ steps.target.outputs.upload_fallback_base_url }}
+          UPLOAD_BASE_URL: ${{ needs.build.outputs.upload_base_url }}
+          UPLOAD_FALLBACK_BASE_URL: ${{ needs.build.outputs.upload_fallback_base_url }}
         run: |
           set -euo pipefail
 
