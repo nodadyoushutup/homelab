@@ -117,8 +117,9 @@ RUN set -eux; \
     curl -sSL "https://dl.min.io/client/mc/release/linux-${mc_arch}/mc" -o /usr/local/bin/mc; \
     chmod +x /usr/local/bin/mc
 
-# Add the custom Jenkins agent entrypoint
-COPY jenkins/agent/entrypoint.sh /usr/local/bin/entrypoint.sh
+# Add the custom Jenkins agent entrypoint. The build context for this image is
+# `docker/jenkins/agent`, so source paths are relative to that directory.
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
 # Ensure the Jenkins home directory exists with the correct ownership so that

@@ -6,14 +6,13 @@ ENV JAVA_OPTS="-Djenkins.install.runSetupWizard=false" \
 # Switch to root for installing plugins and additional tools
 USER root
 
-# Copy the plugins file and install plugins. Both the CI workflow and the local
-# docker compose definition build from the `docker/` directory, so the files are
-# addressed relative to that context.
-COPY jenkins/controller/plugins.txt /usr/share/jenkins/ref/plugins.txt
+# Copy the plugins file and install plugins. The build context for this image is
+# `docker/jenkins/controller`, so source paths are relative to that directory.
+COPY plugins.txt /usr/share/jenkins/ref/plugins.txt
 RUN jenkins-plugin-cli --plugin-file /usr/share/jenkins/ref/plugins.txt --verbose
 
 # Copy the agent exporter
-COPY jenkins/controller/export-agent-secret.groovy /usr/share/jenkins/ref/init.groovy.d/export-agent-secret.groovy
+COPY export-agent-secret.groovy /usr/share/jenkins/ref/init.groovy.d/export-agent-secret.groovy
 
 # TARGETARCH is provided automatically when building with BuildKit. Fallback to
 # the runtime architecture when building without it.
