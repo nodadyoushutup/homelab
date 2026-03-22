@@ -60,6 +60,7 @@ jobs:
         run: |
           set -euo pipefail
           command -v packer >/dev/null 2>&1
+          command -v xorriso >/dev/null 2>&1
           command -v qemu-img >/dev/null 2>&1
           command -v qemu-system-x86_64 >/dev/null 2>&1
           command -v qemu-system-aarch64 >/dev/null 2>&1
