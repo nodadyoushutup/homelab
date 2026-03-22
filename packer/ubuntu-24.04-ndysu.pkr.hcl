@@ -29,6 +29,17 @@ variable "amd64_accelerator" {
   }
 }
 
+variable "arm64_accelerator" {
+  type        = string
+  default     = "kvm"
+  description = "QEMU accelerator for arm64 builds (kvm, tcg, or none)."
+
+  validation {
+    condition     = contains(["kvm", "tcg", "none"], var.arm64_accelerator)
+    error_message = "The arm64_accelerator value must be one of 'kvm', 'tcg', or 'none'."
+  }
+}
+
 locals {
   kde_profile_effective = var.kde_profile != null ? var.kde_profile : ""
 }
@@ -65,7 +76,7 @@ source "qemu" "ubuntu_24_04_amd64" {
 }
 
 source "qemu" "ubuntu_24_04_arm64" {
-  accelerator = "tcg"
+  accelerator = var.arm64_accelerator
   qemu_binary = "qemu-system-aarch64"
 
   communicator = "ssh"
