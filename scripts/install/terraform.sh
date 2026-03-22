@@ -17,11 +17,27 @@ export NEEDRESTART_MODE=a
 export NEEDRESTART_SUSPEND=1
 APT_OPTS=(-y -q -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold")
 PHASE_OPTS=(-o APT::Get::Always-Include-Phased-Updates=true)
+SUDO_CMD=()
+
+init_privilege_command() {
+  if [[ "$(id -u)" -eq 0 ]]; then
+    SUDO_CMD=()
+    return 0
+  fi
+
+  command -v sudo >/dev/null 2>&1 || die "sudo is required when running unprivileged."
+  SUDO_CMD=(sudo)
+}
+
+as_root() {
+  "${SUDO_CMD[@]}" "$@"
+}
 
 # --- Preflight ---
 command -v curl >/dev/null 2>&1 || die "curl is required (apt-get install -y curl)."
 command -v sha256sum >/dev/null 2>&1 || die "sha256sum (coreutils) required."
-command -v unzip >/dev/null 2>&1 || { log "Installing unzip prerequisite..."; sudo apt-get update -y -q; sudo apt-get install "${APT_OPTS[@]}" unzip >/dev/null; }
+init_privilege_command
+command -v unzip >/dev/null 2>&1 || { log "Installing unzip prerequisite..."; as_root apt-get update -y -q; as_root apt-get install "${APT_OPTS[@]}" unzip >/dev/null; }
 
 ARCH_DEB="$(dpkg --print-architecture || echo unknown)"   # amd64, arm64, armhf, ...
 case "$ARCH_DEB" in
@@ -58,15 +74,15 @@ latest_release_version() {
 install_via_apt() {
   log "Attempting APT install for HashiCorp Terraform..."
 
-  sudo apt-get update -y -q
-  sudo apt-get install "${APT_OPTS[@]}" ca-certificates gnupg lsb-release apt-transport-https >/dev/null
+  as_root apt-get update -y -q
+  as_root apt-get install "${APT_OPTS[@]}" ca-certificates gnupg lsb-release apt-transport-https >/dev/null
 
   # keyring
-  sudo install -m 0755 -d /etc/apt/keyrings
+  as_root install -m 0755 -d /etc/apt/keyrings
   if [[ ! -f /etc/apt/keyrings/hashicorp.gpg ]]; then
     curl -fsSL --retry 3 https://apt.releases.hashicorp.com/gpg \
-      | sudo gpg --dearmor -o /etc/apt/keyrings/hashicorp.gpg
-    sudo chmod a+r /etc/apt/keyrings/hashicorp.gpg
+      | as_root gpg --dearmor -o /etc/apt/keyrings/hashicorp.gpg
+    as_root chmod a+r /etc/apt/keyrings/hashicorp.gpg
   fi
 
   local CODENAME; CODENAME="$(choose_repo_codename)"
@@ -76,9 +92,9 @@ install_via_apt() {
   fi
 
   echo "deb [arch=${ARCH_DEB} signed-by=/etc/apt/keyrings/hashicorp.gpg] https://apt.releases.hashicorp.com ${CODENAME} main" \
-    | sudo tee /etc/apt/sources.list.d/hashicorp.list >/dev/null
+    | as_root tee /etc/apt/sources.list.d/hashicorp.list >/dev/null
 
-  sudo apt-get update -y -q
+  as_root apt-get update -y -q
 
   # If a specific version is requested, prefer direct release install instead of APT
   if [[ -n "${TF_VERSION}" ]]; then
@@ -86,7 +102,7 @@ install_via_apt() {
     return 1
   fi
 
-  sudo apt-get install "${APT_OPTS[@]}" "${PHASE_OPTS[@]}" terraform && return 0
+  as_root apt-get install "${APT_OPTS[@]}" "${PHASE_OPTS[@]}" terraform && return 0
 
   warn "APT install failed; will fall back to direct download."
   return 1
@@ -135,7 +151,7 @@ install_via_releases() {
 
   log "Extracting and installing to ${INSTALL_DIR}/${BIN}…"
   unzip -q -o "${tmp}/${zip}" -d "${tmp}"
-  sudo install -m 0755 -o root -g root -T "${tmp}/${BIN}" "${INSTALL_DIR}/${BIN}"
+  as_root install -m 0755 -o root -g root -T "${tmp}/${BIN}" "${INSTALL_DIR}/${BIN}"
   rm -rf "${tmp}"
   trap - EXIT
 
@@ -157,12 +173,12 @@ install_completions_best_effort() {
   if [[ -d /etc/bash_completion.d ]]; then
     log "Installing bash completion to /etc/bash_completion.d/terraform"
     printf '%s\n' "${completion_cmd}" \
-      | sudo tee /etc/bash_completion.d/terraform >/dev/null || true
+      | as_root tee /etc/bash_completion.d/terraform >/dev/null || true
   fi
 
   if [[ -d /usr/share/zsh/vendor-completions ]]; then
     log "Installing zsh completion shim to /usr/share/zsh/vendor-completions/_terraform"
-    sudo tee /usr/share/zsh/vendor-completions/_terraform >/dev/null <<EOF || true
+    as_root tee /usr/share/zsh/vendor-completions/_terraform >/dev/null <<EOF || true
 #compdef terraform
 autoload -U +X bashcompinit && bashcompinit
 ${completion_cmd}

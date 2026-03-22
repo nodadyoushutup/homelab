@@ -60,10 +60,46 @@
           <table class="w-full text-left text-sm">
             <thead>
               <tr class="border-b border-slate-800 bg-slate-900/95 text-slate-300">
-                <th class="px-4 py-3 font-semibold">Name</th>
-                <th class="px-4 py-3 font-semibold">Type</th>
-                <th class="px-4 py-3 font-semibold">Size</th>
-                <th class="px-4 py-3 font-semibold">Modified</th>
+                <th class="px-4 py-3 font-semibold" scope="col" aria-sort="none">
+                  <button
+                    type="button"
+                    class="sort-header inline-flex items-center gap-2 text-left transition hover:text-amber-300 focus:outline-none focus-visible:text-amber-300"
+                    data-sort-key="name"
+                  >
+                    <span>Name</span>
+                    <span class="sort-indicator text-xs text-slate-500" data-sort-indicator-for="name">-</span>
+                  </button>
+                </th>
+                <th class="px-4 py-3 font-semibold" scope="col" aria-sort="none">
+                  <button
+                    type="button"
+                    class="sort-header inline-flex items-center gap-2 text-left transition hover:text-amber-300 focus:outline-none focus-visible:text-amber-300"
+                    data-sort-key="type"
+                  >
+                    <span>Type</span>
+                    <span class="sort-indicator text-xs text-slate-500" data-sort-indicator-for="type">-</span>
+                  </button>
+                </th>
+                <th class="px-4 py-3 font-semibold" scope="col" aria-sort="none">
+                  <button
+                    type="button"
+                    class="sort-header inline-flex items-center gap-2 text-left transition hover:text-amber-300 focus:outline-none focus-visible:text-amber-300"
+                    data-sort-key="size"
+                  >
+                    <span>Size (Disk)</span>
+                    <span class="sort-indicator text-xs text-slate-500" data-sort-indicator-for="size">-</span>
+                  </button>
+                </th>
+                <th class="px-4 py-3 font-semibold" scope="col" aria-sort="none">
+                  <button
+                    type="button"
+                    class="sort-header inline-flex items-center gap-2 text-left transition hover:text-amber-300 focus:outline-none focus-visible:text-amber-300"
+                    data-sort-key="modified"
+                  >
+                    <span>Modified</span>
+                    <span class="sort-indicator text-xs text-slate-500" data-sort-indicator-for="modified">-</span>
+                  </button>
+                </th>
                 <th class="px-4 py-3 text-right font-semibold">Delete</th>
               </tr>
             </thead>

@@ -5,31 +5,32 @@ locals {
   internal_port     = 8080
   published_port    = 18088
   data_mount_target = "/srv/webserver-image/data"
-  nginx_config      = templatefile("${path.module}/nginx.conf.tftpl", { listen_port = local.internal_port, data_root = local.data_mount_target })
+  ui_mount_target   = "/srv/webserver-image/ui"
   index_html        = file("${path.module}/index.html")
   app_js            = file("${path.module}/app.js")
   favicon_svg       = file("${path.module}/favicon.svg")
-  nginx_config_hash = substr(sha256(local.nginx_config), 0, 12)
+  server_py         = file("${path.module}/server.py")
   index_html_hash   = substr(sha256(local.index_html), 0, 12)
   app_js_hash       = substr(sha256(local.app_js), 0, 12)
   favicon_svg_hash  = substr(sha256(local.favicon_svg), 0, 12)
+  server_py_hash    = substr(sha256(local.server_py), 0, 12)
   service_config_hash = substr(
     sha256(
       join(
         "\n",
         [
-          local.nginx_config,
           local.index_html,
           local.app_js,
           local.favicon_svg,
+          local.server_py,
         ],
       ),
     ),
     0,
     12,
   )
-  nginx_force_update = parseint(substr(local.service_config_hash, 0, 8), 16)
-  image_reference    = "nginx:1.28.0-alpine@sha256:30f1c0d78e0ad60901648be663a710bdadf19e4c10ac6782c235200619158284"
+  app_force_update = parseint(substr(local.service_config_hash, 0, 8), 16)
+  image_reference  = "python:3.12.11-alpine3.22"
 }
 
 resource "docker_network" "webserver_image" {
@@ -40,15 +41,6 @@ resource "docker_network" "webserver_image" {
 resource "docker_volume" "webserver_image_data" {
   name   = local.data_volume_name
   driver = "local"
-}
-
-resource "docker_config" "webserver_image_nginx" {
-  name = "webserver-image-nginx-${local.nginx_config_hash}.conf"
-  data = base64encode(local.nginx_config)
-
-  lifecycle {
-    create_before_destroy = true
-  }
 }
 
 resource "docker_config" "webserver_image_index_html" {
@@ -78,11 +70,20 @@ resource "docker_config" "webserver_image_favicon_svg" {
   }
 }
 
+resource "docker_config" "webserver_image_server_py" {
+  name = "webserver-image-server-${local.server_py_hash}.py"
+  data = base64encode(local.server_py)
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
 resource "docker_service" "webserver_image" {
   name = local.service_name
 
   task_spec {
-    force_update = local.nginx_force_update
+    force_update = local.app_force_update
 
     placement {
       constraints = ["node.labels.role==swarm-cp-0"]
@@ -100,6 +101,18 @@ resource "docker_service" "webserver_image" {
 
     container_spec {
       image = local.image_reference
+      command = [
+        "python3",
+      ]
+      args = [
+        "/srv/webserver-image/server.py",
+      ]
+
+      env = {
+        WEBSERVER_IMAGE_DATA_ROOT = local.data_mount_target
+        WEBSERVER_IMAGE_UI_ROOT   = local.ui_mount_target
+        WEBSERVER_IMAGE_PORT      = tostring(local.internal_port)
+      }
 
       dns_config {
         nameservers = [
@@ -116,31 +129,31 @@ resource "docker_service" "webserver_image" {
       }
 
       configs {
-        config_id   = docker_config.webserver_image_nginx.id
-        config_name = docker_config.webserver_image_nginx.name
-        file_name   = "/etc/nginx/nginx.conf"
+        config_id   = docker_config.webserver_image_server_py.id
+        config_name = docker_config.webserver_image_server_py.name
+        file_name   = "/srv/webserver-image/server.py"
       }
 
       configs {
         config_id   = docker_config.webserver_image_index_html.id
         config_name = docker_config.webserver_image_index_html.name
-        file_name   = "/usr/share/nginx/html/index.html"
+        file_name   = "/srv/webserver-image/ui/index.html"
       }
 
       configs {
         config_id   = docker_config.webserver_image_app_js.id
         config_name = docker_config.webserver_image_app_js.name
-        file_name   = "/usr/share/nginx/html/app.js"
+        file_name   = "/srv/webserver-image/ui/app.js"
       }
 
       configs {
         config_id   = docker_config.webserver_image_favicon_svg.id
         config_name = docker_config.webserver_image_favicon_svg.name
-        file_name   = "/usr/share/nginx/html/favicon.svg"
+        file_name   = "/srv/webserver-image/ui/favicon.svg"
       }
 
       healthcheck {
-        test         = ["CMD-SHELL", "wget --spider --quiet http://127.0.0.1:8080/ || exit 1"]
+        test         = ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/', timeout=5).read(1)"]
         interval     = "15s"
         timeout      = "5s"
         retries      = 5

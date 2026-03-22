@@ -4,7 +4,7 @@ variable "provider_config" {
 }
 
 variable "casc_config" {
-  description = "Jenkins Configuration as Code object that is rendered to /home/jenkins/jenkins.yaml"
+  description = "Jenkins Configuration as Code object that is rendered to /var/jenkins_home/jenkins.yaml"
   type        = any
   default = {
     jenkins = {
@@ -29,7 +29,7 @@ variable "env" {
   description = "Environment variables applied to the Jenkins controller container"
   type        = map(string)
   default = {
-    SECRETS_DIR = "/home/jenkins/.jenkins"
+    SECRETS_DIR = "/var/jenkins_home/.jenkins"
   }
 }
 
@@ -66,7 +66,7 @@ variable "home_volume_name" {
 variable "home_mount_target" {
   description = "Container path for Jenkins home volume mount"
   type        = string
-  default     = "/home/jenkins"
+  default     = "/var/jenkins_home"
 }
 
 variable "controller_replicas" {

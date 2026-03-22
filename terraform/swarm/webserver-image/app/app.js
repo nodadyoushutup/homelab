@@ -12,9 +12,16 @@
   const uploadDropzone = document.getElementById("upload-dropzone");
   const uploadSelection = document.getElementById("upload-selection");
   const uploadStatus = document.getElementById("upload-status");
+  const sortHeaders = Array.from(document.querySelectorAll(".sort-header"));
+  const naturalCollator = new Intl.Collator(undefined, { numeric: true, sensitivity: "base" });
 
   let selectedFiles = [];
   let uploading = false;
+  let currentEntries = [];
+  let sortState = {
+    key: "name",
+    direction: "asc",
+  };
 
   const params = new URLSearchParams(window.location.search);
   const currentPath = normalizePath(params.get("path") || "");
@@ -68,6 +75,24 @@
     }
   });
 
+  for (const button of sortHeaders) {
+    button.addEventListener("click", () => {
+      const sortKey = button.dataset.sortKey;
+      if (!sortKey) {
+        return;
+      }
+
+      if (sortState.key === sortKey) {
+        sortState.direction = sortState.direction === "asc" ? "desc" : "asc";
+      } else {
+        sortState = { key: sortKey, direction: "asc" };
+      }
+
+      updateSortIndicators();
+      renderRows(currentPath, currentEntries);
+    });
+  }
+
   listingBody.addEventListener("click", async (event) => {
     const deleteButton = event.target.closest(".delete-entry");
     if (!deleteButton) {
@@ -102,6 +127,7 @@
     }
   });
 
+  updateSortIndicators();
   loadDirectory(currentPath);
 
   function normalizePath(value) {
@@ -130,9 +156,11 @@
 
       const payload = await response.json();
       const rows = Array.isArray(payload) ? payload : [];
-      renderRows(path, rows);
+      currentEntries = rows;
+      renderRows(path, currentEntries);
       statusEl.textContent = `${rows.length} item(s)`;
     } catch (error) {
+      currentEntries = [];
       listingBody.innerHTML = "";
       statusEl.textContent = `Failed to load directory: ${error.message}`;
     }
@@ -153,14 +181,8 @@
   function renderRows(path, rows) {
     const visibleRows = rows
       .filter((entry) => entry && entry.name && entry.name !== "." && entry.name !== "..")
-      .sort((left, right) => {
-        const leftType = left.type === "directory" ? 0 : 1;
-        const rightType = right.type === "directory" ? 0 : 1;
-        if (leftType !== rightType) {
-          return leftType - rightType;
-        }
-        return String(left.name).localeCompare(String(right.name));
-      });
+      .map((entry) => enrichEntry(path, entry))
+      .sort(compareEntries);
 
     if (visibleRows.length === 0) {
       listingBody.innerHTML = '<tr><td class="px-4 py-4 text-slate-400" colspan="5">This directory is empty.</td></tr>';
@@ -168,13 +190,13 @@
     }
 
     listingBody.innerHTML = visibleRows
-      .map((entry) => renderRow(path, entry))
+      .map((entry) => renderRow(entry))
       .join("");
   }
 
-  function renderRow(path, entry) {
-    const name = String(entry.name);
-    const cleanedName = name.replace(/\/+$/, "");
+  function enrichEntry(path, entry) {
+    const rawName = String(entry.name);
+    const cleanedName = rawName.replace(/\/+$/, "");
     const nextPath = path ? `${path}/${cleanedName}` : cleanedName;
     const isDirectory = entry.type === "directory";
 
@@ -183,27 +205,167 @@
       : "/" + encodePath(nextPath);
     const deletePath = "/" + encodePath(nextPath) + (isDirectory ? "/" : "");
 
-    const modified = entry.mtime ? formatDate(entry.mtime) : "-";
-    const size = isDirectory ? "-" : formatSize(Number(entry.size) || 0);
+    const logicalSize = numberOrNull(entry.size);
+    const allocatedSize = numberOrNull(entry.allocated_size);
+    const effectiveSize = isDirectory ? null : (allocatedSize ?? logicalSize);
+
+    return {
+      cleanedName,
+      deletePath,
+      href,
+      isDirectory,
+      logicalSize,
+      allocatedSize,
+      effectiveSize,
+      modifiedDisplay: entry.mtime ? formatDate(entry.mtime) : "-",
+      modifiedEpoch: dateEpochOrNull(entry.mtime),
+      typeLabel: isDirectory ? "Directory" : "File",
+    };
+  }
+
+  function compareEntries(left, right) {
+    if (sortState.key === "name") {
+      return compareString(left.cleanedName, right.cleanedName, sortState.direction);
+    }
+
+    if (sortState.key === "type") {
+      const byType = compareString(left.typeLabel, right.typeLabel, sortState.direction);
+      if (byType !== 0) {
+        return byType;
+      }
+      return compareString(left.cleanedName, right.cleanedName, "asc");
+    }
+
+    if (sortState.key === "size") {
+      const bySize = compareNullableNumbers(left.effectiveSize, right.effectiveSize, sortState.direction);
+      if (bySize !== 0) {
+        return bySize;
+      }
+      return compareString(left.cleanedName, right.cleanedName, "asc");
+    }
+
+    if (sortState.key === "modified") {
+      const byModified = compareNullableNumbers(left.modifiedEpoch, right.modifiedEpoch, sortState.direction);
+      if (byModified !== 0) {
+        return byModified;
+      }
+      return compareString(left.cleanedName, right.cleanedName, "asc");
+    }
+
+    return compareString(left.cleanedName, right.cleanedName, "asc");
+  }
+
+  function compareString(left, right, direction) {
+    const compared = naturalCollator.compare(String(left || ""), String(right || ""));
+    return direction === "desc" ? -compared : compared;
+  }
+
+  function compareNullableNumbers(left, right, direction) {
+    const leftMissing = !Number.isFinite(left);
+    const rightMissing = !Number.isFinite(right);
+
+    if (leftMissing && rightMissing) {
+      return 0;
+    }
+    if (leftMissing) {
+      return 1;
+    }
+    if (rightMissing) {
+      return -1;
+    }
+
+    if (left === right) {
+      return 0;
+    }
+
+    return direction === "desc" ? right - left : left - right;
+  }
+
+  function updateSortIndicators() {
+    for (const button of sortHeaders) {
+      const key = button.dataset.sortKey;
+      if (!key) {
+        continue;
+      }
+
+      const indicator = document.querySelector(`[data-sort-indicator-for="${key}"]`);
+      const header = button.closest("th");
+
+      if (key === sortState.key) {
+        if (indicator) {
+          indicator.textContent = sortState.direction === "asc" ? "^" : "v";
+          indicator.classList.remove("text-slate-500");
+          indicator.classList.add("text-amber-300");
+        }
+        if (header) {
+          header.setAttribute("aria-sort", sortState.direction === "asc" ? "ascending" : "descending");
+        }
+        button.classList.add("text-amber-300");
+      } else {
+        if (indicator) {
+          indicator.textContent = "-";
+          indicator.classList.remove("text-amber-300");
+          indicator.classList.add("text-slate-500");
+        }
+        if (header) {
+          header.setAttribute("aria-sort", "none");
+        }
+        button.classList.remove("text-amber-300");
+      }
+    }
+  }
+
+  function renderRow(entry) {
+    const size = entry.isDirectory ? "-" : formatSize(entry.effectiveSize ?? 0);
+    const sizeTitle = entry.isDirectory
+      ? "Directory"
+      : getSizeTooltip(entry.allocatedSize, entry.logicalSize, entry.effectiveSize);
 
     return `<tr class="transition hover:bg-slate-800/60">
-      <td class="px-4 py-3"><a class="text-amber-300 hover:text-amber-200 hover:underline" href="${escapeHtml(href)}">${escapeHtml(cleanedName)}</a></td>
-      <td class="px-4 py-3 text-slate-300">${isDirectory ? "Directory" : "File"}</td>
-      <td class="px-4 py-3 text-slate-300">${escapeHtml(size)}</td>
-      <td class="px-4 py-3 text-slate-400">${escapeHtml(modified)}</td>
+      <td class="px-4 py-3"><a class="text-amber-300 hover:text-amber-200 hover:underline" href="${escapeHtml(entry.href)}">${escapeHtml(entry.cleanedName)}</a></td>
+      <td class="px-4 py-3 text-slate-300">${entry.typeLabel}</td>
+      <td class="px-4 py-3 text-slate-300" title="${escapeHtml(sizeTitle)}">${escapeHtml(size)}</td>
+      <td class="px-4 py-3 text-slate-400">${escapeHtml(entry.modifiedDisplay)}</td>
       <td class="px-4 py-3 text-right">
         <button
           type="button"
           class="delete-entry inline-flex items-center rounded-lg border border-rose-700/60 bg-rose-900/30 px-2.5 py-1.5 text-xs text-rose-200 transition hover:border-rose-500 hover:text-rose-100 disabled:cursor-not-allowed disabled:opacity-50"
-          data-target-path="${escapeHtml(deletePath)}"
-          data-target-name="${escapeHtml(cleanedName)}"
+          data-target-path="${escapeHtml(entry.deletePath)}"
+          data-target-name="${escapeHtml(entry.cleanedName)}"
           title="Delete"
-          aria-label="Delete ${escapeHtml(cleanedName)}"
+          aria-label="Delete ${escapeHtml(entry.cleanedName)}"
         >
           <i class="fa-solid fa-trash"></i>
         </button>
       </td>
     </tr>`;
+  }
+
+  function getSizeTooltip(allocatedSize, logicalSize, effectiveSize) {
+    if (Number.isFinite(allocatedSize) && Number.isFinite(logicalSize) && allocatedSize !== logicalSize) {
+      return `On disk: ${formatSize(allocatedSize)} (${allocatedSize} B) | Logical: ${formatSize(logicalSize)} (${logicalSize} B)`;
+    }
+
+    const size = Number.isFinite(effectiveSize) ? effectiveSize : logicalSize;
+    if (!Number.isFinite(size)) {
+      return "-";
+    }
+
+    return `${formatSize(size)} (${size} B)`;
+  }
+
+  function dateEpochOrNull(value) {
+    const parsed = new Date(value);
+    const timestamp = parsed.getTime();
+    return Number.isFinite(timestamp) ? timestamp : null;
+  }
+
+  function numberOrNull(value) {
+    const number = Number(value);
+    if (!Number.isFinite(number) || number < 0) {
+      return null;
+    }
+    return number;
   }
 
   function formatDate(value) {

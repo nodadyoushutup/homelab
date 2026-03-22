@@ -1,140 +1,48 @@
 FROM jenkins/jenkins:2.546
 
 ENV JAVA_OPTS="-Djenkins.install.runSetupWizard=false" \
-    CASC_JENKINS_CONFIG="/home/jenkins/jenkins.yaml"
+    CASC_JENKINS_CONFIG="/var/jenkins_home/jenkins.yaml"
 
 # Switch to root for installing plugins and additional tools
 USER root
 
 # Copy the plugins file and install plugins. The build context for this image is
-# `docker/jenkins/controller`, so source paths are relative to that directory.
-COPY plugins.txt /usr/share/jenkins/ref/plugins.txt
+# the repository root, so source paths are relative to the repo root.
+COPY docker/jenkins/controller/plugins.txt /usr/share/jenkins/ref/plugins.txt
 RUN jenkins-plugin-cli --plugin-file /usr/share/jenkins/ref/plugins.txt --verbose
 
 # Copy the agent exporter
-COPY export-agent-secret.groovy /usr/share/jenkins/ref/init.groovy.d/export-agent-secret.groovy
+COPY docker/jenkins/controller/export-agent-secret.groovy /usr/share/jenkins/ref/init.groovy.d/export-agent-secret.groovy
 
-# TARGETARCH is provided automatically when building with BuildKit. Fallback to
-# the runtime architecture when building without it.
-ARG TARGETARCH
+# Reuse shared install scripts from scripts/install as source-of-truth.
+COPY scripts/install/packages.sh /tmp/install-scripts/packages.sh
+COPY scripts/install/docker.sh /tmp/install-scripts/docker.sh
+COPY scripts/install/terraform.sh /tmp/install-scripts/terraform.sh
+COPY scripts/install/ansible.sh /tmp/install-scripts/ansible.sh
+COPY scripts/install/kubectl.sh /tmp/install-scripts/kubectl.sh
+COPY scripts/install/k9s.sh /tmp/install-scripts/k9s.sh
+COPY scripts/install/packer.sh /tmp/install-scripts/packer.sh
+COPY scripts/install/minio_client.sh /tmp/install-scripts/minio_client.sh
 
-# Update package lists and install prerequisites, including Python and pip.
-RUN set -eux; \
-    arch="${TARGETARCH:-$(dpkg --print-architecture)}"; \
-    export DEBIAN_FRONTEND=noninteractive; \
-    apt-get update; \
-    common_packages="apt-transport-https \
-      curl \
-      gnupg \
-      lsb-release \
-      jq \
-      python3 \
-      python3-pip \
-      bat \
-      bridge-utils \
-      btop \
-      dnsutils \
-      duf \
-      ethtool \
-      fd-find \
-      gh \
-      git \
-      htop \
-      ifupdown \
-      iotop \
-      iperf3 \
-      iptables \
-      libvirt-clients \
-      libvirt-daemon-system \
-      lshw \
-      lsof \
-      make \
-      default-mysql-client \
-      nano \
-      net-tools \
-      netcat-openbsd \
-      neovim \
-      nfs-common \
-      nmap \
-      open-iscsi \
-      parted \
-      postgresql-client \
-      python3-venv \
-      qemu-guest-agent \
-      ripgrep \
-      rsync \
-      screen \
-      smartmontools \
-      strace \
-      tcpdump \
-      tmux \
-      traceroute \
-      tree \
-      ufw \
-      unzip \
-      util-linux \
-      vim \
-      virtinst \
-      wget \
-      whois \
-      xorriso \
-      zip"; \
-    arch_packages=""; \
-    case "$arch" in \
-      amd64|x86_64) \
-        arch_packages="cpu-checker qemu-kvm qemu-system-x86" \
-        ;; \
-      arm64|aarch64) \
-        arch_packages="qemu-system-arm" \
-        ;; \
-      *) \
-        echo "Unsupported architecture: $arch" >&2; exit 1 \
-        ;; \
-    esac; \
-    apt-get install -y --no-install-recommends $common_packages $arch_packages; \
-    apt-get clean; \
-    rm -rf /var/lib/apt/lists/*
-
-# Install boto3 and botocore via pip, overriding system restrictions.
-RUN pip3 install --break-system-packages boto3 botocore
-
-# Add the HashiCorp GPG key and repository (Terraform + Packer come from here)
-RUN set -eux; \
-    arch="${TARGETARCH:-$(dpkg --print-architecture)}"; \
-    case "$arch" in \
-      amd64|x86_64) repo_arch="amd64" ;; \
-      arm64|aarch64) repo_arch="arm64" ;; \
-      *) echo "Unsupported architecture: $arch" >&2; exit 1 ;; \
-    esac; \
-    mkdir -p /usr/share/keyrings; \
-    curl -fsSL https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg; \
-    echo "deb [arch=${repo_arch} signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" > /etc/apt/sources.list.d/hashicorp.list
-
-# Install Terraform, Packer, and Ansible
-RUN apt-get update && apt-get install -y \
-    terraform \
-    packer \
-    ansible && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
-
-# Install MinIO Client
-RUN set -eux; \
-    arch="${TARGETARCH:-$(dpkg --print-architecture)}"; \
-    case "$arch" in \
-      amd64|x86_64) mc_arch="amd64" ;; \
-      arm64|aarch64) mc_arch="arm64" ;; \
-      *) echo "Unsupported architecture: $arch" >&2; exit 1 ;; \
-    esac; \
-    curl -sSL "https://dl.min.io/client/mc/release/linux-${mc_arch}/mc" -o /usr/local/bin/mc; \
-    chmod +x /usr/local/bin/mc
-
-# Prepare a writable Jenkins home for the runtime user. This ensures that when
-# the Docker named volume is initialised, ownership is copied correctly and the
-# controller can start without permission errors.
-RUN mkdir -p /home/jenkins && chown -R jenkins:jenkins /home/jenkins
-
-ENV JENKINS_HOME=/home/jenkins \
-    HOME=/home/jenkins
+# Install base packages and tools via shared scripts.
+RUN chmod 0755 /tmp/install-scripts/packages.sh \
+               /tmp/install-scripts/docker.sh \
+               /tmp/install-scripts/terraform.sh \
+               /tmp/install-scripts/ansible.sh \
+               /tmp/install-scripts/kubectl.sh \
+               /tmp/install-scripts/k9s.sh \
+               /tmp/install-scripts/packer.sh \
+               /tmp/install-scripts/minio_client.sh \
+    && /tmp/install-scripts/packages.sh \
+    && INSTALL_DOCKER_PROFILE=cli DOCKER_ENABLE_SERVICE=0 DOCKER_VERIFY=0 TARGET_USER=jenkins /tmp/install-scripts/docker.sh \
+    && /tmp/install-scripts/terraform.sh \
+    && /tmp/install-scripts/ansible.sh \
+    && /tmp/install-scripts/kubectl.sh \
+    && /tmp/install-scripts/k9s.sh \
+    && TARGET_USER=jenkins /tmp/install-scripts/packer.sh \
+    && /tmp/install-scripts/minio_client.sh \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/install-scripts
 
 # Switch back to the default (jenkins) user
 USER jenkins

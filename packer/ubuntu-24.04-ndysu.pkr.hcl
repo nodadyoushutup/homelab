@@ -208,6 +208,19 @@ build {
   }
 
   provisioner "file" {
+    source      = "../scripts/install/minio_client.sh"
+    destination = "/tmp/install-minio-client.sh"
+  }
+
+  provisioner "shell" {
+    execute_command = "sudo -E bash -eux '{{ .Path }}'"
+    inline = [
+      "chmod +x /tmp/install-minio-client.sh",
+      "/tmp/install-minio-client.sh",
+    ]
+  }
+
+  provisioner "file" {
     source      = "../scripts/install/node_exporter.sh"
     destination = "/tmp/install-node-exporter.sh"
   }

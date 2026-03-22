@@ -100,7 +100,7 @@ resource "docker_service" "jenkins_controller" {
       configs {
         config_id   = docker_config.jenkins_casc.id
         config_name = docker_config.jenkins_casc.name
-        file_name   = "/home/jenkins/jenkins.yaml"
+        file_name   = format("%s/jenkins.yaml", var.home_mount_target)
       }
 
       healthcheck {

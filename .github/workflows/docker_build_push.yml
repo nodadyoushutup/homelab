@@ -99,7 +99,8 @@ jobs:
               ;;
             jenkins-controller)
               image_name="jenkins-controller"
-              docker_context="docker/jenkins/controller"
+              docker_context="."
+              dockerfile="docker/jenkins/controller/Dockerfile"
               ;;
             *)
               echo "Unsupported build target: $build_target" >&2
