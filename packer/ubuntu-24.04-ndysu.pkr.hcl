@@ -25,7 +25,7 @@ variable "amd64_accelerator" {
 
   validation {
     condition     = contains(["kvm", "tcg"], var.amd64_accelerator)
-    error_message = "amd64_accelerator must be either 'kvm' or 'tcg'."
+    error_message = "The amd64_accelerator value must be either 'kvm' or 'tcg'."
   }
 }
 
