@@ -52,6 +52,66 @@ resolve_vault_env() {
   fi
 }
 
+detect_swarm_manager_host() {
+  local host
+  host="${VAULT_SWARM_MANAGER_HOST:-}"
+  if [[ -n "${host}" ]]; then
+    echo "${host}"
+    return 0
+  fi
+
+  host="${DOCKER_SWARM_CP:-ssh://swarm-cp-0.internal}"
+  host="${host#ssh://}"
+  host="${host%%/*}"
+  echo "${host}"
+}
+
+vault_health_code() {
+  local vault_addr="$1"
+  curl -m 3 --connect-timeout 2 -sS -o /dev/null -w "%{http_code}" "${vault_addr}/v1/sys/health" || true
+}
+
+resolve_reachable_vault_addr() {
+  local manager_host code candidate existing
+  local deadline=$((SECONDS + 120))
+  local -a candidates=()
+
+  add_candidate() {
+    local value="$1"
+    [[ -n "${value}" ]] || return 0
+    for existing in "${candidates[@]}"; do
+      [[ "${existing}" == "${value}" ]] && return 0
+    done
+    candidates+=("${value}")
+  }
+
+  add_candidate "${VAULT_ADDR:-}"
+  add_candidate "${DEFAULT_VAULT_ADDR}"
+
+  manager_host="$(detect_swarm_manager_host)"
+  if [[ -n "${manager_host}" ]]; then
+    add_candidate "http://${manager_host}:8200"
+  fi
+  add_candidate "http://127.0.0.1:8200"
+  add_candidate "http://localhost:8200"
+
+  while (( SECONDS < deadline )); do
+    for candidate in "${candidates[@]}"; do
+      code="$(vault_health_code "${candidate}")"
+      case "${code}" in
+        200|429|472|473|501|503)
+          echo "${candidate}"
+          return 0
+          ;;
+      esac
+    done
+    sleep 2
+  done
+
+  echo "[ERR] Vault is not reachable via any candidate address (${candidates[*]})." >&2
+  return 1
+}
+
 assert_vault_reachable() {
   local code
 
@@ -90,6 +150,8 @@ pipeline_pre_terraform() {
   }
 
   resolve_vault_env
+  VAULT_ADDR="$(resolve_reachable_vault_addr)"
+  export VAULT_ADDR
   assert_vault_reachable
 
   if ! "${VAULT_UNSEAL_SCRIPT}"; then

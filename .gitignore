@@ -1,9 +1,10 @@
 # Modules
-jenkins-agent/
-jenkins-controller/
+/jenkins-agent/
+/jenkins-controller/
 
 # Local .terraform directories
 .terraform/
+**/.terraform.bak.*/
 
 # .tfstate files
 *.tfstate

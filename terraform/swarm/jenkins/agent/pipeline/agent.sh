@@ -17,7 +17,7 @@ DEFAULT_TFVARS_FILE="${DEFAULT_TFVARS_FILE:-${JENKINS_TFVARS_DIR}/agent.tfvars}"
 PLAN_ARGS_EXTRA=()
 APPLY_ARGS_EXTRA=()
 
-CONTROLLER_TERRAFORM_DIR="${ROOT_DIR}/terraform/swarm/jenkins/controller"
+CONTROLLER_TERRAFORM_DIR="${ROOT_DIR}/terraform/swarm/jenkins-controller/app"
 
 pipeline_pre_terraform() {
   if [[ ! -d "${CONTROLLER_TERRAFORM_DIR}" ]]; then

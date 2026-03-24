@@ -15,9 +15,11 @@ if [[ -f "${_pipeline_env_file}" ]]; then
   _pipeline_existing_tfvars_dir_set=0
   _pipeline_existing_tfvars_home_dir_set=0
   _pipeline_existing_jenkins_tfvars_dir_set=0
+  _pipeline_existing_jenkins_controller_tfvars_dir_set=0
   _pipeline_existing_tfvars_dir_value=""
   _pipeline_existing_tfvars_home_dir_value=""
   _pipeline_existing_jenkins_tfvars_dir_value=""
+  _pipeline_existing_jenkins_controller_tfvars_dir_value=""
 
   if [[ -n "${TFVARS_DIR+x}" ]]; then
     _pipeline_existing_tfvars_dir_set=1
@@ -30,6 +32,10 @@ if [[ -f "${_pipeline_env_file}" ]]; then
   if [[ -n "${JENKINS_TFVARS_DIR+x}" ]]; then
     _pipeline_existing_jenkins_tfvars_dir_set=1
     _pipeline_existing_jenkins_tfvars_dir_value="${JENKINS_TFVARS_DIR}"
+  fi
+  if [[ -n "${JENKINS_CONTROLLER_TFVARS_DIR+x}" ]]; then
+    _pipeline_existing_jenkins_controller_tfvars_dir_set=1
+    _pipeline_existing_jenkins_controller_tfvars_dir_value="${JENKINS_CONTROLLER_TFVARS_DIR}"
   fi
 
   _pipeline_restore_allexport=0
@@ -63,6 +69,9 @@ if [[ -f "${_pipeline_env_file}" ]]; then
   if [[ "${_pipeline_existing_jenkins_tfvars_dir_set}" == "1" ]]; then
     export JENKINS_TFVARS_DIR="${_pipeline_existing_jenkins_tfvars_dir_value}"
   fi
+  if [[ "${_pipeline_existing_jenkins_controller_tfvars_dir_set}" == "1" ]]; then
+    export JENKINS_CONTROLLER_TFVARS_DIR="${_pipeline_existing_jenkins_controller_tfvars_dir_value}"
+  fi
 fi
 
 if [[ -z "${TFVARS_HOME_DIR:-}" && -n "${TFVARS_DIR:-}" ]]; then
@@ -71,6 +80,10 @@ fi
 
 if [[ -z "${JENKINS_TFVARS_DIR:-}" && -n "${TFVARS_DIR:-}" ]]; then
   export JENKINS_TFVARS_DIR="${TFVARS_DIR}/jenkins"
+fi
+
+if [[ -z "${JENKINS_CONTROLLER_TFVARS_DIR:-}" && -n "${TFVARS_DIR:-}" ]]; then
+  export JENKINS_CONTROLLER_TFVARS_DIR="${TFVARS_DIR}/jenkins-controller"
 fi
 
 export PIPELINE_ROOT_ENV_LOADED=1

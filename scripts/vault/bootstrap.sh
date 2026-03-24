@@ -57,6 +57,42 @@ resolve_vault_addr() {
   echo "${resolved}"
 }
 
+collect_vault_addr_candidates() {
+  local env_file_addr manager_host
+  local -a candidates=()
+
+  add_candidate() {
+    local candidate="$1"
+    local existing
+    [[ -n "${candidate}" ]] || return 0
+
+    for existing in "${candidates[@]}"; do
+      [[ "${existing}" == "${candidate}" ]] && return 0
+    done
+
+    candidates+=("${candidate}")
+  }
+
+  add_candidate "$(resolve_vault_addr)"
+
+  if [[ -f "${VAULT_ENV_FILE}" ]]; then
+    env_file_addr="$(awk -F= '/^VAULT_ADDR=/{print $2; exit}' "${VAULT_ENV_FILE}" || true)"
+    add_candidate "${env_file_addr}"
+  fi
+
+  add_candidate "${DEFAULT_VAULT_ADDR}"
+
+  manager_host="$(detect_swarm_manager_host || true)"
+  if [[ -n "${manager_host}" ]]; then
+    add_candidate "http://${manager_host}:8200"
+  fi
+
+  add_candidate "http://127.0.0.1:8200"
+  add_candidate "http://localhost:8200"
+
+  printf '%s\n' "${candidates[@]}"
+}
+
 detect_swarm_manager_host() {
   local host docker_swarm_cp
   local -a candidates
@@ -90,19 +126,27 @@ detect_swarm_manager_host() {
   echo "${candidates[0]}"
 }
 
-wait_for_vault_api() {
+vault_health_code() {
   local vault_addr="$1"
+  curl -m 3 --connect-timeout 2 -sS -o /dev/null -w "%{http_code}" "${vault_addr}/v1/sys/health" || true
+}
+
+wait_for_reachable_vault_api() {
+  local -a candidates=("$@")
   local deadline=$((SECONDS + WAIT_SECONDS))
 
   while (( SECONDS < deadline )); do
-    local code
-    code="$(curl -sS -o /dev/null -w "%{http_code}" "${vault_addr}/v1/sys/health" || true)"
+    local candidate code
+    for candidate in "${candidates[@]}"; do
+      code="$(vault_health_code "${candidate}")"
 
-    case "${code}" in
-      200|429|472|473|501|503)
-        return 0
-        ;;
-    esac
+      case "${code}" in
+        200|429|472|473|501|503)
+          echo "${candidate}"
+          return 0
+          ;;
+      esac
+    done
 
     sleep 2
   done
@@ -233,15 +277,17 @@ PY
 
 main() {
   local vault_addr initialized container_id
+  local -a vault_addr_candidates
 
   mkdir -p "${VAULT_TFVARS_DIR}"
 
-  vault_addr="$(resolve_vault_addr)"
-  log_info "Using VAULT_ADDR=${vault_addr}"
+  mapfile -t vault_addr_candidates < <(collect_vault_addr_candidates)
+  ((${#vault_addr_candidates[@]} > 0)) || fail "Unable to determine a Vault address candidate."
 
-  if ! wait_for_vault_api "${vault_addr}"; then
-    fail "Vault API did not become reachable within ${WAIT_SECONDS}s at ${vault_addr}"
+  if ! vault_addr="$(wait_for_reachable_vault_api "${vault_addr_candidates[@]}")"; then
+    fail "Vault API did not become reachable within ${WAIT_SECONDS}s. Tried: ${vault_addr_candidates[*]}"
   fi
+  log_info "Using VAULT_ADDR=${vault_addr}"
 
   initialized="$(vault_is_initialized "${vault_addr}")"
 

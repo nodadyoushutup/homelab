@@ -36,7 +36,7 @@ variable "env" {
 variable "controller_image" {
   description = "Jenkins controller image reference"
   type        = string
-  default     = "ghcr.io/nodadyoushutup/jenkins-controller:0.0.1"
+  default     = "harbor.nodadyoushutup.com/jenkins-controller/jenkins-controller:0.0.2"
 }
 
 variable "service_name" {
@@ -84,7 +84,7 @@ variable "controller_target_port" {
 variable "controller_published_port" {
   description = "Published Swarm port for Jenkins HTTP UI/API"
   type        = number
-  default     = 18080
+  default     = 18082
 }
 
 variable "agent_target_port" {

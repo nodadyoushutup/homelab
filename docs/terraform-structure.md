@@ -39,9 +39,9 @@ A service can have one or multiple stages. Common stage names:
 
 Service-specific stage names are allowed when they are clearer, for example:
 
-- `terraform/swarm/jenkins/controller`
-- `terraform/swarm/jenkins/agent`
-- `terraform/swarm/jenkins/config`
+- `terraform/swarm/jenkins-controller/app`
+- `terraform/swarm/jenkins-controller/config`
+- `terraform/swarm/jenkins/agent` (legacy)
 
 Rule of thumb: each stage is its own Terraform root module and its own state file.
 
@@ -101,7 +101,7 @@ Common patterns in this repo:
 
 - `database -> app -> config` (example shape: services where app reads external DB/network created in database stage)
 - `app -> config` (example shape: runtime first, then API configuration against it)
-- `controller -> agent` for Jenkins (agent pipeline reads controller outputs)
+- `app -> config` for Jenkins controller
 
 If a non-standard order is required for a service, document that service-specific order near the service Terraform (for example in a service README).
 
@@ -202,6 +202,6 @@ source "${PIPELINE_SCRIPT_ROOT}/swarm_pipeline.sh"
 
 - `terraform/cluster/proxmox/app` uses `variable.tf` (legacy naming).
 - `terraform/swarm/vault/{app,config}/pipeline/*.sh` intentionally use fixed tfvars/backend paths and reject override args.
-- `terraform/swarm/jenkins/agent/pipeline/agent.sh` reads controller outputs as a precheck.
+- `terraform/swarm/jenkins/agent/pipeline/agent.sh` is legacy and reads controller outputs from `terraform/swarm/jenkins-controller/app`.
 
 These are valid existing patterns; new services should follow the standard pattern unless there is a clear operational reason to diverge.

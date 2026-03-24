@@ -20,12 +20,12 @@ Resolution rules from pipeline scripts:
 
 - `TFVARS_HOME_DIR` defaults to `${TFVARS_DIR:-/mnt/eapp/.tfvars}`.
 - `TFVARS_DIR` is typically set in repo `.env` (see `.env.example`).
-- `load_root_env.sh` sources `.env`, while preserving already-exported `TFVARS_DIR`, `TFVARS_HOME_DIR`, and `JENKINS_TFVARS_DIR` if they were set before invocation.
+- `load_root_env.sh` sources `.env`, while preserving already-exported `TFVARS_DIR`, `TFVARS_HOME_DIR`, `JENKINS_TFVARS_DIR`, and `JENKINS_CONTROLLER_TFVARS_DIR` if they were set before invocation.
 
-Jenkins-specific default directory:
+Jenkins controller-specific default directory:
 
 ```text
-${JENKINS_TFVARS_DIR:-${TFVARS_DIR:-/mnt/eapp/.tfvars}/jenkins}
+${JENKINS_CONTROLLER_TFVARS_DIR:-${TFVARS_DIR:-/mnt/eapp/.tfvars}/jenkins-controller}
 ```
 
 ## Current directory structure (host example)
@@ -52,10 +52,11 @@ At the time of writing, `/mnt/eapp/.tfvars` is structured like this:
   harbor/
     app.tfvars
     config.tfvars
-  jenkins/
-    controller.tfvars
-    agent.tfvars
+  jenkins-controller/
+    app.tfvars
     config.tfvars
+  jenkins/                  # legacy (agent stage)
+    agent.tfvars
   loki/
     app.tfvars
     config.yaml
@@ -105,7 +106,8 @@ Examples used by current pipeline entrypoints:
 
 Special cases:
 
-- Jenkins uses `/mnt/eapp/.tfvars/jenkins/{controller,agent,config}.tfvars`.
+- Jenkins controller uses `/mnt/eapp/.tfvars/jenkins-controller/{app,config}.tfvars`.
+- Jenkins agent (legacy stage) still uses `/mnt/eapp/.tfvars/jenkins/agent.tfvars`.
 - Prometheus database stage prefers `/mnt/eapp/.tfvars/prometheus/database.tfvars`, but falls back to `/mnt/eapp/.tfvars/victoriametrics/app.tfvars` if missing.
 
 ## tfvars/backend lookup precedence
