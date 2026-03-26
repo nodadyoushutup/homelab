@@ -7,6 +7,16 @@ metadata:
     argocd.argoproj.io/sync-wave: "34"
 spec:
   project: default
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      name: catalog-svc
+      namespace: kasten-io
+      jsonPointers:
+        - /spec/template/spec/containers
+      jqPathExpressions:
+        - .spec.template.spec.containers[] | select(.name=="catalog-svc") | .livenessProbe
+        - .spec.template.spec.containers[] | select(.name=="catalog-svc") | .readinessProbe
   destination:
     server: https://kubernetes.default.svc
     namespace: kasten-io
@@ -45,6 +55,16 @@ spec:
 
         apiservices:
           deployed: false
+
+        resources:
+          catalog-svc:
+            catalog-svc:
+              requests:
+                cpu: 500m
+                memory: 1Gi
+              limits:
+                cpu: 2000m
+                memory: 2Gi
   syncPolicy:
     automated:
       prune: true
@@ -53,3 +73,4 @@ spec:
       - CreateNamespace=true
       - ServerSideApply=true
       - SkipDryRunOnMissingResource=true
+      - RespectIgnoreDifferences=true
