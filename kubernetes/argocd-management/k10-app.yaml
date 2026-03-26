@@ -12,8 +12,6 @@ spec:
       kind: Deployment
       name: catalog-svc
       namespace: kasten-io
-      jsonPointers:
-        - /spec/template/spec/containers
       jqPathExpressions:
         - .spec.template.spec.containers[] | select(.name=="catalog-svc") | .livenessProbe
         - .spec.template.spec.containers[] | select(.name=="catalog-svc") | .readinessProbe
