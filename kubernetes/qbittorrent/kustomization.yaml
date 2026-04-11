@@ -25,5 +25,6 @@ resources:
   - overlays/cross-seed-kg
   - overlays/cross-seed-sc
   - overlays/upload
+  - overlays/books
   - overlays/xxx
   - overlays/freeleech
