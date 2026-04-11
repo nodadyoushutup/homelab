@@ -1,14 +1,32 @@
 speaker:
   frr:
     enabled: false
+  priorityClassName: system-cluster-critical
+  resources:
+    requests:
+      cpu: 100m
+      memory: 64Mi
   livenessProbe:
-    timeoutSeconds: 5
+    timeoutSeconds: 10
+    failureThreshold: 6
+    periodSeconds: 10
   readinessProbe:
-    timeoutSeconds: 5
+    timeoutSeconds: 10
+    failureThreshold: 6
+    periodSeconds: 10
 controller:
+  priorityClassName: system-cluster-critical
+  resources:
+    requests:
+      cpu: 100m
+      memory: 64Mi
   livenessProbe:
-    timeoutSeconds: 5
+    timeoutSeconds: 10
+    failureThreshold: 6
+    periodSeconds: 10
   readinessProbe:
-    timeoutSeconds: 5
+    timeoutSeconds: 10
+    failureThreshold: 6
+    periodSeconds: 10
 crds:
   validationFailurePolicy: Ignore
