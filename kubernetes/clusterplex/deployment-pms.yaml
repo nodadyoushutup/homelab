@@ -57,7 +57,7 @@ spec:
 
               NETWORKS="${ALLOWED_NETWORKS:-10.244.0.0/16,192.168.1.0/24,127.0.0.1/8}"
               ESCAPED_NETWORKS="$(printf '%s' "$NETWORKS" | sed 's/[&]/\\&/g')"
-              BANDWIDTH_NETWORKS="${LAN_NETWORKS_BANDWIDTH:-10.244.0.0/16,192.168.1.0/24}"
+              BANDWIDTH_NETWORKS="${LAN_NETWORKS_BANDWIDTH:-192.168.1.0/24}"
               ESCAPED_BANDWIDTH_NETWORKS="$(printf '%s' "$BANDWIDTH_NETWORKS" | sed 's/[&]/\\&/g')"
 
               if grep -q 'allowedNetworks="' "$PREF"; then
