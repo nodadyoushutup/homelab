@@ -34,6 +34,11 @@ spec:
                 configMapKeyRef:
                   name: clusterplex-pms-config
                   key: ALLOWED_NETWORKS
+            - name: LAN_NETWORKS_BANDWIDTH
+              valueFrom:
+                configMapKeyRef:
+                  name: clusterplex-pms-config
+                  key: LAN_NETWORKS_BANDWIDTH
           command:
             - sh
             - -c
@@ -52,6 +57,8 @@ spec:
 
               NETWORKS="${ALLOWED_NETWORKS:-10.244.0.0/16,192.168.1.0/24,127.0.0.1/8}"
               ESCAPED_NETWORKS="$(printf '%s' "$NETWORKS" | sed 's/[&]/\\&/g')"
+              BANDWIDTH_NETWORKS="${LAN_NETWORKS_BANDWIDTH:-10.244.0.0/16,192.168.1.0/24}"
+              ESCAPED_BANDWIDTH_NETWORKS="$(printf '%s' "$BANDWIDTH_NETWORKS" | sed 's/[&]/\\&/g')"
 
               if grep -q 'allowedNetworks="' "$PREF"; then
                 sed -i "s#allowedNetworks=\"[^\"]*\"#allowedNetworks=\"${ESCAPED_NETWORKS}\"#" "$PREF"
@@ -59,7 +66,13 @@ spec:
                 sed -i "s#<Preferences #<Preferences allowedNetworks=\"${ESCAPED_NETWORKS}\" #" "$PREF"
               fi
 
-              echo "Ensured TranscoderTempDirectory=/transcode and allowedNetworks in Preferences.xml"
+              if grep -q 'LanNetworksBandwidth="' "$PREF"; then
+                sed -i "s#LanNetworksBandwidth=\"[^\"]*\"#LanNetworksBandwidth=\"${ESCAPED_BANDWIDTH_NETWORKS}\"#" "$PREF"
+              else
+                sed -i "s#<Preferences #<Preferences LanNetworksBandwidth=\"${ESCAPED_BANDWIDTH_NETWORKS}\" #" "$PREF"
+              fi
+
+              echo "Ensured TranscoderTempDirectory=/transcode, allowedNetworks, and LanNetworksBandwidth in Preferences.xml"
           volumeMounts:
             - name: config
               mountPath: /config
