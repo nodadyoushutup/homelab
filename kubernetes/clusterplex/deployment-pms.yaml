@@ -28,6 +28,12 @@ spec:
           securityContext:
             runAsUser: 1000
             runAsGroup: 1000
+          env:
+            - name: ALLOWED_NETWORKS
+              valueFrom:
+                configMapKeyRef:
+                  name: clusterplex-pms-config
+                  key: ALLOWED_NETWORKS
           command:
             - sh
             - -c
@@ -44,10 +50,13 @@ spec:
                 sed -i 's#<Preferences #<Preferences TranscoderTempDirectory="/transcode" #' "$PREF"
               fi
 
+              NETWORKS="${ALLOWED_NETWORKS:-10.244.0.0/16,192.168.1.0/24,127.0.0.1/8}"
+              ESCAPED_NETWORKS="$(printf '%s' "$NETWORKS" | sed 's/[&]/\\&/g')"
+
               if grep -q 'allowedNetworks="' "$PREF"; then
-                sed -i 's#allowedNetworks="[^"]*"#allowedNetworks="10.244.0.0/16,127.0.0.1/8"#' "$PREF"
+                sed -i "s#allowedNetworks=\"[^\"]*\"#allowedNetworks=\"${ESCAPED_NETWORKS}\"#" "$PREF"
               else
-                sed -i 's#<Preferences #<Preferences allowedNetworks="10.244.0.0/16,127.0.0.1/8" #' "$PREF"
+                sed -i "s#<Preferences #<Preferences allowedNetworks=\"${ESCAPED_NETWORKS}\" #" "$PREF"
               fi
 
               echo "Ensured TranscoderTempDirectory=/transcode and allowedNetworks in Preferences.xml"
