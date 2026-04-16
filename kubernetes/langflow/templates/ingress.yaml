@@ -1,0 +1,20 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: 128m
+  name: langflow
+  namespace: langflow
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: langflow.nodadyoushutup.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: langflow
+                port:
+                  number: 8080

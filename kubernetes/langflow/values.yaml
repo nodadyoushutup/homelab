@@ -6,7 +6,7 @@ langflowide:
     enabled: false
 
   ingress:
-    enabled: true
+    enabled: false
     annotations:
       nginx.ingress.kubernetes.io/proxy-body-size: "128m"
     hosts:
@@ -39,6 +39,8 @@ langflowide:
       env:
         - name: LANGFLOW_LOG_LEVEL
           value: "INFO"
+        - name: LANGFLOW_PORT
+          value: "7860"
         - name: LANGFLOW_WORKERS
           value: "1"
         - name: LANGFLOW_DATABASE_CONNECTION_RETRY
