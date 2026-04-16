@@ -36,8 +36,6 @@ langflowide:
         limits:
           cpu: "2"
           memory: 4Gi
-      nodeSelector:
-        kubernetes.io/hostname: k8s-wk-0
       env:
         - name: LANGFLOW_LOG_LEVEL
           value: "INFO"
@@ -106,5 +104,3 @@ langflowide:
         limits:
           cpu: "1"
           memory: 1Gi
-      nodeSelector:
-        kubernetes.io/hostname: k8s-wk-0
