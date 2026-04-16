@@ -41,6 +41,10 @@ langflowide:
           value: "INFO"
         - name: LANGFLOW_PORT
           value: "7860"
+        - name: LANGFLOW_ALEMBIC_LOG_FILE
+          value: "/app/db/alembic.log"
+        - name: LANGFLOW_UPDATE_STARTER_PROJECTS
+          value: "false"
         - name: LANGFLOW_WORKERS
           value: "1"
         - name: LANGFLOW_DATABASE_CONNECTION_RETRY
