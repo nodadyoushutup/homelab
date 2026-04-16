@@ -21,6 +21,9 @@ fi
 export AST_GREP_DEFAULT_PROJECT_ROOT="${DEFAULT_PROJECT_ROOT}"
 export AST_GREP_ALLOWED_ROOTS="${ALLOWED_ROOTS}"
 export AST_GREP_CONFIG="${CONFIG_PATH}"
+export AST_GREP_HOST="${LISTEN_HOST}"
+export AST_GREP_PORT="${LISTEN_PORT}"
+export MCP_HTTP_PATH="${HTTP_PATH}"
 
 exec python /usr/local/bin/ast-grep-mcp-server.py \
   --transport streamable-http \

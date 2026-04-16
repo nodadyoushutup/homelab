@@ -6,7 +6,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BASE_LIB="${SCRIPT_DIR}/base.sh"
-KNOWN_SERVICES=(dozzle gha-runner grafana graphite jenkins mcp-argocd mcp-atlassian mcp-ast-grep mcp-cloudflare mcp-fortigate mcp-github mcp-google-workspace minio nginx-proxy-manager node-exporter prometheus telegraf-docker-metrics webserver-image)
+KNOWN_SERVICES=(dozzle gha-runner grafana graphite jenkins mcp-argocd mcp-atlassian mcp-ast-grep mcp-cloudflare mcp-filesystem-homelab mcp-fortigate mcp-git-homelab mcp-github mcp-google-workspace minio nginx-proxy-manager node-exporter prometheus telegraf-docker-metrics webserver-image)
 declare -A SERVICE_MAP=(
   [dozzle]="dozzle"
   [gha-runner]="gha-runner"
@@ -65,6 +65,18 @@ declare -A SERVICE_MAP=(
   [cloudflare_mcp]="mcp-cloudflare"
   [thelord-mcp-cloudflare]="mcp-cloudflare"
   [thelord_mcp_cloudflare]="mcp-cloudflare"
+  [mcp-filesystem-homelab]="mcp-filesystem-homelab"
+  [mcp_filesystem_homelab]="mcp-filesystem-homelab"
+  [filesystem-homelab-mcp]="mcp-filesystem-homelab"
+  [filesystem_homelab_mcp]="mcp-filesystem-homelab"
+  [filesystem-mcp-homelab]="mcp-filesystem-homelab"
+  [filesystem_mcp_homelab]="mcp-filesystem-homelab"
+  [mcp-git-homelab]="mcp-git-homelab"
+  [mcp_git_homelab]="mcp-git-homelab"
+  [git-homelab-mcp]="mcp-git-homelab"
+  [git_homelab_mcp]="mcp-git-homelab"
+  [git-mcp-homelab]="mcp-git-homelab"
+  [git_mcp_homelab]="mcp-git-homelab"
   [mcp-fortigate]="mcp-fortigate"
   [mcp_fortigate]="mcp-fortigate"
   [fortigate-mcp]="mcp-fortigate"

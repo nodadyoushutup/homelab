@@ -11,6 +11,7 @@ import argparse
 import json
 import os
 import subprocess
+import tempfile
 from pathlib import Path
 from typing import Any, Literal
 
@@ -20,6 +21,7 @@ from pydantic import Field
 
 DEFAULT_CONFIG_PATH = "/opt/ast-grep-config/sgconfig.yml"
 DEFAULT_PROJECT_ROOT = os.environ.get("AST_GREP_DEFAULT_PROJECT_ROOT", "")
+DEFAULT_HOST = os.environ.get("AST_GREP_HOST", "127.0.0.1")
 ALLOWED_ROOTS = [
     Path(root).resolve()
     for root in os.environ.get("AST_GREP_ALLOWED_ROOTS", DEFAULT_PROJECT_ROOT).split(":")
@@ -59,6 +61,7 @@ CONFIG_PATH = DEFAULT_CONFIG_PATH
 
 mcp = FastMCP(
     "ast-grep",
+    host=DEFAULT_HOST,
     stateless_http=True,
     json_response=True,
     streamable_http_path="/mcp",
@@ -201,11 +204,19 @@ def dump_syntax_tree(
     format: DumpFormat = Field(default="cst", description="One of: pattern, cst, ast."),
 ) -> str:
     """Dump ast-grep syntax output for a code snippet or pattern."""
-    result = run_ast_grep(
-        "run",
-        ["--pattern", code, "--lang", language, f"--debug-query={format}"],
-    )
-    return result.stderr.strip()
+    with tempfile.NamedTemporaryFile("w", suffix=f".{language}", delete=False) as handle:
+        temp_path = handle.name
+    try:
+        result = run_ast_grep(
+            "run",
+            ["--pattern", code, "--lang", language, f"--debug-query={format}", temp_path],
+        )
+        return result.stderr.strip()
+    finally:
+        try:
+            os.unlink(temp_path)
+        except FileNotFoundError:
+            pass
 
 
 @mcp.tool()

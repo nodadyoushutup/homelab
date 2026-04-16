@@ -14,6 +14,8 @@ Use this workflow for:
 - `terraform/swarm/mcp-atlassian/app`
 - `terraform/swarm/mcp-ast-grep/app`
 - `terraform/swarm/mcp-cloudflare/app`
+- `terraform/swarm/mcp-filesystem-homelab/app`
+- `terraform/swarm/mcp-git-homelab/app`
 - `terraform/swarm/mcp-fortigate/app`
 - `terraform/swarm/mcp-github/app`
 - `terraform/swarm/mcp-google-workspace/app`
@@ -33,8 +35,10 @@ When a task changes one of the Swarm-hosted MCP servers:
    `/mnt/eapp/.tfvars/<service>/`
 6. update the matching Nginx Proxy Manager and Cloudflare hostname entries when
    the server is meant to be reachable from the host Codex client
-7. update `~/.codex/config.toml` when the MCP hostname set changes or a new
-   server is added
+7. update the matching Codex config layer when the MCP hostname set changes or
+   a new server is added:
+   - `~/.codex/config.toml` for shared/global servers
+   - repo-local `.codex/config.toml` for workspace-specific servers
 8. make sure the exact image tag referenced by Terraform exists where the Swarm
    engine can pull it
 9. run the app stage pipeline
@@ -107,6 +111,32 @@ Before running `terraform/swarm/mcp-cloudflare/app/pipeline/app.sh`:
 - confirm `cloudflare_api_token` and `cloudflare_zone_id` match the target zone
 - rebuild and republish the image first if `applications/mcp-cloudflare/` changed
 
+### `mcp-filesystem-homelab`
+
+Before running `terraform/swarm/mcp-filesystem-homelab/app/pipeline/app.sh`:
+
+- confirm the local image tag in Terraform exists on `swarm-cp-0`
+- confirm the mounted host workspace path exists on the Terraform runner and on
+  the Swarm node at `/mnt/epool/code/homelab`
+- confirm the configured runtime UID/GID can write to that NFS-mounted
+  workspace path on the Swarm node
+- rebuild the image first if `applications/mcp-filesystem-homelab/` changed
+- update the repo-local `.codex/config.toml` entry if the hostname or MCP path
+  changes
+
+### `mcp-git-homelab`
+
+Before running `terraform/swarm/mcp-git-homelab/app/pipeline/app.sh`:
+
+- confirm the local image tag in Terraform exists on `swarm-cp-0`
+- confirm the mounted host repository path exists on the Terraform runner and
+  on the Swarm node at `/mnt/epool/code/homelab`
+- confirm the configured runtime UID/GID can write to that NFS-mounted
+  repository path on the Swarm node
+- rebuild the image first if `applications/mcp-git-homelab/` changed
+- update the repo-local `.codex/config.toml` entry if the hostname or MCP path
+  changes
+
 ### `mcp-fortigate`
 
 Before running `terraform/swarm/mcp-fortigate/app/pipeline/app.sh`:
@@ -164,7 +194,7 @@ After apply:
 3. if the service exposes an explicit MCP HTTP path, probe that path with the
    same transport assumptions the healthcheck uses
 4. if the service is meant to be host-reachable, validate the final hostname
-   and MCP path that `~/.codex/config.toml` points to
+   and MCP path that the matching Codex config layer points to
 5. if the change touched credentials or provider reachability, verify one real
    tool call through the MCP endpoint before closing the task
 
@@ -175,12 +205,15 @@ Validation examples:
 - `mcp-atlassian`: probe `http://<swarm-host>:18080/mcp` with
   `Accept: text/event-stream`
 - `mcp-ast-grep`: probe `http://<swarm-host>:18096/mcp`
+- `mcp-filesystem-homelab`: probe `http://<swarm-host>:18098/mcp`
+- `mcp-git-homelab`: probe `http://<swarm-host>:18099/mcp`
 - `mcp-fortigate`: probe `http://<swarm-host>:18084/mcp`
 - `mcp-github`, `mcp-cloudflare`, `mcp-google-workspace`: at minimum verify the
   port is listening if the wrapper does not define a fixed explicit path in
   Terraform
 - host validation: probe `https://mcp.<service>.nodadyoushutup.com/mcp` from
-  the Codex host and make sure the same URL exists in `~/.codex/config.toml`
+  the Codex host and make sure the same URL exists in the intended Codex config
+  layer (`~/.codex/config.toml` or repo-local `.codex/config.toml`)
 
 ## Change Boundaries
 

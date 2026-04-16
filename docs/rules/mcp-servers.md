@@ -14,6 +14,8 @@ This document applies to the current Swarm-hosted MCP server set:
 - `terraform/swarm/mcp-atlassian/app`
 - `terraform/swarm/mcp-ast-grep/app`
 - `terraform/swarm/mcp-cloudflare/app`
+- `terraform/swarm/mcp-filesystem-homelab/app`
+- `terraform/swarm/mcp-git-homelab/app`
 - `terraform/swarm/mcp-fortigate/app`
 - `terraform/swarm/mcp-github/app`
 - `terraform/swarm/mcp-google-workspace/app`
@@ -50,9 +52,10 @@ This document applies to the current Swarm-hosted MCP server set:
 - The standard client path is a stable hostname routed through the repo-managed
   edge config, not a raw Swarm published port copied into a client by hand.
 - Keep `/mnt/eapp/.tfvars/nginx-proxy-manager/config.tfvars`,
-  `/mnt/eapp/.tfvars/cloudflare/config.tfvars`, and `~/.codex/config.toml`
-  aligned with the Swarm service port and MCP HTTP path for every host-usable
-  server.
+  `/mnt/eapp/.tfvars/cloudflare/config.tfvars`, and the matching Codex config
+  layer (`~/.codex/config.toml` for global servers or repo-local
+  `.codex/config.toml` for workspace-specific servers) aligned with the Swarm
+  service port and MCP HTTP path for every host-usable server.
 - The Codex host is not part of the Swarm overlay network. Do not point host
   MCP config at Swarm service names, overlay-only addresses, or ad hoc direct
   ports unless the task explicitly documents a temporary fallback.
@@ -145,6 +148,45 @@ This document applies to the current Swarm-hosted MCP server set:
   required by the MCP server.
 - Compatibility model: `cloudflare_email` is optional compatibility input, not
   the primary authentication mechanism.
+
+### `mcp-filesystem-homelab`
+
+- Runtime root: `terraform/swarm/mcp-filesystem-homelab/app`
+- Image source: `applications/mcp-filesystem-homelab/` wraps the official
+  `@modelcontextprotocol/server-filesystem` reference server behind the
+  repo-standard HTTP bridge.
+- Listen model: internal `8098`, published `18098`, HTTP path `/mcp`
+- Workspace model: bind-mount the live homelab checkout at
+  `/mnt/epool/code/homelab` read-write on both the Swarm host and inside the
+  container; keep the allowed workspace path and mount target identical so the
+  MCP tools and the repo instructions refer to one canonical path.
+- Runtime user model: run the container with an unprivileged UID/GID that owns
+  the NFS-mounted workspace path. Do not leave this service running as root
+  against a root-squashed repo mount.
+- Scope model: keep the server restricted to one workspace root. Do not widen
+  the allowed directories beyond the intended repo checkout without an explicit
+  task requirement.
+- Client config model: this server is workspace-scoped, so prefer a repo-local
+  `.codex/config.toml` entry instead of adding it to the global Codex config
+  unless a task explicitly promotes it to a shared server.
+
+### `mcp-git-homelab`
+
+- Runtime root: `terraform/swarm/mcp-git-homelab/app`
+- Image source: `applications/mcp-git-homelab/` wraps the official
+  `mcp-server-git` reference server behind the repo-standard HTTP bridge.
+- Listen model: internal `8099`, published `18099`, HTTP path `/mcp`
+- Repository model: bind-mount the live homelab checkout at
+  `/mnt/epool/code/homelab` read-write on both the Swarm host and inside the
+  container so the git server works against the real NFS-backed repository.
+- Runtime user model: run the container with an unprivileged UID/GID that can
+  write to the NFS-mounted repository path. Do not run the service as root
+  against a root-squashed repo mount.
+- Scope model: keep the server pinned to one repository root. Do not widen it
+  to a parent directory without an explicit task requirement.
+- Client config model: this server is workspace-scoped, so prefer a repo-local
+  `.codex/config.toml` entry instead of adding it to the global Codex config
+  unless a task explicitly promotes it to a shared server.
 
 ### `mcp-fortigate`
 

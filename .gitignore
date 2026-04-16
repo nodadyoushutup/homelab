@@ -50,6 +50,7 @@ planning/**
 
 # Environment
 *.env
+!applications/harbor/versions.env
 
 # Exports
 exports/**

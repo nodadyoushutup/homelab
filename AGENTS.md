@@ -32,3 +32,7 @@ Do not start work as an unspecified generic agent.
   task.
 - Do not reference removed legacy wiki paths until replacement docs exist in
   `docs/`.
+- For this workspace, filesystem interaction should go through the
+  `mcp_filesystem_homelab` MCP server once it is available in project config.
+  Use direct shell or local file-edit access only to bootstrap, repair, or
+  validate that MCP path.

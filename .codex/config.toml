@@ -1,0 +1,5 @@
+[mcp_servers.mcp_filesystem_homelab]
+url = "https://mcp.filesystem-homelab.nodadyoushutup.com/mcp"
+
+[mcp_servers.mcp_git_homelab]
+url = "https://mcp.git-homelab.nodadyoushutup.com/mcp"
