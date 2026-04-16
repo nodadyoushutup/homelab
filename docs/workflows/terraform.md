@@ -194,5 +194,6 @@ Some Terraform work manages Kubernetes delivery rather than workloads directly.
 The main example is Argo CD management under `terraform/cluster/argocd/config`.
 
 Use that stage when the change belongs to Terraform-managed Argo CD resources.
-Use the Kubernetes workflow for changes under `kubernetes/` that are delivered
-by Argo CD after Git reconciliation.
+Use [docs/workflows/argocd.md](./argocd.md) and the Kubernetes workflow for
+changes under `kubernetes/` that are delivered by Argo CD after Git
+reconciliation.

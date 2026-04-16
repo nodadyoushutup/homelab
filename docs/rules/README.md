@@ -9,6 +9,7 @@ operator flows.
 
 ## File map
 
+- `argocd.md`: Argo CD ownership, GitOps source-of-truth, and commit/push rules
 - `application-networking.md`: app hostname, DNS, reverse proxy, exposure, and
   validation rules
 - `applications.md`: placement rules for deciding whether a new app belongs in

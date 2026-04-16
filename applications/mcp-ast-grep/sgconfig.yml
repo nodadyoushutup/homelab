@@ -1,0 +1,16 @@
+ruleDirs: []
+
+languageGlobs:
+  hcl:
+    - "*.tf"
+    - "*.tfvars"
+    - "*.tfvars.example"
+  dockerfile:
+    - "Dockerfile"
+    - "Dockerfile.*"
+
+customLanguages:
+  dockerfile:
+    libraryPath: /opt/ast-grep-parsers/dockerfile.so
+    extensions:
+      - dockerfile

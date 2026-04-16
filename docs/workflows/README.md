@@ -8,12 +8,14 @@ govern those workflows.
 
 ## File map
 
+- `argocd.md`: normal GitOps workflow for Argo CD-managed Kubernetes changes
 - `application-networking.md`: standard hostname, DNS, proxy, and domain
   validation flow for new or changed app endpoints
 - `agents.md`: how to choose the owning agent and any subagents before
   execution
 - `container-images.md`: container build, Harbor registry, and GitHub Actions
   publish workflow
+- `git.md`: default staging, commit, and push workflow for normal repo changes
 - `mcp-servers.md`: operator workflow for Swarm-hosted MCP servers
 - `new-application.md`: how to classify a new app and then onboard it through
   the correct platform workflow

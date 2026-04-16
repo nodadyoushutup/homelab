@@ -6,7 +6,8 @@ layout, ownership, naming, and guardrails. Use
 belongs in Kubernetes or Swarm. Use
 [docs/rules/application-networking.md](./application-networking.md) for app
 hostname, DNS, and reverse-proxy rules. Use
-[docs/workflows/kubernetes.md](./../workflows/kubernetes.md) for the operator flow
+[docs/rules/argocd.md](./argocd.md) for Argo CD ownership and GitOps guardrails,
+[docs/workflows/kubernetes.md](./../workflows/kubernetes.md) for the operator flow,
 and [docs/rules/repo.md](./repo.md) for repo-wide rules that also apply here.
 
 ## Top-Level Layout
@@ -79,6 +80,16 @@ kubernetes/<addon>/
   <extra-manifests>.yaml
 ```
 
+When an upstream chart needs repo-local companion manifests or repo-owned
+values as the source of truth, a local wrapper Helm chart is also acceptable:
+
+```text
+kubernetes/<app>/
+  Chart.yaml
+  values.yaml
+  templates/
+```
+
 ## Helm Versus Custom App Rule
 
 When adding a new Kubernetes workload, assess whether an upstream `Helm` chart
@@ -90,6 +101,9 @@ Repo preference:
 - default application workloads to repo-owned custom manifests
 - use `Helm` when the chart already matches the desired deployment shape with
   minimal overrides
+- use a repo-local wrapper chart when the upstream chart is the right runtime
+  but the repo still needs companion manifests such as namespace, secrets,
+  database, or ingress-adjacent wiring kept alongside values
 - keep treating `k10`, `snapshot-controller`, and similar platform addons as
   the reference pattern for Helm-backed installs
 - treat `radarr`, `sonarr`, `privatebin`, `clusterplex`, and `qbittorrent` as
@@ -138,6 +152,8 @@ Existing repo conventions:
 - project sync waves are lower than application sync waves
 - applications commonly use automated sync with `prune` and `selfHeal`
 - `CreateNamespace=true` and `ServerSideApply=true` are normal sync options
+- repo-managed applications normally track `HEAD` from the homelab repo
+- the persistent delivery path is commit plus push, then Argo CD autosync
 
 ## Sync Wave Rules
 
@@ -233,10 +249,13 @@ existing exception rather than the default pattern.
 
 ## Operational Rules
 
-- Apply Kubernetes changes directly with `kubectl apply` when immediate rollout
-  or validation is needed.
-- Do not wait on GitOps reconciliation to test a change.
-- Humans handle the final commit/push that drives GitOps.
+- Kubernetes delivery should end with a committed and pushed Git revision that
+  Argo CD can reconcile.
+- For Argo CD-managed apps, commit and push all relevant workload,
+  `argocd-management`, and doc files together when they are part of one change.
+- Use clear commit subjects that name the service and intent.
+- Direct `kubectl apply` is an exception path for bootstrap, debugging, or
+  recovery, not the steady-state way to lock in app changes.
 - After cluster-wide disruptive work, verify Argo CD health before closing the task.
 
 ## Storage and Safety Rules

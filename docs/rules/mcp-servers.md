@@ -12,6 +12,7 @@ This document applies to the current Swarm-hosted MCP server set:
 
 - `terraform/swarm/mcp-argocd/app`
 - `terraform/swarm/mcp-atlassian/app`
+- `terraform/swarm/mcp-ast-grep/app`
 - `terraform/swarm/mcp-cloudflare/app`
 - `terraform/swarm/mcp-fortigate/app`
 - `terraform/swarm/mcp-github/app`
@@ -110,6 +111,26 @@ This document applies to the current Swarm-hosted MCP server set:
 - Credential model: Jira and Confluence credentials are independent inputs. Do
   not silently drop one side when the service is expected to expose both tool
   families.
+
+### `mcp-ast-grep`
+
+- Runtime root: `terraform/swarm/mcp-ast-grep/app`
+- Image source: `applications/mcp-ast-grep/` owns the repo-local HTTP-capable
+  wrapper image
+- Listen model: internal `8096`, published `18096`, HTTP path `/mcp`
+- Repo model: bind-mount the live repo checkout read-only; do not copy the repo
+  into the image or point the server at an overlay-only path
+- Scope model: keep the mounted root and default project root aligned with the
+  actual homelab checkout so the host Codex client and server share one source
+  tree view
+- Language model: keep Terraform/HCL file globs configured through the
+  ast-grep config used by the container; add custom parsers only when the
+  language is materially used in this repo and the parser maintenance burden is
+  justified
+- Custom parser model: Dockerfile parsing is currently the justified
+  custom-language exception; do not add template-heavy formats such as Jinja or
+  `*.tftpl` unless there is a demonstrated parser strategy that handles the
+  templating syntax cleanly
 
 ### `mcp-cloudflare`
 

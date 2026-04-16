@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: langflow
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "33"
+spec:
+  project: langflow
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: langflow
+  source:
+    repoURL: git@github.com:nodadyoushutup/homelab.git
+    targetRevision: HEAD
+    path: kubernetes/langflow
+    helm:
+      releaseName: langflow
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

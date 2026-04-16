@@ -12,6 +12,7 @@ Use this workflow for:
 
 - `terraform/swarm/mcp-argocd/app`
 - `terraform/swarm/mcp-atlassian/app`
+- `terraform/swarm/mcp-ast-grep/app`
 - `terraform/swarm/mcp-cloudflare/app`
 - `terraform/swarm/mcp-fortigate/app`
 - `terraform/swarm/mcp-github/app`
@@ -85,6 +86,18 @@ Before running `terraform/swarm/mcp-atlassian/app/pipeline/app.sh`:
 - confirm Jira and Confluence URLs, usernames, and API tokens are all present
 - confirm any `jira_projects_filter` or `confluence_spaces_filter` changes are
   intentional because they directly narrow or widen the MCP surface
+
+### `mcp-ast-grep`
+
+Before running `terraform/swarm/mcp-ast-grep/app/pipeline/app.sh`:
+
+- confirm the local image tag in Terraform exists on `swarm-cp-0`
+- confirm the mounted homelab repo path exists on the Terraform runner and on
+  the Swarm node
+- rebuild the image first if `applications/mcp-ast-grep/` changed
+- keep the ast-grep config aligned with the repo’s real file mix before adding
+  custom language parsers; use custom parser plugins only where built-in
+  language support plus globs are insufficient
 
 ### `mcp-cloudflare`
 
@@ -161,6 +174,7 @@ Validation examples:
   `mcp-session-id` header
 - `mcp-atlassian`: probe `http://<swarm-host>:18080/mcp` with
   `Accept: text/event-stream`
+- `mcp-ast-grep`: probe `http://<swarm-host>:18096/mcp`
 - `mcp-fortigate`: probe `http://<swarm-host>:18084/mcp`
 - `mcp-github`, `mcp-cloudflare`, `mcp-google-workspace`: at minimum verify the
   port is listening if the wrapper does not define a fixed explicit path in

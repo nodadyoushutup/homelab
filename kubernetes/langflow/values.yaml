@@ -1,0 +1,110 @@
+langflowide:
+  nameOverride: "langflow"
+  fullnameOverride: "langflow"
+
+  postgresql:
+    enabled: false
+
+  ingress:
+    enabled: true
+    annotations:
+      nginx.ingress.kubernetes.io/proxy-body-size: "128m"
+    hosts:
+      - host: langflow.nodadyoushutup.com
+        paths:
+          - path: /
+            pathType: Prefix
+    tls: []
+
+  langflow:
+    global:
+      image:
+        tag: "1.9.0"
+
+    backend:
+      replicaCount: 2
+      numWorkers: 1
+      backendOnly: true
+      image:
+        repository: langflowai/langflow
+        imagePullPolicy: IfNotPresent
+        tag: "1.9.0"
+      resources:
+        requests:
+          cpu: 500m
+          memory: 1Gi
+        limits:
+          cpu: "2"
+          memory: 4Gi
+      nodeSelector:
+        kubernetes.io/hostname: k8s-wk-0
+      env:
+        - name: LANGFLOW_LOG_LEVEL
+          value: "INFO"
+        - name: LANGFLOW_WORKERS
+          value: "1"
+        - name: LANGFLOW_DATABASE_CONNECTION_RETRY
+          value: "true"
+        - name: LANGFLOW_DB_CONNECTION_SETTINGS
+          value: '{"pool_size": 20, "max_overflow": 30, "pool_timeout": 30, "pool_pre_ping": true, "pool_recycle": 1800, "echo": false}'
+        - name: LANGFLOW_AUTO_LOGIN
+          value: "False"
+        - name: LANGFLOW_NEW_USER_IS_ACTIVE
+          value: "False"
+        - name: LANGFLOW_SUPERUSER
+          valueFrom:
+            secretKeyRef:
+              name: langflow-secrets
+              key: LANGFLOW_SUPERUSER
+        - name: LANGFLOW_SUPERUSER_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: langflow-secrets
+              key: LANGFLOW_SUPERUSER_PASSWORD
+        - name: LANGFLOW_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: langflow-secrets
+              key: LANGFLOW_SECRET_KEY
+      externalDatabase:
+        enabled: true
+        driver:
+          value: "postgresql"
+        host:
+          value: "langflow-postgres"
+        port:
+          value: "5432"
+        database:
+          valueFrom:
+            secretKeyRef:
+              name: langflow-secrets
+              key: POSTGRES_DB
+        user:
+          valueFrom:
+            secretKeyRef:
+              name: langflow-secrets
+              key: POSTGRES_USER
+        password:
+          valueFrom:
+            secretKeyRef:
+              name: langflow-secrets
+              key: POSTGRES_PASSWORD
+      sqlite:
+        enabled: false
+
+    frontend:
+      enabled: true
+      replicaCount: 1
+      image:
+        repository: langflowai/langflow-frontend
+        imagePullPolicy: IfNotPresent
+        tag: "1.9.0"
+      resources:
+        requests:
+          cpu: 300m
+          memory: 512Mi
+        limits:
+          cpu: "1"
+          memory: 1Gi
+      nodeSelector:
+        kubernetes.io/hostname: k8s-wk-0

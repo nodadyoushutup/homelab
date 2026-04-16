@@ -6,7 +6,8 @@ applications built with `base/` plus `overlays/`, using
 the main reference implementation.
 
 Use [docs/workflows/kubernetes.md](./kubernetes.md) for the broader Kubernetes
-delivery flow and [docs/rules/kubernetes.md](./../rules/kubernetes.md) for
+delivery flow, [docs/workflows/argocd.md](./argocd.md) for the commit/push
+GitOps path, and [docs/rules/kubernetes.md](./../rules/kubernetes.md) for
 layout and guardrails.
 
 ## When This Pattern Is Used
@@ -281,17 +282,20 @@ That file is useful for:
 
 But the operational deployment unit is normally the individual overlay.
 
-Direct apply example:
+GitOps render example:
+
+```bash
+kubectl kustomize kubernetes/qbittorrent/overlays/movie-10
+```
+
+Exception-path direct apply example:
 
 ```bash
 kubectl apply -k kubernetes/qbittorrent/overlays/movie-10
 ```
 
-Rendered output example:
-
-```bash
-kubectl kustomize kubernetes/qbittorrent/overlays/movie-10
-```
+The normal steady-state path is still to commit and push the overlay change so
+its matching Argo CD `Application` can autosync the remote revision.
 
 ## Argo CD Pattern
 
@@ -326,8 +330,11 @@ To add a new instance following this pattern:
 8. add the overlay path to `kubernetes/qbittorrent/kustomization.yaml`
 9. add or update the Argo CD `Application` for that overlay
 10. update the qBittorrent `AppProject` destinations if the namespace is new
-11. apply the overlay directly with `kubectl apply -k ...`
-12. validate the rendered app, service, ingress, `NodePort`, and secrets
+11. render the overlay locally and validate the generated resources
+12. commit the overlay and Argo CD wiring together with a clear commit subject
+13. push so the overlay’s Argo CD `Application` can autosync it
+14. validate the rendered app, service, ingress, `NodePort`, secrets, and Argo
+    CD sync state
 
 ## Validation Checklist
 
@@ -346,7 +353,9 @@ Check that the render includes the expected:
 - torrent `NodePort` values
 - `ExternalSecret` path
 
-Then apply:
+Then commit and push the real change so Argo CD can reconcile it.
+
+If you need exception-path operator apply for troubleshooting:
 
 ```bash
 kubectl apply -k kubernetes/qbittorrent/overlays/<instance>

@@ -6,7 +6,9 @@ for the steady-state layout and guardrails. If the first question is whether a
 new app belongs in Kubernetes or Swarm, start with
 [docs/workflows/new-application.md](./new-application.md).
 Use [docs/workflows/application-networking.md](./application-networking.md) for
-the standard domain, DNS, and reverse-proxy flow.
+the standard domain, DNS, and reverse-proxy flow. Use
+[docs/workflows/argocd.md](./argocd.md) for the GitOps commit/push workflow that
+most repo-managed Kubernetes apps follow.
 
 ## Standard Delivery Flow
 
@@ -15,12 +17,10 @@ Kubernetes changes usually follow this pattern:
 1. update manifests under `kubernetes/`
 2. if needed, add or update Argo CD `AppProject` and `Application` objects under
    `kubernetes/argocd-management`
-3. apply the manifests directly with `kubectl apply` for immediate rollout or validation
-4. verify the workload is healthy
-5. allow Argo CD to reconcile from Git afterward
-
-This repo does not treat "wait for GitOps eventually" as the only deployment
-path during active work.
+3. validate locally with render or dry-run checks
+4. commit all relevant files with a clear service-focused commit subject
+5. push so Argo CD can fetch the new revision and autosync it
+6. verify Argo CD sync/health and workload health
 
 ## Choosing the Right Pattern
 
@@ -89,18 +89,19 @@ When onboarding a new app to Argo CD:
 2. create or update `kubernetes/argocd-management/<service>-app.yaml`
 3. set `spec.source.path` to the concrete app directory or overlay path
 4. keep the Argo destination namespace aligned with the workload namespace
-5. apply the Argo CD resources
+5. commit and push the workload plus Argo CD definitions together
+6. watch the application sync to the pushed revision
 
-The bootstrap chain is:
+The steady-state control chain is:
 
-1. `kubernetes/bootstrap/argocd-management-app.yaml` seeds the root app
-2. `kubernetes/argocd-management` defines projects and applications
-3. those applications point at the actual workload directories
+1. `terraform/cluster/argocd/config` manages the live root app and addon
+   `ApplicationSet`
+2. `kubernetes/bootstrap/argocd-management-app.yaml` remains the seed manifest
+   shape for raw bootstrap scenarios
+3. `kubernetes/argocd-management` defines repo-managed projects and applications
+4. those applications point at the actual workload directories
 
-## Direct Apply Workflow
-
-For immediate rollout or troubleshooting, apply the Kubernetes manifests
-directly instead of waiting for Argo CD to notice Git changes.
+## Exception Workflow: Direct Apply
 
 Examples:
 
@@ -114,12 +115,22 @@ kubectl apply -k kubernetes/qbittorrent/overlays/movie-0
 Use `-f` for `standard app` flat manifest folders and `-k` for `Kustomize app`
 overlays or roots.
 
+Use this path only for:
+
+- bootstrap before the normal GitOps chain exists
+- urgent recovery
+- troubleshooting a failing change
+
+If you use direct apply, still commit and push the real source-of-truth change
+afterward so Argo CD converges back to Git.
+
 ## Validation Workflow
 
-After applying a change, validate the thing you actually changed.
+After publishing a change, validate the thing you actually changed.
 
 Common checks:
 
+- `kubectl get applications.argoproj.io -n argocd`
 - `kubectl get pods -n <namespace>`
 - `kubectl describe pod -n <namespace> <pod>`
 - `kubectl logs -n <namespace> <pod>`
@@ -129,12 +140,13 @@ Common checks:
 
 Validate in dependency order:
 
-1. namespace and secrets
-2. storage
-3. backing database, if present
-4. primary deployment
-5. service reachability
-6. ingress or external routing
+1. Argo CD application sync and health
+2. namespace and secrets
+3. storage
+4. backing database, if present
+5. primary deployment
+6. service reachability
+7. ingress or external routing
 
 ## Secret and Database Workflow
 

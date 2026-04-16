@@ -43,6 +43,11 @@ This is a docs-driven repo.
 - If unrelated untracked or modified files from other agents are present,
   ignore them and only stage, commit, or push files relevant to the current
   task unless a human explicitly asks otherwise.
+- For normal repo work, it is acceptable and expected to stage relevant files,
+  commit them, and push them after validation.
+- For now, do not create a new branch unless a human explicitly asks for one.
+- Use clear commit subjects that name the service, area, or intent instead of
+  vague subjects such as `updates` or `misc changes`.
 
 ## Compose-Only Stack Rule
 

@@ -88,6 +88,9 @@ Common shapes:
 
 - Helm-backed app or addon: `kubernetes/<app>/values.yaml` plus any companion
   manifests, with Argo CD pointing at `spec.source.chart`
+- Helm-backed wrapper chart: `kubernetes/<app>/{Chart.yaml,values.yaml,templates/}`
+  when an upstream chart is still the source of the runtime but the repo needs
+  local manifests or wants values to remain repo-owned
 - repo-owned `standard app`: `kubernetes/<app>/`
 - repo-owned `Kustomize app`: `kubernetes/<family>/base` plus
   `kubernetes/<family>/overlays/<instance>`
@@ -145,10 +148,13 @@ For a new Cluster app:
     the workload is repo-owned
 12. if this is a new Argo CD app family, add the matching `AppProject` and
     `Application` files under `kubernetes/argocd-management`
-13. apply the manifests directly with `kubectl apply`
-14. validate the workload before relying on GitOps reconciliation
+13. validate the workload manifests locally with render or dry-run checks
+14. commit all relevant workload and Argo CD files with a clear commit subject
+15. push and let Argo CD autosync the new revision
+16. validate the workload and Argo CD application state
 
 Use [`docs/workflows/kubernetes.md`](./kubernetes.md) for the main flow,
+[`docs/workflows/argocd.md`](./argocd.md) for the GitOps commit/push flow,
 [`docs/workflows/kubernetes-kustomize-patterns.md`](./kubernetes-kustomize-patterns.md)
 for `Kustomize app` families, and
 [`docs/rules/kubernetes.md`](./../rules/kubernetes.md) for structure rules.

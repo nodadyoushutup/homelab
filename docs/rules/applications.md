@@ -58,7 +58,7 @@ Repo examples:
 - infrastructure: `terraform/swarm/harbor`, `vault`,
   `nginx_proxy_manager`, `gha-runner`, `jenkins-controller`
 - management tooling: `terraform/swarm/mcp-argocd`, `mcp-atlassian`,
-  `mcp-cloudflare`, `mcp-fortigate`, `mcp-github`,
+  `mcp-ast-grep`, `mcp-cloudflare`, `mcp-fortigate`, `mcp-github`,
   `mcp-google-workspace`
 
 If the Swarm service is an MCP server, use
