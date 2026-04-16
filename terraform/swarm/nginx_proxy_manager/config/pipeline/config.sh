@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Stage 2 (docs/planning/nginx-proxy-manager-plan.md) – config stage hooks the NPM API
+# Nginx Proxy Manager config stage hooks the NPM API
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

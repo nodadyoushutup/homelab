@@ -42,8 +42,8 @@ override.tf.json
 .terraformrc
 terraform.rc
 
-# Docker config
-docker/config.yaml
+# Applications config
+applications/config.yaml
 
 # Planning
 planning/**

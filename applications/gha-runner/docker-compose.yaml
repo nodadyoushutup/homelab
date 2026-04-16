@@ -1,0 +1,22 @@
+services:
+  gha-runner:
+    build:
+      context: ../..
+      dockerfile: applications/gha-runner/Dockerfile
+      args:
+        RUNNER_VERSION: "${RUNNER_VERSION:-2.332.0}"
+    user: "0:0"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      GH_RUNNER_URL: "${GH_RUNNER_URL}"
+      GH_RUNNER_TOKEN: "${GH_RUNNER_TOKEN}"
+      GH_RUNNER_ACCESS_TOKEN: "${GH_RUNNER_ACCESS_TOKEN:-}"
+      GH_RUNNER_NAME: "${GH_RUNNER_NAME:-homelab-gha-runner}"
+      GH_RUNNER_LABELS: "${GH_RUNNER_LABELS:-self-hosted,linux,homelab}"
+      GH_RUNNER_WORKDIR: "${GH_RUNNER_WORKDIR:-_work}"
+      GH_RUNNER_EPHEMERAL: "${GH_RUNNER_EPHEMERAL:-false}"
+      GH_RUNNER_DISABLEUPDATE: "${GH_RUNNER_DISABLEUPDATE:-true}"
+      GH_RUNNER_REMOVE_TOKEN: "${GH_RUNNER_REMOVE_TOKEN:-}"
+      RUNNER_ALLOW_RUNASROOT: "1"
+    restart: unless-stopped

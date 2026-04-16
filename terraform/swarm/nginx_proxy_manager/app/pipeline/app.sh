@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Stage 2 (docs/planning/nginx-proxy-manager-plan.md) – app deployment entrypoint
+# Nginx Proxy Manager app deployment entrypoint
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

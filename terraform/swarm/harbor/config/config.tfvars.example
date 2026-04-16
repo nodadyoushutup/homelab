@@ -9,7 +9,62 @@ provider_config = {
 
 projects = [
   {
+    name                   = "gha-runner"
+    public                 = false
+    vulnerability_scanning = true
+  },
+  {
+    name                   = "harbor"
+    public                 = false
+    vulnerability_scanning = true
+  },
+  {
+    name                   = "harbor-core"
+    public                 = false
+    vulnerability_scanning = true
+  },
+  {
+    name                   = "harbor-db"
+    public                 = false
+    vulnerability_scanning = true
+  },
+  {
+    name                   = "harbor-exporter"
+    public                 = false
+    vulnerability_scanning = true
+  },
+  {
+    name                   = "harbor-jobservice"
+    public                 = false
+    vulnerability_scanning = true
+  },
+  {
+    name                   = "harbor-log"
+    public                 = false
+    vulnerability_scanning = true
+  },
+  {
+    name                   = "harbor-portal"
+    public                 = false
+    vulnerability_scanning = true
+  },
+  {
+    name                   = "harbor-registryctl"
+    public                 = false
+    vulnerability_scanning = true
+  },
+  {
     name                   = "mcp-atlassian"
+    public                 = false
+    vulnerability_scanning = true
+  },
+  {
+    name                   = "mcp-cloudflare"
+    public                 = false
+    vulnerability_scanning = true
+  },
+  {
+    name                   = "mcp-fortigate"
     public                 = false
     vulnerability_scanning = true
   },
@@ -19,7 +74,47 @@ projects = [
     vulnerability_scanning = true
   },
   {
-    name                   = "mcp-cloudflare"
+    name                   = "mcp-google-workspace"
+    public                 = false
+    vulnerability_scanning = true
+  },
+  {
+    name                   = "nginx-photon"
+    public                 = false
+    vulnerability_scanning = true
+  },
+  {
+    name                   = "prepare"
+    public                 = false
+    vulnerability_scanning = true
+  },
+  {
+    name                   = "redis-photon"
+    public                 = false
+    vulnerability_scanning = true
+  },
+  {
+    name                   = "registry-photon"
+    public                 = false
+    vulnerability_scanning = true
+  },
+  {
+    name                   = "trivy-adapter-photon"
+    public                 = false
+    vulnerability_scanning = true
+  },
+  {
+    name                   = "webserver-image"
+    public                 = false
+    vulnerability_scanning = true
+  },
+  {
+    name                   = "jenkins-agent"
+    public                 = false
+    vulnerability_scanning = true
+  },
+  {
+    name                   = "jenkins-controller"
     public                 = false
     vulnerability_scanning = true
   }
@@ -48,12 +143,27 @@ projects = [
 # Optional robot account example
 # robot_accounts = [
 #   {
-#     name  = "gha-publish"
-#     level = "system"
+#     name        = "gha-publish"
+#     level       = "system"
+#     description = "GitHub Actions publish account for homelab custom images"
 #     permissions = [
 #       {
 #         kind      = "project"
-#         namespace = "mcp-github"
+#         namespace = "gha-runner"
+#         access = [
+#           {
+#             action   = "push"
+#             resource = "repository"
+#           },
+#           {
+#             action   = "pull"
+#             resource = "repository"
+#           }
+#         ]
+#       },
+#       {
+#         kind      = "project"
+#         namespace = "harbor-core"
 #         access = [
 #           {
 #             action   = "push"

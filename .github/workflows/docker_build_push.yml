@@ -19,6 +19,7 @@ on:
         required: true
         type: choice
         options:
+          - harbor-runtime-set
           - mcp-cloudflare
           - mcp-fortigate
           - mcp-github
@@ -42,10 +43,13 @@ jobs:
       version: ${{ steps.prepare.outputs.version }}
       digest: ${{ steps.image_metadata.outputs.digest }}
       target_registry: ${{ steps.prepare.outputs.target_registry }}
+      build_strategy: ${{ steps.prepare.outputs.build_strategy }}
       image_base: ${{ steps.prepare.outputs.image_base }}
       image_name: ${{ steps.prepare.outputs.image_name }}
       docker_context: ${{ steps.prepare.outputs.docker_context }}
       dockerfile: ${{ steps.prepare.outputs.dockerfile }}
+      registry_namespace: ${{ steps.prepare.outputs.registry_namespace }}
+      publish_path_mode: ${{ steps.prepare.outputs.publish_path_mode }}
 
     steps:
       - name: Check out the code
@@ -72,36 +76,48 @@ jobs:
           fi
 
           case "$build_target" in
+            harbor-runtime-set)
+              image_name="harbor-runtime-set"
+              docker_context="applications/harbor"
+              build_strategy="harbor-runtime-set"
+              ;;
             mcp-cloudflare)
               image_name="mcp-cloudflare"
-              docker_context="docker/mcp-cloudflare"
+              docker_context="applications/mcp-cloudflare"
+              build_strategy="direct"
               ;;
             mcp-fortigate)
               image_name="mcp-fortigate"
-              docker_context="docker/mcp-fortigate"
+              docker_context="applications/mcp-fortigate"
+              build_strategy="direct"
               ;;
             mcp-github)
               image_name="mcp-github"
-              docker_context="docker/mcp-github"
+              docker_context="applications/mcp-github"
+              build_strategy="direct"
               ;;
             mcp-google-workspace)
               image_name="mcp-google-workspace"
-              docker_context="docker/mcp-google-workspace"
+              docker_context="applications/mcp-google-workspace"
+              build_strategy="direct"
               ;;
             gha-runner)
               image_name="gha-runner"
               docker_context="."
-              dockerfile="docker/gha-runner/Dockerfile"
+              dockerfile="applications/gha-runner/Dockerfile"
+              build_strategy="direct"
               ;;
             jenkins-agent)
               image_name="jenkins-agent"
               docker_context="."
-              dockerfile="docker/jenkins/agent/Dockerfile"
+              dockerfile="applications/jenkins/agent/Dockerfile"
+              build_strategy="direct"
               ;;
             jenkins-controller)
               image_name="jenkins-controller"
               docker_context="."
-              dockerfile="docker/jenkins/controller/Dockerfile"
+              dockerfile="applications/jenkins/controller/Dockerfile"
+              build_strategy="direct"
               ;;
             *)
               echo "Unsupported build target: $build_target" >&2
@@ -109,19 +125,29 @@ jobs:
               ;;
           esac
 
-          dockerfile="${dockerfile:-${docker_context}/Dockerfile}"
+          if [ "${build_strategy}" = "direct" ]; then
+            dockerfile="${dockerfile:-${docker_context}/Dockerfile}"
 
-          if [ ! -f "$dockerfile" ]; then
-            echo "Dockerfile not found: $dockerfile" >&2
-            exit 1
+            if [ ! -f "$dockerfile" ]; then
+              echo "Dockerfile not found: $dockerfile" >&2
+              exit 1
+            fi
           fi
 
           case "$target_registry" in
             github)
-              image_base="${GHCR_NAMESPACE}/${image_name}"
+              registry_namespace="${GHCR_NAMESPACE}"
+              publish_path_mode="namespace-component"
+              if [ "${build_strategy}" = "direct" ]; then
+                image_base="${GHCR_NAMESPACE}/${image_name}"
+              fi
               ;;
             harbor)
-              image_base="${HARBOR_REGISTRY}/${image_name}/${image_name}"
+              registry_namespace="${HARBOR_REGISTRY}"
+              publish_path_mode="project-per-image"
+              if [ "${build_strategy}" = "direct" ]; then
+                image_base="${HARBOR_REGISTRY}/${image_name}/${image_name}"
+              fi
               ;;
             *)
               echo "Unsupported target_registry: $target_registry" >&2
@@ -129,13 +155,24 @@ jobs:
               ;;
           esac
 
+          dockerfile="${dockerfile:-}"
+          image_base="${image_base:-}"
+
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "target_registry=$target_registry" >> "$GITHUB_OUTPUT"
+          echo "build_strategy=$build_strategy" >> "$GITHUB_OUTPUT"
           echo "image_name=$image_name" >> "$GITHUB_OUTPUT"
           echo "docker_context=$docker_context" >> "$GITHUB_OUTPUT"
           echo "dockerfile=$dockerfile" >> "$GITHUB_OUTPUT"
           echo "image_base=$image_base" >> "$GITHUB_OUTPUT"
-          echo "::notice::Preparing ${image_name}:${version} from ${docker_context} using ${dockerfile} for ${image_base}"
+          echo "registry_namespace=$registry_namespace" >> "$GITHUB_OUTPUT"
+          echo "publish_path_mode=$publish_path_mode" >> "$GITHUB_OUTPUT"
+
+          if [ "${build_strategy}" = "direct" ]; then
+            echo "::notice::Preparing ${image_name}:${version} from ${docker_context} using ${dockerfile} for ${image_base}"
+          else
+            echo "::notice::Preparing Harbor runtime set:${version} from ${docker_context} for ${registry_namespace} using ${publish_path_mode}"
+          fi
 
       - name: Log in to GitHub Container Registry
         if: steps.prepare.outputs.target_registry == 'github'
@@ -165,6 +202,7 @@ jobs:
           password: ${{ secrets.HARBOR_ROBOT_SECRET }}
 
       - name: Build multi-platform image and push by digest
+        if: steps.prepare.outputs.build_strategy == 'direct'
         env:
           BUILDKIT_NO_CLIENT_TOKEN: "true"
         run: |
@@ -177,6 +215,7 @@ jobs:
 
       - name: Capture image digest
         id: image_metadata
+        if: steps.prepare.outputs.build_strategy == 'direct'
         run: |
           digest="$(jq -r '.["containerimage.digest"]' image-metadata.json)"
 
@@ -188,9 +227,22 @@ jobs:
 
           echo "digest=$digest" >> "$GITHUB_OUTPUT"
 
+      - name: Build and publish Harbor runtime set
+        if: steps.prepare.outputs.build_strategy == 'harbor-runtime-set'
+        env:
+          DOCKER_CLI_EXPERIMENTAL: enabled
+        run: |
+          chmod 0755 applications/harbor/scripts/build-multiarch.sh
+          applications/harbor/scripts/build-multiarch.sh \
+            --namespace "${{ steps.prepare.outputs.registry_namespace }}" \
+            --tag "${{ steps.prepare.outputs.version }}" \
+            --path-mode "${{ steps.prepare.outputs.publish_path_mode }}" \
+            --push
+
   push:
     runs-on: [self-hosted, linux, homelab]
     needs: build
+    if: needs.build.outputs.build_strategy == 'direct'
 
     steps:
       - name: Set up Docker Buildx

@@ -5,8 +5,8 @@
   ],
   "dockerfile": {
     "managerFilePatterns": [
-      "/(^|/)docker/jenkins/controller/Dockerfile$/",
-      "/(^|/)docker/jenkins/agent/Dockerfile$/"
+      "/(^|/)applications/jenkins/controller/Dockerfile$/",
+      "/(^|/)applications/jenkins/agent/Dockerfile$/"
     ]
   },
   "packageRules": [

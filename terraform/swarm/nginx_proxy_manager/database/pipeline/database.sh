@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Stage 2 (docs/planning/nginx-proxy-manager-plan.md) – database stage deployment
+# Nginx Proxy Manager database stage deployment
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
