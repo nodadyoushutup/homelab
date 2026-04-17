@@ -70,6 +70,10 @@ When a task changes Langflow:
    app definition as needed
 4. if the change is flow-related, decide whether the change should stay UI-only
    temporarily or be captured as repo-managed JSON
+   - for agent/subagent flows, keep delegation payloads thin: objective,
+     repo_scope, concise context, constraints, expected_output
+   - do not forward full chat history or raw tool output into subagent calls
+   - trim the subagent tool set to the smallest useful read-only surface
 5. if the change is component-related, implement it as repo-managed Python
    rather than in-editor code when the behavior is durable or reusable
 6. if the change affects the project MCP endpoint, update the matching client
@@ -107,10 +111,51 @@ project configuration inside Langflow:
 3. validate the flow behavior in the Playground or through the API
 4. if the change should be durable, export the flow JSON and capture it in
    repo-managed assets
+   - the current Homelab flow snapshots are tracked under `langflow/flows/`
+   - refresh them with
+     `python3 scripts/misc/fix_langflow_homelab_flows.py --apply-live --write-snapshots`
 5. if repo-managed flow loading is enabled, re-import or load the captured JSON
    through the supported startup/API path
 
 Do not rely on memory or screenshots as the only record of a stable flow.
+
+## Agent Creation Flow
+
+Use this when creating a repo-managed Langflow parent agent or subagent:
+
+1. decide whether the new artifact is a parent agent or a subagent
+2. create the Python file under `langflow/agents/` or
+   `langflow/agents/subagents/`
+3. create the matching Markdown instructions/schema doc under `docs/agents/`
+   or `docs/agents/subagents/`
+4. update `docs/agents/README.md` so the current agent set, file map, and
+   Langflow prompt source include the new artifact
+5. if the agent is callable, choose a unique tool name that matches the
+   documented capability
+6. validate that the Python implementation and Markdown contract stay aligned
+
+Do not create only the Python side or only the Markdown side of a new agent.
+
+## Agent Tool Naming Flow
+
+Use this when changing repo-managed Langflow agent Python under
+`langflow/agents/`:
+
+1. identify whether the exported component is a parent agent or a subagent
+2. choose a tool name that matches the documented capability, not a generic
+   default
+3. keep the tool name unique across the loaded Langflow agent catalog
+4. use snake_case in the form `call_<capability>_agent`
+5. use `call_code_analysis_agent` for the `Code Analysis` subagent
+6. use `call_confluence_agent` for the `Confluence` subagent
+7. use `call_kubernetes_agent` for the `Kubernetes` subagent
+8. use `call_pipeline_agent` for the `Pipeline` subagent
+9. use `call_terraform_agent` for the `Terraform` subagent
+10. use `call_jira_agent` for the `Jira` subagent
+11. update the matching docs in `docs/agents/` and this workflow if the stable
+   naming pattern changes
+
+Do not keep `call_agent` once more than one agent-style tool may be present.
 
 ## Custom Component Flow
 
@@ -163,6 +208,8 @@ After any Langflow change, validate the layer you changed:
 3. behavior layer:
    - run the changed flow in Playground or via API
    - if the flow exposes MCP, test the expected endpoint
+   - for agent/subagent flows, inspect backend logs to ensure the run does not
+     reintroduce oversized tool dumps or token-limit retries
 4. persistence layer:
    - if the change was meant to be durable, confirm the exported JSON or
      component files were captured in repo-managed artifacts

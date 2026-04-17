@@ -18,9 +18,10 @@ Do not start work as an unspecified generic agent.
 
 - `docs/agents/README.md`: current agent set, parent/subagent roles, and
   selection guidance
+- `docs/agents/homelab-agent.md` and `docs/agents/subagents/*.md`: native
+  input/output schemas and communication expectations for each agent
 - `docs/workflows/agents.md`: required workflow for choosing and locking the
   agent set before execution
-- `docs/agents/protocol.md`: shared delegation contract for agent-to-agent work
 - `docs/rules/README.md`: index of repo, Kubernetes, and Terraform rules
 - `docs/workflows/README.md`: index of execution workflows
 - `docs/resources/README.md`: curated technology reference shelf

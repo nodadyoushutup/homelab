@@ -3,8 +3,8 @@
 This document defines how work must choose and use agents in this repo.
 
 Use [`docs/agents/README.md`](./../agents/README.md) for the current agent set
-and role definitions. Use [`docs/agents/protocol.md`](./../agents/protocol.md)
-for delegation message structure.
+and role definitions. Use the selected agent and subagent docs for their native
+input/output schemas.
 
 ## Required Startup Flow
 
@@ -40,10 +40,29 @@ Agent selection is not an afterthought.
 If the task changes enough that the chosen agent set is no longer appropriate,
 re-evaluate and explicitly re-lock the agent set.
 
+## Creation Rule
+
+When the work creates a new parent agent or subagent, treat the repo-managed
+Python file and the Markdown contract doc as one unit of work.
+
+Required steps:
+
+1. create the Python implementation in `langflow/agents/` or
+   `langflow/agents/subagents/`
+2. create the matching Markdown instructions/schema file in `docs/agents/` or
+   `docs/agents/subagents/`
+3. update `docs/agents/README.md` so the new agent is part of the documented
+   agent set, file map, and Langflow prompt source
+4. only then treat the new agent or subagent as selectable in this workflow
+
+Do not create a doc-only agent or a Python-only agent.
+
 ## Delegation Rule
 
 - Parent agents own behavior, prioritization, and final decisions.
 - Subagents own narrow reusable capabilities.
 - Subagents should not depend on a specific parent unless a human explicitly
   asks for a parent-specific variant.
-- Use `docs/agents/protocol.md` whenever one agent delegates work to another.
+- When one agent delegates work to another, shape the input to match the
+  callee's documented input schema and consume the callee's documented output
+  schema.

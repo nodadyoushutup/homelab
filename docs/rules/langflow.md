@@ -45,12 +45,20 @@ This document applies to:
   - flows exported as Langflow JSON
   - custom components stored as Python files
   - deployment behavior controlled through Langflow environment variables
+- Agent-to-agent Langflow flows must use thin delegation envelopes. Do not pass
+  full chat history, raw tool output, or large file lists into subagent calls
+  when a short objective plus scoped context would suffice.
+- Analysis-only Langflow subagents should expose the smallest practical tool
+  surface. Do not wire unrelated write-capable or infrastructure-mutation tools
+  into read-only analysis flows.
 - Do not treat ad hoc UI-only flow edits as complete change management when the
   flow is intended to be durable or reproducible. Export or otherwise capture
   the authored flow in repo-managed artifacts.
 - There is no repo-managed Langflow flow archive in this repo yet. Until that
   pattern is implemented, the Langflow PostgreSQL database remains the
   effective live state.
+- The current Homelab flow snapshots live under `langflow/flows/` for review
+  and drift detection, even though startup loading is not yet enabled.
 
 ## Component Rules
 
@@ -62,6 +70,36 @@ This document applies to:
 - `LANGFLOW_COMPONENTS_INDEX_PATH` may be used to curate the component catalog,
   but it does not replace `LANGFLOW_COMPONENTS_PATH` for loading Python modules
   from disk.
+
+## Agent Tool Naming Rules
+
+- Repo-managed Langflow agents and subagents are paired artifacts:
+  - Python implementation under `langflow/agents/` or
+    `langflow/agents/subagents/`
+  - Markdown instructions/schema doc under `docs/agents/` or
+    `docs/agents/subagents/`
+- Do not treat a new agent or subagent as complete until both the Python file
+  and the Markdown file exist.
+- When a new agent or subagent is added, update `docs/agents/README.md` in the
+  same change so the documented agent set and Langflow prompt source stay
+  aligned.
+- When a repo-managed Langflow agent or subagent is exposed as a callable tool
+  from `langflow/agents/`, the tool name must be unique and capability-specific.
+- Do not use a shared generic tool name such as `call_agent`. That becomes
+  ambiguous once multiple agents or subagents are loaded into the same Langflow
+  workspace.
+- Prefer snake_case names shaped like `call_<capability>_agent`.
+- The `Code Analysis` subagent should expose the tool name
+  `call_code_analysis_agent`.
+- The `Confluence` subagent should expose the tool name
+  `call_confluence_agent`.
+- The `Kubernetes` subagent should expose the tool name
+  `call_kubernetes_agent`.
+- The `Terraform` subagent should expose the tool name
+  `call_terraform_agent`.
+- The `Jira` subagent should expose the tool name `call_jira_agent`.
+- If a parent agent is exposed as a tool, give it its own distinct capability
+  name instead of reusing the subagent or a generic default.
 
 ## Flow Packaging Rules
 

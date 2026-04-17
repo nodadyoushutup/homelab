@@ -9,7 +9,6 @@ locals {
     "--host", "0.0.0.0",
     "--port", tostring(local.internal_port),
     "--path", local.http_path,
-    "--read-only",
     "--toolsets", "all",
   ]
   filter_args = concat(

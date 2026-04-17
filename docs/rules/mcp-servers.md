@@ -19,9 +19,12 @@ This document applies to the current Swarm-hosted MCP server set:
 - `terraform/swarm/mcp-fortigate/app`
 - `terraform/swarm/mcp-github/app`
 - `terraform/swarm/mcp-google-workspace/app`
+- `terraform/swarm/mcp-kubernetes/app`
 - `terraform/swarm/mcp-redis/app`
 - `terraform/swarm/mcp-agent-protocol/app`
+- `terraform/swarm/mcp-bash-pipeline/app`
 - `terraform/swarm/mcp-langflow/app`
+- `terraform/swarm/mcp-terraform/app`
 
 ## Shared Placement Rules
 
@@ -110,8 +113,9 @@ This document applies to the current Swarm-hosted MCP server set:
 - Runtime root: `terraform/swarm/mcp-atlassian/app`
 - Image source: upstream image pinned directly in Terraform
 - Listen model: internal `8000`, published `18080`, HTTP path `/mcp`
-- Access model: the service is intentionally started with `--read-only`; keep
-  that behavior unless the repo intentionally adopts a different upstream mode.
+- Access model: the service runs with the upstream full Jira and Confluence
+  tool surface enabled. Keep mutating access intentional, and use scope filters
+  or explicit tool restrictions if the repo later needs to narrow exposure.
 - Scope model: keep `jira_projects_filter` and `confluence_spaces_filter`
   populated when the server should be limited to a subset of Atlassian content.
 - Credential model: Jira and Confluence credentials are independent inputs. Do
@@ -253,6 +257,24 @@ This document applies to the current Swarm-hosted MCP server set:
   the current steady-state behavior. Set it deliberately when the task should
   constrain the server.
 
+### `mcp-kubernetes`
+
+- Runtime root: `terraform/swarm/mcp-kubernetes/app`
+- Image source: upstream image pinned directly in Terraform from
+  `quay.io/containers/kubernetes_mcp_server`
+- Listen model: internal `8106`, published `18106`, HTTP path `/mcp`
+- Credential model: source the cluster credential from a dedicated kubeconfig
+  file under `/mnt/eapp/.tfvars/mcp-kubernetes/` and inject it as a Docker
+  secret instead of baking credentials into the image
+- Access model: keep `mcp_read_only = true`, `disable_multi_cluster = true`,
+  and `toolsets = "core,config"` unless a task explicitly requires broader
+  Kubernetes capabilities
+- Output model: keep `list_output = "yaml"` so cluster object responses stay
+  structured for LLM clients
+- Deployment model: use the upstream native HTTP server directly; do not add a
+  repo-local wrapper unless the upstream transport or image model stops fitting
+  the repo standard
+
 ### `mcp-redis`
 
 - Runtime root: `terraform/swarm/mcp-redis/app`
@@ -286,6 +308,35 @@ This document applies to the current Swarm-hosted MCP server set:
 - Data model: do not use this store for raw chain-of-thought, long-lived
   secrets, or the only durable audit trail
 
+### `mcp-bash-pipeline`
+
+- Runtime root: `terraform/swarm/mcp-bash-pipeline/app`
+- Image source: `applications/mcp-bash-pipeline/` owns the repo-local native
+  Streamable HTTP MCP server image
+- Listen model: internal `8107`, published `18107`, HTTP path `/mcp`
+- Workspace model: bind-mount the shared code tree at `/mnt/eapp/code`
+  read-write and the tfvars tree at `/mnt/eapp/.tfvars`; keep the default
+  workspace root aligned with the repo-local Codex config and allowlist only
+  the shared code tree
+- tfvars host model: the `/mnt/eapp/.tfvars` bind source is node-local from the
+  Swarm host that runs the service. Keep the required tfvars subtree populated
+  on `swarm-cp-0` itself; a matching directory that exists only on another host
+  does not satisfy the runtime contract inside the container
+- Runtime user model: run the container with an unprivileged UID/GID that can
+  read and execute files from the NFS-mounted repo path; do not fall back to
+  root against a root-squashed workspace mount
+- Tool model: keep the server limited to typed pipeline tools for
+  `terraform/**/pipeline/*.sh`; do not widen it into arbitrary shell execution
+  or a generic terminal bridge
+- Execution model: prefer repo-managed Terraform stage entrypoints that already
+  conform to the shared `scripts/terraform/swarm_pipeline.sh` contract; keep
+  known host-dependent pipelines explicitly blocked until the container runtime
+  is intentionally widened to support them
+- Client config model: this server is workspace-scoped, so keep it in the
+  repo-local `.codex/config.toml` with the same `x-workspace-root` convention
+  used by the other local MCP servers and include the logical workspace header
+  when clients need to distinguish homelab from other mounted workspaces
+
 ### `mcp-langflow`
 
 - Runtime root: `terraform/swarm/mcp-langflow/app`
@@ -300,3 +351,23 @@ This document applies to the current Swarm-hosted MCP server set:
   validation through Vault and `ExternalSecret`
 - Tool model: prefer consolidated mode for host-reachable clients unless a task
   explicitly needs the upstream 93-tool granular surface
+
+### `mcp-terraform`
+
+- Runtime root: `terraform/swarm/mcp-terraform/app`
+- Image source: `applications/mcp-terraform/` packages HashiCorp's official
+  `terraform-mcp-server` binary into a thin image that can expose the upstream
+  HTTP health endpoint to Swarm healthchecks
+- Listen model: internal `8080`, published `18104`, HTTP path `/mcp`, health
+  path `/health`
+- Tool model: keep `toolsets` on `registry` by default; only widen to
+  `registry-private`, `terraform`, or `all` when the task explicitly needs more
+  than public registry lookups
+- Credential model: `tfe_token` is optional and should stay scoped to the
+  minimum HCP Terraform or Terraform Enterprise permissions required; set
+  `tfe_address` only when the deployment should target a non-default hostname
+- Safety model: keep `enable_tf_operations` false unless the task explicitly
+  requires Terraform operation tools
+- CORS model: keep `mcp_cors_mode = "strict"` and leave
+  `mcp_allowed_origins` empty unless a browser-based client genuinely requires
+  cross-origin access

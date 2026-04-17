@@ -14,6 +14,9 @@ operator flows.
   validation rules
 - `applications.md`: placement rules for deciding whether a new app belongs in
   Swarm or Kubernetes
+- `confluence.md`: Confluence source-of-truth, access, scope, and analysis
+  rules
+- `jira.md`: Jira source-of-truth, access, scope, and analysis rules
 - `langflow.md`: Langflow deployment, persistence, and source-of-truth rules
 - `mcp-servers.md`: steady-state rules for the Swarm-hosted MCP server set
 - `repo.md`: repo-wide rules, safety constraints, host/runtime assumptions, and

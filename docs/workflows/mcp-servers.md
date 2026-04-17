@@ -19,9 +19,12 @@ Use this workflow for:
 - `terraform/swarm/mcp-fortigate/app`
 - `terraform/swarm/mcp-github/app`
 - `terraform/swarm/mcp-google-workspace/app`
+- `terraform/swarm/mcp-kubernetes/app`
 - `terraform/swarm/mcp-redis/app`
 - `terraform/swarm/mcp-agent-protocol/app`
+- `terraform/swarm/mcp-bash-pipeline/app`
 - `terraform/swarm/mcp-langflow/app`
+- `terraform/swarm/mcp-terraform/app`
 
 ## Standard Flow
 
@@ -91,6 +94,9 @@ Before running `terraform/swarm/mcp-argocd/app/pipeline/app.sh`:
 Before running `terraform/swarm/mcp-atlassian/app/pipeline/app.sh`:
 
 - confirm Jira and Confluence URLs, usernames, and API tokens are all present
+- confirm the full-access posture is still intentional for the current task and
+  environment because the deployed server will expose mutating Jira and
+  Confluence tools to clients
 - confirm any `jira_projects_filter` or `confluence_spaces_filter` changes are
   intentional because they directly narrow or widen the MCP surface
 
@@ -173,6 +179,16 @@ Before running `terraform/swarm/mcp-google-workspace/app/pipeline/app.sh`:
 - confirm `workspace_delegated_user` is the intended impersonated user email
 - rebuild the image first if `applications/mcp-google-workspace/` changed
 
+### `mcp-kubernetes`
+
+Before running `terraform/swarm/mcp-kubernetes/app/pipeline/app.sh`:
+
+- confirm `quay.io/containers/kubernetes_mcp_server:v0.0.60` is still the intended upstream release
+- confirm the local kubeconfig file referenced by tfvars exists on the Terraform runner
+- prefer a dedicated read-only kubeconfig for this service instead of reusing a broad admin kubeconfig
+- keep `mcp_read_only = true` unless the task explicitly requires mutating Kubernetes tools
+- keep the initial toolset narrow unless the task explicitly needs more than `core,config`
+
 ### `mcp-redis`
 
 Before running `terraform/swarm/mcp-redis/app/pipeline/app.sh`:
@@ -195,6 +211,24 @@ Before running `terraform/swarm/mcp-agent-protocol/app/pipeline/app.sh`:
   different exposure model
 - rebuild the image first if `applications/mcp-agent-protocol/` changed
 
+### `mcp-bash-pipeline`
+
+Before running `terraform/swarm/mcp-bash-pipeline/app/pipeline/app.sh`:
+
+- confirm the local image tag in Terraform exists on `swarm-cp-0`
+- confirm the mounted shared code path exists on the Terraform runner and on
+  the Swarm node at `/mnt/eapp/code`
+- confirm `/mnt/eapp/.tfvars/mcp-bash-pipeline/app.tfvars` exists with the
+  intended repo mount path, tfvars mount path, and runtime UID/GID
+- confirm the matching `/mnt/eapp/.tfvars` subtree is populated on
+  `swarm-cp-0` itself, not only on the operator host, because the service bind
+  mount reads the node-local path at runtime
+- confirm the configured runtime UID/GID can read and execute files from the
+  NFS-mounted workspace path on the Swarm node
+- rebuild the image first if `applications/mcp-bash-pipeline/` changed
+- update the repo-local `.codex/config.toml` entry if the hostname, MCP path,
+  or workspace headers change
+
 ### `mcp-langflow`
 
 Before running `terraform/swarm/mcp-langflow/app/pipeline/app.sh`:
@@ -204,6 +238,18 @@ Before running `terraform/swarm/mcp-langflow/app/pipeline/app.sh`:
   `langflow_base_url` and `langflow_api_key`
 - confirm the target Langflow deployment is reachable from the Swarm node
 - rebuild the image first if `applications/mcp-langflow/` changed
+
+### `mcp-terraform`
+
+Before running `terraform/swarm/mcp-terraform/app/pipeline/app.sh`:
+
+- confirm the local image tag in Terraform exists on `swarm-cp-0`
+- confirm `/mnt/eapp/.tfvars/mcp-terraform/app.tfvars` exists with the intended
+  `toolsets` and optional HCP Terraform or Terraform Enterprise credentials
+- rebuild the image first if `applications/mcp-terraform/` changed
+- if a browser-based MCP client is part of the task, decide the final
+  `mcp_allowed_origins` value before apply instead of widening CORS later by
+  hand
 
 ## Apply
 
@@ -247,9 +293,12 @@ Validation examples:
 - `mcp-filesystem-homelab`: probe `http://<swarm-host>:18098/mcp`
 - `mcp-git-homelab`: probe `http://<swarm-host>:18099/mcp`
 - `mcp-fortigate`: probe `http://<swarm-host>:18084/mcp`
+- `mcp-kubernetes`: probe `http://<swarm-host>:18106/mcp`
 - `mcp-redis`: probe `http://<swarm-host>:18101/mcp`
 - `mcp-agent-protocol`: probe `http://<swarm-host>:18100/mcp`
+- `mcp-bash-pipeline`: probe `http://<swarm-host>:18107/mcp`
 - `mcp-langflow`: probe `http://<swarm-host>:18102/mcp`
+- `mcp-terraform`: probe `http://<swarm-host>:18104/mcp`
 - `mcp-github`, `mcp-cloudflare`, `mcp-google-workspace`: at minimum verify the
   port is listening if the wrapper does not define a fixed explicit path in
   Terraform

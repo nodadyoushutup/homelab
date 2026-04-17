@@ -15,7 +15,10 @@ govern those workflows.
   execution
 - `container-images.md`: container build, Harbor registry, and GitHub Actions
   publish workflow
+- `confluence.md`: standard Confluence discovery and documentation-analysis
+  workflow
 - `git.md`: default staging, commit, and push workflow for normal repo changes
+- `jira.md`: standard Jira discovery and issue-analysis workflow
 - `langflow.md`: Langflow deployment, flow, and custom component workflow
 - `mcp-servers.md`: operator workflow for Swarm-hosted MCP servers
 - `new-application.md`: how to classify a new app and then onboard it through
