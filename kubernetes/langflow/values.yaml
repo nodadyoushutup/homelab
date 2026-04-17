@@ -80,6 +80,13 @@ langflowide:
             secretKeyRef:
               name: langflow-secrets
               key: LANGFLOW_SECRET_KEY
+        - name: LANGFLOW_API_KEY_SOURCE
+          value: "env"
+        - name: LANGFLOW_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: langflow-secrets
+              key: LANGFLOW_API_KEY
       externalDatabase:
         enabled: true
         driver:

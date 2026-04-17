@@ -19,7 +19,9 @@ This document applies to the current Swarm-hosted MCP server set:
 - `terraform/swarm/mcp-fortigate/app`
 - `terraform/swarm/mcp-github/app`
 - `terraform/swarm/mcp-google-workspace/app`
+- `terraform/swarm/mcp-redis/app`
 - `terraform/swarm/mcp-agent-protocol/app`
+- `terraform/swarm/mcp-langflow/app`
 
 ## Shared Placement Rules
 
@@ -251,6 +253,21 @@ This document applies to the current Swarm-hosted MCP server set:
   the current steady-state behavior. Set it deliberately when the task should
   constrain the server.
 
+### `mcp-redis`
+
+- Runtime root: `terraform/swarm/mcp-redis/app`
+- Image source: `applications/mcp-redis/` owns the repo-local native
+  Streamable HTTP MCP server image
+- Listen model: internal `8101`, published `18101`, HTTP path `/mcp`
+- Redis model: keep the backing Redis service private to the service overlay;
+  the MCP server is the host-routed access path, not the Redis TCP port itself
+- Scope model: use `key_prefix` deliberately so agents operate inside an
+  intended logical namespace rather than treating the whole Redis instance as
+  an unbounded scratchpad
+- Safety model: destructive operations are allowed by default for this server,
+  but they remain explicitly controllable through
+  `allow_destructive_operations`
+
 ### `mcp-agent-protocol`
 
 - Runtime root: `terraform/swarm/mcp-agent-protocol/app`
@@ -268,3 +285,18 @@ This document applies to the current Swarm-hosted MCP server set:
   tool surface constrained to protocol-aware operations
 - Data model: do not use this store for raw chain-of-thought, long-lived
   secrets, or the only durable audit trail
+
+### `mcp-langflow`
+
+- Runtime root: `terraform/swarm/mcp-langflow/app`
+- Image source: `applications/mcp-langflow/` wraps the published
+  `langflow-mcp-server` package behind the repo-standard HTTP bridge
+- Listen model: internal `8102`, published `18102`, HTTP path `/mcp`
+- Access model: point the wrapper at the stable Langflow deployment URL rather
+  than cluster-internal service names so the Swarm management plane does not
+  depend on Kubernetes overlay reachability
+- Auth model: the wrapper requires a real Langflow API key; keep that key in
+  tfvars and keep the matching Langflow deployment wired for env-backed API key
+  validation through Vault and `ExternalSecret`
+- Tool model: prefer consolidated mode for host-reachable clients unless a task
+  explicitly needs the upstream 93-tool granular surface

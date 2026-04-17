@@ -59,8 +59,8 @@ Repo examples:
   `nginx_proxy_manager`, `gha-runner`, `jenkins-controller`
 - management tooling: `terraform/swarm/mcp-argocd`, `mcp-atlassian`,
   `mcp-ast-grep`, `mcp-cloudflare`, `mcp-filesystem-homelab`,
-  `mcp-fortigate`, `mcp-github`, `mcp-google-workspace`,
-  `mcp-agent-protocol`
+  `mcp-fortigate`, `mcp-github`, `mcp-google-workspace`, `mcp-redis`,
+  `mcp-agent-protocol`, `mcp-langflow`
 
 If the Swarm service is an MCP server, use
 [`docs/rules/mcp-servers.md`](./mcp-servers.md) for its service-specific

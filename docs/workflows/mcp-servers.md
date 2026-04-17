@@ -19,7 +19,9 @@ Use this workflow for:
 - `terraform/swarm/mcp-fortigate/app`
 - `terraform/swarm/mcp-github/app`
 - `terraform/swarm/mcp-google-workspace/app`
+- `terraform/swarm/mcp-redis/app`
 - `terraform/swarm/mcp-agent-protocol/app`
+- `terraform/swarm/mcp-langflow/app`
 
 ## Standard Flow
 
@@ -171,6 +173,17 @@ Before running `terraform/swarm/mcp-google-workspace/app/pipeline/app.sh`:
 - confirm `workspace_delegated_user` is the intended impersonated user email
 - rebuild the image first if `applications/mcp-google-workspace/` changed
 
+### `mcp-redis`
+
+Before running `terraform/swarm/mcp-redis/app/pipeline/app.sh`:
+
+- confirm the local image tag in Terraform exists on `swarm-cp-0`
+- confirm `/mnt/eapp/.tfvars/mcp-redis/app.tfvars` exists with the intended
+  `key_prefix` and safety settings
+- keep Redis internal to the service overlay unless the task explicitly needs a
+  different exposure model
+- rebuild the image first if `applications/mcp-redis/` changed
+
 ### `mcp-agent-protocol`
 
 Before running `terraform/swarm/mcp-agent-protocol/app/pipeline/app.sh`:
@@ -181,6 +194,16 @@ Before running `terraform/swarm/mcp-agent-protocol/app/pipeline/app.sh`:
 - keep Redis internal to the service overlay unless the task explicitly needs a
   different exposure model
 - rebuild the image first if `applications/mcp-agent-protocol/` changed
+
+### `mcp-langflow`
+
+Before running `terraform/swarm/mcp-langflow/app/pipeline/app.sh`:
+
+- confirm the local image tag in Terraform exists on `swarm-cp-0`
+- confirm `/mnt/eapp/.tfvars/mcp-langflow/app.tfvars` exists with the intended
+  `langflow_base_url` and `langflow_api_key`
+- confirm the target Langflow deployment is reachable from the Swarm node
+- rebuild the image first if `applications/mcp-langflow/` changed
 
 ## Apply
 
@@ -224,7 +247,9 @@ Validation examples:
 - `mcp-filesystem-homelab`: probe `http://<swarm-host>:18098/mcp`
 - `mcp-git-homelab`: probe `http://<swarm-host>:18099/mcp`
 - `mcp-fortigate`: probe `http://<swarm-host>:18084/mcp`
+- `mcp-redis`: probe `http://<swarm-host>:18101/mcp`
 - `mcp-agent-protocol`: probe `http://<swarm-host>:18100/mcp`
+- `mcp-langflow`: probe `http://<swarm-host>:18102/mcp`
 - `mcp-github`, `mcp-cloudflare`, `mcp-google-workspace`: at minimum verify the
   port is listening if the wrapper does not define a fixed explicit path in
   Terraform

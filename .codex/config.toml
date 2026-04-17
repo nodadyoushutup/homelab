@@ -60,8 +60,14 @@ url = "https://mcp.cloudflare.nodadyoushutup.com/mcp"
 [mcp_servers.mcp_google_workspace]
 url = "https://mcp.google-workspace.nodadyoushutup.com/mcp"
 
+[mcp_servers.mcp_redis]
+url = "https://mcp.redis.nodadyoushutup.com/mcp"
+
 [mcp_servers.mcp_agent_protocol]
 url = "https://mcp.agent-protocol.nodadyoushutup.com/mcp"
+
+[mcp_servers.mcp_langflow]
+url = "https://mcp.langflow.nodadyoushutup.com/mcp"
 
 [mcp_servers.langflow]
 # Langflow 1.9.0 still serves project MCP streamable endpoints under /api/v1.

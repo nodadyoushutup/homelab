@@ -16,6 +16,7 @@ govern those workflows.
 - `container-images.md`: container build, Harbor registry, and GitHub Actions
   publish workflow
 - `git.md`: default staging, commit, and push workflow for normal repo changes
+- `langflow.md`: Langflow deployment, flow, and custom component workflow
 - `mcp-servers.md`: operator workflow for Swarm-hosted MCP servers
 - `new-application.md`: how to classify a new app and then onboard it through
   the correct platform workflow
