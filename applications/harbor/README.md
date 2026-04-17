@@ -30,6 +30,8 @@ Notes:
 - `--path-mode namespace-component` keeps the default `<namespace>/<component>:<tag>` layout.
 - `--path-mode project-per-image` publishes Harbor-compatible paths like
   `<registry>/<component>/<component>:<tag>`.
+- If the build host does not have GNU Make installed, the script falls back to
+  a disposable `docker:27-cli` helper container and installs build tools there.
 - If cross-architecture emulation is not installed, run once with `--install-binfmt`.
 - The script publishes arch tags (`:<tag>-amd64`, `:<tag>-arm64`) and manifest tags (`:<tag>`).
 

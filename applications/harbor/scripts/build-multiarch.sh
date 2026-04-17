@@ -22,6 +22,9 @@ PLATFORMS_CSV="linux/amd64,linux/arm64"
 PUSH_IMAGES="0"
 INSTALL_BINFMT="0"
 PATH_MODE="namespace-component"
+MAKE_HELPER_IMAGE="${MAKE_HELPER_IMAGE:-docker:27-cli}"
+HAS_HOST_MAKE="0"
+MAKE_HELPER_ANNOUNCED="0"
 
 usage() {
   cat <<USAGE
@@ -108,12 +111,16 @@ if [[ -z "${HARBOR_VERSION}" || -z "${HARBOR_SOURCE_REPO}" || -z "${HARBOR_IMAGE
   exit 1
 fi
 
-for cmd in docker git make curl; do
+for cmd in docker git curl; do
   if ! command -v "${cmd}" >/dev/null 2>&1; then
     echo "[ERR] Required command not found: ${cmd}" >&2
     exit 1
   fi
 done
+
+if command -v make >/dev/null 2>&1; then
+  HAS_HOST_MAKE="1"
+fi
 
 if [[ "${INSTALL_BINFMT}" == "1" ]]; then
   echo "[INFO] Installing binfmt emulation"
@@ -153,6 +160,49 @@ publish_image_ref() {
       printf '%s/%s/%s:%s\n' "${IMAGE_NAMESPACE}" "${image}" "${image}" "${tag}"
       ;;
   esac
+}
+
+run_make_target() {
+  local repo_dir="$1"
+  local target="$2"
+  shift 2
+  local -a env_pairs=("$@")
+
+  if [[ "${HAS_HOST_MAKE}" == "1" ]]; then
+    (
+      cd "${repo_dir}"
+      env "${env_pairs[@]}" make -e "${target}"
+    )
+    return
+  fi
+
+  local -a docker_args env_args
+  docker_args=(
+    --rm
+    -v /var/run/docker.sock:/var/run/docker.sock
+    -v "${repo_dir}:/workspace"
+    -w /workspace
+  )
+  env_args=()
+
+  if [[ -d "${HOME:-}/.docker" ]]; then
+    docker_args+=(-v "${HOME}/.docker:/root/.docker:ro")
+  fi
+
+  for pair in "${env_pairs[@]}"; do
+    env_args+=(-e "${pair}")
+  done
+
+  if [[ "${MAKE_HELPER_ANNOUNCED}" == "0" ]]; then
+    echo "[WARN] Host make not found; using ${MAKE_HELPER_IMAGE} helper container." >&2
+    MAKE_HELPER_ANNOUNCED="1"
+  fi
+
+  docker run \
+    "${docker_args[@]}" \
+    "${env_args[@]}" \
+    "${MAKE_HELPER_IMAGE}" \
+    sh -lc 'apk add --no-cache bash coreutils curl git make >/dev/null && make -e "$1"' _ "${target}"
 }
 
 build_for_platform() {
@@ -221,37 +271,27 @@ build_for_platform() {
   echo "[INFO] Trivy version for ${arch}: ${effective_trivy_version}"
   echo "[INFO] Trivy URL for ${arch}: ${trivy_download_url}"
 
+  local -a build_env
+  build_env=(
+    "DOCKER_DEFAULT_PLATFORM=${platform}"
+    "VERSIONTAG=${arch_tag}"
+    "BASEIMAGETAG=${arch_tag}"
+    "IMAGENAMESPACE=${IMAGE_NAMESPACE}"
+    "BASEIMAGENAMESPACE=${IMAGE_NAMESPACE}"
+    "DEVFLAG=false"
+    "TRIVYFLAG=true"
+    "TRIVYVERSION=${effective_trivy_version}"
+    "BUILD_INSTALLER=true"
+    "BUILD_BASE=true"
+    "TRIVY_DOWNLOAD_URL=${trivy_download_url}"
+    "PULL_BASE_FROM_DOCKERHUB=false"
+  )
+
   echo "[BUILD] make compile (${platform})"
-  env \
-    DOCKER_DEFAULT_PLATFORM="${platform}" \
-    VERSIONTAG="${arch_tag}" \
-    BASEIMAGETAG="${arch_tag}" \
-    IMAGENAMESPACE="${IMAGE_NAMESPACE}" \
-    BASEIMAGENAMESPACE="${IMAGE_NAMESPACE}" \
-    DEVFLAG="false" \
-    TRIVYFLAG="true" \
-    TRIVYVERSION="${effective_trivy_version}" \
-    BUILD_INSTALLER="true" \
-    BUILD_BASE="true" \
-    TRIVY_DOWNLOAD_URL="${trivy_download_url}" \
-    PULL_BASE_FROM_DOCKERHUB="false" \
-    make -e compile
+  run_make_target "${repo_dir}" compile "${build_env[@]}"
 
   echo "[BUILD] make build (${platform})"
-  env \
-    DOCKER_DEFAULT_PLATFORM="${platform}" \
-    VERSIONTAG="${arch_tag}" \
-    BASEIMAGETAG="${arch_tag}" \
-    IMAGENAMESPACE="${IMAGE_NAMESPACE}" \
-    BASEIMAGENAMESPACE="${IMAGE_NAMESPACE}" \
-    DEVFLAG="false" \
-    TRIVYFLAG="true" \
-    TRIVYVERSION="${effective_trivy_version}" \
-    BUILD_INSTALLER="true" \
-    BUILD_BASE="true" \
-    TRIVY_DOWNLOAD_URL="${trivy_download_url}" \
-    PULL_BASE_FROM_DOCKERHUB="false" \
-    make -e build
+  run_make_target "${repo_dir}" build "${build_env[@]}"
 
   if [[ "${PUSH_IMAGES}" == "1" ]]; then
     for image in "${runtime_images[@]}"; do

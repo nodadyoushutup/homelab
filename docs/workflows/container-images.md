@@ -138,6 +138,9 @@ Important behavior:
   Harbor upstream tag.
 - `build-multiarch.sh` builds the full runtime set for `linux/amd64` and
   `linux/arm64`.
+- `build-multiarch.sh` uses host `make` when available and otherwise falls back
+  to a disposable `docker:27-cli` helper container, so older runners do not
+  fail solely because GNU Make is missing.
 - The script now supports registry-aware publish layouts:
   - `namespace-component` for GHCR-style paths
   - `project-per-image` for Harbor-style project-per-image paths
