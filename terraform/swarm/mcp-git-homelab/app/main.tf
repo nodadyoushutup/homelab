@@ -4,7 +4,7 @@ locals {
   internal_port  = 8099
   published_port = 18099
   http_path      = "/mcp"
-  image          = "homelab/mcp-git-homelab:2026.04.16.1"
+  image          = "homelab/mcp-git-homelab:2026.04.16.3"
 }
 
 resource "docker_network" "mcp_git_homelab" {

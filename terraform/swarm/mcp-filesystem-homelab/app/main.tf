@@ -4,7 +4,7 @@ locals {
   internal_port  = 8098
   published_port = 18098
   http_path      = "/mcp"
-  image          = "homelab/mcp-filesystem-homelab:2026.04.16.1"
+  image          = "homelab/mcp-filesystem-homelab:2026.04.16.3"
 }
 
 resource "docker_network" "mcp_filesystem_homelab" {

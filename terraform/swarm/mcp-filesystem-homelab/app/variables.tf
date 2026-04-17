@@ -4,15 +4,15 @@ variable "provider_config" {
 }
 
 variable "repo_mount_path" {
-  description = "Absolute host path for the repo checkout exposed to the filesystem MCP server."
+  description = "Absolute host path for the shared code tree exposed to the filesystem MCP server."
   type        = string
-  default     = "/mnt/epool/code/homelab"
+  default     = "/mnt/eapp/code"
 }
 
 variable "workspace_root" {
-  description = "Absolute in-container workspace root exposed to filesystem MCP tools."
+  description = "Absolute in-container workspace tree exposed to filesystem MCP tools."
   type        = string
-  default     = "/mnt/epool/code/homelab"
+  default     = "/mnt/eapp/code"
 }
 
 variable "runtime_uid" {

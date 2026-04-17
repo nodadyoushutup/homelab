@@ -4,7 +4,7 @@ locals {
   internal_port  = 8096
   published_port = 18096
   http_path      = "/mcp"
-  image          = "homelab/mcp-ast-grep:2026.04.16.2"
+  image          = "homelab/mcp-ast-grep:2026.04.16.3"
 }
 
 resource "docker_network" "mcp_ast_grep" {
@@ -32,13 +32,16 @@ resource "docker_service" "mcp_ast_grep" {
 
     container_spec {
       image = local.image
+      user  = "${var.runtime_uid}:${var.runtime_gid}"
 
       env = {
-        AST_GREP_HOST                 = "0.0.0.0"
-        AST_GREP_PORT                 = tostring(local.internal_port)
-        AST_GREP_DEFAULT_PROJECT_ROOT = var.project_root
-        AST_GREP_ALLOWED_ROOTS        = var.project_root
-        MCP_HTTP_PATH                 = local.http_path
+        AST_GREP_HOST                       = "0.0.0.0"
+        AST_GREP_PORT                       = tostring(local.internal_port)
+        AST_GREP_DEFAULT_PROJECT_ROOT       = var.project_root
+        AST_GREP_ALLOWED_ROOTS              = var.project_root
+        AST_GREP_WORKSPACE_ROOT_HEADER      = "x-workspace-root"
+        AST_GREP_WORKSPACE_ROOT_QUERY_PARAM = "workspace_root"
+        MCP_HTTP_PATH                       = local.http_path
       }
 
       dns_config {
@@ -96,6 +99,11 @@ resource "docker_service" "mcp_ast_grep" {
     precondition {
       condition     = trimspace(var.project_root) != "" && startswith(var.project_root, "/")
       error_message = "project_root must be an absolute container path."
+    }
+
+    precondition {
+      condition     = var.runtime_uid > 0 && var.runtime_gid > 0
+      error_message = "runtime_uid and runtime_gid must be positive integers."
     }
   }
 }

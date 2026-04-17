@@ -4,15 +4,15 @@ variable "provider_config" {
 }
 
 variable "repo_mount_path" {
-  description = "Absolute host path for the git repository checkout exposed to the git MCP server."
+  description = "Absolute host path for the shared code tree exposed to the git MCP server."
   type        = string
-  default     = "/mnt/epool/code/homelab"
+  default     = "/mnt/eapp/code"
 }
 
 variable "repository_root" {
-  description = "Absolute in-container repository root exposed to git MCP tools."
+  description = "Absolute in-container repository allowlist root exposed to git MCP tools."
   type        = string
-  default     = "/mnt/epool/code/homelab"
+  default     = "/mnt/eapp/code"
 }
 
 variable "runtime_uid" {

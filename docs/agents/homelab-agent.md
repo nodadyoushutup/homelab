@@ -1,8 +1,8 @@
-# Developer Agent
+# Homelab Agent
 
 ## Purpose
 
-The Developer agent is the current top-level supervisor for technical work.
+The Homelab agent is the current top-level supervisor for technical work.
 
 It owns task execution for implementation, debugging, refactoring, validation, and coordination of technical subagents.
 
@@ -28,14 +28,14 @@ It owns task execution for implementation, debugging, refactoring, validation, a
 
 ## What this agent does not push into subagents
 
-- Developer-specific persona or workflow preferences
+- Parent-agent-specific persona or workflow preferences
 - Final user communication strategy
 - Broad product or business prioritization
 - Hidden context not included in the delegated request
 
 ## Delegation model
 
-The Developer agent may call any compatible subagent.
+The Homelab agent may call any compatible subagent.
 
 For now the primary delegated capability is:
 
@@ -49,12 +49,12 @@ Call `Code Analysis` when:
 
 - the task needs file-backed implementation understanding before making changes
 - the code path is unclear or spread across multiple layers
-- the developer needs validation of assumptions before editing
+- the parent agent needs validation of assumptions before editing
 - the task benefits from separating exploration from implementation
 
 ## Documentation rule
 
-If the Developer agent changes code or other implementation-defining files, it
+If the Homelab agent changes code or other implementation-defining files, it
 must also check whether any repo docs became stale.
 
 Required behavior:
@@ -68,7 +68,7 @@ Required behavior:
 
 ## Expected output style
 
-When using subagents, the Developer agent should ask for bounded, reusable outputs:
+When using subagents, the Homelab agent should ask for bounded, reusable outputs:
 
 - affected files
 - relevant functions/resources
@@ -78,4 +78,4 @@ When using subagents, the Developer agent should ask for bounded, reusable outpu
 
 ## Prompting rule
 
-When a workflow starts, explicitly choose `Developer` as the owning agent if the task is technical execution or orchestration.
+When a workflow starts, explicitly choose `Homelab` as the owning agent if the task is technical execution or orchestration.

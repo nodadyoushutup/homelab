@@ -1,17 +1,12 @@
 #!/bin/sh
 set -eu
 
-REPOSITORY_ROOT="${MCP_GIT_REPOSITORY_ROOT:-/mnt/epool/code/homelab}"
+REPOSITORY_ROOT="${MCP_GIT_REPOSITORY_ROOT:-/mnt/eapp/code}"
 LISTEN_HOST="${MCP_GIT_HOST:-${MCP_BRIDGE_HOST:-0.0.0.0}}"
 LISTEN_PORT="${MCP_GIT_LISTEN_PORT:-${MCP_BRIDGE_LISTEN_PORT:-8099}}"
 
 if [ ! -d "${REPOSITORY_ROOT}" ]; then
   echo "[ERR] MCP_GIT_REPOSITORY_ROOT is missing: ${REPOSITORY_ROOT}" >&2
-  exit 1
-fi
-
-if [ ! -d "${REPOSITORY_ROOT}/.git" ]; then
-  echo "[ERR] MCP_GIT_REPOSITORY_ROOT is not a git repository: ${REPOSITORY_ROOT}" >&2
   exit 1
 fi
 

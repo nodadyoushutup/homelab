@@ -1,8 +1,69 @@
+model = "gpt-5.4"
+approval_policy = "never"
+sandbox_mode = "danger-full-access"
+network_access = "enabled"
+model_reasoning_effort = "high"
+personality = "pragmatic"
+
+[shell_environment_policy]
+inherit = "all"
+ignore_default_excludes = true
+
+[notice]
+"hide_gpt-5.1-codex-max_migration_prompt" = true
+hide_rate_limit_model_nudge = true
+
+[notice.model_migrations]
+"gpt-5.1-codex-max" = "gpt-5.2-codex"
+"gpt-5.2-codex" = "gpt-5.3-codex"
+"gpt-5.3-codex" = "gpt-5.4"
+
+[projects."/mnt/eapp"]
+trust_level = "trusted"
+
+[projects."/home/nodadyoushutup"]
+trust_level = "trusted"
+
+[projects."/mnt/eapp/code/homelab"]
+trust_level = "trusted"
+
+[plugins."github@openai-curated"]
+enabled = true
+
+[mcp_servers.mcp_atlassian]
+url = "https://mcp.atlassian.nodadyoushutup.com/mcp"
+
 [mcp_servers.mcp_filesystem_homelab]
 url = "https://mcp.filesystem-homelab.nodadyoushutup.com/mcp"
+http_headers = { "x-workspace-root" = "/mnt/eapp/code/homelab" }
 
 [mcp_servers.mcp_git_homelab]
 url = "https://mcp.git-homelab.nodadyoushutup.com/mcp"
+http_headers = { "x-workspace-root" = "/mnt/eapp/code/homelab" }
+
+[mcp_servers.mcp_ast_grep]
+url = "https://mcp.ast-grep.nodadyoushutup.com/mcp"
+http_headers = { "x-workspace-root" = "/mnt/eapp/code/homelab" }
+
+[mcp_servers.mcp_github]
+url = "https://mcp.github.nodadyoushutup.com/mcp"
+
+[mcp_servers.mcp_fortigate]
+url = "https://mcp.fortigate.nodadyoushutup.com/mcp"
+
+[mcp_servers.mcp_argocd]
+url = "https://mcp.argocd.nodadyoushutup.com/mcp"
+
+[mcp_servers.mcp_cloudflare]
+url = "https://mcp.cloudflare.nodadyoushutup.com/mcp"
+
+[mcp_servers.mcp_google_workspace]
+url = "https://mcp.google-workspace.nodadyoushutup.com/mcp"
+
+[mcp_servers.mcp_agent_protocol]
+url = "https://mcp.agent-protocol.nodadyoushutup.com/mcp"
 
 [mcp_servers.langflow]
+# Langflow 1.9.0 still serves project MCP streamable endpoints under /api/v1.
+# The /api/v2/mcp/project/... path returns 404 on this deployment.
 url = "https://langflow.nodadyoushutup.com/api/v1/mcp/project/93e4cb02-f91b-4d30-8c34-a47ad5d8d6e5/streamable"

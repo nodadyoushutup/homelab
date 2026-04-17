@@ -4,6 +4,10 @@ This file defines the shared language agents use when delegating work to each ot
 
 The goal is to keep subagents parent-agnostic while still letting results thread cleanly through a supervisor, Langflow tool call, or another orchestration layer.
 
+The contract is transport-neutral. When agents need shared short-term storage,
+persist these envelopes as structured JSON objects rather than freeform text so
+Redis- or MCP-backed coordination layers can read and write them safely.
+
 ## Core rules
 
 - Every delegated task should include a clear objective, expected output, and constraints.
@@ -52,19 +56,29 @@ questions: <only if blocked or critical ambiguity remains>
 ## Field guidance
 
 - `request_id`: stable ID for threading related calls and responses.
-- `task_type`: should describe capability, not org structure. Example: `code_analysis`, not `developer_helper`.
+- `task_type`: should describe capability, not org structure. Example: `code_analysis`, not `homelab_helper`.
 - `repo_scope`: keeps delegated work bounded.
 - `expected_output`: avoids vague analysis and forces a usable handoff.
 - `status`: use `partial` when useful work was done but not all criteria were met.
 - `findings`: facts only. Put guesses in `assumptions`.
 - `artifacts`: include file paths, functions, commands, or generated outputs another agent can inspect.
 
+## Storage guidance
+
+- Prefer storing the request and response contracts as JSON objects with the
+  same field names shown here.
+- Use short-lived shared stores such as Redis for liveness, task claims,
+  handoffs, and summaries.
+- Do not store raw chain-of-thought as part of the protocol.
+- Do not treat Redis as the durable system of record for long-lived history,
+  secrets, or audit data.
+
 ## Example
 
 ```text
 REQUEST
-request_id: dev-2026-04-16-001
-from_agent: Developer
+request_id: homelab-2026-04-16-001
+from_agent: Homelab
 to_agent: Code Analysis
 task_type: code_analysis
 objective: Trace how qBittorrent ingress ports are defined and identify all files involved.
@@ -78,7 +92,7 @@ done_criteria: Caller can decide what layer must change next.
 
 ```text
 RESPONSE
-request_id: dev-2026-04-16-001
+request_id: homelab-2026-04-16-001
 from_agent: Code Analysis
 status: completed
 summary: Port exposure is split across Kubernetes Service manifests and FortiGate Terraform.

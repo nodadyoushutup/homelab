@@ -19,6 +19,7 @@ This document applies to the current Swarm-hosted MCP server set:
 - `terraform/swarm/mcp-fortigate/app`
 - `terraform/swarm/mcp-github/app`
 - `terraform/swarm/mcp-google-workspace/app`
+- `terraform/swarm/mcp-agent-protocol/app`
 
 ## Shared Placement Rules
 
@@ -121,11 +122,21 @@ This document applies to the current Swarm-hosted MCP server set:
 - Image source: `applications/mcp-ast-grep/` owns the repo-local HTTP-capable
   wrapper image
 - Listen model: internal `8096`, published `18096`, HTTP path `/mcp`
-- Repo model: bind-mount the live repo checkout read-only; do not copy the repo
-  into the image or point the server at an overlay-only path
-- Scope model: keep the mounted root and default project root aligned with the
-  actual homelab checkout so the host Codex client and server share one source
-  tree view
+- Workspace model: bind-mount the shared code tree at `/mnt/eapp/code`
+  read-only on both the Swarm host and inside the container; keep the host mount
+  root and in-container allowlist root identical so the server can serve
+  multiple local workspaces from one deployment.
+- Runtime user model: run the container with an unprivileged UID/GID that can
+  read the NFS-mounted workspace path. Do not rely on root inside the
+  container against a root-squashed repo mount.
+- Scope model: keep the mounted root restricted to the shared code tree and use
+  a workspace-local client hint to select the default project root. The server
+  should honor repo-local Codex config via the `x-workspace-root` header or a
+  `workspace_root` query parameter when `project_folder` is omitted.
+- Client config model: this server is workspace-scoped, so prefer a repo-local
+  `.codex/config.toml` entry instead of adding it to the global Codex config
+  unless a task explicitly promotes it to a shared server. Keep the repo-local
+  `http_headers.x-workspace-root` value aligned with the active workspace root.
 - Language model: keep Terraform/HCL file globs configured through the
   ast-grep config used by the container; add custom parsers only when the
   language is materially used in this repo and the parser maintenance burden is
@@ -156,19 +167,21 @@ This document applies to the current Swarm-hosted MCP server set:
   `@modelcontextprotocol/server-filesystem` reference server behind the
   repo-standard HTTP bridge.
 - Listen model: internal `8098`, published `18098`, HTTP path `/mcp`
-- Workspace model: bind-mount the live homelab checkout at
-  `/mnt/epool/code/homelab` read-write on both the Swarm host and inside the
-  container; keep the allowed workspace path and mount target identical so the
-  MCP tools and the repo instructions refer to one canonical path.
+- Workspace model: bind-mount the shared code tree at `/mnt/eapp/code`
+  read-write on both the Swarm host and inside the container; keep the host
+  mount root and in-container allowlist root identical so one deployment can
+  serve multiple local workspaces.
 - Runtime user model: run the container with an unprivileged UID/GID that owns
   the NFS-mounted workspace path. Do not leave this service running as root
   against a root-squashed repo mount.
-- Scope model: keep the server restricted to one workspace root. Do not widen
-  the allowed directories beyond the intended repo checkout without an explicit
-  task requirement.
+- Scope model: keep the server restricted to the shared code tree. Workspace
+  scoping continues to happen through the explicit `path` arguments passed to
+  the filesystem tools; repo-local Codex config may still carry an
+  `x-workspace-root` hint for consistency with the other local MCP servers.
 - Client config model: this server is workspace-scoped, so prefer a repo-local
   `.codex/config.toml` entry instead of adding it to the global Codex config
-  unless a task explicitly promotes it to a shared server.
+  unless a task explicitly promotes it to a shared server. Keep the repo-local
+  `http_headers.x-workspace-root` value aligned with the active workspace root.
 
 ### `mcp-git-homelab`
 
@@ -176,17 +189,20 @@ This document applies to the current Swarm-hosted MCP server set:
 - Image source: `applications/mcp-git-homelab/` wraps the official
   `mcp-server-git` reference server behind the repo-standard HTTP bridge.
 - Listen model: internal `8099`, published `18099`, HTTP path `/mcp`
-- Repository model: bind-mount the live homelab checkout at
-  `/mnt/epool/code/homelab` read-write on both the Swarm host and inside the
-  container so the git server works against the real NFS-backed repository.
+- Repository model: bind-mount the shared code tree at `/mnt/eapp/code`
+  read-write on both the Swarm host and inside the container so the git server
+  can serve multiple real repositories beneath one NFS-backed root.
 - Runtime user model: run the container with an unprivileged UID/GID that can
   write to the NFS-mounted repository path. Do not run the service as root
   against a root-squashed repo mount.
-- Scope model: keep the server pinned to one repository root. Do not widen it
-  to a parent directory without an explicit task requirement.
+- Scope model: keep the server pinned to the shared code tree and rely on the
+  explicit `repo_path` argument each git tool already requires. Repo-local
+  Codex config may carry an `x-workspace-root` hint, but repository selection
+  remains an explicit tool argument.
 - Client config model: this server is workspace-scoped, so prefer a repo-local
   `.codex/config.toml` entry instead of adding it to the global Codex config
-  unless a task explicitly promotes it to a shared server.
+  unless a task explicitly promotes it to a shared server. Keep the repo-local
+  `http_headers.x-workspace-root` value aligned with the active workspace root.
 
 ### `mcp-fortigate`
 
@@ -234,3 +250,21 @@ This document applies to the current Swarm-hosted MCP server set:
 - Safety model: `workspace_read_only` defaults to `false`, so write access is
   the current steady-state behavior. Set it deliberately when the task should
   constrain the server.
+
+### `mcp-agent-protocol`
+
+- Runtime root: `terraform/swarm/mcp-agent-protocol/app`
+- Image source: `applications/mcp-agent-protocol/` owns the repo-local native
+  Streamable HTTP MCP server image
+- Listen model: internal `8100`, published `18100`, HTTP path `/mcp`
+- Redis model: keep the backing Redis service private to the overlay network;
+  expose the MCP server, not raw Redis, to host clients by default
+- Storage model: store protocol request/response envelopes, liveness records,
+  task claims, and short-lived summaries as JSON under a stable key prefix
+- Host validation model: keep the MCP transport host/origin allowlist aligned
+  with the raw Swarm validation host and the intended `mcp.agent-protocol`
+  hostname instead of disabling DNS rebinding protection
+- Safety model: do not widen the server into a generic Redis console; keep the
+  tool surface constrained to protocol-aware operations
+- Data model: do not use this store for raw chain-of-thought, long-lived
+  secrets, or the only durable audit trail

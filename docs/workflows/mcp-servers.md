@@ -19,6 +19,7 @@ Use this workflow for:
 - `terraform/swarm/mcp-fortigate/app`
 - `terraform/swarm/mcp-github/app`
 - `terraform/swarm/mcp-google-workspace/app`
+- `terraform/swarm/mcp-agent-protocol/app`
 
 ## Standard Flow
 
@@ -96,12 +97,16 @@ Before running `terraform/swarm/mcp-atlassian/app/pipeline/app.sh`:
 Before running `terraform/swarm/mcp-ast-grep/app/pipeline/app.sh`:
 
 - confirm the local image tag in Terraform exists on `swarm-cp-0`
-- confirm the mounted homelab repo path exists on the Terraform runner and on
-  the Swarm node
+- confirm the mounted shared code path exists on the Terraform runner and on
+  the Swarm node at `/mnt/eapp/code`
+- confirm the configured runtime UID/GID can read that NFS-mounted workspace
+  path on the Swarm node
 - rebuild the image first if `applications/mcp-ast-grep/` changed
 - keep the ast-grep config aligned with the repo’s real file mix before adding
   custom language parsers; use custom parser plugins only where built-in
   language support plus globs are insufficient
+- update the repo-local `.codex/config.toml` entry if the hostname, MCP path,
+  or `http_headers.x-workspace-root` value changes
 
 ### `mcp-cloudflare`
 
@@ -116,26 +121,26 @@ Before running `terraform/swarm/mcp-cloudflare/app/pipeline/app.sh`:
 Before running `terraform/swarm/mcp-filesystem-homelab/app/pipeline/app.sh`:
 
 - confirm the local image tag in Terraform exists on `swarm-cp-0`
-- confirm the mounted host workspace path exists on the Terraform runner and on
-  the Swarm node at `/mnt/epool/code/homelab`
+- confirm the mounted shared code path exists on the Terraform runner and on
+  the Swarm node at `/mnt/eapp/code`
 - confirm the configured runtime UID/GID can write to that NFS-mounted
   workspace path on the Swarm node
 - rebuild the image first if `applications/mcp-filesystem-homelab/` changed
-- update the repo-local `.codex/config.toml` entry if the hostname or MCP path
-  changes
+- update the repo-local `.codex/config.toml` entry if the hostname, MCP path,
+  or `http_headers.x-workspace-root` value changes
 
 ### `mcp-git-homelab`
 
 Before running `terraform/swarm/mcp-git-homelab/app/pipeline/app.sh`:
 
 - confirm the local image tag in Terraform exists on `swarm-cp-0`
-- confirm the mounted host repository path exists on the Terraform runner and
-  on the Swarm node at `/mnt/epool/code/homelab`
+- confirm the mounted shared code path exists on the Terraform runner and on
+  the Swarm node at `/mnt/eapp/code`
 - confirm the configured runtime UID/GID can write to that NFS-mounted
   repository path on the Swarm node
 - rebuild the image first if `applications/mcp-git-homelab/` changed
-- update the repo-local `.codex/config.toml` entry if the hostname or MCP path
-  changes
+- update the repo-local `.codex/config.toml` entry if the hostname, MCP path,
+  or `http_headers.x-workspace-root` value changes
 
 ### `mcp-fortigate`
 
@@ -165,6 +170,17 @@ Before running `terraform/swarm/mcp-google-workspace/app/pipeline/app.sh`:
   `service_account.json` on the Terraform runner
 - confirm `workspace_delegated_user` is the intended impersonated user email
 - rebuild the image first if `applications/mcp-google-workspace/` changed
+
+### `mcp-agent-protocol`
+
+Before running `terraform/swarm/mcp-agent-protocol/app/pipeline/app.sh`:
+
+- confirm the local image tag in Terraform exists on `swarm-cp-0`
+- confirm `/mnt/eapp/.tfvars/mcp-agent-protocol/app.tfvars` exists with the
+  intended key prefix or TTL overrides
+- keep Redis internal to the service overlay unless the task explicitly needs a
+  different exposure model
+- rebuild the image first if `applications/mcp-agent-protocol/` changed
 
 ## Apply
 
@@ -208,6 +224,7 @@ Validation examples:
 - `mcp-filesystem-homelab`: probe `http://<swarm-host>:18098/mcp`
 - `mcp-git-homelab`: probe `http://<swarm-host>:18099/mcp`
 - `mcp-fortigate`: probe `http://<swarm-host>:18084/mcp`
+- `mcp-agent-protocol`: probe `http://<swarm-host>:18100/mcp`
 - `mcp-github`, `mcp-cloudflare`, `mcp-google-workspace`: at minimum verify the
   port is listening if the wrapper does not define a fixed explicit path in
   Terraform

@@ -12,13 +12,13 @@ This directory defines agent roles, reusable subagents, and the message contract
 
 ## Current agent set
 
-- Parent agent: `Developer`
+- Parent agent: `Homelab`
 - Subagent: `Code Analysis`
 
 ## File map
 
 - `protocol.md`: shared request/response contract for agent-to-agent communication
-- `developer-agent.md`: the current top-level supervisor/developer agent definition
+- `homelab-agent.md`: the current top-level supervisor definition for the Homelab agent
 - `subagents/code-analysis-subagent.md`: reusable code analysis capability definition
 
 ## Selection workflow
@@ -40,7 +40,7 @@ Required behavior:
 
 Current default choices:
 
-- Use `Developer` when the task needs implementation, debugging, code changes, repo navigation, or orchestration of technical subtasks.
+- Use `Homelab` when the task needs implementation, debugging, code changes, repo navigation, or orchestration of technical subtasks.
 - Use `Code Analysis` only as a delegated capability through a parent agent, or directly when the only goal is source-of-truth analysis without implementation.
 
 ## Architecture rule

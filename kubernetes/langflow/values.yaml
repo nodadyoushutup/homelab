@@ -22,7 +22,11 @@ langflowide:
         tag: "1.9.0"
 
     backend:
-      replicaCount: 2
+      # Langflow's build/job tracking is currently pod-local in this setup.
+      # Multiple backend replicas behind a non-sticky service cause the UI to
+      # poll a different pod and surface "Job not found" / generic network
+      # errors during flow builds.
+      replicaCount: 1
       numWorkers: 1
       backendOnly: true
       image:
@@ -53,6 +57,8 @@ langflowide:
           value: '{"pool_size": 20, "max_overflow": 30, "pool_timeout": 30, "pool_pre_ping": true, "pool_recycle": 1800, "echo": false}'
         - name: LANGFLOW_AUTO_LOGIN
           value: "True"
+        # Temporary auth relaxation so local MCP clients can connect without
+        # per-client key wiring while we iterate on the Langflow setup.
         - name: LANGFLOW_SKIP_AUTH_AUTO_LOGIN
           value: "True"
         - name: LANGFLOW_NEW_USER_IS_ACTIVE
@@ -68,6 +74,8 @@ langflowide:
               name: langflow-secrets
               key: LANGFLOW_SUPERUSER_PASSWORD
         - name: LANGFLOW_SECRET_KEY
+          # Must be a valid Fernet key, not an arbitrary random string.
+          # Generate with: python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
           valueFrom:
             secretKeyRef:
               name: langflow-secrets

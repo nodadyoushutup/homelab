@@ -180,8 +180,11 @@ run_make_target() {
   docker_args=(
     --rm
     -v /var/run/docker.sock:/var/run/docker.sock
-    -v "${repo_dir}:/workspace"
-    -w /workspace
+    # Harbor's make targets launch nested docker builds through the host daemon.
+    # Mount the repo at the same absolute host path so those nested bind mounts
+    # resolve correctly outside the helper container as well.
+    -v "${repo_dir}:${repo_dir}"
+    -w "${repo_dir}"
   )
   env_args=()
 
@@ -202,7 +205,11 @@ run_make_target() {
     "${docker_args[@]}" \
     "${env_args[@]}" \
     "${MAKE_HELPER_IMAGE}" \
-    sh -lc 'apk add --no-cache bash coreutils curl git make >/dev/null && make -e "$1"' _ "${target}"
+    sh -lc '
+      apk add --no-cache bash coreutils curl git make >/dev/null
+      git config --global --add safe.directory "$PWD"
+      make -e "$1"
+    ' _ "${target}"
 }
 
 build_for_platform() {

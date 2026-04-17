@@ -16,11 +16,13 @@ from pathlib import Path
 from typing import Any, Literal
 
 import yaml
-from mcp.server.fastmcp import FastMCP
+from mcp.server.fastmcp import Context, FastMCP
 from pydantic import Field
 
 DEFAULT_CONFIG_PATH = "/opt/ast-grep-config/sgconfig.yml"
 DEFAULT_PROJECT_ROOT = os.environ.get("AST_GREP_DEFAULT_PROJECT_ROOT", "")
+WORKSPACE_ROOT_HEADER = os.environ.get("AST_GREP_WORKSPACE_ROOT_HEADER", "x-workspace-root")
+WORKSPACE_ROOT_QUERY_PARAM = os.environ.get("AST_GREP_WORKSPACE_ROOT_QUERY_PARAM", "workspace_root")
 DEFAULT_HOST = os.environ.get("AST_GREP_HOST", "127.0.0.1")
 ALLOWED_ROOTS = [
     Path(root).resolve()
@@ -128,8 +130,27 @@ def get_supported_languages() -> list[str]:
     return sorted(set(BUILTIN_LANGUAGES + load_custom_languages()))
 
 
-def resolve_project_folder(project_folder: str | None) -> str:
-    candidate = (project_folder or DEFAULT_PROJECT_ROOT).strip()
+def get_request_workspace_root(context: Context | None) -> str:
+    if context is None:
+        return ""
+
+    request = context.request_context.request
+    if request is None:
+        return ""
+
+    header_value = request.headers.get(WORKSPACE_ROOT_HEADER, "").strip()
+    if header_value:
+        return header_value
+
+    query_value = request.query_params.get(WORKSPACE_ROOT_QUERY_PARAM, "").strip()
+    if query_value:
+        return query_value
+
+    return ""
+
+
+def resolve_project_folder(project_folder: str | None, context: Context | None = None) -> str:
+    candidate = (project_folder or get_request_workspace_root(context) or DEFAULT_PROJECT_ROOT).strip()
     if not candidate:
         raise ValueError("project_folder is required when AST_GREP_DEFAULT_PROJECT_ROOT is not set.")
     folder = Path(candidate).resolve()
@@ -187,12 +208,26 @@ def format_matches_as_text(matches: list[dict[str, Any]]) -> str:
 
 
 @mcp.tool()
-def server_info() -> dict[str, Any]:
+def server_info(context: Context | None = None) -> dict[str, Any]:
     """Return server defaults, path restrictions, and supported languages."""
+    requested_workspace_root = get_request_workspace_root(context)
+    effective_project_root = DEFAULT_PROJECT_ROOT
+    resolution_error = ""
+
+    try:
+        effective_project_root = resolve_project_folder("", context)
+    except ValueError as exc:
+        resolution_error = str(exc)
+
     return {
         "default_project_root": DEFAULT_PROJECT_ROOT,
         "allowed_roots": [str(root) for root in ALLOWED_ROOTS],
         "config_path": CONFIG_PATH,
+        "workspace_root_header": WORKSPACE_ROOT_HEADER,
+        "workspace_root_query_param": WORKSPACE_ROOT_QUERY_PARAM,
+        "requested_workspace_root": requested_workspace_root,
+        "effective_project_root": effective_project_root,
+        "workspace_root_error": resolution_error,
         "supported_languages": get_supported_languages(),
     }
 
@@ -251,11 +286,12 @@ def find_code(
     ),
     max_results: int = Field(default=0, description="Maximum matches to return. 0 means unlimited."),
     output_format: str = Field(default="text", description="Either text or json."),
+    context: Context | None = None,
 ) -> str | list[dict[str, Any]]:
     """Search for code with an ast-grep pattern."""
     if output_format not in {"text", "json"}:
         raise ValueError("output_format must be either 'text' or 'json'.")
-    target_root = resolve_project_folder(project_folder)
+    target_root = resolve_project_folder(project_folder, context)
     args = ["--pattern", pattern]
     if language:
         args.extend(["--lang", language])
@@ -285,11 +321,12 @@ def find_code_by_rule(
     ),
     max_results: int = Field(default=0, description="Maximum matches to return. 0 means unlimited."),
     output_format: str = Field(default="text", description="Either text or json."),
+    context: Context | None = None,
 ) -> str | list[dict[str, Any]]:
     """Search for code with an ast-grep YAML rule."""
     if output_format not in {"text", "json"}:
         raise ValueError("output_format must be either 'text' or 'json'.")
-    target_root = resolve_project_folder(project_folder)
+    target_root = resolve_project_folder(project_folder, context)
     result = run_ast_grep("scan", ["--inline-rules", yaml, "--json", target_root])
     matches = json.loads(result.stdout.strip() or "[]")
     total_matches = len(matches)

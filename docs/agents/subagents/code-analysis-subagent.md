@@ -4,7 +4,7 @@
 
 The Code Analysis subagent provides source-of-truth analysis of the repository without owning final implementation decisions.
 
-It is intentionally parent-agnostic so it can be used by a Developer agent, a Business Analyst agent, or another future supervisor.
+It is intentionally parent-agnostic so it can be used by a Homelab agent, a Business Analyst agent, or another future supervisor.
 
 ## Responsibilities
 
@@ -55,7 +55,7 @@ It is intentionally parent-agnostic so it can be used by a Developer agent, a Bu
 
 ## Bad task examples
 
-- "Act like the Developer agent and decide what we should build."
+- "Act like the Homelab agent and decide what we should build."
 - "Own the whole task and talk directly to the user as the final authority."
 
 ## Prompting rule
