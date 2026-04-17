@@ -3,3 +3,6 @@ url = "https://mcp.filesystem-homelab.nodadyoushutup.com/mcp"
 
 [mcp_servers.mcp_git_homelab]
 url = "https://mcp.git-homelab.nodadyoushutup.com/mcp"
+
+[mcp_servers.langflow]
+url = "https://langflow.nodadyoushutup.com/api/v1/mcp/project/93e4cb02-f91b-4d30-8c34-a47ad5d8d6e5/streamable"

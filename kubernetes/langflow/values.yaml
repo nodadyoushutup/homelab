@@ -52,7 +52,9 @@ langflowide:
         - name: LANGFLOW_DB_CONNECTION_SETTINGS
           value: '{"pool_size": 20, "max_overflow": 30, "pool_timeout": 30, "pool_pre_ping": true, "pool_recycle": 1800, "echo": false}'
         - name: LANGFLOW_AUTO_LOGIN
-          value: "False"
+          value: "True"
+        - name: LANGFLOW_SKIP_AUTH_AUTO_LOGIN
+          value: "True"
         - name: LANGFLOW_NEW_USER_IS_ACTIVE
           value: "False"
         - name: LANGFLOW_SUPERUSER
