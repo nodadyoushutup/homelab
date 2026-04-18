@@ -69,6 +69,9 @@ This document applies to:
   the boundary worthwhile.
 - For local development, it is acceptable to run those same app boundaries with
   parallel `langgraph dev` processes instead of containers.
+- Repo-local debug helpers are allowed under `applications/langgraph/` when
+  they stay as thin wrappers around one documented app boundary and do not
+  replace the app-local `langgraph.json` source of truth.
 - Internal Deep Agents subagents remain in-process and should be used for
   narrower specialization inside a single app boundary.
 - Avoid circular remote delegation patterns such as `controller-agent ->

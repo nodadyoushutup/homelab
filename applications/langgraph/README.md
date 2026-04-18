@@ -61,7 +61,9 @@ What is still expected before real deployment:
 - replace `.env.example` files with real `.env` files or deployment secrets
 - replace `.mcp.json.example`-style placeholders with real `mcp.json` configs
 - install dependencies
-- run `langgraph dev` from an app directory or deploy with your target platform
+- run `./debug.sh` from `applications/langgraph/` for the default
+  `controller-agent` local dev path, or run `langgraph dev` from an app
+  directory when you want a different app boundary
 
 ## Model And API Key Defaults
 
@@ -93,8 +95,13 @@ The split specialist app directories still exist as the source of truth for
 their local skills, MCP config, and env defaults, but the main local bring-up
 path is now a single deployment.
 
-If you need to debug locally, run `langgraph dev` directly from the target app
-directory instead of relying on a repo helper script.
+For quick local iteration, use [`debug.sh`](./debug.sh) from this directory.
+It starts the `controller-agent` app boundary on `0.0.0.0:2124` by default,
+keeps browser launch disabled, and leaves hot reload on unless
+`LANGGRAPH_DEBUG_NO_RELOAD=1` is set.
+
+If you need a different app boundary, run `langgraph dev` directly from that
+app directory instead of reusing the shared helper.
 
 ## Container And Publish Notes
 

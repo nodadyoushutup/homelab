@@ -49,7 +49,7 @@ spec:
             - name: NEXT_PUBLIC_AUTH_SCHEME
               value: ""
             - name: LANGGRAPH_API_URL
-              value: https://langgraph.nodadyoushutup.com
+              value: http://192.168.1.36:2124
             - name: LANGSMITH_API_KEY
               value: ""
           ports:

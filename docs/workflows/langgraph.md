@@ -52,6 +52,8 @@ When a task changes the LangGraph implementation:
    - prefer in-process composition before adding remote transport
 9. validate the Python structure after the change
 10. update docs if the stable pattern changed
+11. if the task adds a repo helper script, keep it boundary-scoped and make
+    sure it only wraps the intended app's local `langgraph dev` startup
 
 ## Validation
 
@@ -60,7 +62,9 @@ After changing the LangGraph scaffold:
 1. run a syntax check such as `python3 -m compileall applications/langgraph`
 2. validate any `langgraph.json` files you changed
 3. if dependencies are installed, start the target app locally from its app
-   directory with `langgraph dev`
+   directory with `langgraph dev`, or use `applications/langgraph/debug.sh`
+   when you are intentionally testing the default `controller-agent` app
+   boundary helper
 4. if the change touches remote delegation, verify the relevant env values and
    graph ids before expecting A2A calls to succeed
 
