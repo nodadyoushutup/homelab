@@ -60,8 +60,7 @@ After changing the LangGraph scaffold:
 1. run a syntax check such as `python3 -m compileall applications/langgraph`
 2. validate any `langgraph.json` files you changed
 3. if dependencies are installed, start the target app locally from its app
-   directory with `langgraph dev`, or use `applications/langgraph/run.sh up`
-   when the change spans multiple app boundaries
+   directory with `langgraph dev`
 4. if the change touches remote delegation, verify the relevant env values and
    graph ids before expecting A2A calls to succeed
 

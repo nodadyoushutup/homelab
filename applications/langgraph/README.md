@@ -23,8 +23,7 @@ applications/langgraph/
 │   └── homelab_langgraph/
 ├── Dockerfile
 ├── pyproject.toml
-├── requirements.txt
-└── run.sh
+└── requirements.txt
 ```
 
 Each deployable agent app has its own:
@@ -73,19 +72,16 @@ your deployment environment. The app-local `langgraph.json` files already point
 the runtime at each app's `.env`, so adding the key there is the simplest local
 setup path.
 
-## Local Development
+## Runtime
 
-Use the repo-root virtualenv and the helper launcher:
+The primary runtime path is now the Kubernetes `controller-agent` deployment.
+That workload builds this directory into an image and starts the server with
+the Docker `CMD` from [`Dockerfile`](./Dockerfile):
 
-```bash
-applications/langgraph/.venv/bin/pip install -r applications/langgraph/requirements.txt
-./applications/langgraph/run.sh up
-```
+- `langgraph dev --host 0.0.0.0 --port 2024 --no-browser --no-reload`
 
-This starts one local server on port `2024` and defaults to a loopback
-bring-up. The homelab hostname `https://langsmith.nodadyoushutup.com`
-is intended to front the Kubernetes `controller-agent` deployment, which now
-runs the same `langgraph dev` runtime inside the cluster.
+The homelab hostname `https://langsmith.nodadyoushutup.com` is intended to
+front that Kubernetes deployment.
 
 The deployment serves:
 
@@ -93,38 +89,12 @@ The deployment serves:
 - `code_analysis_agent`
 - `jira_agent`
 
-The supervisor delegates to the code-analysis and Jira specialists as
-co-deployed compiled subagents, so local development no longer depends on
-multiple servers or loopback A2A wiring.
-
-If you want a local-only bring-up instead of the homelab hostname, clear the
-public base URL and bind back to loopback:
-
-```bash
-PUBLIC_BASE_URL= LANGGRAPH_BIND_HOST=127.0.0.1 ./applications/langgraph/run.sh up
-```
-
-If you intentionally want to route the local helper through a reverse-proxied
-public hostname for testing, set the base URL explicitly:
-
-```bash
-PUBLIC_BASE_URL=https://your-temp-hostname ./applications/langgraph/run.sh up
-```
-
-If Studio is opened in Brave before the domain route is available, use the
-native LangGraph tunnel mode instead:
-
-```bash
-PUBLIC_BASE_URL= LANGGRAPH_TUNNEL=1 ./applications/langgraph/run.sh up
-```
-
-If you later move the endpoint to a different reverse-proxied hostname, set
-`PUBLIC_BASE_URL=https://your-hostname` before starting the helper. The
-launcher will then print Studio and Agent Chat links that target that hostname.
-
 The split specialist app directories still exist as the source of truth for
 their local skills, MCP config, and env defaults, but the main local bring-up
 path is now a single deployment.
+
+If you need to debug locally, run `langgraph dev` directly from the target app
+directory instead of relying on a repo helper script.
 
 ## Container And Publish Notes
 
