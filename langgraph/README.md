@@ -37,7 +37,9 @@ The Jira app also has subagent-local:
 ## Current Intent
 
 The primary local development path is one LangGraph development server that
-hosts multiple graphs from the `controller-agent` app boundary.
+hosts multiple graphs from the `controller-agent` app boundary. The
+repo-owned container wrapper for that runtime now lives in
+[`applications/langgraph`](../applications/langgraph).
 
 What is already in place:
 

@@ -88,7 +88,7 @@ jobs:
             controller-agent)
               image_name="controller-agent"
               docker_context="langgraph"
-              dockerfile="applications/controller-agent/Dockerfile"
+              dockerfile="applications/langgraph/Dockerfile"
               platforms="linux/amd64"
               build_strategy="direct"
               ;;
