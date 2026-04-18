@@ -25,7 +25,7 @@ spec:
         - name: chat-ui-registry
       containers:
         - name: chat-ui
-          image: harbor.nodadyoushutup.com/chat-ui/chat-ui:2026.04.18.1
+          image: harbor.nodadyoushutup.com/chat-ui/chat-ui:2026.04.18.165352
           imagePullPolicy: Always
           securityContext:
             runAsUser: 1000

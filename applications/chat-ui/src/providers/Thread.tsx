@@ -1,5 +1,6 @@
 import { validate } from "uuid";
 import { getApiKey } from "@/lib/api-key";
+import { resolveApiUrl } from "@/lib/resolve-api-url";
 import { Thread } from "@langchain/langgraph-sdk";
 import { useQueryState } from "nuqs";
 import {
@@ -51,9 +52,10 @@ export function ThreadProvider({ children }: { children: ReactNode }) {
 
   const getThreads = useCallback(async (): Promise<Thread[]> => {
     const resolvedAssistantId = assistantId || envAssistantId;
-    if (!apiUrl || !resolvedAssistantId) return [];
+    const resolvedApiUrl = resolveApiUrl(apiUrl);
+    if (!resolvedApiUrl || !resolvedAssistantId) return [];
     const client = createClient(
-      apiUrl,
+      resolvedApiUrl,
       getApiKey() ?? undefined,
       authScheme || undefined,
     );

@@ -23,6 +23,7 @@ import { Switch } from "@/components/ui/switch";
 import { ArrowRight } from "lucide-react";
 import { PasswordInput } from "@/components/ui/password-input";
 import { getApiKey } from "@/lib/api-key";
+import { resolveApiUrl } from "@/lib/resolve-api-url";
 import { useThreads } from "./Thread";
 import { toast } from "sonner";
 
@@ -83,8 +84,9 @@ const StreamSession = ({
 }) => {
   const [threadId, setThreadId] = useQueryState("threadId");
   const { getThreads, setThreads } = useThreads();
+  const resolvedApiUrl = resolveApiUrl(apiUrl);
   const streamValue = useTypedStream({
-    apiUrl,
+    apiUrl: resolvedApiUrl ?? apiUrl,
     apiKey: apiKey ?? undefined,
     assistantId,
     ...(authScheme && {
@@ -116,7 +118,7 @@ const StreamSession = ({
         toast.error("Failed to connect to LangGraph server", {
           description: () => (
             <p>
-              Please ensure your graph is running at <code>{apiUrl}</code> and
+              Please ensure your graph is running at <code>{resolvedApiUrl ?? apiUrl}</code> and
               your API key is correctly set (if connecting to a deployed graph).
             </p>
           ),
@@ -126,7 +128,7 @@ const StreamSession = ({
         });
       }
     });
-  }, [apiKey, apiUrl, authScheme]);
+  }, [apiKey, apiUrl, authScheme, resolvedApiUrl]);
 
   return (
     <StreamContext.Provider value={streamValue}>
