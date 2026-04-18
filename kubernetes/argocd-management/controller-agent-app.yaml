@@ -1,0 +1,23 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: controller-agent
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "48"
+spec:
+  project: controller-agent
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: controller-agent
+  source:
+    repoURL: git@github.com:nodadyoushutup/homelab.git
+    targetRevision: HEAD
+    path: kubernetes/controller-agent
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

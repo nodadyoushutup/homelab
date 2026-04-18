@@ -74,10 +74,10 @@ langgraph/.venv/bin/pip install -r requirements.txt
 ./langgraph/run.sh up
 ```
 
-This starts one Agent Server on port `2024` and publishes the deployment
-through the homelab hostname `https://langsmith.nodadyoushutup.com` by default.
-The launcher assumes Nginx Proxy Manager forwards that hostname to
-`192.168.1.36:2024`.
+This starts one local Agent Server on port `2024` and defaults to a loopback
+bring-up. The homelab production hostname `https://langsmith.nodadyoushutup.com`
+is now owned by the Kubernetes standalone deployment instead of the local
+workstation helper.
 
 The deployment serves:
 
@@ -94,6 +94,13 @@ public base URL and bind back to loopback:
 
 ```bash
 PUBLIC_BASE_URL= LANGGRAPH_BIND_HOST=127.0.0.1 ./langgraph/run.sh up
+```
+
+If you intentionally want to route the local helper through a reverse-proxied
+public hostname for testing, set the base URL explicitly:
+
+```bash
+PUBLIC_BASE_URL=https://your-temp-hostname ./langgraph/run.sh up
 ```
 
 If Studio is opened in Brave before the domain route is available, use the

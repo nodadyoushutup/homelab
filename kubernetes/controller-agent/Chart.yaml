@@ -1,0 +1,10 @@
+apiVersion: v2
+name: controller-agent
+description: Wrapper chart for the homelab standalone LangGraph Agent Server
+type: application
+version: 0.1.0
+appVersion: "2026.04.18.1"
+dependencies:
+  - name: langgraph-cloud
+    version: 0.3.0
+    repository: https://langchain-ai.github.io/helm/

@@ -20,6 +20,7 @@ on:
         type: choice
         options:
           - chat-ui
+          - controller-agent
           - harbor-runtime-set
           - mcp-cloudflare
           - mcp-fortigate
@@ -49,6 +50,7 @@ jobs:
       image_name: ${{ steps.prepare.outputs.image_name }}
       docker_context: ${{ steps.prepare.outputs.docker_context }}
       dockerfile: ${{ steps.prepare.outputs.dockerfile }}
+      platforms: ${{ steps.prepare.outputs.platforms }}
       registry_namespace: ${{ steps.prepare.outputs.registry_namespace }}
       publish_path_mode: ${{ steps.prepare.outputs.publish_path_mode }}
 
@@ -70,6 +72,7 @@ jobs:
           version="${{ github.event.inputs.version }}"
           target_registry="${{ github.event.inputs.target_registry }}"
           build_target="${{ github.event.inputs.build_target }}"
+          platforms="linux/amd64,linux/arm64"
 
           if [ -z "$version" ]; then
             echo "Version could not be determined" >&2
@@ -80,6 +83,13 @@ jobs:
             chat-ui)
               image_name="chat-ui"
               docker_context="applications/chat-ui"
+              build_strategy="direct"
+              ;;
+            controller-agent)
+              image_name="controller-agent"
+              docker_context="langgraph"
+              dockerfile="applications/controller-agent/Dockerfile"
+              platforms="linux/amd64"
               build_strategy="direct"
               ;;
             harbor-runtime-set)
@@ -170,6 +180,7 @@ jobs:
           echo "image_name=$image_name" >> "$GITHUB_OUTPUT"
           echo "docker_context=$docker_context" >> "$GITHUB_OUTPUT"
           echo "dockerfile=$dockerfile" >> "$GITHUB_OUTPUT"
+          echo "platforms=$platforms" >> "$GITHUB_OUTPUT"
           echo "image_base=$image_base" >> "$GITHUB_OUTPUT"
           echo "registry_namespace=$registry_namespace" >> "$GITHUB_OUTPUT"
           echo "publish_path_mode=$publish_path_mode" >> "$GITHUB_OUTPUT"
@@ -213,7 +224,7 @@ jobs:
           BUILDKIT_NO_CLIENT_TOKEN: "true"
         run: |
           docker buildx build \
-            --platform linux/amd64,linux/arm64 \
+            --platform "${{ steps.prepare.outputs.platforms }}" \
             --file "${{ steps.prepare.outputs.dockerfile }}" \
             --metadata-file image-metadata.json \
             --output=type=image,name=${{ steps.prepare.outputs.image_base }},push=true,push-by-digest=true \

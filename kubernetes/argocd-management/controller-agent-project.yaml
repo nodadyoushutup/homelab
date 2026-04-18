@@ -1,0 +1,22 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: controller-agent
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "47"
+spec:
+  description: Controller agent standalone LangGraph deployment managed from homelab GitOps repo
+  sourceRepos:
+    - git@github.com:nodadyoushutup/homelab.git
+    - https://github.com/nodadyoushutup/homelab.git
+    - https://langchain-ai.github.io/helm/
+  destinations:
+    - namespace: controller-agent
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+  namespaceResourceWhitelist:
+    - group: "*"
+      kind: "*"
