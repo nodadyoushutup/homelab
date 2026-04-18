@@ -6,13 +6,21 @@ langgraph-cloud:
     argocd.argoproj.io/sync-wave: "20"
 
   images:
-    registry: harbor.nodadyoushutup.com
+    registry: ""
     imagePullSecrets:
       - name: controller-agent-registry
     apiServerImage:
-      repository: controller-agent/controller-agent
+      repository: harbor.nodadyoushutup.com/controller-agent/controller-agent
       pullPolicy: IfNotPresent
       tag: 2026.04.18.1
+    postgresImage:
+      repository: pgvector/pgvector
+      pullPolicy: IfNotPresent
+      tag: pg16
+    redisImage:
+      repository: docker.io/redis
+      pullPolicy: IfNotPresent
+      tag: "6"
 
   config:
     numberOfJobsPerWorker: 10
