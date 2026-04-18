@@ -39,6 +39,8 @@ Short version:
 
 - choose `Swarm app` for infrastructure, observability, management tooling, or
   anything that should survive Kubernetes failure
+- allow a `Cluster app` exception when the human explicitly chooses the
+  emerging Kubernetes MCP pattern for a new server such as `mcp-filesystem`
 - choose `Cluster app` for almost everything else
 
 If the reason for Swarm is weak or mostly convenience, use Kubernetes.

@@ -4,7 +4,7 @@
   ],
   "graphs": {
     "controller_agent": "./agent.py:controller_agent",
-    "code_analysis_agent": "./agent.py:code_analysis_agent",
+    "code_agent": "./agent.py:code_agent",
     "jira_agent": "./agent.py:jira_agent"
   },
   "env": ".env"

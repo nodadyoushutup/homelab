@@ -30,8 +30,6 @@ def _run_coro(coro):
     if error is not None:
         raise error
     return result
-
-
 def _normalize_server_config(raw_servers: dict[str, dict[str, Any]]) -> dict[str, dict[str, Any]]:
     normalized: dict[str, dict[str, Any]] = {}
     for server_name, server_config in raw_servers.items():

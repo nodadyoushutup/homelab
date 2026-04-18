@@ -64,6 +64,11 @@ projects = [
     vulnerability_scanning = true
   },
   {
+    name                   = "mcp-filesystem"
+    public                 = false
+    vulnerability_scanning = true
+  },
+  {
     name                   = "mcp-fortigate"
     public                 = false
     vulnerability_scanning = true
@@ -150,6 +155,20 @@ projects = [
 #       {
 #         kind      = "project"
 #         namespace = "gha-runner"
+#         access = [
+#           {
+#             action   = "push"
+#             resource = "repository"
+#           },
+#           {
+#             action   = "pull"
+#             resource = "repository"
+#           }
+#         ]
+#       },
+#       {
+#         kind      = "project"
+#         namespace = "mcp-filesystem"
 #         access = [
 #           {
 #             action   = "push"

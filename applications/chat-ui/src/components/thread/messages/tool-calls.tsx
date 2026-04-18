@@ -7,32 +7,115 @@ function isComplexValue(value: any): boolean {
   return Array.isArray(value) || (typeof value === "object" && value !== null);
 }
 
+function getToolResultContent(message: ToolMessage): {
+  parsedContent: unknown;
+  isJsonContent: boolean;
+  contentStr: string;
+} {
+  const rawContent = message.content;
+
+  if (typeof rawContent === "string") {
+    try {
+      const parsed = JSON.parse(rawContent);
+      if (isComplexValue(parsed)) {
+        return {
+          parsedContent: parsed,
+          isJsonContent: true,
+          contentStr: JSON.stringify(parsed, null, 2),
+        };
+      }
+    } catch {
+      // Fall through to plain-text rendering below.
+    }
+
+    return {
+      parsedContent: rawContent,
+      isJsonContent: false,
+      contentStr: rawContent,
+    };
+  }
+
+  if (Array.isArray(rawContent)) {
+    const textParts = rawContent
+      .map((item) => {
+        if (
+          item &&
+          typeof item === "object" &&
+          "type" in item &&
+          item.type === "text" &&
+          "text" in item &&
+          typeof item.text === "string"
+        ) {
+          return item.text;
+        }
+        return null;
+      })
+      .filter((item): item is string => !!item);
+
+    if (textParts.length > 0) {
+      return {
+        parsedContent: textParts,
+        isJsonContent: false,
+        contentStr: textParts.join("\n\n"),
+      };
+    }
+
+    return {
+      parsedContent: rawContent,
+      isJsonContent: true,
+      contentStr: JSON.stringify(rawContent, null, 2),
+    };
+  }
+
+  if (isComplexValue(rawContent)) {
+    return {
+      parsedContent: rawContent,
+      isJsonContent: true,
+      contentStr: JSON.stringify(rawContent, null, 2),
+    };
+  }
+
+  return {
+    parsedContent: rawContent,
+    isJsonContent: false,
+    contentStr: String(rawContent ?? ""),
+  };
+}
+
 export function ToolCalls({
   toolCalls,
+  completedToolCallIds,
 }: {
   toolCalls: AIMessage["tool_calls"];
+  completedToolCallIds?: Set<string>;
 }) {
   if (!toolCalls || toolCalls.length === 0) return null;
 
   return (
     <div className="mx-auto grid max-w-3xl grid-rows-[1fr_auto] gap-2">
       {toolCalls.map((tc, idx) => {
-        const args = tc.args as Record<string, any>;
+        const args = (tc.args ?? {}) as Record<string, any>;
         const hasArgs = Object.keys(args).length > 0;
+        const isCompleted = !!(tc.id && completedToolCallIds?.has(tc.id));
         return (
           <div
             key={idx}
             className="overflow-hidden rounded-xl border border-border/80 bg-card/85"
           >
             <div className="border-b border-border/80 bg-muted/50 px-4 py-2">
-              <h3 className="font-medium text-foreground">
-                {tc.name}
-                {tc.id && (
-                  <code className="ml-2 rounded bg-background/80 px-2 py-1 text-sm">
-                    {tc.id}
-                  </code>
-                )}
-              </h3>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h3 className="font-medium text-foreground">
+                  {tc.name}
+                  {tc.id && (
+                    <code className="ml-2 rounded bg-background/80 px-2 py-1 text-sm">
+                      {tc.id}
+                    </code>
+                  )}
+                </h3>
+                <span className="rounded-full border border-border/80 bg-background/80 px-2 py-1 text-xs text-muted-foreground">
+                  {isCompleted ? "Completed" : "Pending"}
+                </span>
+              </div>
             </div>
             {hasArgs ? (
               <table className="min-w-full divide-y divide-border">
@@ -56,7 +139,9 @@ export function ToolCalls({
                 </tbody>
               </table>
             ) : (
-              <code className="block p-3 text-sm">{"{}"}</code>
+              <div className="p-3 text-sm text-muted-foreground">
+                No arguments
+              </div>
             )}
           </div>
         );
@@ -67,23 +152,13 @@ export function ToolCalls({
 
 export function ToolResult({ message }: { message: ToolMessage }) {
   const [isExpanded, setIsExpanded] = useState(false);
-
-  let parsedContent: any;
-  let isJsonContent = false;
-
-  try {
-    if (typeof message.content === "string") {
-      parsedContent = JSON.parse(message.content);
-      isJsonContent = isComplexValue(parsedContent);
-    }
-  } catch {
-    // Content is not JSON, use as is
-    parsedContent = message.content;
-  }
-
-  const contentStr = isJsonContent
-    ? JSON.stringify(parsedContent, null, 2)
-    : String(message.content);
+  const { parsedContent, isJsonContent, contentStr } =
+    getToolResultContent(message);
+  const structuredItems = Array.isArray(parsedContent)
+    ? isExpanded
+      ? parsedContent
+      : parsedContent.slice(0, 5)
+    : Object.entries((parsedContent ?? {}) as Record<string, unknown>);
   const contentLines = contentStr.split("\n");
   const shouldTruncate = contentLines.length > 4 || contentStr.length > 500;
   const displayedContent =
@@ -136,12 +211,7 @@ export function ToolResult({ message }: { message: ToolMessage }) {
                 {isJsonContent ? (
                   <table className="min-w-full divide-y divide-border">
                     <tbody className="divide-y divide-border">
-                      {(Array.isArray(parsedContent)
-                        ? isExpanded
-                          ? parsedContent
-                          : parsedContent.slice(0, 5)
-                        : Object.entries(parsedContent)
-                      ).map((item, argIdx) => {
+                      {structuredItems.map((item, argIdx) => {
                         const [key, value] = Array.isArray(parsedContent)
                           ? [argIdx, item]
                           : [item[0], item[1]];

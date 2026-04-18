@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mcp-filesystem"
+version = "0.1.0"
+description = "Native Streamable HTTP MCP server for workspace-scoped filesystem access."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+  "mcp==1.27.0",
+  "uvicorn==0.34.2",
+]
+
+[project.scripts]
+mcp-filesystem = "mcp_filesystem.server:main"
+
+[tool.setuptools]
+packages = ["mcp_filesystem"]
+package-dir = {"" = "src"}

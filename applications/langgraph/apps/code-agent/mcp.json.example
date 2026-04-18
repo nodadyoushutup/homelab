@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "transport": "http",
+      "url": "https://mcp.filesystem.nodadyoushutup.com/mcp/",
+      "headers": {
+        "x-workspace-name": "homelab",
+        "x-mcp-filesystem-access": "read-write"
+      }
+    }
+  }
+}

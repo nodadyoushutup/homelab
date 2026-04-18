@@ -32,7 +32,7 @@ This document applies to:
 ## App Boundary Rules
 
 - Top-level remote agents should stay domain-oriented. Examples:
-  `controller-agent`, `code-analysis-agent`, `jira-agent`.
+  `controller-agent`, `code-agent`, `jira-agent`.
 - Domain-oriented agents may be co-deployed as sibling graphs inside one app
   boundary when they share the same runtime and scaling needs.
 - Internal Deep Agents subagents should stay task-oriented and narrower than
@@ -72,6 +72,9 @@ This document applies to:
 - Repo-local debug helpers are allowed under `applications/langgraph/` when
   they stay as thin wrappers around one documented app boundary and do not
   replace the app-local `langgraph.json` source of truth.
+- A repo-local debug helper may also launch a paired local frontend for the
+  same app boundary when it is clearly part of the same dev loop and the helper
+  prints the resulting backend and frontend URLs explicitly.
 - Internal Deep Agents subagents remain in-process and should be used for
   narrower specialization inside a single app boundary.
 - Avoid circular remote delegation patterns such as `controller-agent ->

@@ -18,7 +18,7 @@ input/output schemas they use to collaborate.
 ## Current agent set
 
 - Parent agent: `Homelab`
-- Subagent: `Code Analysis`
+- Subagent: `Code`
 - Subagent: `Confluence`
 - Subagent: `Kubernetes`
 - Subagent: `Pipeline`
@@ -29,8 +29,8 @@ input/output schemas they use to collaborate.
 
 - `homelab-agent.md`: the current top-level supervisor definition for the
   Homelab agent, including its native input/output schema
-- `subagents/code-analysis-subagent.md`: reusable code analysis capability
-  definition, including its native input/output schema
+- `subagents/code-subagent.md`: reusable code capability definition, including
+  its native input/output schema
 - `subagents/confluence-subagent.md`: reusable Confluence discovery and
   operations capability definition, including its native input/output schema
 - `subagents/kubernetes-subagent.md`: reusable Kubernetes analysis capability
@@ -73,8 +73,8 @@ Current intent:
 
 - keep `homelab-agent.md` as the instruction contract for the parent `Homelab`
   agent
-- keep `subagents/code-analysis-subagent.md` as the instruction contract for
-  the `Code Analysis` subagent
+- keep `subagents/code-subagent.md` as the instruction contract for the `Code`
+  subagent
 - keep `subagents/confluence-subagent.md` as the instruction contract for the
   `Confluence` subagent
 - keep `subagents/kubernetes-subagent.md` as the instruction contract for the
@@ -130,7 +130,8 @@ Required behavior:
 Current default choices:
 
 - Use `Homelab` when the task needs implementation, debugging, code changes, repo navigation, or orchestration of technical subtasks.
-- Use `Code Analysis` only as a delegated capability through a parent agent, or directly when the only goal is source-of-truth analysis without implementation.
+- Use `Code` only as a delegated capability through a parent agent, or directly
+  when the only goal is source-of-truth analysis without implementation.
 - Use `Confluence` only as a delegated capability through a parent agent, or directly when the goal is Confluence-backed document or page work, including discovery, creation, editing, comments, and related coordination.
 - Use `Kubernetes` only as a delegated capability through a parent agent, or directly when the only goal is Kubernetes-backed manifest and delivery analysis without implementation.
 - Use `Pipeline` only as a delegated capability through a parent agent, or directly when the goal is repo-managed pipeline inspection or bounded pipeline execution through the configured pipeline tools.

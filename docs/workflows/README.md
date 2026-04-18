@@ -21,7 +21,6 @@ govern those workflows.
 - `jira.md`: standard Jira discovery and issue-analysis workflow
 - `langgraph.md`: standard LangGraph monorepo and Deep Agents implementation
   workflow
-- `langflow.md`: Langflow deployment, flow, and custom component workflow
 - `mcp-servers.md`: operator workflow for Swarm-hosted MCP servers
 - `new-application.md`: how to classify a new app and then onboard it through
   the correct platform workflow

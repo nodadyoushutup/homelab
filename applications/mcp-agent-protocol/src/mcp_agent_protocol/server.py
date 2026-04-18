@@ -91,7 +91,7 @@ def load_settings() -> Settings:
         host=os.getenv("MCP_AGENT_PROTOCOL_HOST", "0.0.0.0"),
         port=_env_int("MCP_AGENT_PROTOCOL_LISTEN_PORT", 8100),
         redis_url=redis_url,
-        key_prefix=os.getenv("MCP_AGENT_PROTOCOL_KEY_PREFIX", "langflow-agent-protocol").strip(),
+        key_prefix=os.getenv("MCP_AGENT_PROTOCOL_KEY_PREFIX", "agent-protocol").strip(),
         allowed_hosts=allowed_hosts,
         allowed_origins=allowed_origins,
         agent_ttl_seconds=_env_int("MCP_AGENT_PROTOCOL_DEFAULT_AGENT_TTL_SECONDS", 90),

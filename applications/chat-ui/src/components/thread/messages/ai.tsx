@@ -1,6 +1,11 @@
 import { parsePartialJson } from "@langchain/core/output_parsers";
 import { useStreamContext } from "@/providers/Stream";
-import { AIMessage, Checkpoint, Message } from "@langchain/langgraph-sdk";
+import {
+  AIMessage,
+  Checkpoint,
+  Message,
+  ToolMessage,
+} from "@langchain/langgraph-sdk";
 import { getContentString } from "../utils";
 import { BranchSwitcher, CommandBar } from "./shared";
 import { MarkdownText } from "../markdown-text";
@@ -138,6 +143,12 @@ export function AssistantMessage({
     message.tool_calls?.some(
       (tc) => tc.args && Object.keys(tc.args).length > 0,
     );
+  const completedToolCallIds = new Set(
+    thread.messages
+      .filter((m): m is ToolMessage => m.type === "tool")
+      .map((m) => m.tool_call_id)
+      .filter((value): value is string => !!value),
+  );
   const hasAnthropicToolCalls = !!anthropicStreamedToolCalls?.length;
   const isToolResult = message?.type === "tool";
 
@@ -168,13 +179,22 @@ export function AssistantMessage({
             {!hideToolCalls && (
               <>
                 {(hasToolCalls && toolCallsHaveContents && (
-                  <ToolCalls toolCalls={message.tool_calls} />
+                  <ToolCalls
+                    toolCalls={message.tool_calls}
+                    completedToolCallIds={completedToolCallIds}
+                  />
                 )) ||
                   (hasAnthropicToolCalls && (
-                    <ToolCalls toolCalls={anthropicStreamedToolCalls} />
+                    <ToolCalls
+                      toolCalls={anthropicStreamedToolCalls}
+                      completedToolCallIds={completedToolCallIds}
+                    />
                   )) ||
                   (hasToolCalls && (
-                    <ToolCalls toolCalls={message.tool_calls} />
+                    <ToolCalls
+                      toolCalls={message.tool_calls}
+                      completedToolCallIds={completedToolCallIds}
+                    />
                   ))}
               </>
             )}

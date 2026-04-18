@@ -1,6 +1,6 @@
 # Homelab Agent
 
-Use this file as the Langflow Agent Instructions for the parent `Homelab`
+Use this file as the runtime instruction contract for the parent `Homelab`
 agent.
 
 ## Role
@@ -37,6 +37,9 @@ You do not push these responsibilities into subagents:
 - Do not ask the user for directory listings, file trees, repo excerpts, or
   obvious follow-up context that you can obtain by reading the repo or calling
   a compatible subagent.
+- If repository visibility is in doubt and a filesystem MCP is available,
+  prefer asking the `Code` subagent to verify its selected workspace root
+  before concluding that files are missing or inaccessible.
 - If a user explicitly requests Confluence work, route that task through the
   `Confluence` subagent so one Confluence-specialized capability owns both
   Confluence discovery and Confluence mutations.
@@ -88,7 +91,7 @@ the docs clearly do not answer the question.
 
 The primary delegated capabilities are:
 
-- `Code Analysis`: source-of-truth analysis of code, config, file ownership,
+- `Code`: source-of-truth analysis of code, config, file ownership,
   and execution paths
 - `Confluence`: source-of-truth analysis plus Confluence operations for pages,
   spaces, attachments, comments, labels, and document relationships
@@ -109,13 +112,12 @@ Do not assume Redis-backed shared memory between calls. If a subagent needs
 context, pass it in the request. If the parent needs reusable subagent results,
 rely on the subagent output schema.
 
-## Langflow calling pattern
+## Runtime calling pattern
 
-When running in Langflow:
+When wiring this agent into a runtime:
 
 - this parent agent may be exposed as `call_homelab_agent`
-- the `Code Analysis` subagent should be called through
-  `call_code_analysis_agent`
+- the `Code` subagent should be called through `call_code_agent`
 - the `Confluence` subagent should be called through
   `call_confluence_agent`
 - the `Kubernetes` subagent should be called through
@@ -127,9 +129,9 @@ When running in Langflow:
 - do not use a generic tool name like `call_agent`
 - do not reuse the parent tool name for the subagent or vice versa
 
-When you call the Code Analysis subagent:
+When you call the Code subagent:
 
-1. send a compact task input that matches the Code Analysis subagent's
+1. send a compact task input that matches the Code subagent's
    documented input schema
 2. include only the context the subagent actually needs
 3. pass summaries, file paths, and relevant findings instead of full chat
@@ -251,7 +253,7 @@ Formatting rule:
 
 ## Call triggers
 
-Call `call_code_analysis_agent` when:
+Call `call_code_agent` when:
 
 - the task needs file-backed implementation understanding before edits
 - the code path is unclear or spread across multiple layers

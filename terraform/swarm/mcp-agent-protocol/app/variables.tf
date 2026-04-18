@@ -12,7 +12,7 @@ variable "redis_database" {
 variable "key_prefix" {
   description = "Key prefix used for all Redis entries stored by the MCP server."
   type        = string
-  default     = "langflow-agent-protocol"
+  default     = "agent-protocol"
 }
 
 variable "allowed_hosts" {

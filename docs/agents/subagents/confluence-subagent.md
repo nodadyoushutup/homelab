@@ -1,6 +1,6 @@
 # Confluence Subagent
 
-Use this file as the Langflow Agent Instructions for the `Confluence`
+Use this file as the runtime instruction contract for the `Confluence`
 subagent.
 
 ## Role
@@ -76,9 +76,9 @@ Then follow the topic-specific docs that match the request.
 Use broad Confluence search only after these docs have been checked or when the
 docs do not answer the operating question.
 
-## Langflow calling pattern
+## Runtime calling pattern
 
-When running in Langflow:
+When wiring this subagent into a runtime:
 
 - this subagent should be exposed through `call_confluence_agent`
 - do not use a generic tool name like `call_agent`

@@ -1,10 +1,10 @@
-# Swarm MCP Server Workflow
+# MCP Server Workflow
 
-This document defines the operator workflow for changing the MCP servers that
-run in Docker Swarm in this repo. Use
+This document defines the operator workflow for changing MCP servers in this
+repo. Use
 [`docs/rules/mcp-servers.md`](./../rules/mcp-servers.md) for the steady-state
 rules and [`docs/workflows/terraform.md`](./terraform.md) for the shared
-Terraform execution behavior that these stages inherit.
+Terraform execution behavior that the Swarm stages inherit.
 
 ## Scope
 
@@ -23,51 +23,66 @@ Use this workflow for:
 - `terraform/swarm/mcp-redis/app`
 - `terraform/swarm/mcp-agent-protocol/app`
 - `terraform/swarm/mcp-bash-pipeline/app`
-- `terraform/swarm/mcp-langflow/app`
 - `terraform/swarm/mcp-terraform/app`
+- `kubernetes/mcp-filesystem`
 
 ## Standard Flow
 
-When a task changes one of the Swarm-hosted MCP servers:
+When a task changes an MCP server:
 
-1. identify the target service and read its section in
+1. identify the target service, platform, and read its section in
    `docs/rules/mcp-servers.md`
 2. inspect whether the service uses an upstream image or a repo-local wrapper
    under `applications/<service>/`
-3. if the service is custom or the upstream is stdio-only, make sure there is a
-   repo-local HTTP-capable wrapper under `applications/<service>/`
-4. update the Terraform app root and, if needed, the local image wrapper
-5. update the matching tfvars and companion credential assets under
-   `/mnt/eapp/.tfvars/<service>/`
+3. if the service is custom or the upstream is stdio-only, make sure there is
+   a repo-local HTTP-capable wrapper under `applications/<service>/`
+4. update the platform runtime root:
+   - `terraform/swarm/<service>/app` for Swarm services
+   - `kubernetes/<service>/` plus `kubernetes/argocd-management/` for
+     Kubernetes services
+5. update the matching tfvars and companion credential assets when the service
+   needs them:
+   - `/mnt/eapp/.tfvars/<service>/` for Swarm runtime inputs
+   - `/mnt/eapp/.tfvars/harbor/config.tfvars` for Harbor projects and robots
+   - `/mnt/eapp/.tfvars/vault/config.tfvars` for Kubernetes registry or app
+     secrets consumed through External Secrets
 6. update the matching Nginx Proxy Manager and Cloudflare hostname entries when
    the server is meant to be reachable from the host Codex client
 7. update the matching Codex config layer when the MCP hostname set changes or
    a new server is added:
    - `~/.codex/config.toml` for shared/global servers
    - repo-local `.codex/config.toml` for workspace-specific servers
-8. make sure the exact image tag referenced by Terraform exists where the Swarm
-   engine can pull it
-9. run the app stage pipeline
+8. make sure the exact referenced image tag exists in the target registry or
+   runtime before deploy
+9. apply the platform change:
+   - run the Swarm app stage pipeline for Swarm services
+   - commit and push the Kubernetes manifests, then let Argo CD sync
 10. run the edge pipelines if the hostname or route changed
 11. validate the live service by the same hostname the host Codex config uses
 12. update docs if the stable MCP pattern changed
 
-These services are single-stage Swarm apps, but host-reachable MCP delivery is
-not complete until the domain route and host Codex config are aligned too.
+Host-reachable MCP delivery is not complete until the domain route and host
+Codex config are aligned too.
 
 ## Shared Preflight
 
 Before running the pipeline:
 
-1. confirm the stage root is `terraform/swarm/<service>/app`
-2. confirm `/mnt/eapp/.tfvars/<service>/app.tfvars` exists
+1. confirm the platform root is correct for the target service:
+   - `terraform/swarm/<service>/app` for Swarm
+   - `kubernetes/<service>/` plus `kubernetes/argocd-management/` for
+     Kubernetes
+2. confirm the matching runtime config inputs exist:
+   - `/mnt/eapp/.tfvars/<service>/app.tfvars` for Swarm runtime inputs
+   - `/mnt/eapp/.tfvars/vault/config.tfvars` and Harbor config entries for
+     Kubernetes registry-backed pulls when used
 3. confirm `/mnt/eapp/.tfvars/minio.backend.hcl` exists unless you are
-   intentionally overriding it
+   intentionally overriding it for a Swarm Terraform run
 4. confirm any local secret file paths in tfvars exist on the Terraform runner
 5. if the service should be host-reachable, decide the final hostname and MCP
    path before touching the host Codex config
 6. if the service uses a custom image wrapper, build and publish or otherwise
-   preload the image tag referenced in Terraform
+   preload the referenced image tag
 
 The normal invocation stays the standard Terraform stage entrypoint:
 
@@ -136,6 +151,23 @@ Before running `terraform/swarm/mcp-filesystem-homelab/app/pipeline/app.sh`:
 - rebuild the image first if `applications/mcp-filesystem-homelab/` changed
 - update the repo-local `.codex/config.toml` entry if the hostname, MCP path,
   or `http_headers.x-workspace-root` value changes
+
+### `mcp-filesystem`
+
+Before committing `kubernetes/mcp-filesystem/`:
+
+- confirm the Harbor image tag referenced in
+  `kubernetes/mcp-filesystem/deployment.yaml` exists or will be published in
+  the same task
+- confirm the Harbor project and the Kubernetes pull robot entry exist in
+  `/mnt/eapp/.tfvars/harbor/config.tfvars`
+- confirm `/mnt/eapp/.tfvars/vault/config.tfvars` contains the matching
+  `k8s/mcp_filesystem` registry credentials for the `ExternalSecret`
+- confirm the NFS export `192.168.1.100:/mnt/eapp/code` is still the intended
+  shared repo mount for the pod
+- confirm the repo-local `.codex/config.toml` entry uses request headers for
+  workspace selection and access policy instead of relying on one hard-coded
+  server workspace
 
 ### `mcp-git-homelab`
 
@@ -229,16 +261,6 @@ Before running `terraform/swarm/mcp-bash-pipeline/app/pipeline/app.sh`:
 - update the repo-local `.codex/config.toml` entry if the hostname, MCP path,
   or workspace headers change
 
-### `mcp-langflow`
-
-Before running `terraform/swarm/mcp-langflow/app/pipeline/app.sh`:
-
-- confirm the local image tag in Terraform exists on `swarm-cp-0`
-- confirm `/mnt/eapp/.tfvars/mcp-langflow/app.tfvars` exists with the intended
-  `langflow_base_url` and `langflow_api_key`
-- confirm the target Langflow deployment is reachable from the Swarm node
-- rebuild the image first if `applications/mcp-langflow/` changed
-
 ### `mcp-terraform`
 
 Before running `terraform/swarm/mcp-terraform/app/pipeline/app.sh`:
@@ -290,6 +312,8 @@ Validation examples:
 - `mcp-atlassian`: probe `http://<swarm-host>:18080/mcp` with
   `Accept: text/event-stream`
 - `mcp-ast-grep`: probe `http://<swarm-host>:18096/mcp`
+- `mcp-filesystem`: probe `https://mcp.filesystem.nodadyoushutup.com/mcp/`
+  with `x-workspace-name` and `x-mcp-filesystem-access` headers
 - `mcp-filesystem-homelab`: probe `http://<swarm-host>:18098/mcp`
 - `mcp-git-homelab`: probe `http://<swarm-host>:18099/mcp`
 - `mcp-fortigate`: probe `http://<swarm-host>:18084/mcp`
@@ -297,7 +321,6 @@ Validation examples:
 - `mcp-redis`: probe `http://<swarm-host>:18101/mcp`
 - `mcp-agent-protocol`: probe `http://<swarm-host>:18100/mcp`
 - `mcp-bash-pipeline`: probe `http://<swarm-host>:18107/mcp`
-- `mcp-langflow`: probe `http://<swarm-host>:18102/mcp`
 - `mcp-terraform`: probe `http://<swarm-host>:18104/mcp`
 - `mcp-github`, `mcp-cloudflare`, `mcp-google-workspace`: at minimum verify the
   port is listening if the wrapper does not define a fixed explicit path in

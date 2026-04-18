@@ -33,9 +33,9 @@ enabled = true
 [mcp_servers.mcp_atlassian]
 url = "https://mcp.atlassian.nodadyoushutup.com/mcp"
 
-[mcp_servers.mcp_filesystem_homelab]
-url = "https://mcp.filesystem-homelab.nodadyoushutup.com/mcp"
-http_headers = { "x-workspace-root" = "/mnt/eapp/code/homelab" }
+[mcp_servers.mcp_filesystem]
+url = "https://mcp.filesystem.nodadyoushutup.com/mcp"
+http_headers = { "x-workspace-name" = "homelab", "x-mcp-filesystem-access" = "read-write" }
 
 [mcp_servers.mcp_git_homelab]
 url = "https://mcp.git-homelab.nodadyoushutup.com/mcp"
@@ -73,13 +73,5 @@ url = "https://mcp.agent-protocol.nodadyoushutup.com/mcp"
 url = "https://mcp.bash-pipeline.nodadyoushutup.com/mcp"
 http_headers = { "x-workspace-root" = "/mnt/eapp/code/homelab", "x-homelab-workspace" = "homelab" }
 
-[mcp_servers.mcp_langflow]
-url = "https://mcp.langflow.nodadyoushutup.com/mcp"
-
 [mcp_servers.mcp_terraform]
 url = "https://mcp.terraform.nodadyoushutup.com/mcp"
-
-[mcp_servers.langflow]
-# Langflow 1.9.0 still serves project MCP streamable endpoints under /api/v1.
-# The /api/v2/mcp/project/... path returns 404 on this deployment.
-url = "https://langflow.nodadyoushutup.com/api/v1/mcp/project/93e4cb02-f91b-4d30-8c34-a47ad5d8d6e5/streamable"

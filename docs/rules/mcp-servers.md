@@ -1,14 +1,13 @@
-# Swarm MCP Server Rules
+# MCP Server Rules
 
-This document defines the steady-state rules for the MCP servers that run in
-Docker Swarm in this repo. Use
+This document defines the steady-state rules for MCP servers in this repo. Use
 [`docs/workflows/mcp-servers.md`](./../workflows/mcp-servers.md) for the
 operator flow and [`docs/rules/terraform.md`](./terraform.md) for the shared
-Terraform guardrails these services also follow.
+Terraform guardrails the Swarm-hosted services also follow.
 
 ## Scope
 
-This document applies to the current Swarm-hosted MCP server set:
+This document applies to the current MCP server set:
 
 - `terraform/swarm/mcp-argocd/app`
 - `terraform/swarm/mcp-atlassian/app`
@@ -23,48 +22,52 @@ This document applies to the current Swarm-hosted MCP server set:
 - `terraform/swarm/mcp-redis/app`
 - `terraform/swarm/mcp-agent-protocol/app`
 - `terraform/swarm/mcp-bash-pipeline/app`
-- `terraform/swarm/mcp-langflow/app`
 - `terraform/swarm/mcp-terraform/app`
+- `kubernetes/mcp-filesystem`
 
 ## Shared Placement Rules
 
-- Swarm-hosted MCP servers stay in `terraform/swarm/<service>/app`. Do not move
-  them into `kubernetes/`; these are management-plane services that should stay
-  available during cluster trouble.
+- Existing Swarm-hosted MCP servers stay in `terraform/swarm/<service>/app`
+  unless a task explicitly migrates them.
+- New MCP servers may use the Kubernetes pattern under `kubernetes/<service>/`
+  when the human explicitly chooses the cluster route. The current reference
+  exception is `kubernetes/mcp-filesystem`.
 - Each MCP server keeps its own single `app` stage and single backend state
   file. Do not merge multiple MCP services into one Terraform root or one state
   key.
-- Each service keeps the current one-replica control-plane placement pattern:
+- Swarm services keep the current one-replica control-plane placement pattern:
   `node.labels.role==swarm-cp-0`.
-- Each service keeps its own overlay network named after the service. Do not
+- Swarm services keep their own overlay network named after the service. Do not
   collapse multiple MCP servers onto one shared overlay by default.
 - Keep provider-driven registry auth in `provider.tf` when the image comes from
   a private registry or authenticated GHCR path.
 
 ## Shared Runtime Rules
 
-- Keep the published ingress port, internal listen port, and transport path
-  aligned with the actual service wrapper. Do not change ports casually because
+- Keep the published or ingress-routed listen path and transport path aligned
+  with the actual service wrapper. Do not change ports casually because
   MCP clients and local tooling depend on them.
-- Keep an explicit container healthcheck that probes the actual listening port
+- Keep an explicit pod or container healthcheck that probes the actual
+  listening port
   or HTTP MCP endpoint.
-- Keep the standard DNS resolver list in the Swarm service unless the runtime
+- Keep the standard DNS resolver list in Swarm services unless the runtime
   proves a server-specific need for something else.
 
 ## Shared Reachability Rules
 
-- Treat MCP servers as Swarm-hosted operator apps that must still be HTTP
-  reachable for LLM clients running off-swarm.
+- Treat MCP servers as operator apps that must still be HTTP reachable for LLM
+  clients running off-platform.
 - The standard client path is a stable hostname routed through the repo-managed
   edge config, not a raw Swarm published port copied into a client by hand.
 - Keep `/mnt/eapp/.tfvars/nginx-proxy-manager/config.tfvars`,
   `/mnt/eapp/.tfvars/cloudflare/config.tfvars`, and the matching Codex config
   layer (`~/.codex/config.toml` for global servers or repo-local
-  `.codex/config.toml` for workspace-specific servers) aligned with the Swarm
-  service port and MCP HTTP path for every host-usable server.
-- The Codex host is not part of the Swarm overlay network. Do not point host
-  MCP config at Swarm service names, overlay-only addresses, or ad hoc direct
-  ports unless the task explicitly documents a temporary fallback.
+  `.codex/config.toml` for workspace-specific servers) aligned with the final
+  service route and MCP HTTP path for every host-usable server.
+- The Codex host is not part of the Swarm overlay network or the Kubernetes
+  service network. Do not point host MCP config at overlay-only service names,
+  cluster-only service DNS, or ad hoc direct ports unless the task explicitly
+  documents a temporary fallback.
 - These services are operator endpoints, not general public apps. Expose them
   through trusted DNS and reverse-proxy paths for operator and LLM access, but
   do not broaden exposure beyond that without an explicit task requirement.
@@ -77,9 +80,10 @@ This document applies to the current Swarm-hosted MCP server set:
 
 ## Shared Credential Rules
 
-- Credentials belong in `/mnt/eapp/.tfvars/<service>/app.tfvars` or in the
-  runtime secret flow that the service already uses. Do not commit live tokens,
-  passwords, or service account files into the repo.
+- Credentials belong in `/mnt/eapp/.tfvars/<service>/app.tfvars`,
+  `/mnt/eapp/.tfvars/vault/config.tfvars`, or in the runtime secret flow that
+  the service already uses. Do not commit live tokens, passwords, or service
+  account files into the repo.
 - Prefer the narrowest scope that still supports the required tools. Do not
   widen provider access simply because the MCP server can expose more tools.
 - When a service already supports a safer default mode such as read-only,
@@ -87,12 +91,12 @@ This document applies to the current Swarm-hosted MCP server set:
 
 ## Image Source Rules
 
-- If a service has a repo-local image wrapper under `applications/<service>/`, keep
-  the Terraform image reference and the wrapper implementation in sync.
-- If Terraform points at a custom tag, the exact referenced image must exist in
-  the target registry or Docker engine before apply.
+- If a service has a repo-local image wrapper under `applications/<service>/`,
+  keep the deployment image reference and the wrapper implementation in sync.
+- If a deployment points at a custom tag, the exact referenced image must exist
+  in the target registry or runtime before apply.
 - Services without a repo-local Docker context should continue to pin upstream
-  images directly in Terraform.
+  images directly in Terraform or manifests, whichever owns the deployment.
 
 ## Service Rules
 
@@ -188,6 +192,30 @@ This document applies to the current Swarm-hosted MCP server set:
   `.codex/config.toml` entry instead of adding it to the global Codex config
   unless a task explicitly promotes it to a shared server. Keep the repo-local
   `http_headers.x-workspace-root` value aligned with the active workspace root.
+
+### `mcp-filesystem`
+
+- Runtime root: `kubernetes/mcp-filesystem`
+- Argo CD objects: `kubernetes/argocd-management/mcp-filesystem-project.yaml`
+  and `kubernetes/argocd-management/mcp-filesystem-app.yaml`
+- Image source: `applications/mcp-filesystem/` owns the native Streamable HTTP
+  server image published to Harbor
+- Listen model: container `8098`, service `8098`, ingress-routed hostname
+  `https://mcp.filesystem.nodadyoushutup.com/mcp/`
+- Workspace model: mount the shared code tree from the TrueNAS NFS export at
+  `/mnt/eapp/code` read-write inside the pod and keep the in-container allowlist
+  root pinned to that mounted path
+- Runtime user model: run the pod as UID/GID `1000:1000` so filesystem writes
+  continue to respect the root-squashed NFS export
+- Scope model: this server is intentionally workspace-agnostic at deploy time.
+  Clients select the workspace per request through `x-workspace-name` or
+  `x-workspace-root`
+- Access model: default the service to read-only and use
+  `x-mcp-filesystem-access` to opt into write-capable tool exposure only for
+  clients that should have it
+- Client config model: prefer repo-local `.codex/config.toml` entries that send
+  `x-workspace-name` and `x-mcp-filesystem-access` headers instead of pinning a
+  hard-coded workspace root into the server deployment
 
 ### `mcp-git-homelab`
 
@@ -336,21 +364,6 @@ This document applies to the current Swarm-hosted MCP server set:
   repo-local `.codex/config.toml` with the same `x-workspace-root` convention
   used by the other local MCP servers and include the logical workspace header
   when clients need to distinguish homelab from other mounted workspaces
-
-### `mcp-langflow`
-
-- Runtime root: `terraform/swarm/mcp-langflow/app`
-- Image source: `applications/mcp-langflow/` wraps the published
-  `langflow-mcp-server` package behind the repo-standard HTTP bridge
-- Listen model: internal `8102`, published `18102`, HTTP path `/mcp`
-- Access model: point the wrapper at the stable Langflow deployment URL rather
-  than cluster-internal service names so the Swarm management plane does not
-  depend on Kubernetes overlay reachability
-- Auth model: the wrapper requires a real Langflow API key; keep that key in
-  tfvars and keep the matching Langflow deployment wired for env-backed API key
-  validation through Vault and `ExternalSecret`
-- Tool model: prefer consolidated mode for host-reachable clients unless a task
-  explicitly needs the upstream 93-tool granular surface
 
 ### `mcp-terraform`
 

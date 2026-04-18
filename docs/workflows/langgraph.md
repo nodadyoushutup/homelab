@@ -53,7 +53,8 @@ When a task changes the LangGraph implementation:
 9. validate the Python structure after the change
 10. update docs if the stable pattern changed
 11. if the task adds a repo helper script, keep it boundary-scoped and make
-    sure it only wraps the intended app's local `langgraph dev` startup
+    sure it only wraps the intended app's local `langgraph dev` startup, plus
+    any tightly paired local frontend that belongs to the same debug workflow
 
 ## Validation
 
@@ -64,7 +65,7 @@ After changing the LangGraph scaffold:
 3. if dependencies are installed, start the target app locally from its app
    directory with `langgraph dev`, or use `applications/langgraph/debug.sh`
    when you are intentionally testing the default `controller-agent` app
-   boundary helper
+   boundary helper with its paired local Agent Chat UI
 4. if the change touches remote delegation, verify the relevant env values and
    graph ids before expecting A2A calls to succeed
 

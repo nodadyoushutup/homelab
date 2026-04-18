@@ -23,6 +23,7 @@ on:
           - controller-agent
           - harbor-runtime-set
           - mcp-cloudflare
+          - mcp-filesystem
           - mcp-fortigate
           - mcp-github
           - mcp-google-workspace
@@ -87,7 +88,7 @@ jobs:
               ;;
             controller-agent)
               image_name="controller-agent"
-              docker_context="langgraph"
+              docker_context="applications/langgraph"
               dockerfile="applications/langgraph/Dockerfile"
               platforms="linux/amd64"
               build_strategy="direct"
@@ -100,6 +101,11 @@ jobs:
             mcp-cloudflare)
               image_name="mcp-cloudflare"
               docker_context="applications/mcp-cloudflare"
+              build_strategy="direct"
+              ;;
+            mcp-filesystem)
+              image_name="mcp-filesystem"
+              docker_context="applications/mcp-filesystem"
               build_strategy="direct"
               ;;
             mcp-fortigate)

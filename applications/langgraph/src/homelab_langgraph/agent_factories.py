@@ -30,7 +30,7 @@ def create_supervisor_agent(
             )
         return (
             "This supervisor is wired to delegate to two remote agents: "
-            "a code-analysis agent for repository and implementation analysis, "
+            "a code agent for repository and implementation analysis, "
             "and a jira agent for Jira-backed issue workflows."
         )
 
@@ -41,7 +41,7 @@ def create_supervisor_agent(
             system_prompt=(
                 "You are the Homelab supervisor agent. "
                 "You coordinate work across specialist agents that are co-deployed in this same Agent Server. "
-                "Use the `task` tool to delegate repository and implementation analysis to the `code_analysis_agent` specialist. "
+                "Use the `task` tool to delegate repository and implementation analysis to the `code_agent` specialist. "
                 "Use the `task` tool to delegate Jira discovery and issue-management work to the `jira_agent` specialist. "
                 "Prefer those specialists when the task clearly matches their domain."
             ),
@@ -51,12 +51,12 @@ def create_supervisor_agent(
     remote_tools = [
         build_remote_delegate_tool(
             RemoteAgentDefinition(
-                name="call_code_analysis_agent",
-                description="Delegate repository and implementation analysis tasks to the remote Code Analysis agent.",
-                base_url=settings.get("CODE_ANALYSIS_AGENT_URL"),
-                assistant_id=settings.get("CODE_ANALYSIS_AGENT_ASSISTANT_ID"),
-                graph_id=settings.get("CODE_ANALYSIS_AGENT_GRAPH_ID"),
-                api_key=settings.get("CODE_ANALYSIS_AGENT_API_KEY"),
+                name="call_code_agent",
+                description="Delegate repository and implementation analysis tasks to the remote Code agent.",
+                base_url=settings.get("CODE_AGENT_URL"),
+                assistant_id=settings.get("CODE_AGENT_ASSISTANT_ID"),
+                graph_id=settings.get("CODE_AGENT_GRAPH_ID"),
+                api_key=settings.get("CODE_AGENT_API_KEY"),
             )
         ),
         build_remote_delegate_tool(
@@ -77,34 +77,38 @@ def create_supervisor_agent(
         system_prompt=(
             "You are the Homelab supervisor agent. "
             "You coordinate work across remote specialist agents instead of doing domain-specific work yourself. "
-            "Use `call_code_analysis_agent` for repository and implementation analysis. "
+            "Use `call_code_agent` for repository and implementation analysis. "
             "Use `call_jira_agent` for Jira-focused work. "
-            "Prefer delegation when the specialist agent is a better fit than local reasoning."
+            "Prefer delegation when the specialist agent is a better fit than local reasoning. "
+            "When repository visibility or file access is in doubt, ask the Code agent to verify its filesystem MCP workspace before concluding that files are missing."
         ),
     )
 
 
-def create_code_analysis_agent(app_dir: Path):
+def create_code_agent(app_dir: Path):
     settings = merged_settings(app_dir)
 
     @tool
-    def describe_code_analysis_contract() -> str:
-        """Describe what the Code Analysis agent is responsible for."""
+    def describe_code_contract() -> str:
+        """Describe what the Code agent is responsible for."""
         return (
-            "The Code Analysis agent owns source-of-truth repository analysis. "
+            "The Code agent owns source-of-truth repository analysis. "
             "It should trace code paths, identify affected files, summarize behavior, and separate facts from assumptions."
         )
 
     mcp_tools = load_mcp_tools(app_dir / "mcp.json")
 
     return create_deep_agent(
-        model=settings.get("CODE_ANALYSIS_MODEL", "openai:gpt-5.4"),
+        model=settings.get("CODE_MODEL", "openai:gpt-5.4"),
         system_prompt=(
-            "You are the Code Analysis agent. "
+            "You are the Code agent. "
             "Focus on repository-backed analysis, traceability, and implementation understanding. "
-            "Use MCP-backed tools when they are available, but keep outputs concise and decision-oriented."
+            "Use MCP-backed tools when they are available, but keep outputs concise and decision-oriented. "
+            "When the filesystem MCP is available, treat the selected workspace root as the repository root. "
+            "Use `.` to inspect that workspace root and use repo-relative paths after that; do not assume `/` is the repository root. "
+            "If filesystem results look empty or incorrect, call workspace-introspection tools such as `server_info` or `list_allowed_directories` before claiming the repository is missing or inaccessible."
         ),
-        tools=[describe_code_analysis_contract, *mcp_tools],
+        tools=[describe_code_contract, *mcp_tools],
         skills=resolve_skill_roots(app_dir / "skills"),
     )
 

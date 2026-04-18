@@ -1,6 +1,6 @@
 locals {
   service_name       = "mcp-agent-protocol"
-  redis_service_name = "langflow-agent-protocol-redis"
+  redis_service_name = "agent-protocol-redis"
   network_name       = "mcp-agent-protocol"
   internal_port      = 8100
   published_port     = 18100

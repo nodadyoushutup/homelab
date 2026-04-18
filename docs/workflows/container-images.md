@@ -73,6 +73,7 @@ the same registry.
 | Runtime | Current image source | Source of truth |
 | --- | --- | --- |
 | `chat-ui` | Harbor | `kubernetes/chat-ui/deployment.yaml` plus `/mnt/eapp/.tfvars/harbor/config.tfvars` |
+| `mcp-filesystem` | Harbor | `kubernetes/mcp-filesystem/deployment.yaml` plus `/mnt/eapp/.tfvars/harbor/config.tfvars` and `/mnt/eapp/.tfvars/vault/config.tfvars` |
 | `gha-runner` | Harbor | `/mnt/eapp/.tfvars/gha-runner/app.tfvars` |
 | `jenkins-controller` | Harbor | `/mnt/eapp/.tfvars/jenkins-controller/app.tfvars` |
 | `mcp-cloudflare` | Harbor | `terraform/swarm/mcp-cloudflare/app/main.tf` plus `/mnt/eapp/.tfvars/mcp-cloudflare/app.tfvars` |
@@ -100,8 +101,8 @@ The standard publish workflow is:
 - `version`: required output tag
 - `target_registry`: `github` or `harbor`
 - `build_target`:
-  `chat-ui`, `harbor-runtime-set`, `mcp-cloudflare`, `mcp-fortigate`, `mcp-github`,
-  `mcp-google-workspace`, `gha-runner`, `jenkins-agent`,
+  `chat-ui`, `harbor-runtime-set`, `mcp-cloudflare`, `mcp-filesystem`,
+  `mcp-fortigate`, `mcp-github`, `mcp-google-workspace`, `gha-runner`, `jenkins-agent`,
   `jenkins-controller`
 
 Registry naming rules:
@@ -175,7 +176,7 @@ images. The desired Harbor-managed project set now includes:
 
 - Existing repo images:
   `chat-ui`, `gha-runner`, `harbor`, `jenkins-agent`, `jenkins-controller`,
-  `mcp-argocd`, `mcp-atlassian`, `mcp-cloudflare`, `mcp-fortigate`,
+  `mcp-argocd`, `mcp-atlassian`, `mcp-cloudflare`, `mcp-filesystem`, `mcp-fortigate`,
   `mcp-github`, `mcp-google-workspace`, `webserver-image`
 - Harbor component images:
   `harbor-core`, `harbor-db`, `harbor-exporter`, `harbor-jobservice`,
@@ -211,5 +212,5 @@ After changing image publish behavior:
 1. Confirm the workflow still supports the expected build target and registry.
 2. For Harbor publishes, confirm the target project exists before the push.
 3. Confirm the published tag exists in the target registry.
-4. If the image is deployed in Swarm, confirm the matching Terraform config
-   references that published tag.
+4. If the image is deployed in Swarm or Kubernetes, confirm the matching
+   Terraform config or manifest references that published tag.

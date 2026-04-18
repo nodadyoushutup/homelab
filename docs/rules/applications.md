@@ -60,8 +60,15 @@ Repo examples:
 - management tooling: `terraform/swarm/mcp-argocd`, `mcp-atlassian`,
   `mcp-ast-grep`, `mcp-cloudflare`, `mcp-filesystem-homelab`,
   `mcp-fortigate`, `mcp-github`, `mcp-google-workspace`, `mcp-redis`,
-  `mcp-agent-protocol`, `mcp-bash-pipeline`, `mcp-langflow`,
+  `mcp-agent-protocol`, `mcp-bash-pipeline`,
   `mcp-terraform`
+
+Documented exception:
+
+- a new MCP server can still be a `Cluster app` when the human explicitly
+  chooses Kubernetes and the server is meant to follow the emerging
+  ingress-routed cluster pattern. The current reference example is
+  `kubernetes/mcp-filesystem`
 
 If the Swarm service is an MCP server, use
 [`docs/rules/mcp-servers.md`](./mcp-servers.md) for its service-specific
