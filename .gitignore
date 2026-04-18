@@ -51,6 +51,12 @@ planning/**
 # Environment
 *.env
 !applications/harbor/versions.env
+**/.venv/
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
 
 # Exports
 exports/**
@@ -58,3 +64,6 @@ exports/**
 # Packer generated artifacts/logs
 packer/output/**
 packer/logs/*.log
+
+# Frontend build artifacts
+**/.next/
