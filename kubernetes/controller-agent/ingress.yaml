@@ -10,6 +10,26 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
+    - host: langgraph.nodadyoushutup.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: controller-agent
+                port:
+                  number: 80
+    - host: langraph.nodadyoushutup.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: controller-agent
+                port:
+                  number: 80
     - host: langsmith.nodadyoushutup.com
       http:
         paths:

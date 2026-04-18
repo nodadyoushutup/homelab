@@ -19,7 +19,7 @@ FROM base AS builder
 ARG NEXT_PUBLIC_API_URL=/api
 ARG NEXT_PUBLIC_ASSISTANT_ID=controller_agent
 ARG NEXT_PUBLIC_AUTH_SCHEME=
-ARG LANGGRAPH_API_URL=https://langsmith.nodadyoushutup.com
+ARG LANGGRAPH_API_URL=https://langgraph.nodadyoushutup.com
 
 ENV NEXT_PUBLIC_API_URL="${NEXT_PUBLIC_API_URL}"
 ENV NEXT_PUBLIC_ASSISTANT_ID="${NEXT_PUBLIC_ASSISTANT_ID}"
@@ -39,7 +39,7 @@ ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV HOSTNAME=0.0.0.0
 ENV PORT=3000
-ENV LANGGRAPH_API_URL=https://langsmith.nodadyoushutup.com
+ENV LANGGRAPH_API_URL=https://langgraph.nodadyoushutup.com
 
 WORKDIR /app
 

@@ -80,7 +80,7 @@ the Docker `CMD` from [`Dockerfile`](./Dockerfile):
 
 - `langgraph dev --host 0.0.0.0 --port 2024 --no-browser --no-reload`
 
-The homelab hostname `https://langsmith.nodadyoushutup.com` is intended to
+The homelab hostname `https://langgraph.nodadyoushutup.com` is intended to
 front that Kubernetes deployment.
 
 The deployment serves:

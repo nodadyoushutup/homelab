@@ -8,7 +8,7 @@ Homelab defaults:
 - production hostname: `https://chat-ui.nodadyoushutup.com`
 - proxied LangGraph API path: `/api`
 - default assistant / graph id: `controller_agent`
-- upstream Agent Server target: `https://langsmith.nodadyoushutup.com`
+- upstream Agent Server target: `https://langgraph.nodadyoushutup.com`
 
 The Docker image is built from this directory and published to Harbor as:
 
