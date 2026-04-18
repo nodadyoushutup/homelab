@@ -4,6 +4,7 @@ metadata:
   name: chat-ui
   namespace: chat-ui
   annotations:
+    argocd.argoproj.io/sync-wave: "40"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
 spec:

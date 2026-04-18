@@ -3,6 +3,8 @@ kind: Service
 metadata:
   name: chat-ui
   namespace: chat-ui
+  annotations:
+    argocd.argoproj.io/sync-wave: "35"
 spec:
   selector:
     app.kubernetes.io/name: chat-ui
