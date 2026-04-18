@@ -19,6 +19,7 @@ on:
         required: true
         type: choice
         options:
+          - chat-ui
           - harbor-runtime-set
           - mcp-cloudflare
           - mcp-fortigate
@@ -76,6 +77,11 @@ jobs:
           fi
 
           case "$build_target" in
+            chat-ui)
+              image_name="chat-ui"
+              docker_context="applications/chat-ui"
+              build_strategy="direct"
+              ;;
             harbor-runtime-set)
               image_name="harbor-runtime-set"
               docker_context="applications/harbor"

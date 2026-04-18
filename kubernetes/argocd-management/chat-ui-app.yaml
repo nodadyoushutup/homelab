@@ -1,0 +1,23 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: chat-ui
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "46"
+spec:
+  project: chat-ui
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: chat-ui
+  source:
+    repoURL: git@github.com:nodadyoushutup/homelab.git
+    targetRevision: HEAD
+    path: kubernetes/chat-ui
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

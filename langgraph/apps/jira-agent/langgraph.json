@@ -1,0 +1,9 @@
+{
+  "dependencies": [
+    "../.."
+  ],
+  "graphs": {
+    "jira_agent": "./agent.py:agent"
+  },
+  "env": ".env"
+}

@@ -1,0 +1,7 @@
+deepagents
+httpx
+langchain
+langchain-mcp-adapters
+langchain-openai
+langgraph-cli[inmem]
+python-dotenv

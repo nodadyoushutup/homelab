@@ -39,6 +39,7 @@ The Nginx Proxy Manager entry for `harbor.nodadyoushutup.com` forwards to
 Live Harbor projects reported by the API on `2026-04-16` after the Harbor
 config apply:
 
+- `chat-ui`
 - `gha-runner`
 - `harbor`
 - `harbor-core`
@@ -71,6 +72,7 @@ the same registry.
 
 | Runtime | Current image source | Source of truth |
 | --- | --- | --- |
+| `chat-ui` | Harbor | `kubernetes/chat-ui/deployment.yaml` plus `/mnt/eapp/.tfvars/harbor/config.tfvars` |
 | `gha-runner` | Harbor | `/mnt/eapp/.tfvars/gha-runner/app.tfvars` |
 | `jenkins-controller` | Harbor | `/mnt/eapp/.tfvars/jenkins-controller/app.tfvars` |
 | `mcp-cloudflare` | Harbor | `terraform/swarm/mcp-cloudflare/app/main.tf` plus `/mnt/eapp/.tfvars/mcp-cloudflare/app.tfvars` |
@@ -98,7 +100,7 @@ The standard publish workflow is:
 - `version`: required output tag
 - `target_registry`: `github` or `harbor`
 - `build_target`:
-  `harbor-runtime-set`, `mcp-cloudflare`, `mcp-fortigate`, `mcp-github`,
+  `chat-ui`, `harbor-runtime-set`, `mcp-cloudflare`, `mcp-fortigate`, `mcp-github`,
   `mcp-google-workspace`, `gha-runner`, `jenkins-agent`,
   `jenkins-controller`
 
@@ -172,7 +174,7 @@ The `gha-publish` system robot is the publish account for repo-managed Harbor
 images. The desired Harbor-managed project set now includes:
 
 - Existing repo images:
-  `gha-runner`, `harbor`, `jenkins-agent`, `jenkins-controller`,
+  `chat-ui`, `gha-runner`, `harbor`, `jenkins-agent`, `jenkins-controller`,
   `mcp-argocd`, `mcp-atlassian`, `mcp-cloudflare`, `mcp-fortigate`,
   `mcp-github`, `mcp-google-workspace`, `webserver-image`
 - Harbor component images:

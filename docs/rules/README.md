@@ -17,6 +17,8 @@ operator flows.
 - `confluence.md`: Confluence source-of-truth, access, scope, and analysis
   rules
 - `jira.md`: Jira source-of-truth, access, scope, and analysis rules
+- `langgraph.md`: LangGraph monorepo layout, agent boundaries, env handling,
+  MCP rules, and Deep Agents composition rules
 - `langflow.md`: Langflow deployment, persistence, and source-of-truth rules
 - `mcp-servers.md`: steady-state rules for the Swarm-hosted MCP server set
 - `repo.md`: repo-wide rules, safety constraints, host/runtime assumptions, and
