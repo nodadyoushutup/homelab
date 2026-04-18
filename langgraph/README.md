@@ -36,7 +36,7 @@ The Jira app also has subagent-local:
 
 ## Current Intent
 
-The primary local development path is now one Agent Server deployment that
+The primary local development path is one LangGraph development server that
 hosts multiple graphs from the `controller-agent` app boundary.
 
 What is already in place:
@@ -74,10 +74,10 @@ langgraph/.venv/bin/pip install -r requirements.txt
 ./langgraph/run.sh up
 ```
 
-This starts one local Agent Server on port `2024` and defaults to a loopback
-bring-up. The homelab production hostname `https://langsmith.nodadyoushutup.com`
-is now owned by the Kubernetes standalone deployment instead of the local
-workstation helper.
+This starts one local server on port `2024` and defaults to a loopback
+bring-up. The homelab hostname `https://langsmith.nodadyoushutup.com`
+is intended to front the Kubernetes `controller-agent` deployment, which now
+runs the same `langgraph dev` runtime inside the cluster.
 
 The deployment serves:
 

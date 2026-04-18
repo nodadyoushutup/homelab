@@ -1,0 +1,90 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: controller-agent
+  namespace: controller-agent
+  annotations:
+    argocd.argoproj.io/sync-wave: "30"
+spec:
+  replicas: 1
+  revisionHistoryLimit: 0
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: controller-agent
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: controller-agent
+    spec:
+      securityContext:
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      imagePullSecrets:
+        - name: controller-agent-registry
+      containers:
+        - name: controller-agent
+          image: harbor.nodadyoushutup.com/controller-agent/controller-agent:2026.04.18.3
+          imagePullPolicy: Always
+          workingDir: /app/langgraph/apps/controller-agent
+          command:
+            - langgraph
+            - dev
+            - --host
+            - 0.0.0.0
+            - --port
+            - "2024"
+            - --no-browser
+            - --no-reload
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          envFrom:
+            - secretRef:
+                name: controller-agent-app-env
+          env:
+            - name: TZ
+              value: America/New_York
+            - name: LANGGRAPH_CLI_NO_ANALYTICS
+              value: "1"
+          ports:
+            - name: http
+              containerPort: 2024
+              protocol: TCP
+          volumeMounts:
+            - name: state
+              mountPath: /app/langgraph/apps/controller-agent/.langgraph_api
+          startupProbe:
+            httpGet:
+              path: /docs
+              port: http
+            periodSeconds: 5
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /docs
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /docs
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: 1000m
+              memory: 2Gi
+      volumes:
+        - name: state
+          persistentVolumeClaim:
+            claimName: controller-agent-state

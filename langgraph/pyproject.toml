@@ -13,6 +13,7 @@ dependencies = [
   "httpx",
   "langchain",
   "langchain-mcp-adapters",
+  "langchain-openai",
   "python-dotenv",
 ]
 

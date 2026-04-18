@@ -1,16 +1,19 @@
-# syntax=docker/dockerfile:1.4
+FROM python:3.11-slim-bookworm
 
-FROM langchain/langgraph-api:3.11
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
 
-COPY . /deps/langgraph
+WORKDIR /app/langgraph
 
-RUN cd /deps/langgraph && \
-    PYTHONDONTWRITEBYTECODE=1 uv pip install --system --no-cache-dir -c /api/constraints.txt -e .
+COPY . /app/langgraph
 
-ENV LANGSERVE_GRAPHS='{"controller_agent": "/deps/langgraph/apps/controller-agent/agent.py:controller_agent", "code_analysis_agent": "/deps/langgraph/apps/controller-agent/agent.py:code_analysis_agent", "jira_agent": "/deps/langgraph/apps/controller-agent/agent.py:jira_agent"}'
+RUN pip install --upgrade pip && \
+    pip install -r /app/langgraph/requirements.txt && \
+    pip install -e .
 
-# Re-install the bundled API package after local deps are added so the official
-# runtime remains the active entrypoint.
-RUN mkdir -p /api/langgraph_api /api/langgraph_runtime /api/langgraph_license && \
-    touch /api/langgraph_api/__init__.py /api/langgraph_runtime/__init__.py /api/langgraph_license/__init__.py && \
-    PYTHONDONTWRITEBYTECODE=1 uv pip install --system --no-cache-dir --no-deps -e /api
+WORKDIR /app/langgraph/apps/controller-agent
+
+EXPOSE 2024
+
+CMD ["langgraph", "dev", "--host", "0.0.0.0", "--port", "2024", "--no-browser", "--no-reload"]
