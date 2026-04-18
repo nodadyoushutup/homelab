@@ -22,29 +22,29 @@ export function ToolCalls({
         return (
           <div
             key={idx}
-            className="overflow-hidden rounded-lg border border-gray-200"
+            className="overflow-hidden rounded-xl border border-border/80 bg-card/85"
           >
-            <div className="border-b border-gray-200 bg-gray-50 px-4 py-2">
-              <h3 className="font-medium text-gray-900">
+            <div className="border-b border-border/80 bg-muted/50 px-4 py-2">
+              <h3 className="font-medium text-foreground">
                 {tc.name}
                 {tc.id && (
-                  <code className="ml-2 rounded bg-gray-100 px-2 py-1 text-sm">
+                  <code className="ml-2 rounded bg-background/80 px-2 py-1 text-sm">
                     {tc.id}
                   </code>
                 )}
               </h3>
             </div>
             {hasArgs ? (
-              <table className="min-w-full divide-y divide-gray-200">
-                <tbody className="divide-y divide-gray-200">
+              <table className="min-w-full divide-y divide-border">
+                <tbody className="divide-y divide-border">
                   {Object.entries(args).map(([key, value], argIdx) => (
                     <tr key={argIdx}>
-                      <td className="px-4 py-2 text-sm font-medium whitespace-nowrap text-gray-900">
+                      <td className="px-4 py-2 text-sm font-medium whitespace-nowrap text-foreground">
                         {key}
                       </td>
-                      <td className="px-4 py-2 text-sm text-gray-500">
+                      <td className="px-4 py-2 text-sm text-muted-foreground">
                         {isComplexValue(value) ? (
-                          <code className="rounded bg-gray-50 px-2 py-1 font-mono text-sm break-all">
+                          <code className="rounded bg-background/80 px-2 py-1 font-mono text-sm break-all text-foreground">
                             {JSON.stringify(value, null, 2)}
                           </code>
                         ) : (
@@ -95,28 +95,28 @@ export function ToolResult({ message }: { message: ToolMessage }) {
 
   return (
     <div className="mx-auto grid max-w-3xl grid-rows-[1fr_auto] gap-2">
-      <div className="overflow-hidden rounded-lg border border-gray-200">
-        <div className="border-b border-gray-200 bg-gray-50 px-4 py-2">
+      <div className="overflow-hidden rounded-xl border border-border/80 bg-card/85">
+        <div className="border-b border-border/80 bg-muted/50 px-4 py-2">
           <div className="flex flex-wrap items-center justify-between gap-2">
             {message.name ? (
-              <h3 className="font-medium text-gray-900">
+              <h3 className="font-medium text-foreground">
                 Tool Result:{" "}
-                <code className="rounded bg-gray-100 px-2 py-1">
+                <code className="rounded bg-background/80 px-2 py-1">
                   {message.name}
                 </code>
               </h3>
             ) : (
-              <h3 className="font-medium text-gray-900">Tool Result</h3>
+              <h3 className="font-medium text-foreground">Tool Result</h3>
             )}
             {message.tool_call_id && (
-              <code className="ml-2 rounded bg-gray-100 px-2 py-1 text-sm">
+              <code className="ml-2 rounded bg-background/80 px-2 py-1 text-sm">
                 {message.tool_call_id}
               </code>
             )}
           </div>
         </div>
         <motion.div
-          className="min-w-full bg-gray-100"
+          className="min-w-full bg-muted/40"
           initial={false}
           animate={{ height: "auto" }}
           transition={{ duration: 0.3 }}
@@ -134,8 +134,8 @@ export function ToolResult({ message }: { message: ToolMessage }) {
                 transition={{ duration: 0.2 }}
               >
                 {isJsonContent ? (
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <tbody className="divide-y divide-gray-200">
+                  <table className="min-w-full divide-y divide-border">
+                    <tbody className="divide-y divide-border">
                       {(Array.isArray(parsedContent)
                         ? isExpanded
                           ? parsedContent
@@ -147,12 +147,12 @@ export function ToolResult({ message }: { message: ToolMessage }) {
                           : [item[0], item[1]];
                         return (
                           <tr key={argIdx}>
-                            <td className="px-4 py-2 text-sm font-medium whitespace-nowrap text-gray-900">
+                            <td className="px-4 py-2 text-sm font-medium whitespace-nowrap text-foreground">
                               {key}
                             </td>
-                            <td className="px-4 py-2 text-sm text-gray-500">
+                            <td className="px-4 py-2 text-sm text-muted-foreground">
                               {isComplexValue(value) ? (
-                                <code className="rounded bg-gray-50 px-2 py-1 font-mono text-sm break-all">
+                                <code className="rounded bg-background/80 px-2 py-1 font-mono text-sm break-all text-foreground">
                                   {JSON.stringify(value, null, 2)}
                                 </code>
                               ) : (
@@ -174,12 +174,12 @@ export function ToolResult({ message }: { message: ToolMessage }) {
             (isJsonContent &&
               Array.isArray(parsedContent) &&
               parsedContent.length > 5)) && (
-            <motion.button
-              onClick={() => setIsExpanded(!isExpanded)}
-              className="flex w-full cursor-pointer items-center justify-center border-t-[1px] border-gray-200 py-2 text-gray-500 transition-all duration-200 ease-in-out hover:bg-gray-50 hover:text-gray-600"
-              initial={{ scale: 1 }}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+          <motion.button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="flex w-full cursor-pointer items-center justify-center border-t border-border py-2 text-muted-foreground transition-all duration-200 ease-in-out hover:bg-accent/60 hover:text-foreground"
+            initial={{ scale: 1 }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             >
               {isExpanded ? <ChevronUp /> : <ChevronDown />}
             </motion.button>
