@@ -49,45 +49,47 @@ implementation and the Markdown contract docs in the same change.
 
 Required parent-agent artifacts:
 
-- `langflow/agents/<agent-name>.py`
+- repo-managed Python implementation under `applications/langgraph/`
 - `docs/agents/<agent-name>-agent.md`
 - matching updates in this file for the current agent set, file map, and
-  Langflow prompt source
+  runtime prompt source
 
 Required subagent artifacts:
 
-- `langflow/agents/subagents/<subagent-name>-subagent.py`
+- repo-managed Python implementation under `applications/langgraph/`
 - `docs/agents/subagents/<subagent-name>-subagent.md`
 - matching updates in this file for the current agent set, file map, and
-  Langflow prompt source
+  runtime prompt source
 
 Do not treat a new agent or subagent as part of the supported agent set until
 both the Python file and the Markdown file exist.
 
-## Langflow prompt source
+## Runtime Prompt Source
 
-These files are also the source-of-truth prompt docs for Langflow-managed
-agents.
+These files are the source-of-truth prompt docs for repo-managed agent
+runtimes.
 
 Current intent:
 
-- paste `homelab-agent.md` into the parent `Homelab` agent instructions
-- paste `subagents/code-analysis-subagent.md` into the `Code Analysis`
-  subagent instructions
-- paste `subagents/confluence-subagent.md` into the `Confluence` subagent
-  instructions
-- paste `subagents/kubernetes-subagent.md` into the `Kubernetes` subagent
-  instructions
-- paste `subagents/pipeline-subagent.md` into the `Pipeline` subagent
-  instructions
-- paste `subagents/terraform-subagent.md` into the `Terraform` subagent
-  instructions
-- paste `subagents/jira-subagent.md` into the `Jira` subagent instructions
+- keep `homelab-agent.md` as the instruction contract for the parent `Homelab`
+  agent
+- keep `subagents/code-analysis-subagent.md` as the instruction contract for
+  the `Code Analysis` subagent
+- keep `subagents/confluence-subagent.md` as the instruction contract for the
+  `Confluence` subagent
+- keep `subagents/kubernetes-subagent.md` as the instruction contract for the
+  `Kubernetes` subagent
+- keep `subagents/pipeline-subagent.md` as the instruction contract for the
+  `Pipeline` subagent
+- keep `subagents/terraform-subagent.md` as the instruction contract for the
+  `Terraform` subagent
+- keep `subagents/jira-subagent.md` as the instruction contract for the `Jira`
+  subagent
 - use each agent's own documented schema as the source of truth for how that
   agent accepts input and returns output
 
-When the Langflow calling pattern changes, update these docs first so the
-prompt text and repo behavior stay aligned.
+When the runtime wiring changes, update these docs first so the prompt text and
+repo behavior stay aligned.
 
 ## Current handoff model
 
@@ -106,7 +108,7 @@ Current expectation:
 - every agent should check the relevant `docs/` material before falling back to
   broad repo search
 
-This keeps Langflow orchestration simple while the agent set is still evolving.
+This keeps runtime orchestration simple while the agent set is still evolving.
 
 ## Selection workflow
 

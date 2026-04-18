@@ -47,12 +47,12 @@ Python file and the Markdown contract doc as one unit of work.
 
 Required steps:
 
-1. create the Python implementation in `langflow/agents/` or
-   `langflow/agents/subagents/`
+1. create the Python implementation under the active runtime path in
+   `applications/langgraph/`
 2. create the matching Markdown instructions/schema file in `docs/agents/` or
    `docs/agents/subagents/`
 3. update `docs/agents/README.md` so the new agent is part of the documented
-   agent set, file map, and Langflow prompt source
+   agent set, file map, and runtime prompt source
 4. only then treat the new agent or subagent as selectable in this workflow
 
 Do not create a doc-only agent or a Python-only agent.

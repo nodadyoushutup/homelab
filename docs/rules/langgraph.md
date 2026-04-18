@@ -1,7 +1,7 @@
 # LangGraph Rules
 
 This document defines the steady-state rules for the repo-managed LangGraph and
-Deep Agents implementation under `langgraph/`.
+Deep Agents implementation under `applications/langgraph/`.
 
 Use [docs/workflows/langgraph.md](./../workflows/langgraph.md) for the standard
 operator flow.
@@ -10,22 +10,24 @@ operator flow.
 
 This document applies to:
 
-- `langgraph/`
-- repo-managed LangGraph app configs such as `langgraph/apps/*/langgraph.json`
-- shared LangGraph Python code under `langgraph/src/`
-- app-local and subagent-local skills under `langgraph/apps/**/skills/`
+- `applications/langgraph/`
+- repo-managed LangGraph app configs such as
+  `applications/langgraph/apps/*/langgraph.json`
+- shared LangGraph Python code under `applications/langgraph/src/`
+- app-local and subagent-local skills under
+  `applications/langgraph/apps/**/skills/`
 
 ## Source-of-Truth Rules
 
-- Keep shared Python logic under `langgraph/src/` and keep deployable app config
-  in `langgraph/apps/<app-name>/`.
+- Keep shared Python logic under `applications/langgraph/src/` and keep
+  deployable app config in `applications/langgraph/apps/<app-name>/`.
 - Each deployable LangGraph app must keep its own `langgraph.json` in that app's
   directory instead of relying on a monorepo-root config.
 - A single deployable app may expose multiple graphs from one `langgraph.json`
   when those graphs belong to the same runtime boundary.
-- Treat `langgraph/pyproject.toml` as the shared package dependency root for
-  this monorepo scaffold unless a later change intentionally splits the apps
-  into separate Python packages.
+- Treat `applications/langgraph/pyproject.toml` as the shared package
+  dependency root for this monorepo scaffold unless a later change
+  intentionally splits the apps into separate Python packages.
 
 ## App Boundary Rules
 

@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-LANGGRAPH_DIR="${ROOT_DIR}/langgraph"
-if [[ -x "${ROOT_DIR}/.venv/bin/python" ]]; then
-  VENV_DIR="${ROOT_DIR}/.venv"
+LANGGRAPH_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${LANGGRAPH_DIR}/../.." && pwd)"
+if [[ -x "${REPO_ROOT}/.venv/bin/python" ]]; then
+  VENV_DIR="${REPO_ROOT}/.venv"
 else
   VENV_DIR="${LANGGRAPH_DIR}/.venv"
 fi
@@ -27,13 +27,13 @@ mkdir -p "${PID_DIR}" "${LOG_DIR}"
 
 require_venv() {
   if [[ ! -x "${PYTHON_BIN}" ]]; then
-    echo "Missing ${PYTHON_BIN}. Create or repair either the repo-root .venv or langgraph/.venv first." >&2
+    echo "Missing ${PYTHON_BIN}. Create or repair either the repo-root .venv or applications/langgraph/.venv first." >&2
     exit 1
   fi
 
   if [[ ! -x "${LANGGRAPH_BIN}" ]]; then
     echo "Missing ${LANGGRAPH_BIN}. Install requirements first:" >&2
-    echo "  ${BIN_DIR}/pip install -r ${ROOT_DIR}/requirements.txt" >&2
+    echo "  ${BIN_DIR}/pip install -r ${LANGGRAPH_DIR}/requirements.txt" >&2
     exit 1
   fi
 }

@@ -1,7 +1,7 @@
 # LangGraph Workflow
 
 This document describes how to operate and evolve the repo-managed LangGraph and
-Deep Agents scaffold under `langgraph/`.
+Deep Agents scaffold under `applications/langgraph/`.
 
 Use [docs/rules/langgraph.md](./../rules/langgraph.md) for the steady-state
 rules.
@@ -10,8 +10,8 @@ rules.
 
 Use this workflow for:
 
-- changes under `langgraph/src/`
-- changes to deployable app configs under `langgraph/apps/*/`
+- changes under `applications/langgraph/src/`
+- changes to deployable app configs under `applications/langgraph/apps/*/`
 - changes to app-local or subagent-local skills
 - changes to app-local or subagent-local MCP wiring
 
@@ -26,8 +26,8 @@ When a task changes the LangGraph implementation:
    - skills
    - MCP wiring
 2. read `docs/rules/langgraph.md` before editing
-3. keep shared code in `langgraph/src/` and app entrypoints/configs in
-   `langgraph/apps/<app-name>/`
+3. keep shared code in `applications/langgraph/src/` and app
+   entrypoints/configs in `applications/langgraph/apps/<app-name>/`
 4. decide whether the target app should expose:
    - one graph
    - multiple sibling graphs in one deployment
@@ -47,8 +47,8 @@ When a task changes the LangGraph implementation:
    - prefer HTTP/SSE transports for anything intended to be deployed
 8. if the task changes one app from a single graph to multiple sibling graphs:
    - keep those graph exports together in that app's `langgraph.json`
-   - keep graph factory code in shared `langgraph/src/` modules or the app's
-     entrypoint as appropriate
+   - keep graph factory code in shared `applications/langgraph/src/` modules
+     or the app's entrypoint as appropriate
    - prefer in-process composition before adding remote transport
 9. validate the Python structure after the change
 10. update docs if the stable pattern changed
@@ -57,11 +57,11 @@ When a task changes the LangGraph implementation:
 
 After changing the LangGraph scaffold:
 
-1. run a syntax check such as `python3 -m compileall langgraph`
+1. run a syntax check such as `python3 -m compileall applications/langgraph`
 2. validate any `langgraph.json` files you changed
 3. if dependencies are installed, start the target app locally from its app
-   directory with `langgraph dev`, or use `langgraph/run.sh up` when the change
-   spans multiple app boundaries
+   directory with `langgraph dev`, or use `applications/langgraph/run.sh up`
+   when the change spans multiple app boundaries
 4. if the change touches remote delegation, verify the relevant env values and
    graph ids before expecting A2A calls to succeed
 
@@ -69,11 +69,12 @@ After changing the LangGraph scaffold:
 
 Use this rough pattern:
 
-- `langgraph/src/`: shared package and reusable helpers
-- `langgraph/apps/<deployable-agent>/`: one deployable app boundary, which may
-  expose one graph or multiple sibling graphs
-- `langgraph/apps/<deployable-agent>/subagents/<subagent>/`: config, skills,
-  and MCP wiring that belong only to an internal Deep Agents subagent
+- `applications/langgraph/src/`: shared package and reusable helpers
+- `applications/langgraph/apps/<deployable-agent>/`: one deployable app
+  boundary, which may expose one graph or multiple sibling graphs
+- `applications/langgraph/apps/<deployable-agent>/subagents/<subagent>/`:
+  config, skills, and MCP wiring that belong only to an internal Deep Agents
+  subagent
 
 Do not move `langgraph.json` up to the monorepo root just to make local running
 feel simpler. Keep each app independently deployable.
