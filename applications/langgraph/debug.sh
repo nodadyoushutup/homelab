@@ -18,12 +18,29 @@ if [[ ! -f "${APP_DIR}/langgraph.json" ]]; then
   exit 1
 fi
 
-if [[ -x "${SCRIPT_DIR}/.venv/bin/langgraph" ]]; then
-  LANGGRAPH_BIN="${SCRIPT_DIR}/.venv/bin/langgraph"
-elif command -v langgraph >/dev/null 2>&1; then
-  LANGGRAPH_BIN="$(command -v langgraph)"
-else
-  echo "error: langgraph CLI not found. Install dependencies first or provide applications/langgraph/.venv/bin/langgraph." >&2
+langgraph_cmd=()
+
+if command -v langgraph >/dev/null 2>&1; then
+  langgraph_candidate="$(command -v langgraph)"
+  if "${langgraph_candidate}" --help >/dev/null 2>&1; then
+    langgraph_cmd=("${langgraph_candidate}")
+  fi
+fi
+
+if [[ "${#langgraph_cmd[@]}" -eq 0 && -x "${SCRIPT_DIR}/.venv/bin/langgraph" ]]; then
+  if "${SCRIPT_DIR}/.venv/bin/langgraph" --help >/dev/null 2>&1; then
+    langgraph_cmd=("${SCRIPT_DIR}/.venv/bin/langgraph")
+  fi
+fi
+
+if [[ "${#langgraph_cmd[@]}" -eq 0 && -x "${SCRIPT_DIR}/.venv/bin/python" ]]; then
+  if "${SCRIPT_DIR}/.venv/bin/python" -m langgraph_cli --help >/dev/null 2>&1; then
+    langgraph_cmd=("${SCRIPT_DIR}/.venv/bin/python" "-m" "langgraph_cli")
+  fi
+fi
+
+if [[ "${#langgraph_cmd[@]}" -eq 0 ]]; then
+  echo "error: langgraph CLI not found. Install dependencies first or provide a working applications/langgraph/.venv/bin/python." >&2
   exit 1
 fi
 
@@ -36,6 +53,7 @@ if [[ -z "${PUBLIC_HOST}" ]]; then
 fi
 
 export LANGGRAPH_CLI_NO_ANALYTICS="${LANGGRAPH_CLI_NO_ANALYTICS:-1}"
+export PYTHONPATH="${SCRIPT_DIR}/src${PYTHONPATH:+:${PYTHONPATH}}"
 
 echo "LangGraph debug server"
 echo "  app: ${APP_DIR}"
@@ -48,7 +66,7 @@ echo "  reload: $([[ "${NO_RELOAD}" == "1" ]] && echo disabled || echo enabled)"
 cd "${APP_DIR}"
 
 cmd=(
-  "${LANGGRAPH_BIN}"
+  "${langgraph_cmd[@]}"
   dev
   --host
   "${HOST}"
