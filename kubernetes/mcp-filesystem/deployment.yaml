@@ -50,7 +50,7 @@ spec:
               protocol: TCP
           volumeMounts:
             - name: code
-              mountPath: /mnt/eapp/code/homelab
+              mountPath: /mnt/eapp/code
           readinessProbe:
             tcpSocket:
               port: http
