@@ -11,7 +11,6 @@ Terraform execution behavior that the Swarm stages inherit.
 Use this workflow for:
 
 - `terraform/swarm/mcp-argocd/app`
-- `terraform/swarm/mcp-atlassian/app`
 - `terraform/swarm/mcp-ast-grep/app`
 - `terraform/swarm/mcp-cloudflare/app`
 - `terraform/swarm/mcp-git-homelab/app`
@@ -23,6 +22,7 @@ Use this workflow for:
 - `terraform/swarm/mcp-agent-protocol/app`
 - `terraform/swarm/mcp-bash-pipeline/app`
 - `terraform/swarm/mcp-terraform/app`
+- `kubernetes/mcp-atlassian`
 - `kubernetes/mcp-filesystem`
 
 ## Standard Flow
@@ -105,14 +105,23 @@ Before running `terraform/swarm/mcp-argocd/app/pipeline/app.sh`:
 
 ### `mcp-atlassian`
 
-Before running `terraform/swarm/mcp-atlassian/app/pipeline/app.sh`:
+Before committing `kubernetes/mcp-atlassian/`:
 
-- confirm Jira and Confluence URLs, usernames, and API tokens are all present
+- confirm the upstream image reference in
+  `kubernetes/mcp-atlassian/deployment.yaml` still exists in GHCR
+- confirm `/mnt/eapp/.tfvars/vault/config.tfvars` contains a
+  `k8s/mcp_atlassian` payload with Jira and Confluence URLs, usernames, API
+  tokens, and the current scope-filter values if the service should stay
+  narrowed
+- bootstrap the namespace-local Vault reader secret
+  `mcp-atlassian-vault-reader` before expecting External Secrets to sync
 - confirm the full-access posture is still intentional for the current task and
   environment because the deployed server will expose mutating Jira and
   Confluence tools to clients
-- confirm any `jira_projects_filter` or `confluence_spaces_filter` changes are
-  intentional because they directly narrow or widen the MCP surface
+- confirm the existing hostname route for
+  `https://mcp.atlassian.nodadyoushutup.com/mcp` still points at the intended
+  ingress entrypoint, because the client-facing URL is preserved during the
+  migration
 
 ### `mcp-ast-grep`
 
@@ -261,10 +270,21 @@ Before running `terraform/swarm/mcp-terraform/app/pipeline/app.sh`:
 
 ## Apply
 
-Run the stage through its pipeline entrypoint:
+Run the stage through its platform owner:
+
+For Swarm MCP servers:
 
 ```bash
 terraform/swarm/<service>/app/pipeline/app.sh
+```
+
+For Kubernetes MCP servers, commit and push the manifests and let Argo CD
+autosync them:
+
+```bash
+git add kubernetes/<service> kubernetes/argocd-management/<service>-*.yaml docs/...
+git commit -m "<service>: migrate to kubernetes"
+git push
 ```
 
 Use explicit `--tfvars` or `--backend` overrides only when the task calls for a
@@ -282,8 +302,11 @@ terraform/remote/cloudflare/config/pipeline/config.sh
 
 After apply:
 
-1. confirm the service converged with `docker service ps <service>`
-2. confirm the published port is open on the Swarm ingress node
+1. confirm the service converged with the platform-appropriate control plane:
+   `docker service ps <service>` for Swarm or `kubectl get pods -n <namespace>`
+   for Kubernetes
+2. confirm the runtime listener is reachable from the platform edge:
+   published port on the Swarm ingress node or Kubernetes service/ingress path
 3. if the service exposes an explicit MCP HTTP path, probe that path with the
    same transport assumptions the healthcheck uses
 4. if the service is meant to be host-reachable, validate the final hostname
@@ -295,8 +318,7 @@ Validation examples:
 
 - `mcp-argocd`: probe `http://<swarm-host>:18086/mcp` with an
   `mcp-session-id` header
-- `mcp-atlassian`: probe `http://<swarm-host>:18080/mcp` with
-  `Accept: text/event-stream`
+- `mcp-atlassian`: probe `https://mcp.atlassian.nodadyoushutup.com/mcp`
 - `mcp-ast-grep`: probe `http://<swarm-host>:18096/mcp`
 - `mcp-filesystem`: probe `https://mcp.filesystem.nodadyoushutup.com/mcp/`
 - `mcp-git-homelab`: probe `http://<swarm-host>:18099/mcp`

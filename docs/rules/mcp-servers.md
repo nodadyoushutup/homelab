@@ -10,7 +10,6 @@ Terraform guardrails the Swarm-hosted services also follow.
 This document applies to the current MCP server set:
 
 - `terraform/swarm/mcp-argocd/app`
-- `terraform/swarm/mcp-atlassian/app`
 - `terraform/swarm/mcp-ast-grep/app`
 - `terraform/swarm/mcp-cloudflare/app`
 - `terraform/swarm/mcp-git-homelab/app`
@@ -22,6 +21,7 @@ This document applies to the current MCP server set:
 - `terraform/swarm/mcp-agent-protocol/app`
 - `terraform/swarm/mcp-bash-pipeline/app`
 - `terraform/swarm/mcp-terraform/app`
+- `kubernetes/mcp-atlassian`
 - `kubernetes/mcp-filesystem`
 
 ## Shared Placement Rules
@@ -29,8 +29,8 @@ This document applies to the current MCP server set:
 - Existing Swarm-hosted MCP servers stay in `terraform/swarm/<service>/app`
   unless a task explicitly migrates them.
 - New MCP servers may use the Kubernetes pattern under `kubernetes/<service>/`
-  when the human explicitly chooses the cluster route. The current reference
-  exception is `kubernetes/mcp-filesystem`.
+  when the human explicitly chooses the cluster route. Current reference
+  exceptions are `kubernetes/mcp-atlassian` and `kubernetes/mcp-filesystem`.
 - Each MCP server keeps its own single `app` stage and single backend state
   file. Do not merge multiple MCP services into one Terraform root or one state
   key.
@@ -113,17 +113,28 @@ This document applies to the current MCP server set:
 
 ### `mcp-atlassian`
 
-- Runtime root: `terraform/swarm/mcp-atlassian/app`
-- Image source: upstream image pinned directly in Terraform
-- Listen model: internal `8000`, published `18080`, HTTP path `/mcp`
+- Runtime root: `kubernetes/mcp-atlassian`
+- Argo CD objects: `kubernetes/argocd-management/mcp-atlassian-project.yaml`
+  and `kubernetes/argocd-management/mcp-atlassian-app.yaml`
+- Image source: upstream image pinned directly in Kubernetes manifests
+- Listen model: container `8000`, service `8000`, ingress-routed hostname
+  `https://mcp.atlassian.nodadyoushutup.com/mcp`
+- Transport model: use upstream `streamable-http` directly on `/mcp`; do not
+  add a repo-local proxy unless a future upstream limitation requires one
 - Access model: the service runs with the upstream full Jira and Confluence
-  tool surface enabled. Keep mutating access intentional, and use scope filters
-  or explicit tool restrictions if the repo later needs to narrow exposure.
-- Scope model: keep `jira_projects_filter` and `confluence_spaces_filter`
-  populated when the server should be limited to a subset of Atlassian content.
-- Credential model: Jira and Confluence credentials are independent inputs. Do
-  not silently drop one side when the service is expected to expose both tool
-  families.
+  tool surface enabled through explicit `--toolsets all`. Keep mutating access
+  intentional, and use scope filters or explicit tool restrictions if the repo
+  later needs to narrow exposure.
+- Scope model: keep `JIRA_PROJECTS_FILTER` and `CONFLUENCE_SPACES_FILTER`
+  populated in the Vault-backed app env secret when the server should stay
+  limited to a subset of Atlassian content.
+- Credential model: Jira and Confluence credentials are independent inputs in
+  the Vault-backed app env secret. Do not silently drop one side when the
+  service is expected to expose both tool families.
+- Secret model: keep the Kubernetes app env secret sourced from
+  `secret/k8s/mcp_atlassian` through `ExternalSecret`; carry forward the
+  existing Jira and Confluence scope filters during migration so the platform
+  move does not widen access by accident
 
 ### `mcp-ast-grep`
 
