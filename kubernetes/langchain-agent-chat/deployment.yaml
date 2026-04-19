@@ -25,7 +25,7 @@ spec:
         - name: langchain-agent-chat-registry
       containers:
         - name: langchain-agent-chat
-          image: harbor.nodadyoushutup.com/langchain-agent-chat/langchain-agent-chat:2026.04.18.212019
+          image: harbor.nodadyoushutup.com/langchain-agent-chat/langchain-agent-chat:2026.04.18.220322
           imagePullPolicy: Always
           securityContext:
             runAsUser: 1000
@@ -43,7 +43,7 @@ spec:
             - name: PORT
               value: "3000"
             - name: NEXT_PUBLIC_API_URL
-              value: /api
+              value: https://langchain-agent-chat.nodadyoushutup.com/api
             - name: NEXT_PUBLIC_ASSISTANT_ID
               value: controller_agent
             - name: NEXT_PUBLIC_AUTH_SCHEME
