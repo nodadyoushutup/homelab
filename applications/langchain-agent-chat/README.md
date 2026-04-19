@@ -10,6 +10,10 @@ Homelab defaults:
 - default assistant / graph id: `controller_agent`
 - upstream Agent Server target: `https://langgraph.nodadyoushutup.com`
 
+The Kubernetes deployment overrides the upstream target to the in-cluster
+`controller-agent` service so the Next.js API passthrough stays inside the
+cluster network.
+
 The Docker image is built from this directory and published to Harbor as:
 
 - `harbor.nodadyoushutup.com/langchain-agent-chat/langchain-agent-chat:<tag>`
