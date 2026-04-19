@@ -8,8 +8,8 @@ workshopping:
 
 - `controller-agent`: user-facing coordinator
 - `code-agent`: repository analysis specialist
-- `jira-agent`: Jira specialist with internal Deep Agents subagents for create
-  and edit flows
+- `jira-agent`: single-layer Jira specialist for discovery and issue lifecycle
+  work
 
 ## Layout
 
@@ -34,13 +34,6 @@ Each deployable agent app has its own:
 - optional `mcp.json`
 - app-local skills
 
-The Jira app also has subagent-local:
-
-- `system_prompt.md` files loaded as runtime prompt text by the Jira app
-- `.env` files loaded as config by the Jira app
-- `mcp.json` files loaded as config by the Jira app
-- skills directories referenced only by that internal subagent
-
 ## Current Intent
 
 The primary local development path is one LangGraph development server that
@@ -54,9 +47,9 @@ What is already in place:
 - shared Python package for reusable helpers
 - supervisor-local delegation to compiled specialist graphs in the same
   deployment
-- Jira internal subagents with distinct tools, skills, and config surfaces
-- Markdown-backed `system_prompt.md` files for deployable agents and internal subagents
-- MCP loading support from app-local and subagent-local `mcp.json` files
+- a single-layer Jira specialist that keeps create and edit rules in one app
+- Markdown-backed `system_prompt.md` files for deployable agents
+- MCP loading support from app-local `mcp.json` files
 - a repo-owned Docker wrapper in `Dockerfile` that packages this project and
   runs `langgraph dev`
 

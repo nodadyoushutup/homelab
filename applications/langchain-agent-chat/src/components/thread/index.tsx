@@ -8,10 +8,7 @@ import { Button } from "../ui/button";
 import { Checkpoint, Message } from "@langchain/langgraph-sdk";
 import { AssistantMessage, AssistantMessageLoading } from "./messages/ai";
 import { HumanMessage } from "./messages/human";
-import {
-  DO_NOT_RENDER_ID_PREFIX,
-  ensureToolCallsHaveResponses,
-} from "@/lib/ensure-tool-responses";
+import { DO_NOT_RENDER_ID_PREFIX } from "@/lib/ensure-tool-responses";
 import { LangGraphLogoSVG } from "../icons/langgraph";
 import { TooltipIconButton } from "./tooltip-icon-button";
 import {
@@ -209,13 +206,13 @@ export function Thread() {
       ] as Message["content"],
     };
 
-    const toolMessages = ensureToolCallsHaveResponses(stream.messages);
-
     const context =
       Object.keys(artifactContext).length > 0 ? artifactContext : undefined;
 
     stream.submit(
-      { messages: [...toolMessages, newHumanMessage], context },
+      // Submit only the new human input. Synthetic hidden tool placeholders can
+      // keep the UI stable, but persisting them poisons future tool-call history.
+      { messages: [newHumanMessage], context },
       {
         streamMode: ["values"],
         streamSubgraphs: true,
@@ -223,11 +220,7 @@ export function Thread() {
         optimisticValues: (prev) => ({
           ...prev,
           context,
-          messages: [
-            ...(prev.messages ?? []),
-            ...toolMessages,
-            newHumanMessage,
-          ],
+          messages: [...(prev.messages ?? []), newHumanMessage],
         }),
       },
     );

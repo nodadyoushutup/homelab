@@ -23,6 +23,8 @@ the contract docs under `docs/agents/`.
    matching Markdown contract docs in the same change
 4. update `docs/agents/README.md` if the runtime set, file map, or routing
    expectations changed
+   - if the change removes an internal subagent, fold any durable instructions
+     into the owning agent contract and delete the obsolete subagent contract
 5. update `docs/workflows/langgraph.md` or `docs/rules/langgraph.md` if the
    stable operating pattern changed
 6. validate the affected LangGraph app or shared module

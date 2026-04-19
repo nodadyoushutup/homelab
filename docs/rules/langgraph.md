@@ -41,9 +41,13 @@ This document applies to:
 - Domain-oriented agents may be co-deployed as sibling graphs inside one app
   boundary when they share the same runtime and scaling needs.
 - Internal Deep Agents subagents should stay task-oriented and narrower than
-  their parent app. Examples inside `jira-agent`: `create_issue`, `edit_issue`.
+  their parent app. Examples inside a domain agent: `issue_discovery`,
+  `issue_update`.
 - Do not flatten every specialist into its own remote deployment unless the
   runtime or security boundary is worth the extra operational cost.
+- Internal Deep Agents subagents are optional. The current `jira-agent`
+  intentionally keeps its create and edit rules in the app-level prompt and
+  skills instead of separate internal specialists.
 
 ## Environment Rules
 

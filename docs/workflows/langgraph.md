@@ -33,6 +33,8 @@ When a task changes the LangGraph implementation:
    - one graph
    - multiple sibling graphs in one deployment
    - internal Deep Agents subagents inside one graph
+   - prefer a single app-level agent first; add internal subagents only when a
+     narrower capability needs its own tool surface, skills, or prompt
 5. if the task adds a new deployable app:
    - create its app directory
    - add `agent.py`
@@ -44,6 +46,9 @@ When a task changes the LangGraph implementation:
    - add `system_prompt.md`
    - add any subagent-local skills or MCP config there
    - wire it explicitly in the parent app code
+   - if the task removes an internal subagent, fold the surviving prompt and
+     skill rules back into the owning app and delete the obsolete subagent
+     config
 7. if the task adds MCP-backed tools:
    - keep app-level MCP configs with the app
    - keep subagent-level MCP configs with the subagent
@@ -110,3 +115,6 @@ Use this rough pattern:
 
 Do not move `langgraph.json` up to the monorepo root just to make local running
 feel simpler. Keep each app independently deployable.
+
+Internal subagents are optional. The current `jira-agent` intentionally runs as
+a single-layer agent and keeps its Jira operating rules at the app level.

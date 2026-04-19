@@ -41,6 +41,26 @@ FILESYSTEM_TOOL_NAMES = {
     "list_allowed_directories",
 }
 
+JIRA_JSON_STRING_FIELDS_BY_TOOL = {
+    "jira_create_issue": {"additional_fields"},
+    "jira_update_issue": {"fields", "additional_fields", "attachments"},
+    "jira_transition_issue": {"fields"},
+    "jira_create_issue_link": {"comment_visibility"},
+}
+
+JIRA_OMIT_ARGS_BY_TOOL = {
+    # The current Atlassian transition path rejects plain-text transition comments.
+    # Use jira_add_comment separately when a note is needed.
+    "jira_transition_issue": {"comment"},
+}
+
+JIRA_OMIT_FALSE_BOOL_ARGS_BY_TOOL = {
+    # The Atlassian connector routes jira_add_comment through the JSM endpoint
+    # when `public` is present, even when the issue is a normal Jira issue.
+    # Omit `public=false` unless the caller explicitly needs JSM behavior.
+    "jira_add_comment": {"public"},
+}
+
 
 def _run_coro(coro):
     try:
@@ -98,6 +118,20 @@ def _normalize_server_config(raw_servers: dict[str, dict[str, Any]]) -> dict[str
     return normalized
 
 
+def _required_tool_args(args_schema: Any) -> set[str]:
+    if args_schema is None:
+        return set()
+
+    if isinstance(args_schema, dict):
+        return set(args_schema.get("required", []))
+
+    model_json_schema = getattr(args_schema, "model_json_schema", None)
+    if callable(model_json_schema):
+        return set(model_json_schema().get("required", []))
+
+    return set()
+
+
 def load_mcp_tools(config_path: Path) -> list[Any]:
     """Load MCP tools from a local JSON config if one is present."""
     if not config_path.exists():
@@ -116,6 +150,68 @@ def load_mcp_tools(config_path: Path) -> list[Any]:
         return await client.get_tools()
 
     return _run_coro(_load_tools())
+
+
+def wrap_blank_optional_args(
+    raw_tools: list[Any],
+    *,
+    json_string_fields_by_tool: dict[str, set[str]] | None = None,
+    omit_args_by_tool: dict[str, set[str]] | None = None,
+    omit_false_bool_args_by_tool: dict[str, set[str]] | None = None,
+) -> list[Any]:
+    """Drop blank optional string args and normalize JSON-string inputs when needed."""
+    wrapped_tools: list[Any] = []
+    json_string_fields_by_tool = json_string_fields_by_tool or {}
+    omit_args_by_tool = omit_args_by_tool or {}
+    omit_false_bool_args_by_tool = omit_false_bool_args_by_tool or {}
+
+    for raw_tool in raw_tools:
+        required_args = _required_tool_args(getattr(raw_tool, "args_schema", None))
+        json_string_fields = json_string_fields_by_tool.get(raw_tool.name, set())
+        omitted_args = omit_args_by_tool.get(raw_tool.name, set())
+        omitted_false_bool_args = omit_false_bool_args_by_tool.get(raw_tool.name, set())
+
+        async def call_sanitized_tool(
+            _raw_tool=raw_tool,
+            _required_args=required_args,
+            _json_string_fields=json_string_fields,
+            _omitted_args=omitted_args,
+            _omitted_false_bool_args=omitted_false_bool_args,
+            **kwargs: Any,
+        ) -> Any:
+            sanitized_args: dict[str, Any] = {}
+            for key, value in kwargs.items():
+                if key in _omitted_args:
+                    continue
+
+                if key in _omitted_false_bool_args and value is False:
+                    continue
+
+                if isinstance(value, str):
+                    if not value.strip() and key not in _required_args:
+                        continue
+                    sanitized_args[key] = value
+                    continue
+
+                if key in _json_string_fields and isinstance(value, (dict, list)):
+                    sanitized_args[key] = json.dumps(value)
+                    continue
+
+                sanitized_args[key] = value
+
+            return await _raw_tool.ainvoke(sanitized_args)
+
+        wrapped_tools.append(
+            StructuredTool(
+                name=raw_tool.name,
+                description=raw_tool.description or "",
+                args_schema=raw_tool.args_schema,
+                coroutine=call_sanitized_tool,
+                response_format="content",
+            )
+        )
+
+    return wrapped_tools
 
 
 def _normalize_repo_path(path: str | None, repo_root: Path) -> str:
@@ -155,6 +251,13 @@ def _merge_excludes(extra_patterns: list[str] | None) -> list[str]:
         if pattern not in merged:
             merged.append(pattern)
     return merged
+
+
+def _is_broad_recursive_pattern(pattern: str) -> bool:
+    normalized = pattern.strip()
+    if not normalized:
+        return True
+    return normalized.startswith("**/") or "/" not in normalized
 
 
 def _content_to_text(content: Any) -> str:
@@ -232,6 +335,17 @@ def wrap_filesystem_tools(raw_tools: list[Any], repo_root: Path) -> list[Any]:
                     tool_args["destination"], repo_root
                 )
             if _raw_tool.name == "search_files":
+                normalized_search_path = Path(tool_args["path"]).resolve()
+                if normalized_search_path == repo_root and _is_broad_recursive_pattern(
+                    str(tool_args.get("pattern", ""))
+                ):
+                    raise ValueError(
+                        "Broad recursive searches from the repository root are disabled "
+                        "because the upstream filesystem server walks the entire tree and "
+                        "is too slow over NFS. First call `list_directory` on "
+                        f"`{repo_root}`, then run `search_files` on a narrower subdirectory "
+                        "such as `applications`, `docs`, `kubernetes`, `terraform`, or `scripts`."
+                    )
                 tool_args["excludePatterns"] = _merge_excludes(
                     tool_args.get("excludePatterns")
                 )
@@ -257,10 +371,16 @@ def wrap_filesystem_tools(raw_tools: list[Any], repo_root: Path) -> list[Any]:
 
         async def search_repository_files(
             patterns: list[str],
-            path: str = ".",
+            path: str,
             excludePatterns: list[str] | None = None,
         ) -> Any:
             normalized_path = _normalize_repo_path(path, repo_root)
+            if Path(normalized_path).resolve() == repo_root:
+                raise ValueError(
+                    "search_repository_files requires a narrowed repo-relative directory, not "
+                    "the repository root. First inspect `/mnt/eapp/code/homelab` with "
+                    "`list_directory`, then search a specific subtree."
+                )
             merged_excludes = _merge_excludes(excludePatterns)
             sections: list[str] = []
 
@@ -280,9 +400,10 @@ def wrap_filesystem_tools(raw_tools: list[Any], repo_root: Path) -> list[Any]:
             StructuredTool(
                 name="search_repository_files",
                 description=(
-                    "Search one or more glob patterns within the current repository root "
-                    f"`{repo_root}` using built-in recursive excludes. Prefer this over "
-                    "issuing multiple broad `search_files` calls."
+                    "Search one or more glob patterns within a narrowed subdirectory of the "
+                    f"current repository root `{repo_root}` using built-in recursive excludes. "
+                    "Do not use this from the repo root; first narrow the search with "
+                    "`list_directory`."
                 ),
                 args_schema={
                     "type": "object",
@@ -294,8 +415,7 @@ def wrap_filesystem_tools(raw_tools: list[Any], repo_root: Path) -> list[Any]:
                         },
                         "path": {
                             "type": "string",
-                            "default": ".",
-                            "description": "Repo-relative directory to search from. Use '.' for the repo root.",
+                            "description": "Required repo-relative directory to search from. Must be narrower than the repo root, such as `applications`, `docs`, `kubernetes`, `terraform`, or `scripts`.",
                         },
                         "excludePatterns": {
                             "type": "array",
@@ -304,7 +424,7 @@ def wrap_filesystem_tools(raw_tools: list[Any], repo_root: Path) -> list[Any]:
                             "description": "Additional glob excludes merged with the built-in default excludes.",
                         },
                     },
-                    "required": ["patterns"],
+                    "required": ["patterns", "path"],
                 },
                 coroutine=search_repository_files,
                 response_format="content",

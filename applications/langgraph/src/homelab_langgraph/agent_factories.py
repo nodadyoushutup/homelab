@@ -8,13 +8,20 @@ from langchain.agents import create_agent
 from langchain.tools import tool
 
 from .configuration import (
-    load_env_file,
     load_system_prompt,
     merged_settings,
     resolve_repo_root,
     resolve_skill_roots,
 )
-from .mcp_support import DEFAULT_REPO_SEARCH_EXCLUDES, load_mcp_tools, wrap_filesystem_tools
+from .mcp_support import (
+    DEFAULT_REPO_SEARCH_EXCLUDES,
+    JIRA_JSON_STRING_FIELDS_BY_TOOL,
+    JIRA_OMIT_ARGS_BY_TOOL,
+    JIRA_OMIT_FALSE_BOOL_ARGS_BY_TOOL,
+    load_mcp_tools,
+    wrap_blank_optional_args,
+    wrap_filesystem_tools,
+)
 from .remote_a2a import RemoteAgentDefinition, build_remote_delegate_tool
 
 
@@ -50,7 +57,7 @@ def create_supervisor_agent(
                 {
                     "specialist_topology": "specialist agents that are co-deployed in this same Agent Server",
                     "code_delegate_instruction": "You must use the `task` tool to delegate every repository, source code, configuration, file path, filesystem, MCP workspace, or implementation question to the `code_agent` specialist before answering.",
-                    "jira_delegate_instruction": "Use the `task` tool to delegate Jira discovery and issue-management work to the `jira_agent` specialist.",
+                    "jira_delegate_instruction": "You must use the `task` tool to delegate every explicit Jira request, including create-issue requests, to the `jira_agent` specialist before asking your own follow-up question or answering directly.",
                 },
             ),
             subagents=list(local_subagents),
@@ -87,7 +94,7 @@ def create_supervisor_agent(
             {
                 "specialist_topology": "remote specialist agents instead of doing domain-specific work yourself",
                 "code_delegate_instruction": "You must use `call_code_agent` for any repository, source code, configuration, file path, filesystem, MCP workspace, or implementation question before answering.",
-                "jira_delegate_instruction": "Use `call_jira_agent` for Jira-focused work.",
+                "jira_delegate_instruction": "You must use `call_jira_agent` for every explicit Jira request, including create-issue requests, before asking your own follow-up question or answering directly.",
             },
         ),
     )
@@ -123,100 +130,52 @@ def create_code_agent(app_dir: Path):
 
 def create_jira_agent(app_dir: Path):
     settings = merged_settings(app_dir)
-
-    create_issue_dir = app_dir / "subagents" / "create-issue"
-    edit_issue_dir = app_dir / "subagents" / "edit-issue"
-    create_issue_settings = load_env_file(create_issue_dir / ".env")
-    edit_issue_settings = load_env_file(edit_issue_dir / ".env")
+    default_project = settings.get("CREATE_ISSUE_DEFAULT_PROJECT", "HLAB")
 
     @tool
-    def describe_jira_operating_modes() -> str:
-        """Summarize the parent Jira agent and its internal specialists."""
+    def describe_jira_operating_rules() -> str:
+        """Summarize how the single-layer Jira agent should handle Jira work."""
         return (
-            "The Jira agent coordinates two internal specialists: "
-            "`create_issue` for drafting and validating new issue requests, "
-            "and `edit_issue` for updating existing issues. "
-            "Use the create specialist when the request is primarily about opening work. "
-            "Use the edit specialist when the request is about changing, commenting on, or transitioning existing work."
+            "The Jira agent is a single-layer specialist that handles Jira discovery, "
+            "net-new issue creation, and existing issue updates directly. "
+            "It should identify the current workflow stage first, treat each Jira "
+            "action as being in service of that stage, ask follow-up questions only "
+            "for real stage blockers, and invite the next likely stage when the "
+            "current one is complete. "
+            "Treat requests to create, open, file, log, raise, submit, add, make, or "
+            "write up a Jira issue, ticket, task, story, bug, or epic without an "
+            "existing issue key as net-new issue creation. "
+            "For new issues, start in `TO DO` by locking a short summary and the "
+            "issue type (`Story`, `Bug`, or `Task`) before deeper requirements work. "
+            "Treat requests with an existing issue key or explicit change, comment, "
+            "assignment, or transition intent as updates to existing work. "
+            "For pure status changes, use only the required transition arguments unless "
+            "Jira explicitly requires extra fields. "
+            "If a status change also needs a note, add it with `jira_add_comment` "
+            "instead of the transition comment field. "
+            f"Default project: {default_project}. Use that project unless the user "
+            "names a different project or live Jira metadata shows that another "
+            "project is required."
         )
 
-    @tool
-    def draft_issue_creation_request(summary: str, issue_type: str, details: str) -> str:
-        """Draft the minimum structured issue-creation payload before a Jira mutation."""
-        default_project = create_issue_settings.get("CREATE_ISSUE_DEFAULT_PROJECT", "UNKNOWN")
-        return (
-            f"Draft create-issue request\n"
-            f"- project: {default_project}\n"
-            f"- issue_type: {issue_type}\n"
-            f"- summary: {summary}\n"
-            f"- details: {details}\n"
-            "Validate this draft against Jira requirements before submitting."
-        )
-
-    @tool
-    def draft_issue_edit_request(issue_key: str, requested_change: str) -> str:
-        """Draft the minimum structured issue-edit payload before a Jira mutation."""
-        allowed_fields = edit_issue_settings.get(
-            "EDIT_ISSUE_ALLOWED_FIELDS",
-            "summary,description,comment,status,assignee",
-        )
-        return (
-            f"Draft edit-issue request\n"
-            f"- issue_key: {issue_key}\n"
-            f"- requested_change: {requested_change}\n"
-            f"- allowed_fields_hint: {allowed_fields}\n"
-            "Confirm that the requested change maps cleanly to one of the allowed field families before submitting."
-        )
-
-    create_issue_tools = [
-        draft_issue_creation_request,
-        *load_mcp_tools(create_issue_dir / "mcp.json"),
-    ]
-    edit_issue_tools = [
-        draft_issue_edit_request,
-        *load_mcp_tools(edit_issue_dir / "mcp.json"),
-    ]
-    parent_tools = [
-        describe_jira_operating_modes,
-        *load_mcp_tools(app_dir / "mcp.json"),
+    jira_tools = [
+        describe_jira_operating_rules,
+        *wrap_blank_optional_args(
+            load_mcp_tools(app_dir / "mcp.json"),
+            json_string_fields_by_tool=JIRA_JSON_STRING_FIELDS_BY_TOOL,
+            omit_args_by_tool=JIRA_OMIT_ARGS_BY_TOOL,
+            omit_false_bool_args_by_tool=JIRA_OMIT_FALSE_BOOL_ARGS_BY_TOOL,
+        ),
     ]
 
     return create_deep_agent(
         model=settings.get("JIRA_MODEL", "openai:gpt-5.4"),
-        system_prompt=load_system_prompt(app_dir / "system_prompt.md"),
-        tools=parent_tools,
+        system_prompt=load_system_prompt(
+            app_dir / "system_prompt.md",
+            {
+                "default_project": default_project,
+            },
+        ),
+        tools=jira_tools,
         skills=resolve_skill_roots(app_dir / "skills"),
-        subagents=[
-            {
-                "name": "create_issue",
-                "description": "Create and validate new Jira issue requests.",
-                "system_prompt": load_system_prompt(
-                    create_issue_dir / "system_prompt.md",
-                    {
-                        "default_project": create_issue_settings.get(
-                            "CREATE_ISSUE_DEFAULT_PROJECT", "UNKNOWN"
-                        )
-                    },
-                ),
-                "tools": create_issue_tools,
-                "skills": resolve_skill_roots(create_issue_dir / "skills"),
-                "model": settings.get("JIRA_CREATE_ISSUE_MODEL", settings.get("JIRA_MODEL", "openai:gpt-5.4")),
-            },
-            {
-                "name": "edit_issue",
-                "description": "Edit, comment on, or transition existing Jira issues.",
-                "system_prompt": load_system_prompt(
-                    edit_issue_dir / "system_prompt.md",
-                    {
-                        "allowed_fields": edit_issue_settings.get(
-                            "EDIT_ISSUE_ALLOWED_FIELDS",
-                            "summary,description,comment,status,assignee",
-                        )
-                    },
-                ),
-                "tools": edit_issue_tools,
-                "skills": resolve_skill_roots(edit_issue_dir / "skills"),
-                "model": settings.get("JIRA_EDIT_ISSUE_MODEL", settings.get("JIRA_MODEL", "openai:gpt-5.4")),
-            },
-        ],
     )

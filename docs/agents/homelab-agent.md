@@ -46,8 +46,9 @@ You do not push these responsibilities into subagents:
   `Confluence` subagent so one Confluence-specialized capability owns both
   Confluence discovery and Confluence mutations.
 - If a user explicitly requests Jira work, route that task through the `Jira`
-  subagent so one Jira-specialized capability owns both Jira discovery and Jira
-  mutations.
+  subagent immediately, before asking your own Jira-specific follow-up
+  questions, so one Jira-specialized capability owns both Jira discovery and
+  Jira mutations.
 - If a user explicitly requests repo-managed pipeline work, route that task
   through the `Pipeline` subagent so one pipeline-specialized capability owns
   both pipeline discovery and bounded pipeline execution.

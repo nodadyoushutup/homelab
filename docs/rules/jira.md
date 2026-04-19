@@ -32,6 +32,17 @@ This document applies to:
 - Because the service is not read-only, treat every mutating Jira tool call as
   a deliberate action against the live workspace rather than a harmless
   exploratory query.
+- When a Jira tool argument is optional, omit it rather than sending an empty
+  string.
+- When a Jira tool argument is documented as a JSON string, pass valid JSON
+  only when that field is actually needed.
+- For pure status changes, prefer `jira_transition_issue` with only the
+  required transition arguments unless Jira explicitly requires extra fields.
+- If a status change also needs a note, prefer a separate `jira_add_comment`
+  call instead of the transition-comment field.
+- For `jira_add_comment`, do not set the optional `public` flag unless the
+  issue is confirmed to be a JSM service-desk request and that visibility mode
+  is actually intended.
 
 ## Scope and Query Rules
 
@@ -40,6 +51,9 @@ This document applies to:
   over broad project-agnostic searches.
 - Respect `jira_projects_filter` when the service is intentionally scoped to a
   subset of projects.
+- For net-new issue creation, use the runtime's configured default Jira project
+  when the user does not specify one, and only ask for a project when live Jira
+  metadata or task context makes the default ambiguous or invalid.
 - If a task spans both Jira and Confluence, keep the Jira and Confluence parts
   conceptually separate even though they share the same MCP server.
 
@@ -60,6 +74,18 @@ This document applies to:
   silo.
 - Keep repo-specific Jira custom field meanings and usage rules in the
   `jira-custom-fields` skill under `applications/langgraph/apps/jira-agent/skills/`.
+- Keep repo-specific Jira required field rules and stage-gate logic in the
+  `jira-required-fields` skill under `applications/langgraph/apps/jira-agent/skills/`.
+- Keep repo-specific stage-aware workflow guidance in the `jira-workflow` skill
+  under `applications/langgraph/apps/jira-agent/skills/`.
+- Do not allow a ticket to progress out of `REQUIREMENTS` until all required
+  Jira fields are filled and a hard verification check confirms that state.
+- Jira agents should identify the current workflow stage before acting and tie
+  each Jira action to completing, unblocking, or advancing that stage.
+- Jira agents should prefer using live Jira state plus the workflow skill to
+  infer the next likely stage instead of asking generic readiness questions.
+- When a stage is complete, Jira agents should invite the next workflow step in
+  their recommended follow-up actions.
 - The current issue-type selection pattern in this repo is:
 - `Story` for requested code work or new feature work where there is no broken behavior to fix
 - `Bug` for fixing broken behavior

@@ -99,8 +99,8 @@ Current intent:
   `Pipeline` subagent
 - keep `subagents/terraform-subagent.md` as the instruction contract for the
   `Terraform` subagent
-- keep `subagents/jira-subagent.md` as the instruction contract for the `Jira`
-  subagent
+- keep `subagents/jira-subagent.md` as the instruction contract for the
+  single-layer `Jira` subagent
 - use each agent's own documented schema as the source of truth for how that
   agent accepts input and returns output
 
