@@ -20,7 +20,7 @@ govern those workflows.
 - `jira.md`: standard Jira discovery and issue-analysis workflow
 - `langgraph.md`: standard LangGraph monorepo and Deep Agents implementation
   workflow
-- `mcp-servers.md`: operator workflow for Swarm-hosted MCP servers
+- `mcp-servers.md`: operator workflow for repo-managed MCP servers
 - `new-application.md`: how to classify a new app and then onboard it through
   the correct platform workflow
 - `kubernetes.md`: standard Kubernetes delivery and validation flow

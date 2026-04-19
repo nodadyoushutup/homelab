@@ -19,7 +19,7 @@ operator flows.
 - `jira.md`: Jira source-of-truth, access, scope, and analysis rules
 - `langgraph.md`: LangGraph monorepo layout, agent boundaries, env handling,
   MCP rules, and Deep Agents composition rules
-- `mcp-servers.md`: steady-state rules for the Swarm-hosted MCP server set
+- `mcp-servers.md`: steady-state rules for the repo-managed MCP server set
 - `repo.md`: repo-wide rules, safety constraints, host/runtime assumptions, and
   git hygiene
 - `kubernetes.md`: Kubernetes layout, ownership, networking, secrets, and

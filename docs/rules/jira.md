@@ -24,7 +24,7 @@ This document applies to:
 ## Access Rules
 
 - The current steady-state Jira integration in this repo goes through the
-  Swarm-hosted `mcp-atlassian` service.
+  Kubernetes-hosted `mcp-atlassian` service.
 - That service currently runs with the upstream full tool surface enabled for
   the configured Jira credentials and project scope. Jira issue creation,
   updates, transitions, comments, and related mutations may be available
@@ -58,5 +58,36 @@ This document applies to:
 - When Jira findings affect code, infrastructure, or workflow behavior, carry
   that context into the technical task rather than treating Jira as a separate
   silo.
+- Keep repo-specific Jira custom field meanings and usage rules in the
+  `jira-custom-fields` skill under `applications/langgraph/apps/jira-agent/skills/`.
+- The current issue-type selection pattern in this repo is:
+- `Story` for requested code work or new feature work where there is no broken behavior to fix
+- `Bug` for fixing broken behavior
+- `Task` for simple one-off work, including the special case where a user explicitly wants a lighter quick-task path instead of the fuller lifecycle
+- `Subtask` as a rare child-work issue under an existing parent when explicit checklist-like tracking is desired
+- The current `Bug` lifecycle in this repo starts with a brief baseline summary
+  in `TO DO`, expands the issue description in `REQUIREMENTS`, may add
+  replicate findings as comments, adds cited implementation guidance and test
+  planning in `TECH LEAD`, and then hands implementation to the technical
+  execution path.
+- For `Bug` issues, the Jira description should use stable sections such as
+  `Overview`, `Scope`, `Requirements`, `Acceptance Criteria`, `Tech Lead
+  Notes`, and `Test Plans` as the ticket matures.
+- For `Bug` issues, format `Requirements` as ordered `REQ-*` items and
+  `Acceptance Criteria` as ordered `AC-*` items so later work can refer to them
+  precisely.
+- The current `Story` lifecycle in this repo should be treated the same as the
+  `Bug` lifecycle for baseline capture, requirements expansion, technical
+  validation, implementation handoff, and description structure.
+- The main functional difference is that `Story` does not include the
+  `REPLICATE` stage.
+- The current `Task` lifecycle in this repo should use the same baseline
+  capture and requirements-expansion model as `Story` and `Bug`, but it may
+  move directly from `REQUIREMENTS` to `DONE` once the work is performed.
+- The current `Subtask` lifecycle in this repo is intentionally minimal and is
+  best treated as `TO DO`, `DONE`, or `CANCELED` under a parent issue.
+- The current delivery shortcut allows code to land directly on `main` while
+  Jira still moves through the later workflow stages as a temporary operating
+  convention.
 - When a stable Jira operating pattern changes, update this file and
   [`docs/workflows/jira.md`](./../workflows/jira.md) in the same task.

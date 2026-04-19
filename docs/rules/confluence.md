@@ -26,7 +26,7 @@ This document applies to:
 ## Access Rules
 
 - The current steady-state Confluence integration in this repo goes through the
-  Swarm-hosted `mcp-atlassian` service.
+  Kubernetes-hosted `mcp-atlassian` service.
 - That service currently runs with the upstream full tool surface enabled for
   the configured Confluence credentials and space scope. Confluence page
   creation, edits, comments, labels, and attachment mutations may be available
