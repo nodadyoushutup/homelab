@@ -84,6 +84,7 @@ jobs:
             langchain-agent-chat)
               image_name="langchain-agent-chat"
               docker_context="applications/langchain-agent-chat"
+              platforms="linux/amd64"
               build_strategy="direct"
               ;;
             controller-agent)
