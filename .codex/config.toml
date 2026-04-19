@@ -35,7 +35,6 @@ url = "https://mcp.atlassian.nodadyoushutup.com/mcp"
 
 [mcp_servers.mcp_filesystem]
 url = "https://mcp.filesystem.nodadyoushutup.com/mcp"
-http_headers = { "x-workspace-name" = "homelab", "x-mcp-filesystem-access" = "read-write" }
 
 [mcp_servers.mcp_git_homelab]
 url = "https://mcp.git-homelab.nodadyoushutup.com/mcp"

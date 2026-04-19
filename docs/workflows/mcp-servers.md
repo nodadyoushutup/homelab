@@ -165,9 +165,9 @@ Before committing `kubernetes/mcp-filesystem/`:
   `k8s/mcp_filesystem` registry credentials for the `ExternalSecret`
 - confirm the NFS export `192.168.1.100:/mnt/eapp/code` is still the intended
   shared repo mount for the pod
-- confirm the repo-local `.codex/config.toml` entry uses request headers for
-  workspace selection and access policy instead of relying on one hard-coded
-  server workspace
+- confirm the repo-local `.codex/config.toml` or app MCP config points at the
+  stable hostname without relying on request headers that only existed in the
+  retired custom wrapper
 
 ### `mcp-git-homelab`
 
@@ -313,7 +313,6 @@ Validation examples:
   `Accept: text/event-stream`
 - `mcp-ast-grep`: probe `http://<swarm-host>:18096/mcp`
 - `mcp-filesystem`: probe `https://mcp.filesystem.nodadyoushutup.com/mcp/`
-  with `x-workspace-name` and `x-mcp-filesystem-access` headers
 - `mcp-filesystem-homelab`: probe `http://<swarm-host>:18098/mcp`
 - `mcp-git-homelab`: probe `http://<swarm-host>:18099/mcp`
 - `mcp-fortigate`: probe `http://<swarm-host>:18084/mcp`

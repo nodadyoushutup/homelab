@@ -198,24 +198,25 @@ This document applies to the current MCP server set:
 - Runtime root: `kubernetes/mcp-filesystem`
 - Argo CD objects: `kubernetes/argocd-management/mcp-filesystem-project.yaml`
   and `kubernetes/argocd-management/mcp-filesystem-app.yaml`
-- Image source: `applications/mcp-filesystem/` owns the native Streamable HTTP
-  server image published to Harbor
+- Image source: `applications/mcp-filesystem/` wraps the official
+  `@modelcontextprotocol/server-filesystem` server behind the repo-standard
+  HTTP proxy image published to Harbor
 - Listen model: container `8098`, service `8098`, ingress-routed hostname
   `https://mcp.filesystem.nodadyoushutup.com/mcp/`
 - Workspace model: mount the shared code tree from the TrueNAS NFS export at
-  `/mnt/eapp/code` read-write inside the pod and keep the in-container allowlist
-  root pinned to that mounted path
+  `/mnt/eapp/code` read-write inside the pod and pass that mounted path to the
+  upstream filesystem server as its native allowed root
 - Runtime user model: run the pod as UID/GID `1000:1000` so filesystem writes
   continue to respect the root-squashed NFS export
-- Scope model: this server is intentionally workspace-agnostic at deploy time.
-  Clients select the workspace per request through `x-workspace-name` or
-  `x-workspace-root`
-- Access model: default the service to read-only and use
-  `x-mcp-filesystem-access` to opt into write-capable tool exposure only for
-  clients that should have it
-- Client config model: prefer repo-local `.codex/config.toml` entries that send
-  `x-workspace-name` and `x-mcp-filesystem-access` headers instead of pinning a
-  hard-coded workspace root into the server deployment
+- Scope model: this server is workspace-agnostic at deploy time. Clients
+  operate within the shared `/mnt/eapp/code` tree using the upstream filesystem
+  tool path arguments
+- Access model: the current proof-of-concept exposes the upstream filesystem
+  toolset directly. If request-scoped read-only policy returns later, implement
+  it in a dedicated wrapper instead of overloading the Kubernetes manifests
+- Client config model: point repo-local `.codex/config.toml` or app MCP config
+  at the stable hostname and let the client choose paths inside
+  `/mnt/eapp/code`
 
 ### `mcp-git-homelab`
 

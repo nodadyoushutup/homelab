@@ -1,18 +1,10 @@
-FROM python:3.12-alpine
+FROM ghcr.io/sparfenyuk/mcp-proxy:latest@sha256:644ae2eec70fccba8a1b49d75172bd6b298860aa8bbeae708ab2ab0b3bf88da8
 
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    PIP_NO_CACHE_DIR=1
+ARG MCP_FILESYSTEM_VERSION=2026.1.14
 
-WORKDIR /app
-
-RUN apk add --no-cache catatonit
-
-COPY pyproject.toml README.md ./
-COPY src ./src
-
-RUN python -m pip install --upgrade pip \
-  && python -m pip install .
+RUN apk add --no-cache nodejs npm \
+  && npm install --global --omit=dev "@modelcontextprotocol/server-filesystem@${MCP_FILESYSTEM_VERSION}" \
+  && npm cache clean --force
 
 COPY entrypoint.sh /usr/local/bin/mcp-filesystem-entrypoint
 
