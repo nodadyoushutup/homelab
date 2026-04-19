@@ -19,7 +19,7 @@ on:
         required: true
         type: choice
         options:
-          - chat-ui
+          - langchain-agent-chat
           - controller-agent
           - harbor-runtime-set
           - mcp-cloudflare
@@ -81,9 +81,9 @@ jobs:
           fi
 
           case "$build_target" in
-            chat-ui)
-              image_name="chat-ui"
-              docker_context="applications/chat-ui"
+            langchain-agent-chat)
+              image_name="langchain-agent-chat"
+              docker_context="applications/langchain-agent-chat"
               build_strategy="direct"
               ;;
             controller-agent)

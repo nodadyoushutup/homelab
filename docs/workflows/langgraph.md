@@ -63,9 +63,11 @@ After changing the LangGraph scaffold:
 1. run a syntax check such as `python3 -m compileall applications/langgraph`
 2. validate any `langgraph.json` files you changed
 3. if dependencies are installed, start the target app locally from its app
-   directory with `langgraph dev`, or use `applications/langgraph/debug.sh`
-   when you are intentionally testing the default `controller-agent` app
-   boundary helper with its paired local Agent Chat UI
+   directory with `langgraph dev`, or use
+   `applications/langgraph/agent_server.sh` for the default
+   `controller-agent` backend and `applications/langgraph/chat.sh` for the
+   paired local LangChain Agent Chat app when you are intentionally testing that local
+   dev path
 4. if the change touches remote delegation, verify the relevant env values and
    graph ids before expecting A2A calls to succeed
 

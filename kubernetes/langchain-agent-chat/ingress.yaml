@@ -1,0 +1,22 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: langchain-agent-chat
+  namespace: langchain-agent-chat
+  annotations:
+    argocd.argoproj.io/sync-wave: "40"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: langchain-agent-chat.nodadyoushutup.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: langchain-agent-chat
+                port:
+                  number: 3000

@@ -43,7 +43,7 @@ The Jira app also has subagent-local:
 
 The primary local development path is one LangGraph development server that
 hosts multiple graphs from the `controller-agent` app boundary, paired with a
-local Agent Chat UI dev server that proxies into that same local backend.
+local LangChain Agent Chat dev server that proxies into that same local backend.
 
 What is already in place:
 
@@ -62,9 +62,10 @@ What is still expected before real deployment:
 - replace `.env.example` files with real `.env` files or deployment secrets
 - replace `.mcp.json.example`-style placeholders with real `mcp.json` configs
 - install dependencies
-- run `./debug.sh` from `applications/langgraph/` for the default
-  `controller-agent` plus Agent Chat UI local dev path, or run `langgraph dev`
-  from an app directory when you want a different app boundary
+- run `./agent_server.sh` from `applications/langgraph/` for the default
+  `controller-agent` backend, and run `./chat.sh` from the same directory for
+  the paired LangChain Agent Chat local dev path, or run `langgraph dev` from an app
+  directory when you want a different app boundary
 
 ## Model And API Key Defaults
 
@@ -81,7 +82,7 @@ The primary runtime path is now the Kubernetes `controller-agent` deployment.
 That workload builds this directory into an image and starts the server with
 the Docker `CMD` from [`Dockerfile`](./Dockerfile):
 
-- `langgraph dev --host 0.0.0.0 --port 2024 --no-browser --no-reload`
+- `langgraph dev --host 0.0.0.0 --port 2024 --no-browser --no-reload --n-jobs-per-worker 8`
 
 The homelab hostname `https://langgraph.nodadyoushutup.com` is intended to
 front that Kubernetes deployment.
@@ -96,24 +97,35 @@ The split specialist app directories still exist as the source of truth for
 their local skills, MCP config, and env defaults, but the main local bring-up
 path is now a single deployment.
 
-For quick local iteration, use [`debug.sh`](./debug.sh) from this directory.
-It starts the `controller-agent` app boundary on `0.0.0.0:2124` and the local
-Agent Chat UI on `0.0.0.0:3000` by default, points the chat UI proxy at the
-local LangGraph backend, force-kills any existing listeners on the target
-debug ports before startup, and leaves LangGraph hot reload on unless
-`LANGGRAPH_DEBUG_NO_RELOAD=1` is set.
+For quick local iteration, use [`agent_server.sh`](./agent_server.sh) for the
+backend and [`chat.sh`](./chat.sh) for the frontend. They run independently in
+the foreground so each terminal shows the live logs directly while you manage
+restarts yourself. By default, `agent_server.sh` starts the `controller-agent`
+app boundary on `0.0.0.0:2124` with `8` jobs per worker, and `chat.sh` starts
+the local LangChain Agent Chat app on `0.0.0.0:3000` pointing at
+`http://127.0.0.1:2124`.
 
 Helpful overrides:
 
-- `LANGGRAPH_DEBUG_PORT`: backend port override
-- `CHAT_UI_DEBUG_PORT`: frontend port override
-- `CHAT_UI_DEBUG_ENABLED=0`: run only the LangGraph backend
-- `CHAT_UI_DEBUG_ASSISTANT_ID`: frontend default graph id override
-- `CHAT_UI_DEBUG_LANGGRAPH_API_URL`: frontend proxy upstream override
-- `LANGGRAPH_DEBUG_CLEAR_PORTS`: comma-separated custom cleanup port list
+- `AGENT_SERVER_PORT`: backend port override
+- `AGENT_SERVER_NO_RELOAD=1`: disable backend hot reload
+- `AGENT_SERVER_N_JOBS_PER_WORKER`: backend concurrency override
+- `AGENT_SERVER_CLEAR_PORT=0`: skip automatic backend port cleanup
+- `LANGCHAIN_AGENT_CHAT_PORT`: frontend port override
+- `LANGCHAIN_AGENT_CHAT_ASSISTANT_ID`: frontend default graph id override
+- `LANGCHAIN_AGENT_CHAT_LANGGRAPH_API_URL`: frontend proxy upstream override
+- `LANGCHAIN_AGENT_CHAT_CLEAR_PORT=0`: skip automatic frontend port cleanup
 
-The helper prints the local and LAN URLs, log file paths, and PID file paths
-for both processes so you can open the UI directly against your local machine.
+Compatibility note:
+- `agent_server.sh` still accepts the previous `LANGGRAPH_DEBUG_*` variables as
+  fallbacks.
+- `chat.sh` still accepts the previous `LANGCHAIN_AGENT_CHAT_DEBUG_*` and
+  `CHAT_UI_DEBUG_*` variables as
+  fallbacks.
+
+The container image uses the same `8` jobs-per-worker default through
+`LANGGRAPH_N_JOBS_PER_WORKER`, so you can tune the deployed runtime without
+rebuilding the image.
 
 If you need a different app boundary, run `langgraph dev` directly from that
 app directory instead of reusing the shared helper.

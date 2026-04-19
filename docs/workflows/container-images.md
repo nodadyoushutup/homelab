@@ -39,7 +39,7 @@ The Nginx Proxy Manager entry for `harbor.nodadyoushutup.com` forwards to
 Live Harbor projects reported by the API on `2026-04-16` after the Harbor
 config apply:
 
-- `chat-ui`
+- `langchain-agent-chat`
 - `gha-runner`
 - `harbor`
 - `harbor-core`
@@ -72,7 +72,7 @@ the same registry.
 
 | Runtime | Current image source | Source of truth |
 | --- | --- | --- |
-| `chat-ui` | Harbor | `kubernetes/chat-ui/deployment.yaml` plus `/mnt/eapp/.tfvars/harbor/config.tfvars` |
+| `langchain-agent-chat` | Harbor | `kubernetes/langchain-agent-chat/deployment.yaml` plus `/mnt/eapp/.tfvars/harbor/config.tfvars` |
 | `mcp-filesystem` | Harbor | `kubernetes/mcp-filesystem/deployment.yaml` plus `/mnt/eapp/.tfvars/harbor/config.tfvars` and `/mnt/eapp/.tfvars/vault/config.tfvars` |
 | `gha-runner` | Harbor | `/mnt/eapp/.tfvars/gha-runner/app.tfvars` |
 | `jenkins-controller` | Harbor | `/mnt/eapp/.tfvars/jenkins-controller/app.tfvars` |
@@ -101,7 +101,7 @@ The standard publish workflow is:
 - `version`: required output tag
 - `target_registry`: `github` or `harbor`
 - `build_target`:
-  `chat-ui`, `harbor-runtime-set`, `mcp-cloudflare`, `mcp-filesystem`,
+  `langchain-agent-chat`, `harbor-runtime-set`, `mcp-cloudflare`, `mcp-filesystem`,
   `mcp-fortigate`, `mcp-github`, `mcp-google-workspace`, `gha-runner`, `jenkins-agent`,
   `jenkins-controller`
 
@@ -175,7 +175,7 @@ The `gha-publish` system robot is the publish account for repo-managed Harbor
 images. The desired Harbor-managed project set now includes:
 
 - Existing repo images:
-  `chat-ui`, `gha-runner`, `harbor`, `jenkins-agent`, `jenkins-controller`,
+  `langchain-agent-chat`, `gha-runner`, `harbor`, `jenkins-agent`, `jenkins-controller`,
   `mcp-argocd`, `mcp-atlassian`, `mcp-cloudflare`, `mcp-filesystem`, `mcp-fortigate`,
   `mcp-github`, `mcp-google-workspace`, `webserver-image`
 - Harbor component images:
