@@ -7,8 +7,14 @@ from deepagents import CompiledSubAgent, create_deep_agent
 from langchain.agents import create_agent
 from langchain.tools import tool
 
-from .configuration import load_env_file, merged_settings, resolve_skill_roots
-from .mcp_support import load_mcp_tools
+from .configuration import (
+    load_env_file,
+    load_system_prompt,
+    merged_settings,
+    resolve_repo_root,
+    resolve_skill_roots,
+)
+from .mcp_support import DEFAULT_REPO_SEARCH_EXCLUDES, load_mcp_tools, wrap_filesystem_tools
 from .remote_a2a import RemoteAgentDefinition, build_remote_delegate_tool
 
 
@@ -26,7 +32,8 @@ def create_supervisor_agent(
             available = ", ".join(spec["name"] for spec in local_subagents)
             return (
                 "This supervisor is running in a single deployment with local specialist subagents. "
-                f"Available specialists: {available}."
+                f"Available specialists: {available}. "
+                "Route code, config, repository, path, and filesystem questions to code_agent."
             )
         return (
             "This supervisor is wired to delegate to two remote agents: "
@@ -38,12 +45,13 @@ def create_supervisor_agent(
         return create_deep_agent(
             model=settings.get("SUPERVISOR_MODEL", "openai:gpt-5.4"),
             tools=[describe_homelab_topology],
-            system_prompt=(
-                "You are the Homelab supervisor agent. "
-                "You coordinate work across specialist agents that are co-deployed in this same Agent Server. "
-                "Use the `task` tool to delegate repository and implementation analysis to the `code_agent` specialist. "
-                "Use the `task` tool to delegate Jira discovery and issue-management work to the `jira_agent` specialist. "
-                "Prefer those specialists when the task clearly matches their domain."
+            system_prompt=load_system_prompt(
+                app_dir / "system_prompt.md",
+                {
+                    "specialist_topology": "specialist agents that are co-deployed in this same Agent Server",
+                    "code_delegate_instruction": "You must use the `task` tool to delegate every repository, source code, configuration, file path, filesystem, MCP workspace, or implementation question to the `code_agent` specialist before answering.",
+                    "jira_delegate_instruction": "Use the `task` tool to delegate Jira discovery and issue-management work to the `jira_agent` specialist.",
+                },
             ),
             subagents=list(local_subagents),
         )
@@ -52,7 +60,7 @@ def create_supervisor_agent(
         build_remote_delegate_tool(
             RemoteAgentDefinition(
                 name="call_code_agent",
-                description="Delegate repository and implementation analysis tasks to the remote Code agent.",
+                description="Delegate any repository, code, config, path, filesystem, or implementation-analysis task to the remote Code agent.",
                 base_url=settings.get("CODE_AGENT_URL"),
                 assistant_id=settings.get("CODE_AGENT_ASSISTANT_ID"),
                 graph_id=settings.get("CODE_AGENT_GRAPH_ID"),
@@ -74,39 +82,39 @@ def create_supervisor_agent(
     return create_agent(
         model=settings.get("SUPERVISOR_MODEL", "openai:gpt-5.4"),
         tools=[describe_homelab_topology, *remote_tools],
-        system_prompt=(
-            "You are the Homelab supervisor agent. "
-            "You coordinate work across remote specialist agents instead of doing domain-specific work yourself. "
-            "Use `call_code_agent` for repository and implementation analysis. "
-            "Use `call_jira_agent` for Jira-focused work. "
-            "Prefer delegation when the specialist agent is a better fit than local reasoning. "
-            "When repository visibility or file access is in doubt, ask the Code agent to verify its filesystem MCP workspace before concluding that files are missing."
+        system_prompt=load_system_prompt(
+            app_dir / "system_prompt.md",
+            {
+                "specialist_topology": "remote specialist agents instead of doing domain-specific work yourself",
+                "code_delegate_instruction": "You must use `call_code_agent` for any repository, source code, configuration, file path, filesystem, MCP workspace, or implementation question before answering.",
+                "jira_delegate_instruction": "Use `call_jira_agent` for Jira-focused work.",
+            },
         ),
     )
 
 
 def create_code_agent(app_dir: Path):
     settings = merged_settings(app_dir)
+    repo_root = resolve_repo_root(settings.get("CODE_REPOSITORY_ROOT"))
 
     @tool
     def describe_code_contract() -> str:
         """Describe what the Code agent is responsible for."""
         return (
-            "The Code agent owns source-of-truth repository analysis. "
-            "It should trace code paths, identify affected files, summarize behavior, and separate facts from assumptions."
+            "The Code agent owns source-of-truth repository analysis for code, config, files, paths, filesystem visibility, and implementation behavior. "
+            f"It should stay scoped to the repository root `{repo_root}`, trace code paths, identify affected files, summarize behavior, and separate facts from assumptions."
         )
 
-    mcp_tools = load_mcp_tools(app_dir / "mcp.json")
+    mcp_tools = wrap_filesystem_tools(load_mcp_tools(app_dir / "mcp.json"), repo_root)
 
     return create_deep_agent(
         model=settings.get("CODE_MODEL", "openai:gpt-5.4"),
-        system_prompt=(
-            "You are the Code agent. "
-            "Focus on repository-backed analysis, traceability, and implementation understanding. "
-            "Use MCP-backed tools when they are available, but keep outputs concise and decision-oriented. "
-            "When the filesystem MCP is available, treat the selected workspace root as the repository root. "
-            "Use `.` to inspect that workspace root and use repo-relative paths after that; do not assume `/` is the repository root. "
-            "If filesystem results look empty or incorrect, call workspace-introspection tools such as `server_info` or `list_allowed_directories` before claiming the repository is missing or inaccessible."
+        system_prompt=load_system_prompt(
+            app_dir / "system_prompt.md",
+            {
+                "repo_root": str(repo_root),
+                "default_search_excludes": ", ".join(DEFAULT_REPO_SEARCH_EXCLUDES),
+            },
         ),
         tools=[describe_code_contract, *mcp_tools],
         skills=resolve_skill_roots(app_dir / "skills"),
@@ -175,23 +183,20 @@ def create_jira_agent(app_dir: Path):
 
     return create_deep_agent(
         model=settings.get("JIRA_MODEL", "openai:gpt-5.4"),
-        system_prompt=(
-            "You are the Jira agent. "
-            "You own Jira-focused discovery, issue lifecycle actions, and Jira-specific guardrails. "
-            "Route new issue requests to `create_issue`. "
-            "Route existing issue updates, comments, and transitions to `edit_issue`. "
-            "Keep delegation thin and include only the Jira context the specialist actually needs."
-        ),
+        system_prompt=load_system_prompt(app_dir / "system_prompt.md"),
         tools=parent_tools,
         skills=resolve_skill_roots(app_dir / "skills"),
         subagents=[
             {
                 "name": "create_issue",
                 "description": "Create and validate new Jira issue requests.",
-                "system_prompt": (
-                    "You are the create_issue Jira specialist. "
-                    "Focus on creating new issues, shaping required fields, and validating that a create request is complete before any mutation. "
-                    f"Default project hint: {create_issue_settings.get('CREATE_ISSUE_DEFAULT_PROJECT', 'UNKNOWN')}."
+                "system_prompt": load_system_prompt(
+                    create_issue_dir / "system_prompt.md",
+                    {
+                        "default_project": create_issue_settings.get(
+                            "CREATE_ISSUE_DEFAULT_PROJECT", "UNKNOWN"
+                        )
+                    },
                 ),
                 "tools": create_issue_tools,
                 "skills": resolve_skill_roots(create_issue_dir / "skills"),
@@ -200,10 +205,14 @@ def create_jira_agent(app_dir: Path):
             {
                 "name": "edit_issue",
                 "description": "Edit, comment on, or transition existing Jira issues.",
-                "system_prompt": (
-                    "You are the edit_issue Jira specialist. "
-                    "Focus on updating existing Jira issues, comments, assignees, and transitions. "
-                    f"Allowed field hint: {edit_issue_settings.get('EDIT_ISSUE_ALLOWED_FIELDS', 'summary,description,comment,status,assignee')}."
+                "system_prompt": load_system_prompt(
+                    edit_issue_dir / "system_prompt.md",
+                    {
+                        "allowed_fields": edit_issue_settings.get(
+                            "EDIT_ISSUE_ALLOWED_FIELDS",
+                            "summary,description,comment,status,assignee",
+                        )
+                    },
                 ),
                 "tools": edit_issue_tools,
                 "skills": resolve_skill_roots(edit_issue_dir / "skills"),

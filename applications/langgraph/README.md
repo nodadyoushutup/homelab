@@ -29,12 +29,14 @@ applications/langgraph/
 Each deployable agent app has its own:
 
 - `langgraph.json`
+- `system_prompt.md`
 - `.env` or `.env.example`
 - optional `mcp.json`
 - app-local skills
 
 The Jira app also has subagent-local:
 
+- `system_prompt.md` files loaded as runtime prompt text by the Jira app
 - `.env` files loaded as config by the Jira app
 - `mcp.json` files loaded as config by the Jira app
 - skills directories referenced only by that internal subagent
@@ -53,6 +55,7 @@ What is already in place:
 - supervisor-local delegation to compiled specialist graphs in the same
   deployment
 - Jira internal subagents with distinct tools, skills, and config surfaces
+- Markdown-backed `system_prompt.md` files for deployable agents and internal subagents
 - MCP loading support from app-local and subagent-local `mcp.json` files
 - a repo-owned Docker wrapper in `Dockerfile` that packages this project and
   runs `langgraph dev`
@@ -129,6 +132,31 @@ rebuilding the image.
 
 If you need a different app boundary, run `langgraph dev` directly from that
 app directory instead of reusing the shared helper.
+
+## Docker Dev Stack
+
+For fast host-local development with bind-mounted source code, use the
+top-level [`docker/`](./../../docker/README.md) directory. That stack is a
+development-only exception to the normal app-boundary layout:
+
+- `docker/docker-compose.yml` starts one LangGraph dev container plus one chat
+  UI dev container
+- local Docker images are built from this repo for the dev stack
+- LangGraph code is mounted from the host `applications/langgraph` directory to
+  `/app/langgraph` inside the container so restarts pick up live code
+- the LangGraph code mount overrides the baked app path inside that container
+- the LangGraph dev container otherwise uses the image's own default `WORKDIR`
+  and `CMD`, so it stays close to the published runtime shape
+- the chat UI image is built from the local
+  `applications/langchain-agent-chat` source tree and serves the built Next.js
+  app from the image
+- chat UI `NEXT_PUBLIC_*` values are compiled at build time, so changing the
+  public browser URL requires rebuilding `chat-ui-dev`
+- chat UI proxy traffic to LangGraph uses the Compose service DNS name plus the
+  container port, currently `http://langgraph-dev:2024`
+
+Use this when you want quick containerized restarts on your host machine. Do
+not treat it as the source of truth for deployment packaging.
 
 ## Container And Publish Notes
 

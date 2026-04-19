@@ -56,9 +56,9 @@ likely to explain how Terraform is structured in this repo.
 
 Start with:
 
-- `docs/agents/README.md` for current agent ownership and scope
 - `docs/rules/README.md` for the rules index
 - `docs/workflows/README.md` for the workflows index
+- `docs/rules/langgraph.md` for LangGraph app boundaries and MCP rules
 - `docs/rules/terraform.md` for steady-state Terraform rules
 - `docs/workflows/terraform.md` for the standard Terraform operating flow
 

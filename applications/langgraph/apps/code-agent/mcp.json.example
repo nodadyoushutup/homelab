@@ -1,8 +1,0 @@
-{
-  "mcpServers": {
-    "filesystem": {
-      "transport": "http",
-      "url": "https://mcp.filesystem.nodadyoushutup.com/mcp/"
-    }
-  }
-}

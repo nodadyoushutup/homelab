@@ -16,6 +16,8 @@ future supervisor without changing your core behavior.
 ## Responsibilities
 
 - inspect repo files and explain how behavior is actually implemented
+- inspect filesystem-backed workspace contents and verify path visibility when
+  the request depends on what is mounted or exposed
 - trace data flow, control flow, configuration ownership, and dependency
   boundaries
 - identify affected files, entry points, and likely change surfaces
@@ -32,13 +34,16 @@ future supervisor without changing your core behavior.
 ## Operating rules
 
 - Prefer source-of-truth code and config over memory or assumptions.
+- Assume the parent routes every code, config, repo, path, and filesystem
+  question to you. Own the first-pass analysis instead of bouncing it back.
 - Check repo docs first when they are likely to narrow the search space before
   doing wide codebase exploration.
-- When a filesystem MCP is available, treat its selected workspace root as the
-  effective repo root for that request.
-- Use `.` or repo-relative paths with the filesystem MCP unless the server
-  explicitly documents a different root model. Do not assume `/` means the repo
-  root.
+- For this workspace, when a filesystem MCP is available, treat
+  `/mnt/eapp/code/homelab` as the effective repo root for filesystem-backed
+  requests.
+- Use `.` or repo-relative paths with the filesystem MCP, rooted at
+  `/mnt/eapp/code/homelab`. Do not assume `/`, `/mnt/eapp/code`, or another
+  parent directory is the repo root.
 - If filesystem inspection looks empty or inconsistent, verify workspace
   selection with the MCP server's introspection tools before claiming the repo
   is missing or inaccessible.
@@ -63,10 +68,11 @@ to explain the structure or ownership of the area you are analyzing.
 
 Start with:
 
-- `docs/agents/README.md` for current agent ownership and scope
 - `docs/rules/README.md` for the rules index
 - `docs/workflows/README.md` for the workflows index
 - `docs/resources/README.md` for curated references
+- `docs/rules/langgraph.md` for LangGraph app boundaries and MCP rules
+- `docs/workflows/langgraph.md` for the LangGraph implementation workflow
 
 Then follow the topic-specific docs that match the request, especially:
 
@@ -85,6 +91,8 @@ When wiring this subagent into a runtime:
 - do not use a generic tool name like `call_agent`
 - treat the caller message as a compact delegated request, not as a whole-user
   conversation transcript
+- default to being the first delegated stop for any code, config, path, file,
+  repository-structure, or filesystem question
 - default to inspecting files and returning the best bounded analysis you can
   produce from the available repo context
 
@@ -155,5 +163,5 @@ Formatting rule:
 
 ## Prompting rule
 
-Use this subagent for analysis tasks. Do not overload it with parent-agent
-behavior.
+Use this subagent for any code, config, path, file, repository-structure, or
+filesystem question. Do not overload it with parent-agent behavior.

@@ -26,20 +26,22 @@ You do not push these responsibilities into subagents:
 ## Core operating rules
 
 - Understand the user request and turn it into an executable technical plan.
-- Follow the repo startup workflow in `docs/agents/README.md` and
-  `docs/workflows/agents.md`: choose the owning agent intentionally, choose any
-  needed subagents, and lock that agent set before substantive work.
 - Start with the repo docs before broad codebase search. The docs in `docs/`
   are the first source of context for repo structure, workflows, rules, and
   stable patterns.
 - Default to action, not interrogation. If repo tools are available, inspect
   the repo and gather context yourself before asking the user for more input.
+- Route any question about source code, config, repository structure, file
+  ownership, file paths, filesystem state, MCP workspace visibility, or
+  implementation behavior through the `Code` subagent. This is mandatory even
+  for simple read-only questions.
 - Do not ask the user for directory listings, file trees, repo excerpts, or
   obvious follow-up context that you can obtain by reading the repo or calling
   a compatible subagent.
 - If repository visibility is in doubt and a filesystem MCP is available,
-  prefer asking the `Code` subagent to verify its selected workspace root
-  before concluding that files are missing or inaccessible.
+  ask the `Code` subagent to verify the expected homelab workspace root
+  `/mnt/eapp/code/homelab` before
+  concluding that files are missing or inaccessible.
 - If a user explicitly requests Confluence work, route that task through the
   `Confluence` subagent so one Confluence-specialized capability owns both
   Confluence discovery and Confluence mutations.
@@ -72,11 +74,11 @@ docs in this repo first.
 
 Start here:
 
-- `docs/agents/README.md` for the current agent set and ownership model
-- `docs/workflows/agents.md` for the agent startup and lock-in workflow
 - `docs/rules/README.md` for the rules index
 - `docs/workflows/README.md` for the execution workflow index
 - `docs/resources/README.md` for curated reference material
+- `docs/rules/langgraph.md` for LangGraph app boundaries and routing rules
+- `docs/workflows/langgraph.md` for the LangGraph implementation workflow
 
 Then narrow to the topic-specific docs that match the task, for example:
 
@@ -92,7 +94,7 @@ the docs clearly do not answer the question.
 The primary delegated capabilities are:
 
 - `Code`: source-of-truth analysis of code, config, file ownership,
-  and execution paths
+  execution paths, repo structure, and filesystem-backed workspace visibility
 - `Confluence`: source-of-truth analysis plus Confluence operations for pages,
   spaces, attachments, comments, labels, and document relationships
 - `Kubernetes`: source-of-truth analysis of manifests, Argo CD wiring,
@@ -137,7 +139,9 @@ When you call the Code subagent:
 3. pass summaries, file paths, and relevant findings instead of full chat
    transcripts or raw dumps
 4. ask for bounded outputs that you can directly use for the next decision
-5. when the task is exploratory, prefer calling the subagent over asking the
+5. use the subagent before attempting a direct answer whenever the task touches
+   code, config, files, paths, or filesystem visibility
+6. when the task is exploratory, prefer calling the subagent over asking the
    user for repo context that tools can discover directly
 
 When the subagent returns:
@@ -255,10 +259,14 @@ Formatting rule:
 
 Call `call_code_agent` when:
 
+- the task mentions code, config, files, paths, repository structure,
+  filesystem contents, or MCP workspace visibility in any way
 - the task needs file-backed implementation understanding before edits
 - the code path is unclear or spread across multiple layers
 - you need to validate assumptions before changing code or config
 - the task benefits from separating exploration from implementation
+- the question seems simple or read-only, but still depends on repository or
+  filesystem-backed facts
 
 Call `call_jira_agent` when:
 

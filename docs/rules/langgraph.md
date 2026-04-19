@@ -23,6 +23,11 @@ This document applies to:
   deployable app config in `applications/langgraph/apps/<app-name>/`.
 - Each deployable LangGraph app must keep its own `langgraph.json` in that app's
   directory instead of relying on a monorepo-root config.
+- Each deployable LangGraph app should keep its runtime system prompt in an
+  app-local `system_prompt.md`.
+- The top-level `docker/` directory may exist as a host-local development
+  exception for bind-mounted dev containers. Do not treat it as the source of
+  truth for deployment packaging or runtime ownership.
 - A single deployable app may expose multiple graphs from one `langgraph.json`
   when those graphs belong to the same runtime boundary.
 - Treat `applications/langgraph/pyproject.toml` as the shared package
@@ -45,6 +50,8 @@ This document applies to:
 - Each deployable app may own its own `.env` file in its app directory.
 - Internal Deep Agents subagents may also own `.env` files, but those files are
   treated as local config inputs that the parent app loads explicitly.
+- Internal Deep Agents subagents may also own `system_prompt.md` files, which
+  the parent app should load explicitly when building those subagents.
 - Do not assume subagent-local `.env` files create isolated process
   environments. Only separately deployed apps get real process-level env
   isolation.
@@ -59,6 +66,14 @@ This document applies to:
   that internal subagent.
 - Keep top-level supervisor tool surfaces thin. Domain-specific MCP access
   should usually live inside the specialist app or its internal subagents.
+- When a specialist app uses a workspace-wide filesystem MCP for repo-backed
+  analysis, wrap or constrain those filesystem tools to the intended repository
+  root before exposing them to the model. Do not rely on the model to avoid the
+  wider shared workspace on its own.
+- In the `Homelab` runtime, questions about code, config, repository
+  structure, file paths, filesystem contents, or MCP workspace visibility must
+  route through the `Code` specialist instead of being answered directly by the
+  supervisor.
 
 ## Agent Composition Rules
 
@@ -72,11 +87,17 @@ This document applies to:
 - Repo-local debug helpers are allowed under `applications/langgraph/` when
   they stay as thin wrappers around one documented app boundary and do not
   replace the app-local `langgraph.json` source of truth.
+- A top-level `docker/docker-compose.yml` is also allowed for local LangGraph
+  plus chat-ui development when it is clearly documented as a dev-only bind
+  mount workflow and does not replace the app-local deployment sources of
+  truth.
 - A repo-local debug helper may also launch a paired local frontend for the
   same app boundary when it is clearly part of the same dev loop and the helper
   prints the resulting backend and frontend URLs explicitly.
 - Internal Deep Agents subagents remain in-process and should be used for
   narrower specialization inside a single app boundary.
+- Keep `Homelab` focused on coordination. It should not perform first-pass code
+  or filesystem analysis directly when the `Code` specialist is available.
 - Avoid circular remote delegation patterns such as `controller-agent ->
   jira-agent -> controller-agent` unless a future workflow explicitly defines
   how that loop is bounded.
@@ -85,6 +106,9 @@ This document applies to:
 
 - Keep skills in app-local or subagent-local directories close to the code that
   owns them.
+- Keep runtime prompt text in app-local or subagent-local `system_prompt.md`
+  files close to the code that owns them instead of burying long prompt bodies
+  inside Python string literals.
 - If a custom subagent needs its own skills, declare them explicitly instead of
   relying on parent inheritance.
 - Keep skills small, bounded, and capability-specific.

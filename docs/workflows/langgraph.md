@@ -14,6 +14,7 @@ Use this workflow for:
 - changes to deployable app configs under `applications/langgraph/apps/*/`
 - changes to app-local or subagent-local skills
 - changes to app-local or subagent-local MCP wiring
+- changes to the top-level `docker/` LangGraph dev stack
 
 ## Standard Flow
 
@@ -36,25 +37,43 @@ When a task changes the LangGraph implementation:
    - create its app directory
    - add `agent.py`
    - add `langgraph.json`
+   - add `system_prompt.md`
    - add `.env.example`
 6. if the task adds a new internal Deep Agents subagent:
    - add its task-specific config directory inside the owning app
+   - add `system_prompt.md`
    - add any subagent-local skills or MCP config there
    - wire it explicitly in the parent app code
 7. if the task adds MCP-backed tools:
    - keep app-level MCP configs with the app
    - keep subagent-level MCP configs with the subagent
    - prefer HTTP/SSE transports for anything intended to be deployed
+   - when the backing MCP server exposes a broader shared workspace than the
+     target repo, add app-side wrappers or constraints so the model sees the
+     intended repository root and default excludes instead of the full shared
+     tree
 8. if the task changes one app from a single graph to multiple sibling graphs:
    - keep those graph exports together in that app's `langgraph.json`
    - keep graph factory code in shared `applications/langgraph/src/` modules
      or the app's entrypoint as appropriate
    - prefer in-process composition before adding remote transport
-9. validate the Python structure after the change
-10. update docs if the stable pattern changed
-11. if the task adds a repo helper script, keep it boundary-scoped and make
+9. if the task changes supervisor routing or prompt text:
+   - keep code, config, file, path, filesystem, and MCP workspace questions
+     routed through the `Code` specialist instead of answered directly by the
+     parent
+   - keep prompt text in the relevant app-local or subagent-local
+     `system_prompt.md` file instead of reintroducing long inline Python prompts
+   - keep the relevant contract docs under `docs/agents/` in sync
+10. validate the Python structure after the change
+11. update docs if the stable pattern changed
+12. if the task adds a repo helper script, keep it boundary-scoped and make
     sure it only wraps the intended app's local `langgraph dev` startup, plus
     any tightly paired local frontend that belongs to the same debug workflow
+13. if the task adds or changes the top-level `docker/` dev stack:
+   - keep it explicitly development-only
+   - mount source code from the working tree instead of replacing deployment
+     sources of truth
+   - document the expected ports, env file, and restart workflow
 
 ## Validation
 
@@ -68,8 +87,15 @@ After changing the LangGraph scaffold:
    `controller-agent` backend and `applications/langgraph/chat.sh` for the
    paired local LangChain Agent Chat app when you are intentionally testing that local
    dev path
-4. if the change touches remote delegation, verify the relevant env values and
+4. if the change touches supervisor routing, verify that code and filesystem
+   questions still delegate to the `Code` specialist
+5. if the change touches repo-backed filesystem MCP usage, verify that the
+   exposed filesystem tools stay scoped to the intended repository root and
+   that broad searches pick up the default excludes
+6. if the change touches remote delegation, verify the relevant env values and
    graph ids before expecting A2A calls to succeed
+7. if the change touches the top-level `docker/` stack, run `docker compose
+   config` from `docker/` to validate the compose file
 
 ## Structure Guidance
 

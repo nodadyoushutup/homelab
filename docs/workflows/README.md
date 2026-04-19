@@ -11,8 +11,7 @@ govern those workflows.
 - `argocd.md`: normal GitOps workflow for Argo CD-managed Kubernetes changes
 - `application-networking.md`: standard hostname, DNS, proxy, and domain
   validation flow for new or changed app endpoints
-- `agents.md`: how to choose the owning agent and any subagents before
-  execution
+- `agents.md`: how to update LangGraph agent contracts and runtime routing
 - `container-images.md`: container build, Harbor registry, and GitHub Actions
   publish workflow
 - `confluence.md`: standard Confluence discovery and documentation-analysis

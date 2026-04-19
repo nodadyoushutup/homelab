@@ -13,7 +13,6 @@ This document applies to the current MCP server set:
 - `terraform/swarm/mcp-atlassian/app`
 - `terraform/swarm/mcp-ast-grep/app`
 - `terraform/swarm/mcp-cloudflare/app`
-- `terraform/swarm/mcp-filesystem-homelab/app`
 - `terraform/swarm/mcp-git-homelab/app`
 - `terraform/swarm/mcp-fortigate/app`
 - `terraform/swarm/mcp-github/app`
@@ -170,29 +169,6 @@ This document applies to the current MCP server set:
 - Compatibility model: `cloudflare_email` is optional compatibility input, not
   the primary authentication mechanism.
 
-### `mcp-filesystem-homelab`
-
-- Runtime root: `terraform/swarm/mcp-filesystem-homelab/app`
-- Image source: `applications/mcp-filesystem-homelab/` wraps the official
-  `@modelcontextprotocol/server-filesystem` reference server behind the
-  repo-standard HTTP bridge.
-- Listen model: internal `8098`, published `18098`, HTTP path `/mcp`
-- Workspace model: bind-mount the shared code tree at `/mnt/eapp/code`
-  read-write on both the Swarm host and inside the container; keep the host
-  mount root and in-container allowlist root identical so one deployment can
-  serve multiple local workspaces.
-- Runtime user model: run the container with an unprivileged UID/GID that owns
-  the NFS-mounted workspace path. Do not leave this service running as root
-  against a root-squashed repo mount.
-- Scope model: keep the server restricted to the shared code tree. Workspace
-  scoping continues to happen through the explicit `path` arguments passed to
-  the filesystem tools; repo-local Codex config may still carry an
-  `x-workspace-root` hint for consistency with the other local MCP servers.
-- Client config model: this server is workspace-scoped, so prefer a repo-local
-  `.codex/config.toml` entry instead of adding it to the global Codex config
-  unless a task explicitly promotes it to a shared server. Keep the repo-local
-  `http_headers.x-workspace-root` value aligned with the active workspace root.
-
 ### `mcp-filesystem`
 
 - Runtime root: `kubernetes/mcp-filesystem`
@@ -203,20 +179,20 @@ This document applies to the current MCP server set:
   HTTP proxy image published to Harbor
 - Listen model: container `8098`, service `8098`, ingress-routed hostname
   `https://mcp.filesystem.nodadyoushutup.com/mcp/`
-- Workspace model: mount the shared code tree from the TrueNAS NFS export at
-  `/mnt/eapp/code` read-write inside the pod and pass that mounted path to the
-  upstream filesystem server as its native allowed root
+- Workspace model: mount the homelab workspace from the TrueNAS NFS export at
+  `/mnt/eapp/code/homelab` read-write inside the pod and pass that exact path
+  to the upstream filesystem server as its native allowed root
 - Runtime user model: run the pod as UID/GID `1000:1000` so filesystem writes
   continue to respect the root-squashed NFS export
-- Scope model: this server is workspace-agnostic at deploy time. Clients
-  operate within the shared `/mnt/eapp/code` tree using the upstream filesystem
-  tool path arguments
+- Scope model: this server is homelab-workspace-scoped at deploy time. Clients
+  should treat `/mnt/eapp/code/homelab` as the source of truth for local repo
+  paths and keep filesystem tool arguments inside that tree
 - Access model: the current proof-of-concept exposes the upstream filesystem
   toolset directly. If request-scoped read-only policy returns later, implement
   it in a dedicated wrapper instead of overloading the Kubernetes manifests
 - Client config model: point repo-local `.codex/config.toml` or app MCP config
-  at the stable hostname and let the client choose paths inside
-  `/mnt/eapp/code`
+  at the stable hostname and keep local repo paths anchored at
+  `/mnt/eapp/code/homelab`
 
 ### `mcp-git-homelab`
 

@@ -333,7 +333,7 @@ resource "proxmox_virtual_environment_vm" "development_vm" {
   }
 
   memory {
-    dedicated = 2048
+    dedicated = 8192
   }
 
   disk {

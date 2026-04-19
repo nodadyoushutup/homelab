@@ -41,7 +41,7 @@ spec:
             - name: TZ
               value: America/New_York
             - name: MCP_FILESYSTEM_WORKSPACE_ROOT
-              value: /mnt/eapp/code
+              value: /mnt/eapp/code/homelab
             - name: MCP_FILESYSTEM_LISTEN_PORT
               value: "8098"
           ports:
@@ -50,7 +50,7 @@ spec:
               protocol: TCP
           volumeMounts:
             - name: code
-              mountPath: /mnt/eapp/code
+              mountPath: /mnt/eapp/code/homelab
           readinessProbe:
             tcpSocket:
               port: http
@@ -65,4 +65,4 @@ spec:
         - name: code
           nfs:
             server: 192.168.1.100
-            path: /mnt/eapp/code
+            path: /mnt/eapp/code/homelab

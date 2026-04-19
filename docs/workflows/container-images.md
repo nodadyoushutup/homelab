@@ -78,7 +78,6 @@ the same registry.
 | `jenkins-controller` | Harbor | `/mnt/eapp/.tfvars/jenkins-controller/app.tfvars` |
 | `mcp-cloudflare` | Harbor | `terraform/swarm/mcp-cloudflare/app/main.tf` plus `/mnt/eapp/.tfvars/mcp-cloudflare/app.tfvars` |
 | `mcp-ast-grep` | Local engine tag (`homelab/...`) | `terraform/swarm/mcp-ast-grep/app/main.tf` plus `/mnt/eapp/.tfvars/mcp-ast-grep/app.tfvars` |
-| `mcp-filesystem-homelab` | Local engine tag (`homelab/...`) | `terraform/swarm/mcp-filesystem-homelab/app/main.tf` plus `/mnt/eapp/.tfvars/mcp-filesystem-homelab/app.tfvars` |
 | `mcp-git-homelab` | Local engine tag (`homelab/...`) | `terraform/swarm/mcp-git-homelab/app/main.tf` plus `/mnt/eapp/.tfvars/mcp-git-homelab/app.tfvars` |
 | `mcp-github` | GHCR | `terraform/swarm/mcp-github/app/main.tf` plus `/mnt/eapp/.tfvars/mcp-github/app.tfvars` |
 | `mcp-fortigate` | GHCR | `terraform/swarm/mcp-fortigate/app/main.tf` plus `/mnt/eapp/.tfvars/mcp-fortigate/app.tfvars` |

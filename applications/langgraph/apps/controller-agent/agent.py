@@ -19,7 +19,7 @@ controller_agent = create_supervisor_agent(
     local_subagents=[
         {
             "name": "code_agent",
-            "description": "Code specialist for repository paths, ownership, and change surfaces.",
+            "description": "Mandatory specialist for any code, config, repository, path, filesystem, or implementation question.",
             "runnable": code_agent,
         },
         {

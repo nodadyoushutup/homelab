@@ -14,7 +14,6 @@ Use this workflow for:
 - `terraform/swarm/mcp-atlassian/app`
 - `terraform/swarm/mcp-ast-grep/app`
 - `terraform/swarm/mcp-cloudflare/app`
-- `terraform/swarm/mcp-filesystem-homelab/app`
 - `terraform/swarm/mcp-git-homelab/app`
 - `terraform/swarm/mcp-fortigate/app`
 - `terraform/swarm/mcp-github/app`
@@ -139,19 +138,6 @@ Before running `terraform/swarm/mcp-cloudflare/app/pipeline/app.sh`:
 - confirm `cloudflare_api_token` and `cloudflare_zone_id` match the target zone
 - rebuild and republish the image first if `applications/mcp-cloudflare/` changed
 
-### `mcp-filesystem-homelab`
-
-Before running `terraform/swarm/mcp-filesystem-homelab/app/pipeline/app.sh`:
-
-- confirm the local image tag in Terraform exists on `swarm-cp-0`
-- confirm the mounted shared code path exists on the Terraform runner and on
-  the Swarm node at `/mnt/eapp/code`
-- confirm the configured runtime UID/GID can write to that NFS-mounted
-  workspace path on the Swarm node
-- rebuild the image first if `applications/mcp-filesystem-homelab/` changed
-- update the repo-local `.codex/config.toml` entry if the hostname, MCP path,
-  or `http_headers.x-workspace-root` value changes
-
 ### `mcp-filesystem`
 
 Before committing `kubernetes/mcp-filesystem/`:
@@ -163,11 +149,11 @@ Before committing `kubernetes/mcp-filesystem/`:
   `/mnt/eapp/.tfvars/harbor/config.tfvars`
 - confirm `/mnt/eapp/.tfvars/vault/config.tfvars` contains the matching
   `k8s/mcp_filesystem` registry credentials for the `ExternalSecret`
-- confirm the NFS export `192.168.1.100:/mnt/eapp/code` is still the intended
-  shared repo mount for the pod
+- confirm the NFS export `192.168.1.100:/mnt/eapp/code/homelab` is still the
+  intended workspace mount for the pod
 - confirm the repo-local `.codex/config.toml` or app MCP config points at the
-  stable hostname without relying on request headers that only existed in the
-  retired custom wrapper
+  stable hostname and that filesystem guidance stays anchored to
+  `/mnt/eapp/code/homelab`
 
 ### `mcp-git-homelab`
 
@@ -313,7 +299,6 @@ Validation examples:
   `Accept: text/event-stream`
 - `mcp-ast-grep`: probe `http://<swarm-host>:18096/mcp`
 - `mcp-filesystem`: probe `https://mcp.filesystem.nodadyoushutup.com/mcp/`
-- `mcp-filesystem-homelab`: probe `http://<swarm-host>:18098/mcp`
 - `mcp-git-homelab`: probe `http://<swarm-host>:18099/mcp`
 - `mcp-fortigate`: probe `http://<swarm-host>:18084/mcp`
 - `mcp-kubernetes`: probe `http://<swarm-host>:18106/mcp`

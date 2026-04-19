@@ -1,11 +1,15 @@
-# Agents
+# LangGraph Agent Contracts
 
-This directory defines agent roles, reusable subagents, and the native
-input/output schemas they use to collaborate.
+This directory defines the runtime contracts for the repo-managed LangGraph
+agents under `applications/langgraph/`.
+
+These docs describe runtime behavior, delegation boundaries, and native
+input/output schemas. They are not a repo-wide contributor startup checklist.
 
 ## Design principles
 
-- Always choose the agent intentionally at prompt time.
+- Route work intentionally inside the runtime instead of relying on unnamed
+  generic behavior.
 - Parent agents own role-specific behavior, prioritization, and decision-making.
 - Subagents own narrow capabilities and should remain reusable across parent agents.
 - Subagents should not assume who called them. They should rely on the incoming
@@ -15,7 +19,7 @@ input/output schemas they use to collaborate.
 - Callers should adapt to the callee's documented schema instead of relying on
   a repo-wide shared protocol file.
 
-## Current agent set
+## Current runtime set
 
 - Parent agent: `Homelab`
 - Subagent: `Code`
@@ -66,8 +70,20 @@ both the Python file and the Markdown file exist.
 
 ## Runtime Prompt Source
 
-These files are the source-of-truth prompt docs for repo-managed agent
-runtimes.
+The runtime prompt source for repo-managed LangGraph agents lives alongside the
+apps themselves.
+
+Current prompt-source pattern:
+
+- app-level prompt text should live in
+  `applications/langgraph/apps/<app-name>/system_prompt.md`
+- internal subagent prompt text should live in
+  `applications/langgraph/apps/<app-name>/subagents/<subagent-name>/system_prompt.md`
+- Python wiring under `applications/langgraph/src/` should load those Markdown
+  files and pass the resulting text into the runtime's `system_prompt`
+  argument
+
+These docs remain the human-readable runtime contracts and schema references.
 
 Current intent:
 
@@ -89,7 +105,7 @@ Current intent:
   agent accepts input and returns output
 
 When the runtime wiring changes, update these docs first so the prompt text and
-repo behavior stay aligned.
+runtime behavior stay aligned.
 
 ## Current handoff model
 
@@ -110,35 +126,21 @@ Current expectation:
 
 This keeps runtime orchestration simple while the agent set is still evolving.
 
-## Selection workflow
+## Runtime routing expectations
 
-Before starting work, explicitly choose the agent that should own the task.
+Use [docs/workflows/agents.md](./../workflows/agents.md) when you are updating
+the LangGraph runtime contracts or their implementation.
 
-If the prompt does not name an agent, select one intentionally before execution rather than defaulting to an unnamed general agent.
+Current expectations:
 
-Use [docs/workflows/agents.md](./../workflows/agents.md) for the operational
-selection flow and lock-in rule.
-
-Required behavior:
-
-- choose the owning parent agent before implementation or investigation starts
-- choose any needed subagents from the documented subagent set based on
-  capability
-- lock that agent set before proceeding
-- if the task changes materially, explicitly re-evaluate and re-lock the agent set
-
-Current default choices:
-
-- Use `Homelab` when the task needs implementation, debugging, code changes, repo navigation, or orchestration of technical subtasks.
-- Use `Code` only as a delegated capability through a parent agent, or directly
-  when the only goal is source-of-truth analysis without implementation.
-- Use `Confluence` only as a delegated capability through a parent agent, or directly when the goal is Confluence-backed document or page work, including discovery, creation, editing, comments, and related coordination.
-- Use `Kubernetes` only as a delegated capability through a parent agent, or directly when the only goal is Kubernetes-backed manifest and delivery analysis without implementation.
-- Use `Pipeline` only as a delegated capability through a parent agent, or directly when the goal is repo-managed pipeline inspection or bounded pipeline execution through the configured pipeline tools.
-- Use `Terraform` only as a delegated capability through a parent agent, or directly when the only goal is Terraform-backed infrastructure analysis without implementation.
-- Use `Jira` only as a delegated capability through a parent agent, or directly
-  when the goal is Jira-backed issue or workflow work, including discovery,
-  creation, editing, comments, transitions, and related coordination.
+- `Homelab` is the coordinating supervisor for runtime orchestration.
+- `Code` is the mandatory specialist for code, config, repository structure,
+  file paths, filesystem visibility, MCP workspace inspection, and
+  implementation questions.
+- `Confluence`, `Kubernetes`, `Pipeline`, `Terraform`, and `Jira` remain
+  reusable specialist capabilities for their respective domains.
+- If runtime routing changes materially, update both the Python wiring under
+  `applications/langgraph/` and the matching contract docs in this directory.
 
 ## Architecture rule
 

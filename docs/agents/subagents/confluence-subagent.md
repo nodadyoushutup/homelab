@@ -65,9 +65,9 @@ likely to explain how we use Confluence in this repo.
 
 Start with:
 
-- `docs/agents/README.md` for current agent ownership and scope
 - `docs/rules/README.md` for the rules index
 - `docs/workflows/README.md` for the workflows index
+- `docs/rules/langgraph.md` for LangGraph app boundaries and MCP rules
 - `docs/rules/confluence.md` for steady-state Confluence rules
 - `docs/workflows/confluence.md` for the standard Confluence operating flow
 

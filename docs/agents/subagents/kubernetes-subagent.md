@@ -56,9 +56,9 @@ likely to explain how Kubernetes is structured in this repo.
 
 Start with:
 
-- `docs/agents/README.md` for current agent ownership and scope
 - `docs/rules/README.md` for the rules index
 - `docs/workflows/README.md` for the workflows index
+- `docs/rules/langgraph.md` for LangGraph app boundaries and MCP rules
 - `docs/rules/kubernetes.md` for steady-state Kubernetes rules
 - `docs/workflows/kubernetes.md` for the standard Kubernetes operating flow
 

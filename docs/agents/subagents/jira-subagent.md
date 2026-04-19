@@ -66,9 +66,9 @@ likely to explain how we use Jira in this repo.
 
 Start with:
 
-- `docs/agents/README.md` for current agent ownership and scope
 - `docs/rules/README.md` for the rules index
 - `docs/workflows/README.md` for the workflows index
+- `docs/rules/langgraph.md` for LangGraph app boundaries and MCP rules
 - `docs/rules/jira.md` for steady-state Jira rules
 - `docs/workflows/jira.md` for the standard Jira operating flow
 

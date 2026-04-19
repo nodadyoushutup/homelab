@@ -58,9 +58,8 @@ Repo examples:
 - infrastructure: `terraform/swarm/harbor`, `vault`,
   `nginx_proxy_manager`, `gha-runner`, `jenkins-controller`
 - management tooling: `terraform/swarm/mcp-argocd`, `mcp-atlassian`,
-  `mcp-ast-grep`, `mcp-cloudflare`, `mcp-filesystem-homelab`,
-  `mcp-fortigate`, `mcp-github`, `mcp-google-workspace`, `mcp-redis`,
-  `mcp-agent-protocol`, `mcp-bash-pipeline`,
+  `mcp-ast-grep`, `mcp-cloudflare`, `mcp-fortigate`, `mcp-github`,
+  `mcp-google-workspace`, `mcp-redis`, `mcp-agent-protocol`, `mcp-bash-pipeline`,
   `mcp-terraform`
 
 Documented exception:
