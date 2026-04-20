@@ -17,12 +17,12 @@ Use this workflow for:
 - `terraform/swarm/mcp-fortigate/app`
 - `terraform/swarm/mcp-github/app`
 - `terraform/swarm/mcp-google-workspace/app`
-- `terraform/swarm/mcp-kubernetes/app`
 - `terraform/swarm/mcp-redis/app`
 - `terraform/swarm/mcp-agent-protocol/app`
 - `terraform/swarm/mcp-bash-pipeline/app`
 - `terraform/swarm/mcp-terraform/app`
 - `kubernetes/mcp-atlassian`
+- `kubernetes/mcp-kubernetes`
 - `kubernetes/mcp-filesystem`
 
 ## Standard Flow
@@ -208,11 +208,11 @@ Before running `terraform/swarm/mcp-google-workspace/app/pipeline/app.sh`:
 
 ### `mcp-kubernetes`
 
-Before running `terraform/swarm/mcp-kubernetes/app/pipeline/app.sh`:
+Before committing `kubernetes/mcp-kubernetes/`:
 
 - confirm `quay.io/containers/kubernetes_mcp_server:v0.0.60` is still the intended upstream release
-- confirm the local kubeconfig file referenced by tfvars exists on the Terraform runner
-- prefer a dedicated read-only kubeconfig for this service instead of reusing a broad admin kubeconfig
+- keep the deployment on the upstream native HTTP server; do not add a repo-local proxy unless the upstream transport model regresses
+- keep the pod on a dedicated in-cluster ServiceAccount bound to the built-in read-only `view` ClusterRole instead of mounting a static kubeconfig
 - keep `mcp_read_only = true` unless the task explicitly requires mutating Kubernetes tools
 - keep the initial toolset narrow unless the task explicitly needs more than `core,config`
 
@@ -323,7 +323,7 @@ Validation examples:
 - `mcp-filesystem`: probe `https://mcp.filesystem.nodadyoushutup.com/mcp/`
 - `mcp-git-homelab`: probe `http://<swarm-host>:18099/mcp`
 - `mcp-fortigate`: probe `http://<swarm-host>:18084/mcp`
-- `mcp-kubernetes`: probe `http://<swarm-host>:18106/mcp`
+- `mcp-kubernetes`: probe `https://mcp.kubernetes.nodadyoushutup.com/mcp`
 - `mcp-redis`: probe `http://<swarm-host>:18101/mcp`
 - `mcp-agent-protocol`: probe `http://<swarm-host>:18100/mcp`
 - `mcp-bash-pipeline`: probe `http://<swarm-host>:18107/mcp`

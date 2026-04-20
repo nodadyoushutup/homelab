@@ -16,12 +16,12 @@ This document applies to the current MCP server set:
 - `terraform/swarm/mcp-fortigate/app`
 - `terraform/swarm/mcp-github/app`
 - `terraform/swarm/mcp-google-workspace/app`
-- `terraform/swarm/mcp-kubernetes/app`
 - `terraform/swarm/mcp-redis/app`
 - `terraform/swarm/mcp-agent-protocol/app`
 - `terraform/swarm/mcp-bash-pipeline/app`
 - `terraform/swarm/mcp-terraform/app`
 - `kubernetes/mcp-atlassian`
+- `kubernetes/mcp-kubernetes`
 - `kubernetes/mcp-filesystem`
 
 ## Shared Placement Rules
@@ -30,7 +30,8 @@ This document applies to the current MCP server set:
   unless a task explicitly migrates them.
 - New MCP servers may use the Kubernetes pattern under `kubernetes/<service>/`
   when the human explicitly chooses the cluster route. Current reference
-  exceptions are `kubernetes/mcp-atlassian` and `kubernetes/mcp-filesystem`.
+  exceptions are `kubernetes/mcp-atlassian`, `kubernetes/mcp-kubernetes`, and
+  `kubernetes/mcp-filesystem`.
 - Each MCP server keeps its own single `app` stage and single backend state
   file. Do not merge multiple MCP services into one Terraform root or one state
   key.
@@ -275,21 +276,26 @@ This document applies to the current MCP server set:
 
 ### `mcp-kubernetes`
 
-- Runtime root: `terraform/swarm/mcp-kubernetes/app`
-- Image source: upstream image pinned directly in Terraform from
+- Runtime root: `kubernetes/mcp-kubernetes`
+- Argo CD objects: `kubernetes/argocd-management/mcp-kubernetes-project.yaml`
+  and `kubernetes/argocd-management/mcp-kubernetes-app.yaml`
+- Image source: upstream image pinned directly in Kubernetes manifests from
   `quay.io/containers/kubernetes_mcp_server`
-- Listen model: internal `8106`, published `18106`, HTTP path `/mcp`
-- Credential model: source the cluster credential from a dedicated kubeconfig
-  file under `/mnt/eapp/.tfvars/mcp-kubernetes/` and inject it as a Docker
-  secret instead of baking credentials into the image
+- Listen model: container `8106`, service `8106`, ingress-routed hostname
+  `https://mcp.kubernetes.nodadyoushutup.com/mcp`
+- Credential model: use the pod's in-cluster Kubernetes credentials through a
+  dedicated ServiceAccount bound to the built-in read-only `view` ClusterRole;
+  do not mount a static kubeconfig unless a future recovery path explicitly
+  needs one
 - Access model: keep `mcp_read_only = true`, `disable_multi_cluster = true`,
-  and `toolsets = "core,config"` unless a task explicitly requires broader
-  Kubernetes capabilities
+  `cluster-provider = in-cluster`, and `toolsets = "core,config"` unless a
+  task explicitly requires broader Kubernetes capabilities
 - Output model: keep `list_output = "yaml"` so cluster object responses stay
   structured for LLM clients
 - Deployment model: use the upstream native HTTP server directly; do not add a
   repo-local wrapper unless the upstream transport or image model stops fitting
-  the repo standard
+  the repo standard; keep the hostname routed through ingress rather than a
+  raw published port
 
 ### `mcp-redis`
 

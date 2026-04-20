@@ -1,0 +1,14 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: mcp-kubernetes-viewer-mcp-kubernetes
+  annotations:
+    argocd.argoproj.io/sync-wave: "13"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: view
+subjects:
+  - kind: ServiceAccount
+    name: mcp-kubernetes-viewer
+    namespace: mcp-kubernetes
