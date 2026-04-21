@@ -178,7 +178,7 @@ images. The desired Harbor-managed project set now includes:
 - Existing repo images:
   `langchain-agent-chat`, `langgraph`, `gha-runner`, `harbor`, `jenkins-agent`, `jenkins-controller`,
   `mcp-atlassian`, `mcp-cloudflare`, `mcp-filesystem`, `mcp-fortigate`,
-  `mcp-google-workspace`, `webserver-image`
+  `mcp-github`, `mcp-google-workspace`, `webserver-image`
 - Harbor component images:
   `harbor-core`, `harbor-db`, `harbor-exporter`, `harbor-jobservice`,
   `harbor-log`, `harbor-portal`, `harbor-registryctl`, `nginx-photon`,
