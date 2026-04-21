@@ -14,13 +14,13 @@ Use this workflow for:
 - `terraform/swarm/mcp-git-homelab/app`
 - `terraform/swarm/mcp-fortigate/app`
 - `terraform/swarm/mcp-github/app`
-- `terraform/swarm/mcp-google-workspace/app`
 - `terraform/swarm/mcp-agent-protocol/app`
 - `terraform/swarm/mcp-bash-pipeline/app`
 - `terraform/swarm/mcp-terraform/app`
 - `kubernetes/mcp-argocd`
 - `kubernetes/mcp-atlassian`
 - `kubernetes/mcp-cloudflare`
+- `kubernetes/mcp-google-workspace`
 - `kubernetes/mcp-kubernetes`
 - `kubernetes/mcp-filesystem`
 
@@ -212,14 +212,27 @@ Before running `terraform/swarm/mcp-github/app/pipeline/app.sh`:
 
 ### `mcp-google-workspace`
 
-Before running `terraform/swarm/mcp-google-workspace/app/pipeline/app.sh`:
+Before committing `kubernetes/mcp-google-workspace/`:
 
-- confirm the `homelab/mcp-google-workspace:*` image tag in Terraform exists on
-  the Docker engine that will run the service
-- confirm `workspace_service_account_file` points at a readable local
-  `service_account.json` on the Terraform runner
-- confirm `workspace_delegated_user` is the intended impersonated user email
-- rebuild the image first if `applications/mcp-google-workspace/` changed
+- confirm the Harbor image tag referenced in
+  `kubernetes/mcp-google-workspace/deployment.yaml` exists or will be
+  published in the same task
+- confirm the Harbor project and the Kubernetes pull robot entry exist in
+  `/mnt/eapp/.tfvars/harbor/config.tfvars`
+- confirm `/mnt/eapp/.tfvars/vault/config.tfvars` contains the matching
+  `k8s/mcp_google_workspace` app and registry credentials plus the delegated
+  service-account JSON payload
+- bootstrap the namespace-local Vault reader secret
+  `mcp-google-workspace-vault-reader` before expecting External Secrets to sync
+- confirm `workspace_delegated_user` is still the intended impersonated user
+  email and that `workspace_tool_tier` and `workspace_read_only` preserve the
+  existing access posture
+- confirm the existing hostname route for
+  `https://mcp.google-workspace.nodadyoushutup.com/mcp` will move to the
+  Kubernetes ingress entrypoint, because the client-facing URL is preserved
+  during the migration
+- rebuild and republish the image first if
+  `applications/mcp-google-workspace/` changed
 
 ### `mcp-kubernetes`
 
@@ -332,8 +345,10 @@ Validation examples:
 - `mcp-bash-pipeline`: probe `http://<swarm-host>:18107/mcp`
 - `mcp-terraform`: probe `http://<swarm-host>:18104/mcp`
 - `mcp-cloudflare`: probe `https://mcp.cloudflare.nodadyoushutup.com/mcp`
-- `mcp-github`, `mcp-google-workspace`: at minimum verify the port is
-  listening if the wrapper does not define a fixed explicit path in Terraform
+- `mcp-google-workspace`: probe
+  `https://mcp.google-workspace.nodadyoushutup.com/mcp`
+- `mcp-github`: at minimum verify the port is listening if the wrapper does
+  not define a fixed explicit path in Terraform
 - host validation: probe `https://mcp.<service>.nodadyoushutup.com/mcp` from
   the Codex host and make sure the same URL exists in the intended Codex config
   layer (`~/.codex/config.toml` or repo-local `.codex/config.toml`)

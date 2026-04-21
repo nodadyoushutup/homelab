@@ -13,13 +13,13 @@ This document applies to the current MCP server set:
 - `terraform/swarm/mcp-git-homelab/app`
 - `terraform/swarm/mcp-fortigate/app`
 - `terraform/swarm/mcp-github/app`
-- `terraform/swarm/mcp-google-workspace/app`
 - `terraform/swarm/mcp-agent-protocol/app`
 - `terraform/swarm/mcp-bash-pipeline/app`
 - `terraform/swarm/mcp-terraform/app`
 - `kubernetes/mcp-argocd`
 - `kubernetes/mcp-atlassian`
 - `kubernetes/mcp-cloudflare`
+- `kubernetes/mcp-google-workspace`
 - `kubernetes/mcp-kubernetes`
 - `kubernetes/mcp-filesystem`
 
@@ -30,8 +30,8 @@ This document applies to the current MCP server set:
 - New MCP servers may use the Kubernetes pattern under `kubernetes/<service>/`
   when the human explicitly chooses the cluster route. Current reference
   exceptions are `kubernetes/mcp-argocd`, `kubernetes/mcp-atlassian`,
-  `kubernetes/mcp-cloudflare`, `kubernetes/mcp-kubernetes`, and
-  `kubernetes/mcp-filesystem`.
+  `kubernetes/mcp-cloudflare`, `kubernetes/mcp-google-workspace`,
+  `kubernetes/mcp-kubernetes`, and `kubernetes/mcp-filesystem`.
 - Each MCP server keeps its own single `app` stage and single backend state
   file. Do not merge multiple MCP services into one Terraform root or one state
   key.
@@ -272,22 +272,29 @@ This document applies to the current MCP server set:
 
 ### `mcp-google-workspace`
 
-- Runtime root: `terraform/swarm/mcp-google-workspace/app`
-- Image source: `applications/mcp-google-workspace/` owns the local wrapper for the
-  `homelab/mcp-google-workspace:*` image tag used by Terraform
-- Listen model: internal `8086`, published `18092`, HTTP endpoint provided by
-  the local wrapper
-- Credential model: `workspace_service_account_file` must point at a real local
-  file on the Terraform runner. The JSON file is converted into a Docker secret
-  at apply time and must never be committed to the repo.
+- Runtime root: `kubernetes/mcp-google-workspace`
+- Argo CD objects:
+  `kubernetes/argocd-management/mcp-google-workspace-project.yaml` and
+  `kubernetes/argocd-management/mcp-google-workspace-app.yaml`
+- Image source: `applications/mcp-google-workspace/` builds the Harbor-backed
+  wrapper image referenced by Kubernetes
+- Listen model: container `8086`, service `8086`, ingress-routed hostname
+  `https://mcp.google-workspace.nodadyoushutup.com/mcp`
+- Credential model: keep the app env, Harbor pull credentials, and delegated
+  service-account JSON sourced from `secret/k8s/mcp_google_workspace` through
+  `ExternalSecret`; do not commit the service-account JSON into the repo or
+  reintroduce a node-local file dependency for the runtime
 - Delegation model: `workspace_delegated_user` must stay a valid email address
-  because the wrapper enforces service-account impersonation for a single user.
+  because the wrapper enforces single-user service-account impersonation
 - Tool model: `workspace_tool_tier` must stay one of `core`, `extended`, or
-  `complete`; `workspace_tools` is optional and only used for explicit
-  narrowing.
+  `complete`; add `workspace_tools` back only when the task intentionally
+  narrows the server below the tier default
 - Safety model: `workspace_read_only` defaults to `false`, so write access is
-  the current steady-state behavior. Set it deliberately when the task should
-  constrain the server.
+  still the steady-state posture. Set it deliberately when the task should
+  constrain the server
+- Delivery model: preserve the stable operator hostname during migration and
+  cut the Nginx Proxy Manager route over to the Kubernetes ingress IP instead
+  of keeping the old Swarm published port
 
 ### `mcp-kubernetes`
 

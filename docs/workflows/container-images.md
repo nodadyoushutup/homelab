@@ -81,7 +81,7 @@ the same registry.
 | `mcp-git-homelab` | Local engine tag (`homelab/...`) | `terraform/swarm/mcp-git-homelab/app/main.tf` plus `/mnt/eapp/.tfvars/mcp-git-homelab/app.tfvars` |
 | `mcp-github` | GHCR | `terraform/swarm/mcp-github/app/main.tf` plus `/mnt/eapp/.tfvars/mcp-github/app.tfvars` |
 | `mcp-fortigate` | GHCR | `terraform/swarm/mcp-fortigate/app/main.tf` plus `/mnt/eapp/.tfvars/mcp-fortigate/app.tfvars` |
-| `mcp-google-workspace` | Local engine tag (`homelab/...`) | `terraform/swarm/mcp-google-workspace/app/main.tf` |
+| `mcp-google-workspace` | Harbor | `kubernetes/mcp-google-workspace/deployment.yaml` plus `/mnt/eapp/.tfvars/harbor/config.tfvars` and `/mnt/eapp/.tfvars/vault/config.tfvars` |
 | Harbor runtime services | Local `goharbor/*:2.14.2-custom.1-arm64` tags on the Swarm node | `/mnt/eapp/.tfvars/harbor/app.tfvars` |
 
 That last row matters: Harbor now has a publish path for its component images,
