@@ -1,0 +1,23 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: mcp-fortigate
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "46"
+spec:
+  project: mcp-fortigate
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: mcp-fortigate
+  source:
+    repoURL: git@github.com:nodadyoushutup/homelab.git
+    targetRevision: HEAD
+    path: kubernetes/mcp-fortigate
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

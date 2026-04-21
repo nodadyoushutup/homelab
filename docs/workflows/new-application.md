@@ -40,7 +40,8 @@ Short version:
 - choose `Swarm app` for infrastructure, observability, management tooling, or
   anything that should survive Kubernetes failure
 - allow a `Cluster app` exception when the human explicitly chooses the
-  emerging Kubernetes MCP pattern for a new server such as `mcp-filesystem`
+  emerging Kubernetes MCP pattern for a new server such as `mcp-filesystem` or
+  `mcp-fortigate`
 - choose `Cluster app` for almost everything else
 
 If the reason for Swarm is weak or mostly convenience, use Kubernetes.
@@ -59,7 +60,8 @@ Common shapes:
 
 Reference services:
 
-- single-stage: `terraform/swarm/mcp-github/app`, `dozzle/app`, `loki/app`
+- single-stage: `terraform/swarm/mcp-terraform/app`, `dozzle/app`,
+  `loki/app`
 - multi-stage: `terraform/swarm/grafana/{database,app,config}`,
   `harbor/{app,config}`, `nginx_proxy_manager/{database,app,config}`
 
@@ -104,7 +106,8 @@ Reference services:
 - Helm-backed: `kubernetes/argocd-management/k10-app.yaml`,
   `kubernetes/argocd-management/snapshot-controller-app.yaml`
 - repo-owned `standard app`: `kubernetes/prowlarr`, `radarr`, `privatebin`,
-  `clusterplex`
+  `clusterplex`, `mcp-ast-grep`, `mcp-bash-pipeline`, `mcp-fortigate`,
+  `mcp-git`, `mcp-github`
 - repo-owned `Kustomize app`: `kubernetes/qbittorrent`,
   `kubernetes/cross-seed`
 

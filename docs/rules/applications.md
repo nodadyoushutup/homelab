@@ -57,23 +57,25 @@ Repo examples:
   `graphite`, `dozzle`, `node_exporter`, `telegraf_docker_metrics`
 - infrastructure: `terraform/swarm/harbor`, `vault`,
   `nginx_proxy_manager`, `gha-runner`, `jenkins-controller`
-- management tooling: `terraform/swarm/mcp-ast-grep`, `mcp-fortigate`, `mcp-github`,
-  `mcp-agent-protocol`, `mcp-bash-pipeline`, `mcp-terraform`
+- management tooling: `terraform/swarm/mcp-terraform`
 
 Documented exception:
 
 - a new MCP server can still be a `Cluster app` when the human explicitly
   chooses Kubernetes and the server is meant to follow the emerging
   ingress-routed cluster pattern. Current reference examples are
-  `kubernetes/mcp-argocd`, `kubernetes/mcp-atlassian`,
-  `kubernetes/mcp-cloudflare`, `kubernetes/mcp-google-workspace`,
-  `kubernetes/mcp-kubernetes`, and `kubernetes/mcp-filesystem`
+  `kubernetes/mcp-argocd`, `kubernetes/mcp-ast-grep`,
+  `kubernetes/mcp-atlassian`,
+  `kubernetes/mcp-cloudflare`, `kubernetes/mcp-fortigate`,
+  `kubernetes/mcp-git`, `kubernetes/mcp-github`,
+  `kubernetes/mcp-google-workspace`, `kubernetes/mcp-kubernetes`,
+  `kubernetes/mcp-filesystem`, and `kubernetes/mcp-bash-pipeline`
 
 If the Swarm service is an MCP server, use
 [`docs/rules/mcp-servers.md`](./mcp-servers.md) for its service-specific
 guardrails after the platform decision is made.
 
-Custom MCP servers should normally have:
+Swarm-hosted custom MCP servers should normally have:
 
 - `terraform/swarm/<service>/app` for the Swarm runtime
 - `applications/<service>/` when a repo-local HTTP wrapper or proxy variant is

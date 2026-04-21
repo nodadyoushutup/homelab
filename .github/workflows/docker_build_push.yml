@@ -22,9 +22,12 @@ on:
           - langchain-agent-chat
           - langgraph
           - harbor-runtime-set
+          - mcp-bash-pipeline
           - mcp-cloudflare
+          - mcp-ast-grep
           - mcp-filesystem
           - mcp-fortigate
+          - mcp-git
           - mcp-github
           - mcp-google-workspace
           - gha-runner
@@ -99,9 +102,19 @@ jobs:
               docker_context="applications/harbor"
               build_strategy="harbor-runtime-set"
               ;;
+            mcp-bash-pipeline)
+              image_name="mcp-bash-pipeline"
+              docker_context="applications/mcp-bash-pipeline"
+              build_strategy="direct"
+              ;;
             mcp-cloudflare)
               image_name="mcp-cloudflare"
               docker_context="applications/mcp-cloudflare"
+              build_strategy="direct"
+              ;;
+            mcp-ast-grep)
+              image_name="mcp-ast-grep"
+              docker_context="applications/mcp-ast-grep"
               build_strategy="direct"
               ;;
             mcp-filesystem)
@@ -112,6 +125,11 @@ jobs:
             mcp-fortigate)
               image_name="mcp-fortigate"
               docker_context="applications/mcp-fortigate"
+              build_strategy="direct"
+              ;;
+            mcp-git)
+              image_name="mcp-git"
+              docker_context="applications/mcp-git"
               build_strategy="direct"
               ;;
             mcp-github)

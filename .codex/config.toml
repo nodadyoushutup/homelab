@@ -36,8 +36,8 @@ url = "https://mcp.atlassian.nodadyoushutup.com/mcp"
 [mcp_servers.mcp_filesystem]
 url = "https://mcp.filesystem.nodadyoushutup.com/mcp"
 
-[mcp_servers.mcp_git_homelab]
-url = "https://mcp.git-homelab.nodadyoushutup.com/mcp"
+[mcp_servers.mcp_git]
+url = "https://mcp.git.nodadyoushutup.com/mcp"
 http_headers = { "x-workspace-root" = "/mnt/eapp/code/homelab" }
 
 [mcp_servers.mcp_ast_grep]
@@ -61,12 +61,6 @@ url = "https://mcp.cloudflare.nodadyoushutup.com/mcp"
 
 [mcp_servers.mcp_google_workspace]
 url = "https://mcp.google-workspace.nodadyoushutup.com/mcp"
-
-[mcp_servers.mcp_redis]
-url = "https://mcp.redis.nodadyoushutup.com/mcp"
-
-[mcp_servers.mcp_agent_protocol]
-url = "https://mcp.agent-protocol.nodadyoushutup.com/mcp"
 
 [mcp_servers.mcp_bash_pipeline]
 url = "https://mcp.bash-pipeline.nodadyoushutup.com/mcp"

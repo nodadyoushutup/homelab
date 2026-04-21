@@ -1,0 +1,95 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp-bash-pipeline
+  namespace: mcp-bash-pipeline
+  annotations:
+    argocd.argoproj.io/sync-wave: "30"
+spec:
+  replicas: 1
+  revisionHistoryLimit: 0
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: mcp-bash-pipeline
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: mcp-bash-pipeline
+    spec:
+      enableServiceLinks: false
+      nodeSelector:
+        kubernetes.io/hostname: k8s-wk-0
+      securityContext:
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      imagePullSecrets:
+        - name: mcp-bash-pipeline-registry
+      containers:
+        - name: mcp-bash-pipeline
+          image: harbor.nodadyoushutup.com/mcp-bash-pipeline/mcp-bash-pipeline:2026.04.17.1
+          imagePullPolicy: Always
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          env:
+            - name: TZ
+              value: America/New_York
+            - name: BASH_PIPELINE_PORT
+              value: "8107"
+            - name: BASH_PIPELINE_HTTP_PATH
+              value: /mcp
+            - name: BASH_PIPELINE_DEFAULT_WORKSPACE_ROOT
+              value: /mnt/eapp/code/homelab
+            - name: BASH_PIPELINE_ALLOWED_WORKSPACE_ROOTS
+              value: /mnt/eapp/code
+            - name: BASH_PIPELINE_TFVARS_ROOT
+              value: /mnt/eapp/.tfvars
+            - name: BASH_PIPELINE_WORKSPACE_ROOT_HEADER
+              value: x-workspace-root
+            - name: BASH_PIPELINE_WORKSPACE_NAME_HEADER
+              value: x-homelab-workspace
+            - name: BASH_PIPELINE_DEFAULT_WORKSPACE_NAME
+              value: homelab
+            - name: BASH_PIPELINE_DEFAULT_TIMEOUT_SECONDS
+              value: "1800"
+            - name: BASH_PIPELINE_MAX_OUTPUT_CHARS
+              value: "12000"
+          ports:
+            - name: http
+              containerPort: 8107
+              protocol: TCP
+          volumeMounts:
+            - name: code
+              mountPath: /mnt/eapp/code
+            - name: tfvars
+              mountPath: /mnt/eapp/.tfvars
+          readinessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 20
+      volumes:
+        - name: code
+          nfs:
+            server: 192.168.1.100
+            path: /mnt/eapp/code
+        - name: tfvars
+          nfs:
+            server: 192.168.1.100
+            path: /mnt/eapp/.tfvars

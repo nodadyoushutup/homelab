@@ -75,12 +75,13 @@ on the same registry.
 | Runtime | Current image source | Source of truth |
 | --- | --- | --- |
 | `langchain-agent-chat` | Harbor | `kubernetes/langchain-agent-chat/deployment.yaml` plus `/mnt/eapp/.tfvars/harbor/config.tfvars` |
+| `mcp-bash-pipeline` | Harbor | `kubernetes/mcp-bash-pipeline/deployment.yaml` plus `/mnt/eapp/.tfvars/harbor/config.tfvars` and `/mnt/eapp/.tfvars/vault/config.tfvars` |
+| `mcp-ast-grep` | Harbor | `kubernetes/mcp-ast-grep/deployment.yaml` plus `/mnt/eapp/.tfvars/harbor/config.tfvars` and `/mnt/eapp/.tfvars/vault/config.tfvars` |
 | `mcp-filesystem` | Harbor | `kubernetes/mcp-filesystem/deployment.yaml` plus `/mnt/eapp/.tfvars/harbor/config.tfvars` and `/mnt/eapp/.tfvars/vault/config.tfvars` |
 | `gha-runner` | Harbor | `/mnt/eapp/.tfvars/gha-runner/app.tfvars` |
 | `jenkins-controller` | Harbor | `/mnt/eapp/.tfvars/jenkins-controller/app.tfvars` |
 | `mcp-cloudflare` | Harbor | `kubernetes/mcp-cloudflare/deployment.yaml` plus `/mnt/eapp/.tfvars/harbor/config.tfvars` and `/mnt/eapp/.tfvars/vault/config.tfvars` |
-| `mcp-ast-grep` | Local engine tag (`homelab/...`) | `terraform/swarm/mcp-ast-grep/app/main.tf` plus `/mnt/eapp/.tfvars/mcp-ast-grep/app.tfvars` |
-| `mcp-git-homelab` | Local engine tag (`homelab/...`) | `terraform/swarm/mcp-git-homelab/app/main.tf` plus `/mnt/eapp/.tfvars/mcp-git-homelab/app.tfvars` |
+| `mcp-git` | Harbor | `kubernetes/mcp-git/deployment.yaml` plus `/mnt/eapp/.tfvars/harbor/config.tfvars` and `/mnt/eapp/.tfvars/vault/config.tfvars` |
 | `mcp-github` | GHCR | `kubernetes/mcp-github/deployment.yaml` plus `/mnt/eapp/.tfvars/vault/config.tfvars` |
 | `mcp-fortigate` | GHCR | `kubernetes/mcp-fortigate/deployment.yaml` plus `/mnt/eapp/.tfvars/vault/config.tfvars` |
 | `mcp-google-workspace` | Harbor | `kubernetes/mcp-google-workspace/deployment.yaml` plus `/mnt/eapp/.tfvars/harbor/config.tfvars` and `/mnt/eapp/.tfvars/vault/config.tfvars` |
@@ -102,8 +103,10 @@ The standard publish workflow is:
 - `version`: required output tag
 - `target_registry`: `github` or `harbor`
 - `build_target`:
-  `langchain-agent-chat`, `langgraph`, `harbor-runtime-set`, `mcp-cloudflare`, `mcp-filesystem`,
-  `mcp-fortigate`, `mcp-github`, `mcp-google-workspace`, `gha-runner`, `jenkins-agent`,
+  `langchain-agent-chat`, `langgraph`, `harbor-runtime-set`,
+  `mcp-ast-grep`, `mcp-bash-pipeline`, `mcp-cloudflare`,
+  `mcp-filesystem`, `mcp-fortigate`, `mcp-git`, `mcp-github`,
+  `mcp-google-workspace`, `gha-runner`, `jenkins-agent`,
   `jenkins-controller`
 
 Registry naming rules:
@@ -177,7 +180,8 @@ images. The desired Harbor-managed project set now includes:
 
 - Existing repo images:
   `langchain-agent-chat`, `langgraph`, `gha-runner`, `harbor`, `jenkins-agent`, `jenkins-controller`,
-  `mcp-atlassian`, `mcp-cloudflare`, `mcp-filesystem`, `mcp-fortigate`,
+  `mcp-ast-grep`, `mcp-atlassian`, `mcp-bash-pipeline`,
+  `mcp-cloudflare`, `mcp-filesystem`, `mcp-fortigate`, `mcp-git`,
   `mcp-google-workspace`, `webserver-image`
 - Harbor component images:
   `harbor-core`, `harbor-db`, `harbor-exporter`, `harbor-jobservice`,

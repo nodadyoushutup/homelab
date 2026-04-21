@@ -3,22 +3,21 @@
 This document defines the steady-state rules for MCP servers in this repo. Use
 [`docs/workflows/mcp-servers.md`](./../workflows/mcp-servers.md) for the
 operator flow and [`docs/rules/terraform.md`](./terraform.md) for the shared
-Terraform guardrails the Swarm-hosted services also follow.
+Terraform guardrails the remaining Swarm-hosted services also follow.
 
 ## Scope
 
 This document applies to the current MCP server set:
 
-- `terraform/swarm/mcp-ast-grep/app`
-- `terraform/swarm/mcp-git-homelab/app`
-- `terraform/swarm/mcp-fortigate/app`
-- `terraform/swarm/mcp-github/app`
-- `terraform/swarm/mcp-agent-protocol/app`
-- `terraform/swarm/mcp-bash-pipeline/app`
 - `terraform/swarm/mcp-terraform/app`
+- `kubernetes/mcp-ast-grep`
 - `kubernetes/mcp-argocd`
 - `kubernetes/mcp-atlassian`
+- `kubernetes/mcp-bash-pipeline`
 - `kubernetes/mcp-cloudflare`
+- `kubernetes/mcp-fortigate`
+- `kubernetes/mcp-git`
+- `kubernetes/mcp-github`
 - `kubernetes/mcp-google-workspace`
 - `kubernetes/mcp-kubernetes`
 - `kubernetes/mcp-filesystem`
@@ -29,9 +28,12 @@ This document applies to the current MCP server set:
   unless a task explicitly migrates them.
 - New MCP servers may use the Kubernetes pattern under `kubernetes/<service>/`
   when the human explicitly chooses the cluster route. Current reference
-  exceptions are `kubernetes/mcp-argocd`, `kubernetes/mcp-atlassian`,
-  `kubernetes/mcp-cloudflare`, `kubernetes/mcp-google-workspace`,
-  `kubernetes/mcp-kubernetes`, and `kubernetes/mcp-filesystem`.
+  exceptions are `kubernetes/mcp-argocd`, `kubernetes/mcp-ast-grep`,
+  `kubernetes/mcp-atlassian`, `kubernetes/mcp-bash-pipeline`,
+  `kubernetes/mcp-cloudflare`, `kubernetes/mcp-fortigate`,
+  `kubernetes/mcp-git`, `kubernetes/mcp-github`,
+  `kubernetes/mcp-google-workspace`, `kubernetes/mcp-kubernetes`, and
+  `kubernetes/mcp-filesystem`.
 - Each MCP server keeps its own single `app` stage and single backend state
   file. Do not merge multiple MCP services into one Terraform root or one state
   key.
@@ -146,17 +148,19 @@ This document applies to the current MCP server set:
 
 ### `mcp-ast-grep`
 
-- Runtime root: `terraform/swarm/mcp-ast-grep/app`
+- Runtime root: `kubernetes/mcp-ast-grep`
+- Argo CD objects: `kubernetes/argocd-management/mcp-ast-grep-project.yaml`
+  and `kubernetes/argocd-management/mcp-ast-grep-app.yaml`
 - Image source: `applications/mcp-ast-grep/` owns the repo-local HTTP-capable
-  wrapper image
-- Listen model: internal `8096`, published `18096`, HTTP path `/mcp`
-- Workspace model: bind-mount the shared code tree at `/mnt/eapp/code`
-  read-only on both the Swarm host and inside the container; keep the host mount
-  root and in-container allowlist root identical so the server can serve
-  multiple local workspaces from one deployment.
-- Runtime user model: run the container with an unprivileged UID/GID that can
-  read the NFS-mounted workspace path. Do not rely on root inside the
-  container against a root-squashed repo mount.
+  wrapper image referenced by Kubernetes
+- Listen model: container `8096`, service `8096`, ingress-routed hostname
+  `https://mcp.ast-grep.nodadyoushutup.com/mcp`
+- Workspace model: mount the shared code tree from the TrueNAS NFS export at
+  `/mnt/eapp/code` read-only inside the pod; keep the mounted root and
+  in-container allowlist root identical so the server can serve multiple local
+  workspaces from one deployment.
+- Runtime user model: run the pod as UID/GID `1000:1000` so the root-squashed
+  NFS workspace stays readable without relying on root inside the container.
 - Scope model: keep the mounted root restricted to the shared code tree and use
   a workspace-local client hint to select the default project root. The server
   should honor repo-local Codex config via the `x-workspace-root` header or a
@@ -169,10 +173,16 @@ This document applies to the current MCP server set:
   ast-grep config used by the container; add custom parsers only when the
   language is materially used in this repo and the parser maintenance burden is
   justified
+- Secret model: keep the Harbor pull secret sourced from
+  `secret/k8s/mcp_ast_grep` through `ExternalSecret`; do not split the image
+  pull credentials across ad hoc Kubernetes secrets
 - Custom parser model: Dockerfile parsing is currently the justified
   custom-language exception; do not add template-heavy formats such as Jinja or
   `*.tftpl` unless there is a demonstrated parser strategy that handles the
   templating syntax cleanly
+- Delivery model: preserve the stable operator hostname during migration and
+  cut the Nginx Proxy Manager route over to the Kubernetes ingress IP instead
+  of keeping the old Swarm published port
 
 ### `mcp-cloudflare`
 
@@ -221,22 +231,28 @@ This document applies to the current MCP server set:
   at the stable hostname and keep local repo paths anchored at
   `/mnt/eapp/code/homelab`
 
-### `mcp-git-homelab`
+### `mcp-git`
 
-- Runtime root: `terraform/swarm/mcp-git-homelab/app`
-- Image source: `applications/mcp-git-homelab/` wraps the official
-  `mcp-server-git` reference server behind the repo-standard HTTP bridge.
-- Listen model: internal `8099`, published `18099`, HTTP path `/mcp`
-- Repository model: bind-mount the shared code tree at `/mnt/eapp/code`
-  read-write on both the Swarm host and inside the container so the git server
-  can serve multiple real repositories beneath one NFS-backed root.
-- Runtime user model: run the container with an unprivileged UID/GID that can
-  write to the NFS-mounted repository path. Do not run the service as root
-  against a root-squashed repo mount.
+- Runtime root: `kubernetes/mcp-git`
+- Argo CD objects: `kubernetes/argocd-management/mcp-git-project.yaml` and
+  `kubernetes/argocd-management/mcp-git-app.yaml`
+- Image source: `applications/mcp-git/` wraps the official `mcp-server-git`
+  reference server behind the repo-standard HTTP bridge.
+- Listen model: container `8099`, service `8099`, ingress-routed hostname
+  `https://mcp.git.nodadyoushutup.com/mcp`
+- Repository model: mount the shared code tree from the TrueNAS NFS export at
+  `/mnt/eapp/code` read-write inside the pod so the git server can serve
+  multiple real repositories beneath one NFS-backed root.
+- Runtime user model: run the pod as UID/GID `1000:1000` so git operations can
+  keep writing through the root-squashed workspace export without falling back
+  to root.
 - Scope model: keep the server pinned to the shared code tree and rely on the
   explicit `repo_path` argument each git tool already requires. Repo-local
   Codex config may carry an `x-workspace-root` hint, but repository selection
   remains an explicit tool argument.
+- Secret model: keep the Kubernetes pull secret sourced from `secret/k8s/mcp_git`
+  through `ExternalSecret` so Harbor registry access stays in Vault instead of
+  in repo manifests.
 - Client config model: this server is workspace-scoped, so prefer a repo-local
   `.codex/config.toml` entry instead of adding it to the global Codex config
   unless a task explicitly promotes it to a shared server. Keep the repo-local
@@ -244,31 +260,51 @@ This document applies to the current MCP server set:
 
 ### `mcp-fortigate`
 
-- Runtime root: `terraform/swarm/mcp-fortigate/app`
-- Image source: `applications/mcp-fortigate/` supplies the custom runtime currently
-  published to GHCR
-- Listen model: internal `8814`, published `18084`, HTTP path `/mcp`
+- Runtime root: `kubernetes/mcp-fortigate`
+- Argo CD objects:
+  `kubernetes/argocd-management/mcp-fortigate-project.yaml` and
+  `kubernetes/argocd-management/mcp-fortigate-app.yaml`
+- Image source: `applications/mcp-fortigate/` builds the GHCR-backed wrapper
+  image referenced by Kubernetes
+- Listen model: container `8814`, service `8814`, ingress-routed hostname
+  `https://mcp.fortigate.nodadyoushutup.com/mcp`
 - Credential model: set either `fortigate_api_token` or both
   `fortigate_username` and `fortigate_password`. Do not leave both auth modes
   incomplete.
 - Access model: prefer API token auth when available rather than username and
   password auth.
-- Device model: keep `fortigate_host`, `fortigate_port`, `fortigate_vdom`, and
-  `fortigate_timeout` explicit in tfvars so the generated runtime config is
-  deterministic.
+- Device model: keep `fortigate_host`, `fortigate_port`, `fortigate_vdom`,
+  `fortigate_verify_ssl`, and `fortigate_timeout` explicit in the Kubernetes
+  deployment env so the runtime config stays deterministic.
+- Secret model: keep the Kubernetes app env secret and GHCR pull secret sourced
+  from `secret/k8s/mcp_fortigate` through `ExternalSecret`; the unused auth
+  mode may be present as empty strings, but the active auth mode must be
+  populated.
+- Delivery model: preserve the stable operator hostname during migration and
+  cut the Nginx Proxy Manager route over to the Kubernetes ingress IP instead
+  of keeping the old Swarm published port.
 
 ### `mcp-github`
 
-- Runtime root: `terraform/swarm/mcp-github/app`
-- Image source: `applications/mcp-github/` builds the wrapper image referenced by
-  Terraform
-- Listen model: internal `8082`, published `18082`, HTTP bridge provided by the
-  local wrapper
+- Runtime root: `kubernetes/mcp-github`
+- Argo CD objects: `kubernetes/argocd-management/mcp-github-project.yaml` and
+  `kubernetes/argocd-management/mcp-github-app.yaml`
+- Image source: `applications/mcp-github/` builds the wrapper image referenced
+  by Kubernetes
+- Listen model: container `8082`, service `8082`, ingress-routed hostname
+  `https://mcp.github.nodadyoushutup.com/mcp`
 - Credential model: `github_personal_access_token` is required. Use a token
   with the minimum scopes needed for the repos and organizations this server is
   supposed to manage.
 - Tool model: the wrapper currently passes `GITHUB_MCP_TOOLSETS=all`. Treat any
   reduction or expansion of toolsets as a deliberate compatibility change.
+- Secret model: keep both the Kubernetes app env secret and the GHCR pull
+  secret sourced from `secret/k8s/mcp_github` through `ExternalSecret`; do not
+  duplicate the token or registry credentials into repo-managed manifests or
+  local files once the cluster path is live.
+- Delivery model: preserve the stable operator hostname during migration and
+  cut the Nginx Proxy Manager route over to the Kubernetes ingress IP instead
+  of keeping the old Swarm published port.
 
 ### `mcp-google-workspace`
 
@@ -319,41 +355,25 @@ This document applies to the current MCP server set:
   the repo standard; keep the hostname routed through ingress rather than a
   raw published port
 
-### `mcp-agent-protocol`
-
-- Runtime root: `terraform/swarm/mcp-agent-protocol/app`
-- Image source: `applications/mcp-agent-protocol/` owns the repo-local native
-  Streamable HTTP MCP server image
-- Listen model: internal `8100`, published `18100`, HTTP path `/mcp`
-- Redis model: keep the backing Redis service private to the overlay network;
-  expose the MCP server, not raw Redis, to host clients by default
-- Storage model: store protocol request/response envelopes, liveness records,
-  task claims, and short-lived summaries as JSON under a stable key prefix
-- Host validation model: keep the MCP transport host/origin allowlist aligned
-  with the raw Swarm validation host and the intended `mcp.agent-protocol`
-  hostname instead of disabling DNS rebinding protection
-- Safety model: do not widen the server into a generic Redis console; keep the
-  tool surface constrained to protocol-aware operations
-- Data model: do not use this store for raw chain-of-thought, long-lived
-  secrets, or the only durable audit trail
-
 ### `mcp-bash-pipeline`
 
-- Runtime root: `terraform/swarm/mcp-bash-pipeline/app`
+- Runtime root: `kubernetes/mcp-bash-pipeline`
+- Argo CD objects:
+  `kubernetes/argocd-management/mcp-bash-pipeline-project.yaml` and
+  `kubernetes/argocd-management/mcp-bash-pipeline-app.yaml`
 - Image source: `applications/mcp-bash-pipeline/` owns the repo-local native
-  Streamable HTTP MCP server image
-- Listen model: internal `8107`, published `18107`, HTTP path `/mcp`
-- Workspace model: bind-mount the shared code tree at `/mnt/eapp/code`
-  read-write and the tfvars tree at `/mnt/eapp/.tfvars`; keep the default
-  workspace root aligned with the repo-local Codex config and allowlist only
-  the shared code tree
-- tfvars host model: the `/mnt/eapp/.tfvars` bind source is node-local from the
-  Swarm host that runs the service. Keep the required tfvars subtree populated
-  on `swarm-cp-0` itself; a matching directory that exists only on another host
-  does not satisfy the runtime contract inside the container
-- Runtime user model: run the container with an unprivileged UID/GID that can
-  read and execute files from the NFS-mounted repo path; do not fall back to
-  root against a root-squashed workspace mount
+  Streamable HTTP MCP server image referenced by Kubernetes
+- Listen model: container `8107`, service `8107`, ingress-routed hostname
+  `https://mcp.bash-pipeline.nodadyoushutup.com/mcp`
+- Workspace model: mount the shared code tree from the TrueNAS NFS export at
+  `/mnt/eapp/code` read-write and set the default workspace root to
+  `/mnt/eapp/code/homelab`; keep the allowlist pinned to the shared code tree
+- tfvars model: mount `/mnt/eapp/.tfvars` into the pod from cluster-reachable
+  storage and keep the in-container path aligned with the shared Terraform
+  wrapper defaults instead of depending on a Swarm node-local bind mount
+- Runtime user model: run the pod as an unprivileged UID/GID that can read and
+  execute files from the NFS-mounted repo path; do not fall back to root
+  against a root-squashed workspace mount
 - Tool model: keep the server limited to typed pipeline tools for
   `terraform/**/pipeline/*.sh`; do not widen it into arbitrary shell execution
   or a generic terminal bridge
@@ -361,6 +381,9 @@ This document applies to the current MCP server set:
   conform to the shared `scripts/terraform/swarm_pipeline.sh` contract; keep
   known host-dependent pipelines explicitly blocked until the container runtime
   is intentionally widened to support them
+- Secret model: keep the Kubernetes pull secret sourced from
+  `secret/k8s/mcp_bash_pipeline` through `ExternalSecret` so Harbor registry
+  access stays in Vault instead of in repo manifests
 - Client config model: this server is workspace-scoped, so keep it in the
   repo-local `.codex/config.toml` with the same `x-workspace-root` convention
   used by the other local MCP servers and include the logical workspace header

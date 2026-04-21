@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp-fortigate
+  namespace: mcp-fortigate
+  annotations:
+    argocd.argoproj.io/sync-wave: "30"
+spec:
+  replicas: 1
+  revisionHistoryLimit: 0
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: mcp-fortigate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: mcp-fortigate
+    spec:
+      enableServiceLinks: false
+      nodeSelector:
+        kubernetes.io/hostname: k8s-wk-0
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      imagePullSecrets:
+        - name: mcp-fortigate-registry
+      containers:
+        - name: mcp-fortigate
+          image: ghcr.io/nodadyoushutup/mcp-fortigate:0.0.1
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          envFrom:
+            - secretRef:
+                name: mcp-fortigate-app-env
+          env:
+            - name: TZ
+              value: America/New_York
+            - name: FORTIGATE_HOST
+              value: "192.168.1.1"
+            - name: FORTIGATE_PORT
+              value: "443"
+            - name: FORTIGATE_VDOM
+              value: "root"
+            - name: FORTIGATE_VERIFY_SSL
+              value: "false"
+            - name: FORTIGATE_TIMEOUT
+              value: "30"
+            - name: MCP_SERVER_PORT
+              value: "8814"
+            - name: MCP_HTTP_PATH
+              value: "/mcp"
+          ports:
+            - name: http
+              containerPort: 8814
+              protocol: TCP
+          readinessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 20

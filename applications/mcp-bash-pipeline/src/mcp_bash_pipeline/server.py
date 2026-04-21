@@ -58,8 +58,6 @@ def load_settings() -> Settings:
         "localhost:*",
         "[::1]",
         "[::1]:*",
-        "swarm-cp-0.local",
-        "swarm-cp-0.local:*",
         "mcp.bash-pipeline.nodadyoushutup.com",
         "mcp.bash-pipeline.nodadyoushutup.com:*",
     ]
@@ -70,8 +68,6 @@ def load_settings() -> Settings:
         "http://localhost:*",
         "http://[::1]",
         "http://[::1]:*",
-        "http://swarm-cp-0.local",
-        "http://swarm-cp-0.local:*",
         "https://mcp.bash-pipeline.nodadyoushutup.com",
     ]
 

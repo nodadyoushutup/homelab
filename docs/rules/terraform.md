@@ -194,7 +194,6 @@ Examples:
 - Terraform path: `terraform/swarm/nginx_proxy_manager/...`
 - tfvars path: `/mnt/eapp/.tfvars/nginx-proxy-manager/...`
 - Terraform path: `terraform/swarm/node_exporter/...`
-- Terraform path: `terraform/swarm/mcp-github/...`
 
 Do not rename service paths unless the work is explicitly a migration.
 

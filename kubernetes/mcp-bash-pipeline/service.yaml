@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mcp-bash-pipeline
+  namespace: mcp-bash-pipeline
+  annotations:
+    argocd.argoproj.io/sync-wave: "35"
+spec:
+  selector:
+    app.kubernetes.io/name: mcp-bash-pipeline
+  ports:
+    - name: http
+      port: 8107
+      targetPort: http

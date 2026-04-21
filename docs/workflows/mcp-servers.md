@@ -4,22 +4,21 @@ This document defines the operator workflow for changing MCP servers in this
 repo. Use
 [`docs/rules/mcp-servers.md`](./../rules/mcp-servers.md) for the steady-state
 rules and [`docs/workflows/terraform.md`](./terraform.md) for the shared
-Terraform execution behavior that the Swarm stages inherit.
+Terraform execution behavior that the remaining Swarm stages inherit.
 
 ## Scope
 
 Use this workflow for:
 
-- `terraform/swarm/mcp-ast-grep/app`
-- `terraform/swarm/mcp-git-homelab/app`
-- `terraform/swarm/mcp-fortigate/app`
-- `terraform/swarm/mcp-github/app`
-- `terraform/swarm/mcp-agent-protocol/app`
-- `terraform/swarm/mcp-bash-pipeline/app`
 - `terraform/swarm/mcp-terraform/app`
+- `kubernetes/mcp-ast-grep`
 - `kubernetes/mcp-argocd`
 - `kubernetes/mcp-atlassian`
+- `kubernetes/mcp-bash-pipeline`
 - `kubernetes/mcp-cloudflare`
+- `kubernetes/mcp-fortigate`
+- `kubernetes/mcp-git`
+- `kubernetes/mcp-github`
 - `kubernetes/mcp-google-workspace`
 - `kubernetes/mcp-kubernetes`
 - `kubernetes/mcp-filesystem`
@@ -128,19 +127,29 @@ Before committing `kubernetes/mcp-atlassian/`:
 
 ### `mcp-ast-grep`
 
-Before running `terraform/swarm/mcp-ast-grep/app/pipeline/app.sh`:
+Before committing `kubernetes/mcp-ast-grep/`:
 
-- confirm the local image tag in Terraform exists on `swarm-cp-0`
-- confirm the mounted shared code path exists on the Terraform runner and on
-  the Swarm node at `/mnt/eapp/code`
-- confirm the configured runtime UID/GID can read that NFS-mounted workspace
-  path on the Swarm node
+- confirm the Harbor image tag referenced in
+  `kubernetes/mcp-ast-grep/deployment.yaml` exists or will be published in the
+  same task
+- confirm the Harbor project and the Kubernetes pull robot entry exist in
+  `/mnt/eapp/.tfvars/harbor/config.tfvars`
+- confirm `/mnt/eapp/.tfvars/vault/config.tfvars` contains the matching
+  `k8s/mcp_ast_grep` registry credentials for the `ExternalSecret`
+- confirm the NFS export `192.168.1.100:/mnt/eapp/code` is still the intended
+  read-only workspace mount for the pod
+- confirm the pod runtime UID/GID `1000:1000` can read that root-squashed
+  workspace path
 - rebuild the image first if `applications/mcp-ast-grep/` changed
 - keep the ast-grep config aligned with the repo’s real file mix before adding
   custom language parsers; use custom parser plugins only where built-in
   language support plus globs are insufficient
-- update the repo-local `.codex/config.toml` entry if the hostname, MCP path,
-  or `http_headers.x-workspace-root` value changes
+- confirm the existing hostname route for
+  `https://mcp.ast-grep.nodadyoushutup.com/mcp` will move to the Kubernetes
+  ingress entrypoint, because the client-facing URL is preserved during the
+  migration
+- update the repo-local `.codex/config.toml` entry only if the hostname, MCP
+  path, or `http_headers.x-workspace-root` value changes
 
 ### `mcp-cloudflare`
 
@@ -179,35 +188,59 @@ Before committing `kubernetes/mcp-filesystem/`:
   stable hostname and that filesystem guidance stays anchored to
   `/mnt/eapp/code/homelab`
 
-### `mcp-git-homelab`
+### `mcp-git`
 
-Before running `terraform/swarm/mcp-git-homelab/app/pipeline/app.sh`:
+Before committing `kubernetes/mcp-git/`:
 
-- confirm the local image tag in Terraform exists on `swarm-cp-0`
-- confirm the mounted shared code path exists on the Terraform runner and on
-  the Swarm node at `/mnt/eapp/code`
-- confirm the configured runtime UID/GID can write to that NFS-mounted
-  repository path on the Swarm node
-- rebuild the image first if `applications/mcp-git-homelab/` changed
-- update the repo-local `.codex/config.toml` entry if the hostname, MCP path,
-  or `http_headers.x-workspace-root` value changes
+- confirm the Harbor image tag referenced in
+  `kubernetes/mcp-git/deployment.yaml` exists or will be published in the same
+  task
+- confirm the Harbor project and the Kubernetes pull robot entry exist in
+  `/mnt/eapp/.tfvars/harbor/config.tfvars`
+- confirm `/mnt/eapp/.tfvars/vault/config.tfvars` contains the matching
+  `k8s/mcp_git` registry credentials for the `ExternalSecret`
+- confirm the NFS export `192.168.1.100:/mnt/eapp/code` is still the intended
+  shared repository mount for the pod
+- confirm the repo-local `.codex/config.toml` entry points at the stable
+  hostname and that `http_headers.x-workspace-root` still matches the intended
+  workspace root
 
 ### `mcp-fortigate`
 
-Before running `terraform/swarm/mcp-fortigate/app/pipeline/app.sh`:
+Before committing `kubernetes/mcp-fortigate/`:
 
-- confirm the GHCR image tag in Terraform exists
-- confirm `fortigate_host` resolves from the Swarm node
-- confirm tfvars set either `fortigate_api_token` or both
-  `fortigate_username` and `fortigate_password`
+- confirm the GHCR image tag referenced in
+  `kubernetes/mcp-fortigate/deployment.yaml` exists
+- confirm `/mnt/eapp/.tfvars/vault/config.tfvars` contains a
+  `k8s/mcp_fortigate` payload with `ghcr_username`, `ghcr_password`, plus
+  either `fortigate_api_token` or both `fortigate_username` and
+  `fortigate_password`
+- bootstrap the namespace-local Vault reader secret
+  `mcp-fortigate-vault-reader` before expecting External Secrets to sync
+- confirm the deployment env in `kubernetes/mcp-fortigate/deployment.yaml`
+  still matches the intended FortiGate host, port, VDOM, TLS verify posture,
+  and timeout before push
+- confirm the existing hostname route for
+  `https://mcp.fortigate.nodadyoushutup.com/mcp` will move to the Kubernetes
+  ingress entrypoint, because the client-facing URL is preserved during the
+  migration
 - rebuild and republish the image first if `applications/mcp-fortigate/` changed
 
 ### `mcp-github`
 
-Before running `terraform/swarm/mcp-github/app/pipeline/app.sh`:
+Before committing `kubernetes/mcp-github/`:
 
-- confirm the GHCR image tag in Terraform exists
-- confirm `github_personal_access_token` is present and still valid
+- confirm the image tag referenced in `kubernetes/mcp-github/deployment.yaml`
+  exists in GHCR
+- confirm `/mnt/eapp/.tfvars/vault/config.tfvars` contains a `k8s/mcp_github`
+  payload with `github_personal_access_token`, `ghcr_registry`,
+  `ghcr_username`, and `ghcr_password`
+- bootstrap the namespace-local Vault reader secret
+  `mcp-github-vault-reader` before expecting External Secrets to sync
+- confirm the existing hostname route for
+  `https://mcp.github.nodadyoushutup.com/mcp` will move to the Kubernetes
+  ingress entrypoint, because the client-facing URL is preserved during the
+  migration
 - rebuild and republish the image first if `applications/mcp-github/` changed
 
 ### `mcp-google-workspace`
@@ -244,32 +277,27 @@ Before committing `kubernetes/mcp-kubernetes/`:
 - keep `mcp_read_only = true` unless the task explicitly requires mutating Kubernetes tools
 - keep the initial toolset narrow unless the task explicitly needs more than `core,config`
 
-### `mcp-agent-protocol`
-
-Before running `terraform/swarm/mcp-agent-protocol/app/pipeline/app.sh`:
-
-- confirm the local image tag in Terraform exists on `swarm-cp-0`
-- confirm `/mnt/eapp/.tfvars/mcp-agent-protocol/app.tfvars` exists with the
-  intended key prefix or TTL overrides
-- keep Redis internal to the service overlay unless the task explicitly needs a
-  different exposure model
-- rebuild the image first if `applications/mcp-agent-protocol/` changed
-
 ### `mcp-bash-pipeline`
 
-Before running `terraform/swarm/mcp-bash-pipeline/app/pipeline/app.sh`:
+Before committing `kubernetes/mcp-bash-pipeline/`:
 
-- confirm the local image tag in Terraform exists on `swarm-cp-0`
-- confirm the mounted shared code path exists on the Terraform runner and on
-  the Swarm node at `/mnt/eapp/code`
-- confirm `/mnt/eapp/.tfvars/mcp-bash-pipeline/app.tfvars` exists with the
-  intended repo mount path, tfvars mount path, and runtime UID/GID
-- confirm the matching `/mnt/eapp/.tfvars` subtree is populated on
-  `swarm-cp-0` itself, not only on the operator host, because the service bind
-  mount reads the node-local path at runtime
+- confirm the Harbor image tag referenced in
+  `kubernetes/mcp-bash-pipeline/deployment.yaml` exists or will be published in
+  the same task
+- confirm the Harbor project and the Kubernetes pull robot entry exist in
+  `/mnt/eapp/.tfvars/harbor/config.tfvars`
+- confirm `/mnt/eapp/.tfvars/vault/config.tfvars` contains the matching
+  `k8s/mcp_bash_pipeline` registry credentials for the `ExternalSecret`
+- confirm the NFS exports for both `/mnt/eapp/code` and `/mnt/eapp/.tfvars`
+  are reachable from the selected Kubernetes worker and still represent the
+  intended runtime inputs
 - confirm the configured runtime UID/GID can read and execute files from the
-  NFS-mounted workspace path on the Swarm node
+  mounted workspace path and read the mounted tfvars path inside the pod
 - rebuild the image first if `applications/mcp-bash-pipeline/` changed
+- confirm the existing hostname route for
+  `https://mcp.bash-pipeline.nodadyoushutup.com/mcp` will move to the
+  Kubernetes ingress entrypoint, because the client-facing URL is preserved
+  during the migration
 - update the repo-local `.codex/config.toml` entry if the hostname, MCP path,
   or workspace headers change
 
@@ -336,19 +364,17 @@ Validation examples:
 - `mcp-argocd`: probe `https://mcp.argocd.nodadyoushutup.com/mcp` with an
   `mcp-session-id` header
 - `mcp-atlassian`: probe `https://mcp.atlassian.nodadyoushutup.com/mcp`
-- `mcp-ast-grep`: probe `http://<swarm-host>:18096/mcp`
+- `mcp-ast-grep`: probe `https://mcp.ast-grep.nodadyoushutup.com/mcp`
 - `mcp-filesystem`: probe `https://mcp.filesystem.nodadyoushutup.com/mcp/`
-- `mcp-git-homelab`: probe `http://<swarm-host>:18099/mcp`
-- `mcp-fortigate`: probe `http://<swarm-host>:18084/mcp`
+- `mcp-git`: probe `https://mcp.git.nodadyoushutup.com/mcp`
+- `mcp-fortigate`: probe `https://mcp.fortigate.nodadyoushutup.com/mcp`
 - `mcp-kubernetes`: probe `https://mcp.kubernetes.nodadyoushutup.com/mcp`
-- `mcp-agent-protocol`: probe `http://<swarm-host>:18100/mcp`
-- `mcp-bash-pipeline`: probe `http://<swarm-host>:18107/mcp`
+- `mcp-bash-pipeline`: probe `https://mcp.bash-pipeline.nodadyoushutup.com/mcp`
 - `mcp-terraform`: probe `http://<swarm-host>:18104/mcp`
 - `mcp-cloudflare`: probe `https://mcp.cloudflare.nodadyoushutup.com/mcp`
 - `mcp-google-workspace`: probe
   `https://mcp.google-workspace.nodadyoushutup.com/mcp`
-- `mcp-github`: at minimum verify the port is listening if the wrapper does
-  not define a fixed explicit path in Terraform
+- `mcp-github`: probe `https://mcp.github.nodadyoushutup.com/mcp`
 - host validation: probe `https://mcp.<service>.nodadyoushutup.com/mcp` from
   the Codex host and make sure the same URL exists in the intended Codex config
   layer (`~/.codex/config.toml` or repo-local `.codex/config.toml`)
