@@ -1,19 +1,19 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: controller-agent
+  name: langgraph
   namespace: argocd
   annotations:
     argocd.argoproj.io/sync-wave: "48"
 spec:
-  project: controller-agent
+  project: langgraph
   destination:
     server: https://kubernetes.default.svc
-    namespace: controller-agent
+    namespace: langgraph
   source:
     repoURL: git@github.com:nodadyoushutup/homelab.git
     targetRevision: HEAD
-    path: kubernetes/controller-agent
+    path: kubernetes/langgraph
   syncPolicy:
     automated:
       prune: true

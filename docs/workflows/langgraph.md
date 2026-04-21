@@ -79,6 +79,10 @@ When a task changes the LangGraph implementation:
    - mount source code from the working tree instead of replacing deployment
      sources of truth
    - document the expected ports, env file, and restart workflow
+14. if the task also updates the default deployed Homelab runtime manifests:
+   - keep the Kubernetes app family under `kubernetes/langgraph/`
+   - keep the launched LangGraph app boundary under
+     `applications/langgraph/apps/langgraph/`
 
 ## Validation
 
@@ -89,7 +93,7 @@ After changing the LangGraph scaffold:
 3. if dependencies are installed, start the target app locally from its app
    directory with `langgraph dev`, or use
    `applications/langgraph/agent_server.sh` for the default
-   `controller-agent` backend and `applications/langgraph/chat.sh` for the
+   `langgraph` backend and `applications/langgraph/chat.sh` for the
    paired local LangChain Agent Chat app when you are intentionally testing that local
    dev path
 4. if the change touches supervisor routing, verify that code and filesystem

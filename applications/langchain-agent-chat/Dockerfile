@@ -17,7 +17,7 @@ RUN pnpm install --frozen-lockfile
 FROM base AS builder
 
 ARG NEXT_PUBLIC_API_URL=https://langchain-agent-chat.nodadyoushutup.com/api
-ARG NEXT_PUBLIC_ASSISTANT_ID=controller_agent
+ARG NEXT_PUBLIC_ASSISTANT_ID=langgraph
 ARG NEXT_PUBLIC_AUTH_SCHEME=
 ARG LANGGRAPH_API_URL=https://langgraph.nodadyoushutup.com
 

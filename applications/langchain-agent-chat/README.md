@@ -8,11 +8,11 @@ Homelab defaults:
 - production hostname: `https://langchain-agent-chat.nodadyoushutup.com`
 - proxied LangGraph API path: `/api`
 - production public API URL: `https://langchain-agent-chat.nodadyoushutup.com/api`
-- default assistant / graph id: `controller_agent`
+- default assistant / graph id: `langgraph`
 - upstream Agent Server target: `https://langgraph.nodadyoushutup.com`
 
 The Kubernetes deployment overrides the upstream target to the in-cluster
-`controller-agent` service so the Next.js API passthrough stays inside the
+`langgraph` service so the Next.js API passthrough stays inside the
 cluster network. The client-facing `NEXT_PUBLIC_API_URL` must stay absolute in
 production and local debug runs because the LangGraph SDK expects a full URL
 when it builds client requests.

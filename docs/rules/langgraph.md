@@ -37,7 +37,7 @@ This document applies to:
 ## App Boundary Rules
 
 - Top-level remote agents should stay domain-oriented. Examples:
-  `controller-agent`, `code-agent`, `jira-agent`.
+  `langgraph`, `code-agent`, `jira-agent`.
 - Domain-oriented agents may be co-deployed as sibling graphs inside one app
   boundary when they share the same runtime and scaling needs.
 - Internal Deep Agents subagents should stay task-oriented and narrower than
@@ -81,7 +81,9 @@ This document applies to:
 
 ## Agent Composition Rules
 
-- The `controller-agent` app may communicate with separate deployed agents
+- The default deployed Homelab supervisor app boundary is
+  `applications/langgraph/apps/langgraph/`.
+- The `langgraph` app may communicate with separate deployed agents
   over A2A or another intentionally chosen remote interface.
 - Prefer co-deploying related graphs in one app boundary first, then split them
   into remote deployments only when scaling, ownership, or security needs make
@@ -102,8 +104,8 @@ This document applies to:
   narrower specialization inside a single app boundary.
 - Keep `Homelab` focused on coordination. It should not perform first-pass code
   or filesystem analysis directly when the `Code` specialist is available.
-- Avoid circular remote delegation patterns such as `controller-agent ->
-  jira-agent -> controller-agent` unless a future workflow explicitly defines
+- Avoid circular remote delegation patterns such as `langgraph ->
+  jira-agent -> langgraph` unless a future workflow explicitly defines
   how that loop is bounded.
 
 ## Skills Rules

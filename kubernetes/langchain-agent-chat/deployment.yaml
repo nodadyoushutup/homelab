@@ -45,11 +45,11 @@ spec:
             - name: NEXT_PUBLIC_API_URL
               value: https://langchain-agent-chat.nodadyoushutup.com/api
             - name: NEXT_PUBLIC_ASSISTANT_ID
-              value: controller_agent
+              value: langgraph
             - name: NEXT_PUBLIC_AUTH_SCHEME
               value: ""
             - name: LANGGRAPH_API_URL
-              value: http://controller-agent.controller-agent.svc.cluster.local
+              value: http://langgraph.langgraph.svc.cluster.local
             - name: LANGSMITH_API_KEY
               value: ""
           ports:

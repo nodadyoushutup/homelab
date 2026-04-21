@@ -7,11 +7,15 @@ task touches:
 - `.github/workflows/docker_build_push.yml`
 - `applications/**/Dockerfile`
 - `applications/harbor/**`
+- `kubernetes/**/deployment.yaml`
 - `terraform/swarm/**` image references
 - `/mnt/eapp/.tfvars/<service>/*.tfvars` registry auth or image tags
+- `/mnt/eapp/.tfvars/vault/config.tfvars`
 
 Use [docs/workflows/terraform.md](./terraform.md) when the task also deploys the
-new image tag into Swarm. Use [docs/rules/mcp-servers.md](./../rules/mcp-servers.md)
+new image tag into a Terraform-managed runtime. Use
+[docs/workflows/kubernetes.md](./kubernetes.md) when the image consumer lives
+under `kubernetes/`. Use [docs/rules/mcp-servers.md](./../rules/mcp-servers.md)
 for MCP-specific runtime guardrails.
 
 ## Current Harbor State
@@ -52,11 +56,9 @@ config apply:
 - `jenkins-agent`
 - `jenkins-controller`
 - `library`
-- `mcp-argocd`
 - `mcp-atlassian`
 - `mcp-cloudflare`
 - `mcp-fortigate`
-- `mcp-github`
 - `mcp-google-workspace`
 - `nginx-photon`
 - `prepare`
@@ -67,8 +69,8 @@ config apply:
 
 ## Current Registry Consumers
 
-Current Swarm image consumption is mixed. Do not assume every custom image is on
-the same registry.
+Current runtime image consumption is mixed. Do not assume every custom image is
+on the same registry.
 
 | Runtime | Current image source | Source of truth |
 | --- | --- | --- |
@@ -79,8 +81,8 @@ the same registry.
 | `mcp-cloudflare` | Harbor | `kubernetes/mcp-cloudflare/deployment.yaml` plus `/mnt/eapp/.tfvars/harbor/config.tfvars` and `/mnt/eapp/.tfvars/vault/config.tfvars` |
 | `mcp-ast-grep` | Local engine tag (`homelab/...`) | `terraform/swarm/mcp-ast-grep/app/main.tf` plus `/mnt/eapp/.tfvars/mcp-ast-grep/app.tfvars` |
 | `mcp-git-homelab` | Local engine tag (`homelab/...`) | `terraform/swarm/mcp-git-homelab/app/main.tf` plus `/mnt/eapp/.tfvars/mcp-git-homelab/app.tfvars` |
-| `mcp-github` | GHCR | `terraform/swarm/mcp-github/app/main.tf` plus `/mnt/eapp/.tfvars/mcp-github/app.tfvars` |
-| `mcp-fortigate` | GHCR | `terraform/swarm/mcp-fortigate/app/main.tf` plus `/mnt/eapp/.tfvars/mcp-fortigate/app.tfvars` |
+| `mcp-github` | GHCR | `kubernetes/mcp-github/deployment.yaml` plus `/mnt/eapp/.tfvars/vault/config.tfvars` |
+| `mcp-fortigate` | GHCR | `kubernetes/mcp-fortigate/deployment.yaml` plus `/mnt/eapp/.tfvars/vault/config.tfvars` |
 | `mcp-google-workspace` | Harbor | `kubernetes/mcp-google-workspace/deployment.yaml` plus `/mnt/eapp/.tfvars/harbor/config.tfvars` and `/mnt/eapp/.tfvars/vault/config.tfvars` |
 | Harbor runtime services | Local `goharbor/*:2.14.2-custom.1-arm64` tags on the Swarm node | `/mnt/eapp/.tfvars/harbor/app.tfvars` |
 
@@ -100,7 +102,7 @@ The standard publish workflow is:
 - `version`: required output tag
 - `target_registry`: `github` or `harbor`
 - `build_target`:
-  `langchain-agent-chat`, `harbor-runtime-set`, `mcp-cloudflare`, `mcp-filesystem`,
+  `langchain-agent-chat`, `langgraph`, `harbor-runtime-set`, `mcp-cloudflare`, `mcp-filesystem`,
   `mcp-fortigate`, `mcp-github`, `mcp-google-workspace`, `gha-runner`, `jenkins-agent`,
   `jenkins-controller`
 
@@ -174,9 +176,9 @@ The `gha-publish` system robot is the publish account for repo-managed Harbor
 images. The desired Harbor-managed project set now includes:
 
 - Existing repo images:
-  `langchain-agent-chat`, `gha-runner`, `harbor`, `jenkins-agent`, `jenkins-controller`,
-  `mcp-argocd`, `mcp-atlassian`, `mcp-cloudflare`, `mcp-filesystem`, `mcp-fortigate`,
-  `mcp-github`, `mcp-google-workspace`, `webserver-image`
+  `langchain-agent-chat`, `langgraph`, `gha-runner`, `harbor`, `jenkins-agent`, `jenkins-controller`,
+  `mcp-atlassian`, `mcp-cloudflare`, `mcp-filesystem`, `mcp-fortigate`,
+  `mcp-google-workspace`, `webserver-image`
 - Harbor component images:
   `harbor-core`, `harbor-db`, `harbor-exporter`, `harbor-jobservice`,
   `harbor-log`, `harbor-portal`, `harbor-registryctl`, `nginx-photon`,
@@ -200,8 +202,8 @@ When adding or changing a repo-managed image:
 4. If the workflow needs a new selectable target, add it to
    `.github/workflows/docker_build_push.yml`.
 5. Publish the image through `workflow_dispatch`.
-6. Update the Terraform image reference or tfvars for the consumer.
-7. Run the matching Terraform app stage if deployment is part of the task.
+6. Update the Terraform image reference, Kubernetes manifest, or tfvars for the consumer.
+7. Run the matching Terraform stage or Kubernetes delivery workflow if deployment is part of the task.
 8. Update this doc if the stable registry or build pattern changes.
 
 ## Validation

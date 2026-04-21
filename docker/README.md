@@ -3,7 +3,7 @@
 This directory contains a host-local Docker Compose workflow for fast
 development of:
 
-- the LangGraph `controller-agent` runtime
+- the LangGraph `langgraph` runtime
 - the LangChain Agent Chat frontend
 
 The stack is intentionally development-only:
@@ -26,14 +26,14 @@ The stack is intentionally development-only:
 The `langgraph-dev` service intentionally uses the image's built-in `WORKDIR`
 and `CMD`. The only LangGraph-specific overrides are the bind mount onto
 `/app/langgraph` and the separate state volume for
-`/app/langgraph/apps/controller-agent/.langgraph_api`.
+`/app/langgraph/apps/langgraph/.langgraph_api`.
 
 The `chat-ui-dev` service keeps the image config minimal, but its public client
 config is baked at build time because it is a Next.js production build.
 
 Local image tags:
 
-- `homelab/controller-agent:latest`
+- `homelab/langgraph:latest`
 - `homelab/langchain-agent-chat:latest`
 
 ## Usage

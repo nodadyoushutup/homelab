@@ -2,7 +2,7 @@ name: homelab-dev
 
 services:
   langgraph-dev:
-    image: homelab/controller-agent:latest
+    image: homelab/langgraph:latest
     pull_policy: never
     build:
       context: ../applications/langgraph
@@ -17,7 +17,7 @@ services:
       - "2124:2024"
     volumes:
       - ../applications/langgraph:/app/langgraph
-      - langgraph_state:/app/langgraph/apps/controller-agent/.langgraph_api
+      - langgraph_state:/app/langgraph/apps/langgraph/.langgraph_api
 
   chat-ui-dev:
     image: homelab/langchain-agent-chat:latest
@@ -27,7 +27,7 @@ services:
       dockerfile: Dockerfile
       args:
         NEXT_PUBLIC_API_URL: http://192.168.1.36:3000/api
-        NEXT_PUBLIC_ASSISTANT_ID: controller_agent
+        NEXT_PUBLIC_ASSISTANT_ID: langgraph
         NEXT_PUBLIC_AUTH_SCHEME: ""
         LANGGRAPH_API_URL: http://langgraph-dev:2024
     depends_on:
@@ -35,7 +35,7 @@ services:
     environment:
       CHAT_UI_PORT: "3000"
       NEXT_PUBLIC_API_URL: http://192.168.1.36:3000/api
-      NEXT_PUBLIC_ASSISTANT_ID: controller_agent
+      NEXT_PUBLIC_ASSISTANT_ID: langgraph
       NEXT_PUBLIC_AUTH_SCHEME: ""
       LANGGRAPH_API_URL: http://langgraph-dev:2024
       NEXT_TELEMETRY_DISABLED: "1"

@@ -20,7 +20,7 @@ on:
         type: choice
         options:
           - langchain-agent-chat
-          - controller-agent
+          - langgraph
           - harbor-runtime-set
           - mcp-cloudflare
           - mcp-filesystem
@@ -87,8 +87,8 @@ jobs:
               platforms="linux/amd64"
               build_strategy="direct"
               ;;
-            controller-agent)
-              image_name="controller-agent"
+            langgraph)
+              image_name="langgraph"
               docker_context="applications/langgraph"
               dockerfile="applications/langgraph/Dockerfile"
               platforms="linux/amd64"

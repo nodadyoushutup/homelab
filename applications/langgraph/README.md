@@ -6,7 +6,7 @@ project and its repo-owned container wrapper.
 It contains the LangGraph and Deep Agents implementation we have been
 workshopping:
 
-- `controller-agent`: user-facing coordinator
+- `langgraph`: user-facing coordinator
 - `code-agent`: repository analysis specialist
 - `jira-agent`: single-layer Jira specialist for discovery and issue lifecycle
   work
@@ -16,7 +16,7 @@ workshopping:
 ```text
 applications/langgraph/
 ├── apps/
-│   ├── controller-agent/
+│   ├── langgraph/
 │   ├── code-agent/
 │   └── jira-agent/
 ├── src/
@@ -37,12 +37,12 @@ Each deployable agent app has its own:
 ## Current Intent
 
 The primary local development path is one LangGraph development server that
-hosts multiple graphs from the `controller-agent` app boundary, paired with a
+hosts multiple graphs from the `langgraph` app boundary, paired with a
 local LangChain Agent Chat dev server that proxies into that same local backend.
 
 What is already in place:
 
-- a single-deployment `langgraph.json` in `apps/controller-agent` that
+- a single-deployment `langgraph.json` in `apps/langgraph` that
   exports the supervisor, code, and Jira graphs from one server
 - shared Python package for reusable helpers
 - supervisor-local delegation to compiled specialist graphs in the same
@@ -59,7 +59,7 @@ What is still expected before real deployment:
 - replace `.mcp.json.example`-style placeholders with real `mcp.json` configs
 - install dependencies
 - run `./agent_server.sh` from `applications/langgraph/` for the default
-  `controller-agent` backend, and run `./chat.sh` from the same directory for
+  `langgraph` backend, and run `./chat.sh` from the same directory for
   the paired LangChain Agent Chat local dev path, or run `langgraph dev` from an app
   directory when you want a different app boundary
 
@@ -74,7 +74,7 @@ setup path.
 
 ## Runtime
 
-The primary runtime path is now the Kubernetes `controller-agent` deployment.
+The primary runtime path is now the Kubernetes `langgraph` deployment.
 That workload builds this directory into an image and starts the server with
 the Docker `CMD` from [`Dockerfile`](./Dockerfile):
 
@@ -85,7 +85,7 @@ front that Kubernetes deployment.
 
 The deployment serves:
 
-- `controller_agent`
+- `langgraph`
 - `code_agent`
 - `jira_agent`
 
@@ -96,7 +96,7 @@ path is now a single deployment.
 For quick local iteration, use [`agent_server.sh`](./agent_server.sh) for the
 backend and [`chat.sh`](./chat.sh) for the frontend. They run independently in
 the foreground so each terminal shows the live logs directly while you manage
-restarts yourself. By default, `agent_server.sh` starts the `controller-agent`
+restarts yourself. By default, `agent_server.sh` starts the `langgraph`
 app boundary on `0.0.0.0:2124` with `8` jobs per worker, and `chat.sh` starts
 the local LangChain Agent Chat app on `0.0.0.0:3000` pointing at
 `http://127.0.0.1:2124`.
@@ -163,7 +163,7 @@ Dockerfile path:
 
 Published image:
 
-- `harbor.nodadyoushutup.com/controller-agent/controller-agent:<tag>`
+- `harbor.nodadyoushutup.com/langgraph/langgraph:<tag>`
 
-The image name remains `controller-agent` for now because the Kubernetes app,
-Harbor project, and pull-secret wiring already target that published path.
+The published image name now matches the deployable app boundary and the
+Kubernetes workload identity: `langgraph`.
