@@ -6,7 +6,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BASE_LIB="${SCRIPT_DIR}/base.sh"
-KNOWN_SERVICES=(dozzle gha-runner grafana graphite jenkins mcp-ast-grep mcp-cloudflare mcp-fortigate mcp-git-homelab mcp-github minio nginx-proxy-manager node-exporter prometheus telegraf-docker-metrics webserver-image)
+KNOWN_SERVICES=(dozzle gha-runner grafana graphite jenkins mcp-ast-grep mcp-cloudflare mcp-fortigate mcp-git-homelab minio nginx-proxy-manager node-exporter prometheus telegraf-docker-metrics webserver-image)
 declare -A SERVICE_MAP=(
   [dozzle]="dozzle"
   [gha-runner]="gha-runner"
@@ -69,12 +69,6 @@ declare -A SERVICE_MAP=(
   [ftg_mcp]="mcp-fortigate"
   [juststank-ftg-mcp]="mcp-fortigate"
   [juststank_ftg_mcp]="mcp-fortigate"
-  [mcp-github]="mcp-github"
-  [mcp_github]="mcp-github"
-  [github-mcp]="mcp-github"
-  [github_mcp]="mcp-github"
-  [github-mcp-server]="mcp-github"
-  [github_mcp_server]="mcp-github"
 )
 
 usage() {
