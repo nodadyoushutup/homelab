@@ -46,7 +46,7 @@ spec:
             - name: TZ
               value: America/New_York
             - name: MCP_GIT_REPOSITORY_ROOT
-              value: /mnt/eapp/code
+              value: /mnt/eapp/code/homelab
             - name: MCP_GIT_LISTEN_PORT
               value: "8099"
           ports:

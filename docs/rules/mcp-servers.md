@@ -241,15 +241,14 @@ This document applies to the current MCP server set:
 - Listen model: container `8099`, service `8099`, ingress-routed hostname
   `https://mcp.git.nodadyoushutup.com/mcp`
 - Repository model: mount the shared code tree from the TrueNAS NFS export at
-  `/mnt/eapp/code` read-write inside the pod so the git server can serve
-  multiple real repositories beneath one NFS-backed root.
+  `/mnt/eapp/code` read-write inside the pod, but point the upstream server at
+  `/mnt/eapp/code/homelab` because it must start from a real Git repository.
 - Runtime user model: run the pod as UID/GID `1000:1000` so git operations can
   keep writing through the root-squashed workspace export without falling back
   to root.
-- Scope model: keep the server pinned to the shared code tree and rely on the
-  explicit `repo_path` argument each git tool already requires. Repo-local
-  Codex config may carry an `x-workspace-root` hint, but repository selection
-  remains an explicit tool argument.
+- Scope model: treat the current deployment as homelab-workspace-scoped until
+  the wrapper can safely proxy arbitrary repo roots. Keep repo-local Codex
+  config and tool usage anchored at `/mnt/eapp/code/homelab`.
 - Secret model: keep the Kubernetes pull secret sourced from `secret/k8s/mcp_git`
   through `ExternalSecret` so Harbor registry access stays in Vault instead of
   in repo manifests.

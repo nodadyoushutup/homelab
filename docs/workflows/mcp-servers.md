@@ -136,6 +136,8 @@ Before committing `kubernetes/mcp-ast-grep/`:
   `/mnt/eapp/.tfvars/harbor/config.tfvars`
 - confirm `/mnt/eapp/.tfvars/vault/config.tfvars` contains the matching
   `k8s/mcp_ast_grep` registry credentials for the `ExternalSecret`
+- bootstrap the namespace-local Vault reader secret
+  `mcp-ast-grep-vault-reader` before expecting External Secrets to sync
 - confirm the NFS export `192.168.1.100:/mnt/eapp/code` is still the intended
   read-only workspace mount for the pod
 - confirm the pod runtime UID/GID `1000:1000` can read that root-squashed
@@ -182,6 +184,8 @@ Before committing `kubernetes/mcp-filesystem/`:
   `/mnt/eapp/.tfvars/harbor/config.tfvars`
 - confirm `/mnt/eapp/.tfvars/vault/config.tfvars` contains the matching
   `k8s/mcp_filesystem` registry credentials for the `ExternalSecret`
+- bootstrap the namespace-local Vault reader secret
+  `mcp-filesystem-vault-reader` before expecting External Secrets to sync
 - confirm the NFS export `192.168.1.100:/mnt/eapp/code/homelab` is still the
   intended workspace mount for the pod
 - confirm the repo-local `.codex/config.toml` or app MCP config points at the
@@ -199,8 +203,13 @@ Before committing `kubernetes/mcp-git/`:
   `/mnt/eapp/.tfvars/harbor/config.tfvars`
 - confirm `/mnt/eapp/.tfvars/vault/config.tfvars` contains the matching
   `k8s/mcp_git` registry credentials for the `ExternalSecret`
+- bootstrap the namespace-local Vault reader secret
+  `mcp-git-vault-reader` before expecting External Secrets to sync
 - confirm the NFS export `192.168.1.100:/mnt/eapp/code` is still the intended
-  shared repository mount for the pod
+  shared code mount for the pod
+- confirm `MCP_GIT_REPOSITORY_ROOT` still points at a real Git repository such
+  as `/mnt/eapp/code/homelab`, not just a parent directory that contains
+  multiple repositories
 - confirm the repo-local `.codex/config.toml` entry points at the stable
   hostname and that `http_headers.x-workspace-root` still matches the intended
   workspace root
@@ -288,6 +297,8 @@ Before committing `kubernetes/mcp-bash-pipeline/`:
   `/mnt/eapp/.tfvars/harbor/config.tfvars`
 - confirm `/mnt/eapp/.tfvars/vault/config.tfvars` contains the matching
   `k8s/mcp_bash_pipeline` registry credentials for the `ExternalSecret`
+- bootstrap the namespace-local Vault reader secret
+  `mcp-bash-pipeline-vault-reader` before expecting External Secrets to sync
 - confirm the NFS exports for both `/mnt/eapp/code` and `/mnt/eapp/.tfvars`
   are reachable from the selected Kubernetes worker and still represent the
   intended runtime inputs

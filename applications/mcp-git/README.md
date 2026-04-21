@@ -6,8 +6,8 @@ reference server.
 It is designed to be:
 
 - nothing more than the upstream git MCP plus a stable HTTP transport
-- rooted natively at `/mnt/eapp/code` so one deployment can serve multiple real
-  repositories
+- rooted at `/mnt/eapp/code/homelab`, which is an actual Git repository the
+  upstream server can open directly
 - writable as UID/GID `1000:1000` so git operations keep working on the
   NFS-backed workspace
 - deployed through Kubernetes and Argo CD instead of the retired Swarm stage
