@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp-terraform
+  namespace: mcp-terraform
+  annotations:
+    argocd.argoproj.io/sync-wave: "30"
+spec:
+  replicas: 1
+  revisionHistoryLimit: 0
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: mcp-terraform
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: mcp-terraform
+    spec:
+      enableServiceLinks: false
+      nodeSelector:
+        kubernetes.io/hostname: k8s-wk-0
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      imagePullSecrets:
+        - name: mcp-terraform-registry
+      containers:
+        - name: mcp-terraform
+          image: harbor.nodadyoushutup.com/mcp-terraform/mcp-terraform:2026.04.16.1
+          imagePullPolicy: Always
+          securityContext:
+            runAsUser: 65532
+            runAsGroup: 65532
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          envFrom:
+            - secretRef:
+                name: mcp-terraform-app-env
+          env:
+            - name: TZ
+              value: America/New_York
+          args:
+            - streamable-http
+            - --transport-host
+            - 0.0.0.0
+            - --transport-port
+            - "8080"
+            - --mcp-endpoint
+            - /mcp
+            - --toolsets
+            - $(MCP_TERRAFORM_TOOLSETS)
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 20

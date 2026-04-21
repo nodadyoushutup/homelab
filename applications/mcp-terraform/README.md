@@ -6,7 +6,6 @@ binary.
 Why this exists:
 
 - keeps the runtime rooted in the official HashiCorp release
-- adds a minimal userland so Swarm can run an HTTP healthcheck against
-  `/health`
+- adds a minimal userland so the deployment can probe `/health` directly
 - preserves the repo's standard remote HTTP MCP deployment pattern without
   introducing a separate proxy layer

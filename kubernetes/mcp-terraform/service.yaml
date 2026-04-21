@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mcp-terraform
+  namespace: mcp-terraform
+  annotations:
+    argocd.argoproj.io/sync-wave: "35"
+spec:
+  selector:
+    app.kubernetes.io/name: mcp-terraform
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http

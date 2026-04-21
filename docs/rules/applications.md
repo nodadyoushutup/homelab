@@ -57,7 +57,7 @@ Repo examples:
   `graphite`, `dozzle`, `node_exporter`, `telegraf_docker_metrics`
 - infrastructure: `terraform/swarm/harbor`, `vault`,
   `nginx_proxy_manager`, `gha-runner`, `jenkins-controller`
-- management tooling: `terraform/swarm/mcp-terraform`
+- management tooling: no current Swarm MCP examples
 
 Documented exception:
 
@@ -69,7 +69,8 @@ Documented exception:
   `kubernetes/mcp-cloudflare`, `kubernetes/mcp-fortigate`,
   `kubernetes/mcp-git`, `kubernetes/mcp-github`,
   `kubernetes/mcp-google-workspace`, `kubernetes/mcp-kubernetes`,
-  `kubernetes/mcp-filesystem`, and `kubernetes/mcp-bash-pipeline`
+  `kubernetes/mcp-filesystem`, `kubernetes/mcp-bash-pipeline`, and
+  `kubernetes/mcp-terraform`
 
 If the Swarm service is an MCP server, use
 [`docs/rules/mcp-servers.md`](./mcp-servers.md) for its service-specific

@@ -30,6 +30,7 @@ on:
           - mcp-git
           - mcp-github
           - mcp-google-workspace
+          - mcp-terraform
           - gha-runner
           - jenkins-agent
           - jenkins-controller
@@ -140,6 +141,11 @@ jobs:
             mcp-google-workspace)
               image_name="mcp-google-workspace"
               docker_context="applications/mcp-google-workspace"
+              build_strategy="direct"
+              ;;
+            mcp-terraform)
+              image_name="mcp-terraform"
+              docker_context="applications/mcp-terraform"
               build_strategy="direct"
               ;;
             gha-runner)

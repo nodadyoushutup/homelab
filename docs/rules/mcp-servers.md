@@ -9,7 +9,6 @@ Terraform guardrails the remaining Swarm-hosted services also follow.
 
 This document applies to the current MCP server set:
 
-- `terraform/swarm/mcp-terraform/app`
 - `kubernetes/mcp-ast-grep`
 - `kubernetes/mcp-argocd`
 - `kubernetes/mcp-atlassian`
@@ -21,6 +20,7 @@ This document applies to the current MCP server set:
 - `kubernetes/mcp-google-workspace`
 - `kubernetes/mcp-kubernetes`
 - `kubernetes/mcp-filesystem`
+- `kubernetes/mcp-terraform`
 
 ## Shared Placement Rules
 
@@ -32,8 +32,8 @@ This document applies to the current MCP server set:
   `kubernetes/mcp-atlassian`, `kubernetes/mcp-bash-pipeline`,
   `kubernetes/mcp-cloudflare`, `kubernetes/mcp-fortigate`,
   `kubernetes/mcp-git`, `kubernetes/mcp-github`,
-  `kubernetes/mcp-google-workspace`, `kubernetes/mcp-kubernetes`, and
-  `kubernetes/mcp-filesystem`.
+  `kubernetes/mcp-google-workspace`, `kubernetes/mcp-kubernetes`,
+  `kubernetes/mcp-filesystem`, and `kubernetes/mcp-terraform`.
 - Each MCP server keeps its own single `app` stage and single backend state
   file. Do not merge multiple MCP services into one Terraform root or one state
   key.
@@ -391,12 +391,15 @@ This document applies to the current MCP server set:
 
 ### `mcp-terraform`
 
-- Runtime root: `terraform/swarm/mcp-terraform/app`
+- Runtime root: `kubernetes/mcp-terraform`
+- Argo CD objects:
+  `kubernetes/argocd-management/mcp-terraform-project.yaml` and
+  `kubernetes/argocd-management/mcp-terraform-app.yaml`
 - Image source: `applications/mcp-terraform/` packages HashiCorp's official
-  `terraform-mcp-server` binary into a thin image that can expose the upstream
-  HTTP health endpoint to Swarm healthchecks
-- Listen model: internal `8080`, published `18104`, HTTP path `/mcp`, health
-  path `/health`
+  `terraform-mcp-server` binary into the Harbor-backed wrapper image referenced
+  by Kubernetes
+- Listen model: container `8080`, service `8080`, ingress-routed hostname
+  `https://mcp.terraform.nodadyoushutup.com/mcp`, health path `/health`
 - Tool model: keep `toolsets` on `registry` by default; only widen to
   `registry-private`, `terraform`, or `all` when the task explicitly needs more
   than public registry lookups
@@ -408,3 +411,9 @@ This document applies to the current MCP server set:
 - CORS model: keep `mcp_cors_mode = "strict"` and leave
   `mcp_allowed_origins` empty unless a browser-based client genuinely requires
   cross-origin access
+- Secret model: keep both the Kubernetes app env secret and Harbor pull secret
+  sourced from `secret/k8s/mcp_terraform` through `ExternalSecret` so runtime
+  config and registry access stay in one Vault-managed payload
+- Delivery model: preserve the stable operator hostname during migration and
+  cut the Nginx Proxy Manager route over to the Kubernetes ingress IP instead
+  of keeping the old Swarm published port

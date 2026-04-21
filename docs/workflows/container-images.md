@@ -85,6 +85,7 @@ on the same registry.
 | `mcp-github` | GHCR | `kubernetes/mcp-github/deployment.yaml` plus `/mnt/eapp/.tfvars/vault/config.tfvars` |
 | `mcp-fortigate` | GHCR | `kubernetes/mcp-fortigate/deployment.yaml` plus `/mnt/eapp/.tfvars/vault/config.tfvars` |
 | `mcp-google-workspace` | Harbor | `kubernetes/mcp-google-workspace/deployment.yaml` plus `/mnt/eapp/.tfvars/harbor/config.tfvars` and `/mnt/eapp/.tfvars/vault/config.tfvars` |
+| `mcp-terraform` | Harbor | `kubernetes/mcp-terraform/deployment.yaml` plus `/mnt/eapp/.tfvars/harbor/config.tfvars` and `/mnt/eapp/.tfvars/vault/config.tfvars` |
 | Harbor runtime services | Local `goharbor/*:2.14.2-custom.1-arm64` tags on the Swarm node | `/mnt/eapp/.tfvars/harbor/app.tfvars` |
 
 That last row matters: Harbor now has a publish path for its component images,
@@ -106,7 +107,7 @@ The standard publish workflow is:
   `langchain-agent-chat`, `langgraph`, `harbor-runtime-set`,
   `mcp-ast-grep`, `mcp-bash-pipeline`, `mcp-cloudflare`,
   `mcp-filesystem`, `mcp-fortigate`, `mcp-git`, `mcp-github`,
-  `mcp-google-workspace`, `gha-runner`, `jenkins-agent`,
+  `mcp-google-workspace`, `mcp-terraform`, `gha-runner`, `jenkins-agent`,
   `jenkins-controller`
 
 Registry naming rules:
@@ -182,7 +183,7 @@ images. The desired Harbor-managed project set now includes:
   `langchain-agent-chat`, `langgraph`, `gha-runner`, `harbor`, `jenkins-agent`, `jenkins-controller`,
   `mcp-ast-grep`, `mcp-atlassian`, `mcp-bash-pipeline`,
   `mcp-cloudflare`, `mcp-filesystem`, `mcp-fortigate`, `mcp-git`,
-  `mcp-google-workspace`, `webserver-image`
+  `mcp-google-workspace`, `mcp-terraform`, `webserver-image`
 - Harbor component images:
   `harbor-core`, `harbor-db`, `harbor-exporter`, `harbor-jobservice`,
   `harbor-log`, `harbor-portal`, `harbor-registryctl`, `nginx-photon`,

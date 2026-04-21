@@ -10,7 +10,6 @@ Terraform execution behavior that the remaining Swarm stages inherit.
 
 Use this workflow for:
 
-- `terraform/swarm/mcp-terraform/app`
 - `kubernetes/mcp-ast-grep`
 - `kubernetes/mcp-argocd`
 - `kubernetes/mcp-atlassian`
@@ -22,6 +21,7 @@ Use this workflow for:
 - `kubernetes/mcp-google-workspace`
 - `kubernetes/mcp-kubernetes`
 - `kubernetes/mcp-filesystem`
+- `kubernetes/mcp-terraform`
 
 ## Standard Flow
 
@@ -303,15 +303,26 @@ Before committing `kubernetes/mcp-bash-pipeline/`:
 
 ### `mcp-terraform`
 
-Before running `terraform/swarm/mcp-terraform/app/pipeline/app.sh`:
+Before committing `kubernetes/mcp-terraform/`:
 
-- confirm the local image tag in Terraform exists on `swarm-cp-0`
-- confirm `/mnt/eapp/.tfvars/mcp-terraform/app.tfvars` exists with the intended
-  `toolsets` and optional HCP Terraform or Terraform Enterprise credentials
-- rebuild the image first if `applications/mcp-terraform/` changed
-- if a browser-based MCP client is part of the task, decide the final
-  `mcp_allowed_origins` value before apply instead of widening CORS later by
-  hand
+- confirm the Harbor image tag referenced in
+  `kubernetes/mcp-terraform/deployment.yaml` exists or will be published in the
+  same task
+- confirm the Harbor project and the Kubernetes pull robot entry exist in
+  `/mnt/eapp/.tfvars/harbor/config.tfvars`
+- confirm `/mnt/eapp/.tfvars/vault/config.tfvars` contains the matching
+  `k8s/mcp_terraform` app and registry credentials for the `ExternalSecret`
+- bootstrap the namespace-local Vault reader secret
+  `mcp-terraform-vault-reader` before expecting External Secrets to sync
+- confirm the intended `toolsets`, `enable_tf_operations`, `mcp_cors_mode`, and
+  optional HCP Terraform or Terraform Enterprise credentials still match the
+  desired access posture before push
+- confirm the existing hostname route for
+  `https://mcp.terraform.nodadyoushutup.com/mcp` will move to the Kubernetes
+  ingress entrypoint, because the client-facing URL is preserved during the
+  migration
+- rebuild and republish the image first if `applications/mcp-terraform/`
+  changed
 
 ## Apply
 
@@ -370,7 +381,7 @@ Validation examples:
 - `mcp-fortigate`: probe `https://mcp.fortigate.nodadyoushutup.com/mcp`
 - `mcp-kubernetes`: probe `https://mcp.kubernetes.nodadyoushutup.com/mcp`
 - `mcp-bash-pipeline`: probe `https://mcp.bash-pipeline.nodadyoushutup.com/mcp`
-- `mcp-terraform`: probe `http://<swarm-host>:18104/mcp`
+- `mcp-terraform`: probe `https://mcp.terraform.nodadyoushutup.com/mcp`
 - `mcp-cloudflare`: probe `https://mcp.cloudflare.nodadyoushutup.com/mcp`
 - `mcp-google-workspace`: probe
   `https://mcp.google-workspace.nodadyoushutup.com/mcp`
