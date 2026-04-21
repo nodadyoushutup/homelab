@@ -101,9 +101,6 @@ BLOCKED_PIPELINES: dict[str, str] = {
     "terraform/cluster/talos/app/pipeline/app.sh": (
         "Requires operator-local kubeconfig and kubectl-based cluster readiness checks."
     ),
-    "terraform/swarm/mcp-argocd/app/pipeline/app.sh": (
-        "Requires operator-local kubectl and argocd bootstrap behavior."
-    ),
     "terraform/swarm/vault/app/pipeline/app.sh": (
         "Requires host-level SSH and Docker bootstrap behavior outside this runner contract."
     ),

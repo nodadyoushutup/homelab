@@ -24,7 +24,7 @@ Use this workflow whenever:
 The default answer in step 1 is internal-only unless a human explicitly asks
 for public exposure.
 
-If the app is a Swarm MCP server, also use
+If the app is an MCP server, also use
 [`docs/workflows/mcp-servers.md`](./mcp-servers.md) because hostname routing
 and `~/.codex/config.toml` alignment are part of the required delivery flow.
 
@@ -48,9 +48,9 @@ Public:
 Current documented exception:
 
 - `thelounge.nodadyoushutup.com` is public
-- Swarm MCP hostnames are documented hostname-routed operator exceptions; keep
-  them aligned with the host Codex config rather than treating them as raw-port
-  only services
+- MCP hostnames are documented hostname-routed operator exceptions; keep them
+  aligned with the host Codex config rather than treating them as raw-port-only
+  services
 
 ## Step 2: Choose The Hostname
 

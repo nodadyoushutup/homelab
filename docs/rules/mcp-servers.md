@@ -9,7 +9,6 @@ Terraform guardrails the Swarm-hosted services also follow.
 
 This document applies to the current MCP server set:
 
-- `terraform/swarm/mcp-argocd/app`
 - `terraform/swarm/mcp-ast-grep/app`
 - `terraform/swarm/mcp-cloudflare/app`
 - `terraform/swarm/mcp-git-homelab/app`
@@ -20,6 +19,7 @@ This document applies to the current MCP server set:
 - `terraform/swarm/mcp-agent-protocol/app`
 - `terraform/swarm/mcp-bash-pipeline/app`
 - `terraform/swarm/mcp-terraform/app`
+- `kubernetes/mcp-argocd`
 - `kubernetes/mcp-atlassian`
 - `kubernetes/mcp-kubernetes`
 - `kubernetes/mcp-filesystem`
@@ -30,8 +30,8 @@ This document applies to the current MCP server set:
   unless a task explicitly migrates them.
 - New MCP servers may use the Kubernetes pattern under `kubernetes/<service>/`
   when the human explicitly chooses the cluster route. Current reference
-  exceptions are `kubernetes/mcp-atlassian`, `kubernetes/mcp-kubernetes`, and
-  `kubernetes/mcp-filesystem`.
+  exceptions are `kubernetes/mcp-argocd`, `kubernetes/mcp-atlassian`,
+  `kubernetes/mcp-kubernetes`, and `kubernetes/mcp-filesystem`.
 - Each MCP server keeps its own single `app` stage and single backend state
   file. Do not merge multiple MCP services into one Terraform root or one state
   key.
@@ -102,15 +102,22 @@ This document applies to the current MCP server set:
 
 ### `mcp-argocd`
 
-- Runtime root: `terraform/swarm/mcp-argocd/app`
-- Image source: upstream image pinned directly in Terraform
-- Listen model: internal `3000`, published `18086`
+- Runtime root: `kubernetes/mcp-argocd`
+- Argo CD objects: `kubernetes/argocd-management/mcp-argocd-project.yaml`
+  and `kubernetes/argocd-management/mcp-argocd-app.yaml`
+- Image source: upstream image pinned directly in Kubernetes manifests
+- Listen model: container `3000`, service `3000`, ingress-routed hostname
+  `https://mcp.argocd.nodadyoushutup.com/mcp`
 - Access model: `mcp_read_only` defaults to `true` and should stay that way
   unless the task genuinely needs mutating Argo CD tools.
-- Token model: `argocd_api_token` may be injected at deploy time by the stage
-  pipeline; do not replace that with a hardcoded repo secret.
+- Token model: keep the Kubernetes app env secret sourced from
+  `secret/k8s/mcp_argocd` through `ExternalSecret`; do not widen that secret to
+  unrelated Argo CD or cluster credentials.
 - Trust model: `argocd_insecure_skip_verify` is an exception flag. Only enable
   it when the Argo CD certificate trust path cannot be fixed in the same task.
+- Delivery model: preserve the stable operator hostname during migration and
+  cut the Nginx Proxy Manager route over to the Kubernetes ingress IP instead
+  of inventing a second client URL
 
 ### `mcp-atlassian`
 

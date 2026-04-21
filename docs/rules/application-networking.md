@@ -71,15 +71,16 @@ hostnames for new apps.
 
 ## MCP Server Hostname Rule
 
-- Swarm MCP servers are a documented hostname-routed exception because the
-  Codex host runs off-swarm and must consume them over HTTP.
+- MCP servers are a documented hostname-routed operator exception because the
+  Codex host runs outside both the Swarm overlay and Kubernetes service
+  networks and must consume them over HTTP.
 - Use `mcp.<service>.nodadyoushutup.com` for the standard MCP hostname unless a
   task explicitly defines a different naming pattern.
-- Keep the Swarm service port/path, the Nginx Proxy Manager proxy host, the
-  Cloudflare record, and `~/.codex/config.toml` aligned for every host-usable
-  MCP server.
-- Do not point Codex or other host-side LLM tooling at raw Swarm node ports as
-  the steady-state access pattern when a routed hostname exists.
+- Keep the service route, the Nginx Proxy Manager proxy host, the Cloudflare
+  record, and `~/.codex/config.toml` aligned for every host-usable MCP server.
+- Do not point Codex or other host-side LLM tooling at raw Swarm node ports,
+  cluster-only DNS names, or ad hoc NodePorts as the steady-state access
+  pattern when a routed hostname exists.
 
 ## Internal vs Public DNS Rules
 
@@ -108,7 +109,7 @@ Current repo guidance:
 - `thelounge.nodadyoushutup.com` remains the normal end-user public exception
 - MCP hostnames managed under [`docs/rules/mcp-servers.md`](./mcp-servers.md)
   are documented hostname-routed operator exceptions because the client host is
-  off-swarm
+  off-platform
 
 Do not point a new app at the public IP "just in case". Public exposure is an
 explicit choice, not the default.

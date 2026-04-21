@@ -10,7 +10,6 @@ Terraform execution behavior that the Swarm stages inherit.
 
 Use this workflow for:
 
-- `terraform/swarm/mcp-argocd/app`
 - `terraform/swarm/mcp-ast-grep/app`
 - `terraform/swarm/mcp-cloudflare/app`
 - `terraform/swarm/mcp-git-homelab/app`
@@ -21,6 +20,7 @@ Use this workflow for:
 - `terraform/swarm/mcp-agent-protocol/app`
 - `terraform/swarm/mcp-bash-pipeline/app`
 - `terraform/swarm/mcp-terraform/app`
+- `kubernetes/mcp-argocd`
 - `kubernetes/mcp-atlassian`
 - `kubernetes/mcp-kubernetes`
 - `kubernetes/mcp-filesystem`
@@ -93,15 +93,19 @@ terraform/swarm/<service>/app/pipeline/app.sh
 
 ### `mcp-argocd`
 
-Before running `terraform/swarm/mcp-argocd/app/pipeline/app.sh`:
+Before committing `kubernetes/mcp-argocd/`:
 
-- make sure `kubectl`, `argocd`, and `python3` are available on the operator
-  host if `argocd_api_token` is empty, placeholder text, or intentionally left
-  for pipeline bootstrap
-- make sure the current kube context can reach the `argocd` namespace
-- expect the pipeline to enable `accounts.admin: apiKey, login`, restart
-  `deployment/argocd-server`, and generate the managed token id
-  `mcp-argocd-swarm` when bootstrap is needed
+- confirm the upstream image reference in
+  `kubernetes/mcp-argocd/deployment.yaml` still exists in GHCR
+- confirm `/mnt/eapp/.tfvars/vault/config.tfvars` contains a `k8s/mcp_argocd`
+  payload with `argocd_base_url`, `argocd_api_token`, `mcp_read_only`, and the
+  current `argocd_insecure_skip_verify` posture
+- bootstrap the namespace-local Vault reader secret
+  `mcp-argocd-vault-reader` before expecting External Secrets to sync
+- confirm the existing hostname route for
+  `https://mcp.argocd.nodadyoushutup.com/mcp` will move to the Kubernetes
+  ingress entrypoint, because the client-facing URL is preserved during the
+  migration
 
 ### `mcp-atlassian`
 
@@ -316,7 +320,7 @@ After apply:
 
 Validation examples:
 
-- `mcp-argocd`: probe `http://<swarm-host>:18086/mcp` with an
+- `mcp-argocd`: probe `https://mcp.argocd.nodadyoushutup.com/mcp` with an
   `mcp-session-id` header
 - `mcp-atlassian`: probe `https://mcp.atlassian.nodadyoushutup.com/mcp`
 - `mcp-ast-grep`: probe `http://<swarm-host>:18096/mcp`
