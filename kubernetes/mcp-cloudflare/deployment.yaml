@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp-cloudflare
+  namespace: mcp-cloudflare
+  annotations:
+    argocd.argoproj.io/sync-wave: "30"
+spec:
+  replicas: 1
+  revisionHistoryLimit: 0
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: mcp-cloudflare
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: mcp-cloudflare
+    spec:
+      enableServiceLinks: false
+      nodeSelector:
+        kubernetes.io/hostname: k8s-wk-0
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      imagePullSecrets:
+        - name: mcp-cloudflare-registry
+      containers:
+        - name: mcp-cloudflare
+          image: harbor.nodadyoushutup.com/mcp-cloudflare/mcp-cloudflare:0.0.1
+          imagePullPolicy: Always
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          envFrom:
+            - secretRef:
+                name: mcp-cloudflare-app-env
+          env:
+            - name: TZ
+              value: America/New_York
+            - name: MCP_CLOUDFLARE_LISTEN_PORT
+              value: "8084"
+          ports:
+            - name: http
+              containerPort: 8084
+              protocol: TCP
+          readinessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 20

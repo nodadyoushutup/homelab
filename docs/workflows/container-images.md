@@ -76,7 +76,7 @@ the same registry.
 | `mcp-filesystem` | Harbor | `kubernetes/mcp-filesystem/deployment.yaml` plus `/mnt/eapp/.tfvars/harbor/config.tfvars` and `/mnt/eapp/.tfvars/vault/config.tfvars` |
 | `gha-runner` | Harbor | `/mnt/eapp/.tfvars/gha-runner/app.tfvars` |
 | `jenkins-controller` | Harbor | `/mnt/eapp/.tfvars/jenkins-controller/app.tfvars` |
-| `mcp-cloudflare` | Harbor | `terraform/swarm/mcp-cloudflare/app/main.tf` plus `/mnt/eapp/.tfvars/mcp-cloudflare/app.tfvars` |
+| `mcp-cloudflare` | Harbor | `kubernetes/mcp-cloudflare/deployment.yaml` plus `/mnt/eapp/.tfvars/harbor/config.tfvars` and `/mnt/eapp/.tfvars/vault/config.tfvars` |
 | `mcp-ast-grep` | Local engine tag (`homelab/...`) | `terraform/swarm/mcp-ast-grep/app/main.tf` plus `/mnt/eapp/.tfvars/mcp-ast-grep/app.tfvars` |
 | `mcp-git-homelab` | Local engine tag (`homelab/...`) | `terraform/swarm/mcp-git-homelab/app/main.tf` plus `/mnt/eapp/.tfvars/mcp-git-homelab/app.tfvars` |
 | `mcp-github` | GHCR | `terraform/swarm/mcp-github/app/main.tf` plus `/mnt/eapp/.tfvars/mcp-github/app.tfvars` |

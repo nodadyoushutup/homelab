@@ -10,17 +10,16 @@ Terraform guardrails the Swarm-hosted services also follow.
 This document applies to the current MCP server set:
 
 - `terraform/swarm/mcp-ast-grep/app`
-- `terraform/swarm/mcp-cloudflare/app`
 - `terraform/swarm/mcp-git-homelab/app`
 - `terraform/swarm/mcp-fortigate/app`
 - `terraform/swarm/mcp-github/app`
 - `terraform/swarm/mcp-google-workspace/app`
-- `terraform/swarm/mcp-redis/app`
 - `terraform/swarm/mcp-agent-protocol/app`
 - `terraform/swarm/mcp-bash-pipeline/app`
 - `terraform/swarm/mcp-terraform/app`
 - `kubernetes/mcp-argocd`
 - `kubernetes/mcp-atlassian`
+- `kubernetes/mcp-cloudflare`
 - `kubernetes/mcp-kubernetes`
 - `kubernetes/mcp-filesystem`
 
@@ -31,7 +30,8 @@ This document applies to the current MCP server set:
 - New MCP servers may use the Kubernetes pattern under `kubernetes/<service>/`
   when the human explicitly chooses the cluster route. Current reference
   exceptions are `kubernetes/mcp-argocd`, `kubernetes/mcp-atlassian`,
-  `kubernetes/mcp-kubernetes`, and `kubernetes/mcp-filesystem`.
+  `kubernetes/mcp-cloudflare`, `kubernetes/mcp-kubernetes`, and
+  `kubernetes/mcp-filesystem`.
 - Each MCP server keeps its own single `app` stage and single backend state
   file. Do not merge multiple MCP services into one Terraform root or one state
   key.
@@ -176,17 +176,25 @@ This document applies to the current MCP server set:
 
 ### `mcp-cloudflare`
 
-- Runtime root: `terraform/swarm/mcp-cloudflare/app`
-- Image source: `applications/mcp-cloudflare/` builds the wrapper image referenced by
-  Terraform
-- Listen model: internal `8084`, published `18090`, HTTP bridge provided by the
-  local wrapper
+- Runtime root: `kubernetes/mcp-cloudflare`
+- Argo CD objects: `kubernetes/argocd-management/mcp-cloudflare-project.yaml`
+  and `kubernetes/argocd-management/mcp-cloudflare-app.yaml`
+- Image source: `applications/mcp-cloudflare/` builds the Harbor-backed wrapper
+  image referenced by Kubernetes
+- Listen model: container `8084`, service `8084`, ingress-routed hostname
+  `https://mcp.cloudflare.nodadyoushutup.com/mcp`
 - Credential model: `cloudflare_api_token` and `cloudflare_zone_id` are both
   required for the current DNS-focused server shape.
 - Scope model: keep the token limited to the zone and permissions actually
   required by the MCP server.
 - Compatibility model: `cloudflare_email` is optional compatibility input, not
   the primary authentication mechanism.
+- Secret model: keep both the Kubernetes app env secret and Harbor pull secret
+  sourced from `secret/k8s/mcp_cloudflare` through `ExternalSecret` so the app
+  runtime and registry access stay in one Vault-managed payload.
+- Delivery model: preserve the stable operator hostname during migration and
+  cut the Nginx Proxy Manager route over to the Kubernetes ingress IP instead
+  of keeping the old Swarm published port.
 
 ### `mcp-filesystem`
 
@@ -303,21 +311,6 @@ This document applies to the current MCP server set:
   repo-local wrapper unless the upstream transport or image model stops fitting
   the repo standard; keep the hostname routed through ingress rather than a
   raw published port
-
-### `mcp-redis`
-
-- Runtime root: `terraform/swarm/mcp-redis/app`
-- Image source: `applications/mcp-redis/` owns the repo-local native
-  Streamable HTTP MCP server image
-- Listen model: internal `8101`, published `18101`, HTTP path `/mcp`
-- Redis model: keep the backing Redis service private to the service overlay;
-  the MCP server is the host-routed access path, not the Redis TCP port itself
-- Scope model: use `key_prefix` deliberately so agents operate inside an
-  intended logical namespace rather than treating the whole Redis instance as
-  an unbounded scratchpad
-- Safety model: destructive operations are allowed by default for this server,
-  but they remain explicitly controllable through
-  `allow_destructive_operations`
 
 ### `mcp-agent-protocol`
 

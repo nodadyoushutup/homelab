@@ -57,9 +57,8 @@ Repo examples:
   `graphite`, `dozzle`, `node_exporter`, `telegraf_docker_metrics`
 - infrastructure: `terraform/swarm/harbor`, `vault`,
   `nginx_proxy_manager`, `gha-runner`, `jenkins-controller`
-- management tooling: `terraform/swarm/mcp-ast-grep`, `mcp-cloudflare`,
-  `mcp-fortigate`, `mcp-github`,
-  `mcp-google-workspace`, `mcp-redis`, `mcp-agent-protocol`,
+- management tooling: `terraform/swarm/mcp-ast-grep`, `mcp-fortigate`, `mcp-github`,
+  `mcp-google-workspace`, `mcp-agent-protocol`,
   `mcp-bash-pipeline`, `mcp-terraform`
 
 Documented exception:
@@ -68,7 +67,8 @@ Documented exception:
   chooses Kubernetes and the server is meant to follow the emerging
   ingress-routed cluster pattern. Current reference examples are
   `kubernetes/mcp-argocd`, `kubernetes/mcp-atlassian`,
-  `kubernetes/mcp-kubernetes`, and `kubernetes/mcp-filesystem`
+  `kubernetes/mcp-cloudflare`, `kubernetes/mcp-kubernetes`, and
+  `kubernetes/mcp-filesystem`
 
 If the Swarm service is an MCP server, use
 [`docs/rules/mcp-servers.md`](./mcp-servers.md) for its service-specific

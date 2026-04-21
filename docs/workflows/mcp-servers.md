@@ -11,17 +11,16 @@ Terraform execution behavior that the Swarm stages inherit.
 Use this workflow for:
 
 - `terraform/swarm/mcp-ast-grep/app`
-- `terraform/swarm/mcp-cloudflare/app`
 - `terraform/swarm/mcp-git-homelab/app`
 - `terraform/swarm/mcp-fortigate/app`
 - `terraform/swarm/mcp-github/app`
 - `terraform/swarm/mcp-google-workspace/app`
-- `terraform/swarm/mcp-redis/app`
 - `terraform/swarm/mcp-agent-protocol/app`
 - `terraform/swarm/mcp-bash-pipeline/app`
 - `terraform/swarm/mcp-terraform/app`
 - `kubernetes/mcp-argocd`
 - `kubernetes/mcp-atlassian`
+- `kubernetes/mcp-cloudflare`
 - `kubernetes/mcp-kubernetes`
 - `kubernetes/mcp-filesystem`
 
@@ -145,10 +144,22 @@ Before running `terraform/swarm/mcp-ast-grep/app/pipeline/app.sh`:
 
 ### `mcp-cloudflare`
 
-Before running `terraform/swarm/mcp-cloudflare/app/pipeline/app.sh`:
+Before committing `kubernetes/mcp-cloudflare/`:
 
-- confirm the custom image tag in Terraform exists in Harbor
+- confirm the Harbor image tag referenced in
+  `kubernetes/mcp-cloudflare/deployment.yaml` exists or will be published in
+  the same task
+- confirm the Harbor project and the Kubernetes pull robot entry exist in
+  `/mnt/eapp/.tfvars/harbor/config.tfvars`
+- confirm `/mnt/eapp/.tfvars/vault/config.tfvars` contains the matching
+  `k8s/mcp_cloudflare` app and registry credentials for the `ExternalSecret`
 - confirm `cloudflare_api_token` and `cloudflare_zone_id` match the target zone
+- bootstrap the namespace-local Vault reader secret
+  `mcp-cloudflare-vault-reader` before expecting External Secrets to sync
+- confirm the existing hostname route for
+  `https://mcp.cloudflare.nodadyoushutup.com/mcp` will move to the Kubernetes
+  ingress entrypoint, because the client-facing URL is preserved during the
+  migration
 - rebuild and republish the image first if `applications/mcp-cloudflare/` changed
 
 ### `mcp-filesystem`
@@ -219,17 +230,6 @@ Before committing `kubernetes/mcp-kubernetes/`:
 - keep the pod on a dedicated in-cluster ServiceAccount bound to the built-in read-only `view` ClusterRole instead of mounting a static kubeconfig
 - keep `mcp_read_only = true` unless the task explicitly requires mutating Kubernetes tools
 - keep the initial toolset narrow unless the task explicitly needs more than `core,config`
-
-### `mcp-redis`
-
-Before running `terraform/swarm/mcp-redis/app/pipeline/app.sh`:
-
-- confirm the local image tag in Terraform exists on `swarm-cp-0`
-- confirm `/mnt/eapp/.tfvars/mcp-redis/app.tfvars` exists with the intended
-  `key_prefix` and safety settings
-- keep Redis internal to the service overlay unless the task explicitly needs a
-  different exposure model
-- rebuild the image first if `applications/mcp-redis/` changed
 
 ### `mcp-agent-protocol`
 
@@ -328,13 +328,12 @@ Validation examples:
 - `mcp-git-homelab`: probe `http://<swarm-host>:18099/mcp`
 - `mcp-fortigate`: probe `http://<swarm-host>:18084/mcp`
 - `mcp-kubernetes`: probe `https://mcp.kubernetes.nodadyoushutup.com/mcp`
-- `mcp-redis`: probe `http://<swarm-host>:18101/mcp`
 - `mcp-agent-protocol`: probe `http://<swarm-host>:18100/mcp`
 - `mcp-bash-pipeline`: probe `http://<swarm-host>:18107/mcp`
 - `mcp-terraform`: probe `http://<swarm-host>:18104/mcp`
-- `mcp-github`, `mcp-cloudflare`, `mcp-google-workspace`: at minimum verify the
-  port is listening if the wrapper does not define a fixed explicit path in
-  Terraform
+- `mcp-cloudflare`: probe `https://mcp.cloudflare.nodadyoushutup.com/mcp`
+- `mcp-github`, `mcp-google-workspace`: at minimum verify the port is
+  listening if the wrapper does not define a fixed explicit path in Terraform
 - host validation: probe `https://mcp.<service>.nodadyoushutup.com/mcp` from
   the Codex host and make sure the same URL exists in the intended Codex config
   layer (`~/.codex/config.toml` or repo-local `.codex/config.toml`)
