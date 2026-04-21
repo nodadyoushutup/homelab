@@ -238,6 +238,10 @@ Repo rules for this pattern:
   `<app>-vault-reader`
 - that token secret must exist in the same namespace as the `SecretStore`
 - `ExternalSecret.spec.data[].remoteRef.key` must match the Vault path exactly
+- when using `ExternalSecret.spec.dataFrom[].extract`, include the operator's
+  defaulted `conversionStrategy: Default`, `decodingStrategy: None`, and
+  `metadataPolicy: None` fields explicitly so Argo CD does not treat controller
+  defaults as live drift
 - tfvars-driven group and secret names are restricted to lowercase alphanumeric,
   `-`, and `_` by Terraform validation, so new Terraform-driven secret paths
   should stay in the supported `<group>/<name>` shape
