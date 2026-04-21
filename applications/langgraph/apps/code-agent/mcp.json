@@ -3,6 +3,10 @@
     "filesystem": {
       "transport": "http",
       "url": "https://mcp.filesystem.nodadyoushutup.com/mcp/"
+    },
+    "kubernetes": {
+      "transport": "http",
+      "url": "https://mcp.kubernetes.nodadyoushutup.com/mcp"
     }
   }
 }
