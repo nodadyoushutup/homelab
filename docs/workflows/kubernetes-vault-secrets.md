@@ -122,6 +122,31 @@ Resulting Vault objects from that example:
 - `secret/k8s/qbittorrent_movie_10`
 - `secret/k8s/privatebin`
 
+## Durable Unseal Automation
+
+This repo's Vault deployment uses manual-unseal keys stored in
+`/mnt/eapp/.tfvars/vault/init.json`, not cloud auto-unseal.
+
+That means Vault can come back `sealed` after a Docker restart even if the host
+did not reboot. When that happens, all Kubernetes `SecretStore` objects that
+depend on Vault will fail validation and `ExternalSecret` refreshes will start
+returning provider errors.
+
+To keep this from recurring after a Swarm manager boot or Docker daemon
+restart, install or refresh the host-side auto-unseal unit on the manager that
+runs Vault:
+
+```bash
+scripts/vault/install_auto_unseal_service.sh
+```
+
+The installed `vault-auto-unseal.service` should be enabled for both:
+
+- normal host boot
+- `docker.service` starts/restarts
+
+If the Vault host changes, rerun the installer against the new manager.
+
 ## Apply Workflow
 
 After updating `/mnt/eapp/.tfvars/vault/config.tfvars`, run:

@@ -30,7 +30,8 @@ usage() {
   cat <<'EOF'
 Usage: install_auto_unseal_service.sh [options]
 
-Installs/updates a systemd unit on a Swarm manager that auto-unseals Vault at boot.
+Installs/updates a systemd unit on a Swarm manager that auto-unseals Vault at
+boot and after Docker restarts.
 
 Options:
   --host <host>                  Target host (default: swarm-cp-0.local)
@@ -134,6 +135,7 @@ RestartSec=15
 
 [Install]
 WantedBy=multi-user.target
+WantedBy=docker.service
 EOF
 
   ssh "${ssh_target}" "sudo systemctl daemon-reload"
