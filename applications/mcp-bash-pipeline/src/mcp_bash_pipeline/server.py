@@ -49,7 +49,7 @@ def load_settings() -> Settings:
     default_workspace_root = os.getenv("BASH_PIPELINE_DEFAULT_WORKSPACE_ROOT", "").strip()
     allowed_roots_raw = os.getenv("BASH_PIPELINE_ALLOWED_WORKSPACE_ROOTS", "/mnt/eapp/code")
     allowed_workspace_roots = [Path(root).resolve() for root in allowed_roots_raw.split(":") if root.strip()]
-    tfvars_root = Path(os.getenv("BASH_PIPELINE_TFVARS_ROOT", "/mnt/eapp/.tfvars")).resolve()
+    tfvars_root = Path(os.getenv("BASH_PIPELINE_TFVARS_ROOT", "/mnt/eapp/config")).resolve()
 
     default_allowed_hosts = [
         "127.0.0.1",

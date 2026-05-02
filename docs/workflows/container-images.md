@@ -9,8 +9,8 @@ task touches:
 - `applications/harbor/**`
 - `kubernetes/**/deployment.yaml`
 - `terraform/swarm/**` image references
-- `/mnt/eapp/.tfvars/<service>/*.tfvars` registry auth or image tags
-- `/mnt/eapp/.tfvars/vault/config.tfvars`
+- `/mnt/eapp/config/<service>/*.tfvars` registry auth or image tags
+- `/mnt/eapp/config/vault/config.tfvars`
 
 Use [docs/workflows/terraform.md](./terraform.md) when the task also deploys the
 new image tag into a Terraform-managed runtime. Use
@@ -74,19 +74,20 @@ on the same registry.
 
 | Runtime | Current image source | Source of truth |
 | --- | --- | --- |
-| `langchain-agent-chat` | Harbor | `kubernetes/langchain-agent-chat/deployment.yaml` plus `/mnt/eapp/.tfvars/harbor/config.tfvars` |
-| `mcp-bash-pipeline` | Harbor | `kubernetes/mcp-bash-pipeline/deployment.yaml` plus `/mnt/eapp/.tfvars/harbor/config.tfvars` and `/mnt/eapp/.tfvars/vault/config.tfvars` |
-| `mcp-ast-grep` | Harbor | `kubernetes/mcp-ast-grep/deployment.yaml` plus `/mnt/eapp/.tfvars/harbor/config.tfvars` and `/mnt/eapp/.tfvars/vault/config.tfvars` |
-| `mcp-filesystem` | Harbor | `kubernetes/mcp-filesystem/deployment.yaml` plus `/mnt/eapp/.tfvars/harbor/config.tfvars` and `/mnt/eapp/.tfvars/vault/config.tfvars` |
-| `gha-runner` | Harbor | `/mnt/eapp/.tfvars/gha-runner-arm64/app.tfvars` and `/mnt/eapp/.tfvars/gha-runner-amd64/app.tfvars` |
-| `jenkins-controller` | Harbor | `/mnt/eapp/.tfvars/jenkins-controller/app.tfvars` |
-| `mcp-cloudflare` | Harbor | `kubernetes/mcp-cloudflare/deployment.yaml` plus `/mnt/eapp/.tfvars/harbor/config.tfvars` and `/mnt/eapp/.tfvars/vault/config.tfvars` |
-| `mcp-git` | Harbor | `kubernetes/mcp-git/deployment.yaml` plus `/mnt/eapp/.tfvars/harbor/config.tfvars` and `/mnt/eapp/.tfvars/vault/config.tfvars` |
-| `mcp-github` | GHCR | `kubernetes/mcp-github/deployment.yaml` plus `/mnt/eapp/.tfvars/vault/config.tfvars` |
-| `mcp-fortigate` | GHCR | `kubernetes/mcp-fortigate/deployment.yaml` plus `/mnt/eapp/.tfvars/vault/config.tfvars` |
-| `mcp-google-workspace` | Harbor | `kubernetes/mcp-google-workspace/deployment.yaml` plus `/mnt/eapp/.tfvars/harbor/config.tfvars` and `/mnt/eapp/.tfvars/vault/config.tfvars` |
-| `mcp-terraform` | Harbor | `kubernetes/mcp-terraform/deployment.yaml` plus `/mnt/eapp/.tfvars/harbor/config.tfvars` and `/mnt/eapp/.tfvars/vault/config.tfvars` |
-| Harbor runtime services | Local `goharbor/*:2.14.2-custom.1-arm64` tags on the Swarm node | `/mnt/eapp/.tfvars/harbor/app.tfvars` |
+| `langchain-agent-chat` | Harbor | `kubernetes/langchain-agent-chat/deployment.yaml` plus `/mnt/eapp/config/harbor/config.tfvars` |
+| `mcp-bash-pipeline` | Harbor | `kubernetes/mcp-bash-pipeline/deployment.yaml` plus `/mnt/eapp/config/harbor/config.tfvars` and `/mnt/eapp/config/vault/config.tfvars` |
+| `mcp-ast-grep` | Harbor | `kubernetes/mcp-ast-grep/deployment.yaml` plus `/mnt/eapp/config/harbor/config.tfvars` and `/mnt/eapp/config/vault/config.tfvars` |
+| `mcp-filesystem` | Harbor | `kubernetes/mcp-filesystem/deployment.yaml` plus `/mnt/eapp/config/harbor/config.tfvars` and `/mnt/eapp/config/vault/config.tfvars` |
+| `gha-runner` | Harbor | `/mnt/eapp/config/gha-runner-arm64/app.tfvars` and `/mnt/eapp/config/gha-runner-amd64/app.tfvars` |
+| `jenkins-agent` | Harbor | `/mnt/eapp/config/jenkins-agent/app.tfvars` |
+| `jenkins-controller` | Harbor | `/mnt/eapp/config/jenkins-controller/app.tfvars` |
+| `mcp-cloudflare` | Harbor | `kubernetes/mcp-cloudflare/deployment.yaml` plus `/mnt/eapp/config/harbor/config.tfvars` and `/mnt/eapp/config/vault/config.tfvars` |
+| `mcp-git` | Harbor | `kubernetes/mcp-git/deployment.yaml` plus `/mnt/eapp/config/harbor/config.tfvars` and `/mnt/eapp/config/vault/config.tfvars` |
+| `mcp-github` | GHCR | `kubernetes/mcp-github/deployment.yaml` plus `/mnt/eapp/config/vault/config.tfvars` |
+| `mcp-fortigate` | GHCR | `kubernetes/mcp-fortigate/deployment.yaml` plus `/mnt/eapp/config/vault/config.tfvars` |
+| `mcp-google-workspace` | Harbor | `kubernetes/mcp-google-workspace/deployment.yaml` plus `/mnt/eapp/config/harbor/config.tfvars` and `/mnt/eapp/config/vault/config.tfvars` |
+| `mcp-terraform` | Harbor | `kubernetes/mcp-terraform/deployment.yaml` plus `/mnt/eapp/config/harbor/config.tfvars` and `/mnt/eapp/config/vault/config.tfvars` |
+| Harbor runtime services | Local `goharbor/*:2.14.2-custom.1-arm64` tags on the Swarm node | `/mnt/eapp/config/harbor/app.tfvars` |
 
 That last row matters: Harbor now has a publish path for its component images,
 but the Harbor Swarm runtime does not yet consume those registry-backed tags.
@@ -124,6 +125,12 @@ manifests afterward.
   `mcp-filesystem`, `mcp-fortigate`, `mcp-git`, `mcp-github`,
   `mcp-google-workspace`, `mcp-terraform`, `gha-runner`, `jenkins-agent`,
   `jenkins-controller`
+- `build_platforms`: `both` (default), `amd64`, or `arm64`
+  - this acts as a filter against the target's supported platform set
+  - if a target only supports `linux/amd64`, choosing `both` still builds only
+    `linux/amd64`
+  - if the selected target does not support the requested architecture, the
+    workflow fails during `prepare`
 
 The `gha-runner` direct image target currently keeps the default
 `linux/amd64,linux/arm64` platform set, so the published Harbor/GHCR tag can be
@@ -144,12 +151,15 @@ Registry naming rules:
   - single-platform Harbor direct publishes are built locally on the runner and
     pushed as a single native arch tag before the final manifest alias is
     published
-  - multi-platform Harbor direct publishes are built one platform at a time on
-    the matching native runner, pushed as per-arch tags, then assembled with
-    `docker manifest`
-  - do not route Harbor direct-image publishes through `buildx --push` or
-    `push-by-digest` plus `imagetools create`; Harbor rejects those token flows
-    in this homelab environment
+- multi-platform Harbor direct publishes are built one platform at a time on
+  the matching native runner, pushed as per-arch tags, then assembled with
+  `docker manifest`
+- those per-arch helper-tag builds must disable build provenance so each pushed
+  helper tag stays a plain single-platform manifest that `docker manifest
+  create` can consume
+- do not route Harbor direct-image publishes through `buildx --push` or
+  `push-by-digest` plus `imagetools create`; Harbor rejects those token flows
+  in this homelab environment
 - `harbor-runtime-set` publishes all Harbor component images in one run:
   - GHCR:
     `ghcr.io/<owner>/<component>:<version>`
@@ -208,7 +218,7 @@ Harbor project management is driven by:
 
 - `terraform/swarm/harbor/config/main.tf`
 - `terraform/swarm/harbor/config/config.tfvars.example`
-- `/mnt/eapp/.tfvars/harbor/config.tfvars`
+- `/mnt/eapp/config/harbor/config.tfvars`
 
 The `gha-publish` system robot is the publish account for repo-managed Harbor
 images. The desired Harbor-managed project set now includes:
@@ -237,7 +247,7 @@ When adding or changing a repo-managed image:
    runtime set.
 2. Update the Dockerfile or Harbor image factory sources under `applications/`.
 3. If the image should publish to Harbor, make sure the Harbor project exists in
-   `/mnt/eapp/.tfvars/harbor/config.tfvars` and the example tfvars.
+   `/mnt/eapp/config/harbor/config.tfvars` and the example tfvars.
 4. If the workflow needs a new selectable target, add it to
    `.github/workflows/docker_build_push.yml`.
 5. Publish the image through `workflow_dispatch`.

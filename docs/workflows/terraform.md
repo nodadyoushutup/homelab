@@ -40,8 +40,8 @@ terraform/remote/cloudflare/config/pipeline/config.sh
 ## Before You Run a Stage
 
 1. Identify the correct stage or stage sequence.
-2. Confirm the matching tfvars file exists under `/mnt/eapp/.tfvars`.
-3. Confirm the backend config exists, normally `/mnt/eapp/.tfvars/minio.backend.hcl`.
+2. Confirm the matching tfvars file exists under `/mnt/eapp/config`.
+3. Confirm the backend config exists, normally `/mnt/eapp/config/minio.backend.hcl`.
 4. Check whether the stage has custom preflight or post-init hooks.
 5. If the change introduces an endpoint, include the matching Nginx Proxy
    Manager and Cloudflare changes in the same workflow.
@@ -63,16 +63,16 @@ Most stages also accept optional overrides:
 
 ```bash
 terraform/swarm/grafana/app/pipeline/app.sh \
-  --tfvars /mnt/eapp/.tfvars/grafana/app.tfvars \
-  --backend /mnt/eapp/.tfvars/minio.backend.hcl
+  --tfvars /mnt/eapp/config/grafana/app.tfvars \
+  --backend /mnt/eapp/config/minio.backend.hcl
 ```
 
 Positional arguments are also supported:
 
 ```bash
 terraform/swarm/grafana/app/pipeline/app.sh \
-  /mnt/eapp/.tfvars/grafana/app.tfvars \
-  /mnt/eapp/.tfvars/minio.backend.hcl
+  /mnt/eapp/config/grafana/app.tfvars \
+  /mnt/eapp/config/minio.backend.hcl
 ```
 
 Do not assume every stage accepts overrides. `vault` intentionally rejects them.
@@ -103,7 +103,7 @@ handle that manually.
 ### Deploy a new or updated service
 
 1. Update the Terraform code in the relevant stage directories.
-2. Update the matching tfvars under `/mnt/eapp/.tfvars`.
+2. Update the matching tfvars under `/mnt/eapp/config`.
 3. Run the dependent stages in order.
 4. Validate the runtime after each stage that changes live infrastructure.
 5. If the service exposes an endpoint, run the matching edge stages too.
@@ -127,6 +127,15 @@ Some `config` stages only make sense after the app is running. In those cases:
 
 Examples in the repo include `grafana`, `harbor`, `jenkins-controller`, and
 `nginx_proxy_manager`.
+
+For Jenkins specifically:
+
+- `terraform/swarm/jenkins-controller/app/pipeline/app.sh` should run before
+  `terraform/swarm/jenkins-agent/app/pipeline/app.sh`
+- the controller app stage writes inbound agent secret files under
+  `/mnt/eapp/config/jenkins-controller/agent-secrets/`
+- both controller and agent containers expect the shared `/mnt/eapp/config`
+  mount to be present
 
 ### Run a stage with custom safety hooks
 

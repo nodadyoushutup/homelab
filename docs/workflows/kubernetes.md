@@ -155,7 +155,7 @@ For the detailed Vault -> External Secrets workflow, use
 
 The short version is:
 
-1. update `/mnt/eapp/.tfvars/vault/config.tfvars`
+1. update `/mnt/eapp/config/vault/config.tfvars`
 2. run `terraform/swarm/vault/config/pipeline/config.sh`
 3. apply `SecretStore`
 4. apply `ExternalSecret`

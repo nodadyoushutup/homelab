@@ -12,7 +12,7 @@ layout and guardrails.
 
 The standard repo flow is:
 
-1. define the secret payload in `/mnt/eapp/.tfvars/vault/config.tfvars`
+1. define the secret payload in `/mnt/eapp/config/vault/config.tfvars`
 2. run `terraform/swarm/vault/config/pipeline/config.sh`
 3. let Terraform write the payload into Vault KV v2 under `secret/<group>/<name>`
 4. create a namespace-local Vault token secret in Kubernetes
@@ -22,7 +22,7 @@ The standard repo flow is:
 
 In repo terms, the chain is:
 
-`/mnt/eapp/.tfvars/vault/config.tfvars` -> `terraform/swarm/vault/config` ->
+`/mnt/eapp/config/vault/config.tfvars` -> `terraform/swarm/vault/config` ->
 Vault KV -> `SecretStore` -> `ExternalSecret` -> Kubernetes `Secret` ->
 Deployment/StatefulSet/Job
 
@@ -30,7 +30,7 @@ Deployment/StatefulSet/Job
 
 The source of truth for secret values is:
 
-- `/mnt/eapp/.tfvars/vault/config.tfvars`
+- `/mnt/eapp/config/vault/config.tfvars`
 
 The Terraform stage that writes those values into Vault is:
 
@@ -125,7 +125,7 @@ Resulting Vault objects from that example:
 ## Durable Unseal Automation
 
 This repo's Vault deployment uses manual-unseal keys stored in
-`/mnt/eapp/.tfvars/vault/init.json`, not cloud auto-unseal.
+`/mnt/eapp/config/vault/init.json`, not cloud auto-unseal.
 
 That means Vault can come back `sealed` after a Docker restart even if the host
 did not reboot. When that happens, all Kubernetes `SecretStore` objects that
@@ -149,7 +149,7 @@ If the Vault host changes, rerun the installer against the new manager.
 
 ## Apply Workflow
 
-After updating `/mnt/eapp/.tfvars/vault/config.tfvars`, run:
+After updating `/mnt/eapp/config/vault/config.tfvars`, run:
 
 ```bash
 terraform/swarm/vault/config/pipeline/config.sh
@@ -157,7 +157,7 @@ terraform/swarm/vault/config/pipeline/config.sh
 
 That stage uses fixed input paths and does not accept override args. It also:
 
-- auto-sources `/mnt/eapp/.tfvars/vault/.env`
+- auto-sources `/mnt/eapp/config/vault/.env`
 - requires `VAULT_TOKEN` from that env file
 - auto-runs `scripts/vault/unseal.sh`
 - fails fast if Vault bootstrap artifacts are missing
@@ -188,7 +188,7 @@ Each namespace needs a Kubernetes secret containing `VAULT_TOKEN` for the
 Standard command:
 
 ```bash
-source /mnt/eapp/.tfvars/vault/.env && \
+source /mnt/eapp/config/vault/.env && \
 kubectl -n <namespace> create secret generic <app>-vault-reader \
   --from-literal=VAULT_TOKEN="$VAULT_TOKEN" \
   --dry-run=client -o yaml | kubectl apply -f -
@@ -197,7 +197,7 @@ kubectl -n <namespace> create secret generic <app>-vault-reader \
 Example:
 
 ```bash
-source /mnt/eapp/.tfvars/vault/.env && \
+source /mnt/eapp/config/vault/.env && \
 kubectl -n prowlarr create secret generic prowlarr-vault-reader \
   --from-literal=VAULT_TOKEN="$VAULT_TOKEN" \
   --dry-run=client -o yaml | kubectl apply -f -
@@ -302,7 +302,7 @@ env:
 
 For a new app or a secret rotation, use this order:
 
-1. update `/mnt/eapp/.tfvars/vault/config.tfvars`
+1. update `/mnt/eapp/config/vault/config.tfvars`
 2. run `terraform/swarm/vault/config/pipeline/config.sh`
 3. create or refresh the namespace-local `<app>-vault-reader` secret if needed
 4. apply `secretstore.yaml`
@@ -346,8 +346,8 @@ If you need to verify the Vault-side path directly, the intended path is
 
 Check:
 
-- `/mnt/eapp/.tfvars/vault/init.json` exists
-- `/mnt/eapp/.tfvars/vault/.env` exists
+- `/mnt/eapp/config/vault/init.json` exists
+- `/mnt/eapp/config/vault/.env` exists
 - `VAULT_TOKEN` is present in `.env`
 - Vault is reachable and unsealed
 

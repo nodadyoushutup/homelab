@@ -34,6 +34,15 @@ on:
           - gha-runner
           - jenkins-agent
           - jenkins-controller
+      build_platforms:
+        description: "Architectures to build"
+        required: true
+        default: both
+        type: choice
+        options:
+          - both
+          - amd64
+          - arm64
 
 permissions:
   contents: write
@@ -73,7 +82,8 @@ jobs:
           version="${{ github.event.inputs.version }}"
           target_registry="${{ github.event.inputs.target_registry }}"
           build_target="${{ github.event.inputs.build_target }}"
-          platforms="linux/amd64,linux/arm64"
+          requested_platforms="${{ github.event.inputs.build_platforms }}"
+          supported_platforms="linux/amd64,linux/arm64"
 
           if [ -z "$version" ]; then
             echo "Version could not be determined" >&2
@@ -84,14 +94,14 @@ jobs:
             langchain-agent-chat)
               image_name="langchain-agent-chat"
               docker_context="applications/langchain-agent-chat"
-              platforms="linux/amd64"
+              supported_platforms="linux/amd64"
               build_strategy="direct"
               ;;
             langgraph)
               image_name="langgraph"
               docker_context="applications/langgraph"
               dockerfile="applications/langgraph/Dockerfile"
-              platforms="linux/amd64"
+              supported_platforms="linux/amd64"
               build_strategy="direct"
               ;;
             harbor-runtime-set)
@@ -153,13 +163,13 @@ jobs:
             jenkins-agent)
               image_name="jenkins-agent"
               docker_context="."
-              dockerfile="applications/jenkins/agent/Dockerfile"
+              dockerfile="applications/jenkins-agent/Dockerfile"
               build_strategy="direct"
               ;;
             jenkins-controller)
               image_name="jenkins-controller"
               docker_context="."
-              dockerfile="applications/jenkins/controller/Dockerfile"
+              dockerfile="applications/jenkins-controller/Dockerfile"
               build_strategy="direct"
               ;;
             *)
@@ -200,6 +210,41 @@ jobs:
 
           dockerfile="${dockerfile:-}"
           image_base="${image_base:-}"
+
+          case "$requested_platforms" in
+            both)
+              requested_platforms_csv="linux/amd64,linux/arm64"
+              ;;
+            amd64)
+              requested_platforms_csv="linux/amd64"
+              ;;
+            arm64)
+              requested_platforms_csv="linux/arm64"
+              ;;
+            *)
+              echo "Unsupported build_platforms selection: $requested_platforms" >&2
+              exit 1
+              ;;
+          esac
+
+          filtered_platforms=()
+          IFS=',' read -r -a supported_platform_list <<<"${supported_platforms}"
+          for platform in "${supported_platform_list[@]}"; do
+            [ -n "$platform" ] || continue
+
+            case ",${requested_platforms_csv}," in
+              *,"${platform}",*)
+                filtered_platforms+=("${platform}")
+                ;;
+            esac
+          done
+
+          if [ "${#filtered_platforms[@]}" -eq 0 ]; then
+            echo "Build target ${build_target} does not support requested build_platforms=${requested_platforms}." >&2
+            exit 1
+          fi
+
+          platforms="$(IFS=,; echo "${filtered_platforms[*]}")"
 
           build_amd64=false
           build_arm64=false
@@ -283,6 +328,7 @@ jobs:
           docker buildx build \
             --builder default \
             --platform linux/amd64 \
+            --provenance=false \
             --file "${{ needs.prepare.outputs.dockerfile }}" \
             --load \
             --tag "${image_ref}" \
@@ -341,6 +387,7 @@ jobs:
           docker buildx build \
             --builder default \
             --platform linux/arm64 \
+            --provenance=false \
             --file "${{ needs.prepare.outputs.dockerfile }}" \
             --load \
             --tag "${image_ref}" \

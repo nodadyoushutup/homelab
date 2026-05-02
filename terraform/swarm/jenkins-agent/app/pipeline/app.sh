@@ -6,13 +6,13 @@ ROOT_DIR="$(cd "${SCRIPT_DIR}/../../../../.." && pwd)"
 PIPELINE_SCRIPT_ROOT="${ROOT_DIR}/scripts/terraform"
 source "${PIPELINE_SCRIPT_ROOT}/load_root_env.sh"
 
-SERVICE_NAME="jenkins"
-STAGE_NAME="Jenkins agents"
-ENTRYPOINT_RELATIVE="terraform/swarm/jenkins/agent/pipeline/agent.sh"
-TERRAFORM_DIR="${ROOT_DIR}/terraform/swarm/jenkins/agent"
+SERVICE_NAME="jenkins-agent"
+STAGE_NAME="Jenkins agent app"
+ENTRYPOINT_RELATIVE="terraform/swarm/jenkins-agent/app/pipeline/app.sh"
+TERRAFORM_DIR="${ROOT_DIR}/terraform/swarm/jenkins-agent/app"
 
-JENKINS_TFVARS_DIR="${JENKINS_TFVARS_DIR:-${TFVARS_DIR:-/mnt/eapp/.tfvars}/jenkins}"
-DEFAULT_TFVARS_FILE="${DEFAULT_TFVARS_FILE:-${JENKINS_TFVARS_DIR}/agent.tfvars}"
+JENKINS_AGENT_TFVARS_DIR="${JENKINS_AGENT_TFVARS_DIR:-${JENKINS_TFVARS_DIR:-${TFVARS_DIR:-/mnt/eapp/config}/jenkins-agent}}"
+DEFAULT_TFVARS_FILE="${DEFAULT_TFVARS_FILE:-${JENKINS_AGENT_TFVARS_DIR}/app.tfvars}"
 
 PLAN_ARGS_EXTRA=()
 APPLY_ARGS_EXTRA=()
@@ -25,23 +25,19 @@ pipeline_pre_terraform() {
     exit 1
   fi
 
-  echo "[INFO] Collecting Jenkins controller outputs"
+  echo "[INFO] Checking Jenkins controller outputs"
   if ! terraform -chdir="${CONTROLLER_TERRAFORM_DIR}" init -backend-config="${BACKEND_CONFIG_PATH}" > /dev/null; then
     echo "[ERR] Unable to initialize controller backend; ensure controller pipeline has been run." >&2
     exit 1
   fi
 
-  local controller_service_id controller_image
+  local controller_service_id
   controller_service_id="$(terraform -chdir="${CONTROLLER_TERRAFORM_DIR}" output -raw controller_service_id 2>/dev/null || true)"
-  controller_image="$(terraform -chdir="${CONTROLLER_TERRAFORM_DIR}" output -raw controller_image 2>/dev/null || true)"
 
-  if [[ -z "${controller_service_id}" || -z "${controller_image}" ]]; then
+  if [[ -z "${controller_service_id}" ]]; then
     echo "[ERR] Jenkins controller outputs unavailable. Run the controller pipeline before deploying agents." >&2
     exit 1
   fi
-
-  export TF_VAR_controller_service_id="${controller_service_id}"
-  export TF_VAR_controller_image="${controller_image}"
 }
 
 PIPELINE_ARGS=("$@")

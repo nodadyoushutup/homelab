@@ -54,7 +54,7 @@ spec:
             - name: BASH_PIPELINE_ALLOWED_WORKSPACE_ROOTS
               value: /mnt/eapp/code
             - name: BASH_PIPELINE_TFVARS_ROOT
-              value: /mnt/eapp/.tfvars
+              value: /mnt/eapp/config
             - name: BASH_PIPELINE_WORKSPACE_ROOT_HEADER
               value: x-workspace-root
             - name: BASH_PIPELINE_WORKSPACE_NAME_HEADER
@@ -73,7 +73,7 @@ spec:
             - name: code
               mountPath: /mnt/eapp/code
             - name: tfvars
-              mountPath: /mnt/eapp/.tfvars
+              mountPath: /mnt/eapp/config
           readinessProbe:
             tcpSocket:
               port: http
@@ -92,4 +92,4 @@ spec:
         - name: tfvars
           nfs:
             server: 192.168.1.100
-            path: /mnt/eapp/.tfvars
+            path: /mnt/eapp/config

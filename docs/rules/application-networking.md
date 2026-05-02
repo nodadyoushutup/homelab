@@ -22,8 +22,8 @@ That means the app is not considered complete until all of these exist when the
 endpoint is HTTP or HTTPS based:
 
 - workload-side ingress or reachable upstream target
-- `/mnt/eapp/.tfvars/nginx-proxy-manager/config.tfvars`
-- `/mnt/eapp/.tfvars/cloudflare/config.tfvars`
+- `/mnt/eapp/config/nginx-proxy-manager/config.tfvars`
+- `/mnt/eapp/config/cloudflare/config.tfvars`
 
 Do not treat "the wildcard record exists" as sufficient. Each app needs its own
 intentional hostname entry.
@@ -36,9 +36,9 @@ drift.
 The usual sources of truth are:
 
 - app manifests or Terraform service code for the upstream target
-- `/mnt/eapp/.tfvars/nginx-proxy-manager/config.tfvars` for certificates and
+- `/mnt/eapp/config/nginx-proxy-manager/config.tfvars` for certificates and
   proxy hosts
-- `/mnt/eapp/.tfvars/cloudflare/config.tfvars` for DNS records
+- `/mnt/eapp/config/cloudflare/config.tfvars` for DNS records
 - Terraform pipeline entrypoints for applying the Nginx Proxy Manager and
   Cloudflare changes
 
@@ -119,7 +119,7 @@ explicit choice, not the default.
 For HTTP and HTTPS apps, the proxy host definition must match the intended
 hostname and point at a stable upstream target.
 
-Expected shape in `/mnt/eapp/.tfvars/nginx-proxy-manager/config.tfvars`:
+Expected shape in `/mnt/eapp/config/nginx-proxy-manager/config.tfvars`:
 
 - a certificate entry covering the app hostname or hostnames
 - a `proxy_hosts` entry with the same `domain_names`

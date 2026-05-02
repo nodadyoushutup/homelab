@@ -61,8 +61,8 @@ This document applies to the current MCP server set:
   clients running off-platform.
 - The standard client path is a stable hostname routed through the repo-managed
   edge config, not a raw Swarm published port copied into a client by hand.
-- Keep `/mnt/eapp/.tfvars/nginx-proxy-manager/config.tfvars`,
-  `/mnt/eapp/.tfvars/cloudflare/config.tfvars`, and the matching Codex config
+- Keep `/mnt/eapp/config/nginx-proxy-manager/config.tfvars`,
+  `/mnt/eapp/config/cloudflare/config.tfvars`, and the matching Codex config
   layer (`~/.codex/config.toml` for global servers or repo-local
   `.codex/config.toml` for workspace-specific servers) aligned with the final
   service route and MCP HTTP path for every host-usable server.
@@ -82,8 +82,8 @@ This document applies to the current MCP server set:
 
 ## Shared Credential Rules
 
-- Credentials belong in `/mnt/eapp/.tfvars/<service>/app.tfvars`,
-  `/mnt/eapp/.tfvars/vault/config.tfvars`, or in the runtime secret flow that
+- Credentials belong in `/mnt/eapp/config/<service>/app.tfvars`,
+  `/mnt/eapp/config/vault/config.tfvars`, or in the runtime secret flow that
   the service already uses. Do not commit live tokens, passwords, or service
   account files into the repo.
 - Prefer the narrowest scope that still supports the required tools. Do not
@@ -367,7 +367,7 @@ This document applies to the current MCP server set:
 - Workspace model: mount the shared code tree from the TrueNAS NFS export at
   `/mnt/eapp/code` read-write and set the default workspace root to
   `/mnt/eapp/code/homelab`; keep the allowlist pinned to the shared code tree
-- tfvars model: mount `/mnt/eapp/.tfvars` into the pod from cluster-reachable
+- tfvars model: mount `/mnt/eapp/config` into the pod from cluster-reachable
   storage and keep the in-container path aligned with the shared Terraform
   wrapper defaults instead of depending on a Swarm node-local bind mount
 - Runtime user model: run the pod as an unprivileged UID/GID that can read and

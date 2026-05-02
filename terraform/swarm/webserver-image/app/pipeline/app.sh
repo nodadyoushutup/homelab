@@ -10,7 +10,7 @@ SERVICE_NAME="webserver-image"
 STAGE_NAME="Webserver image app"
 ENTRYPOINT_RELATIVE="terraform/swarm/webserver-image/app/pipeline/app.sh"
 TERRAFORM_DIR="${ROOT_DIR}/terraform/swarm/webserver-image/app"
-TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${TFVARS_DIR:-/mnt/eapp/.tfvars}}"
+TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${TFVARS_DIR:-/mnt/eapp/config}}"
 DEFAULT_TFVARS_FILE="${DEFAULT_TFVARS_FILE:-${TFVARS_HOME_DIR}/webserver-image/app.tfvars}"
 DEFAULT_BACKEND_FILE="${DEFAULT_BACKEND_FILE:-${TFVARS_HOME_DIR}/minio.backend.hcl}"
 

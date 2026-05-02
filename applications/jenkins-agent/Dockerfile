@@ -1,4 +1,4 @@
-FROM jenkins/inbound-agent:3283.v92c105e0f819-7
+FROM jenkins/inbound-agent:3283.v92c105e0f819-7-jdk21
 
 # Switch to root to install additional packages
 USER root
@@ -34,7 +34,7 @@ RUN chmod 0755 /tmp/install-scripts/packages.sh \
     && rm -rf /var/lib/apt/lists/* /tmp/install-scripts
 
 # Add the custom Jenkins agent entrypoint.
-COPY applications/jenkins/agent/entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY applications/jenkins-agent/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
 # Ensure the Jenkins home directory exists with the correct ownership so that

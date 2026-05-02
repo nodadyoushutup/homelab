@@ -89,7 +89,7 @@ to Nginx Proxy Manager or Cloudflare.
 
 ## Step 4: Update Nginx Proxy Manager tfvars
 
-Edit `/mnt/eapp/.tfvars/nginx-proxy-manager/config.tfvars`.
+Edit `/mnt/eapp/config/nginx-proxy-manager/config.tfvars`.
 
 For each new hostname set:
 
@@ -109,7 +109,7 @@ terraform/swarm/nginx_proxy_manager/config/pipeline/config.sh
 
 ## Step 5: Update Cloudflare tfvars
 
-Edit `/mnt/eapp/.tfvars/cloudflare/config.tfvars`.
+Edit `/mnt/eapp/config/cloudflare/config.tfvars`.
 
 For each hostname:
 

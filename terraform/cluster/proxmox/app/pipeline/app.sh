@@ -10,7 +10,7 @@ SERVICE_NAME="proxmox"
 STAGE_NAME="Proxmox cluster"
 ENTRYPOINT_RELATIVE="terraform/cluster/proxmox/app/pipeline/app.sh"
 TERRAFORM_DIR="${ROOT_DIR}/terraform/cluster/proxmox/app"
-TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${TFVARS_DIR:-/mnt/eapp/.tfvars}}"
+TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${TFVARS_DIR:-/mnt/eapp/config}}"
 DEFAULT_TFVARS_FILE="${DEFAULT_TFVARS_FILE:-${TFVARS_HOME_DIR}/proxmox/app.tfvars}"
 DEFAULT_BACKEND_FILE="${DEFAULT_BACKEND_FILE:-${TFVARS_HOME_DIR}/minio.backend.hcl}"
 

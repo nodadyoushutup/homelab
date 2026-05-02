@@ -12,7 +12,7 @@ STAGE_NAME="Grafana database"
 ENTRYPOINT_RELATIVE="terraform/swarm/grafana/database/pipeline/database.sh"
 TERRAFORM_DIR="${ROOT_DIR}/terraform/swarm/grafana/database"
 
-TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${TFVARS_DIR:-/mnt/eapp/.tfvars}}"
+TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${TFVARS_DIR:-/mnt/eapp/config}}"
 DEFAULT_TFVARS_FILE="${DEFAULT_TFVARS_FILE:-${TFVARS_HOME_DIR}/grafana/database.tfvars}"
 DEFAULT_BACKEND_FILE="${DEFAULT_BACKEND_FILE:-${TFVARS_HOME_DIR}/minio.backend.hcl}"
 

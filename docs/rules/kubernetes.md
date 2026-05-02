@@ -216,7 +216,7 @@ pattern is:
 
 For Vault-backed Kubernetes secrets, the source of truth is:
 
-- `/mnt/eapp/.tfvars/vault/config.tfvars`
+- `/mnt/eapp/config/vault/config.tfvars`
 - `terraform/swarm/vault/config`
 
 Use [docs/workflows/kubernetes-vault-secrets.md](./../workflows/kubernetes-vault-secrets.md)

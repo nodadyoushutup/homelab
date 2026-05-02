@@ -58,7 +58,7 @@ When a project does not maintain a standalone docs site, this file links to the 
 | Telegraf | `terraform/swarm/telegraf_docker_metrics/app` | [Telegraf docs](https://docs.influxdata.com/telegraf/v1/configuration/) |
 | Dozzle | `terraform/swarm/dozzle/app` | [Dozzle docs](https://dozzle.dev/guide/what-is-dozzle) |
 | Harbor | `terraform/swarm/harbor/{app,config}`, `applications/harbor/` | [Harbor docs](https://goharbor.io/docs/) |
-| Jenkins | `terraform/swarm/jenkins-controller/{app,config}`, `terraform/swarm/jenkins/agent`, `applications/jenkins/` | [Jenkins docs](https://www.jenkins.io/doc/) |
+| Jenkins | `terraform/swarm/jenkins-agent/app`, `terraform/swarm/jenkins-controller/{app,config}`, `applications/jenkins-agent/`, `applications/jenkins-controller/` | [Jenkins docs](https://www.jenkins.io/doc/) |
 | Model Context Protocol (MCP) | `applications/mcp-*`, `kubernetes/mcp-*`, `terraform/swarm/mcp-*/app` | [MCP docs](https://modelcontextprotocol.io/docs/learn) |
 
 ## Application workloads

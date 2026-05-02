@@ -1,11 +1,28 @@
 locals {
-  casc_yaml = yamlencode(var.casc_config)
-  casc_hash = substr(sha256(local.casc_yaml), 0, 12)
+  casc_hash = substr(sha256(file(var.casc_config_path)), 0, 12)
 
   config_force_update = parseint(substr(local.casc_hash, 0, 8), 16)
-  extra_mounts_by_name = {
-    for mount in var.mounts : mount.name => mount
+  default_env = {
+    CASC_JENKINS_CONFIG = var.casc_config_container_path
+    SECRETS_DIR         = var.agent_secrets_dir
   }
+  controller_env = merge(local.default_env, var.env)
+  default_mounts_by_name = var.enable_shared_tfvars_mount ? {
+    (var.shared_tfvars_volume_name) = {
+      name   = var.shared_tfvars_volume_name
+      target = var.shared_tfvars_mount_target
+      driver = "local"
+      driver_opts = {
+        type   = "none"
+        o      = "bind"
+        device = var.shared_tfvars_host_path
+      }
+      no_copy = false
+    }
+  } : {}
+  extra_mounts_by_name = merge(local.default_mounts_by_name, {
+    for mount in var.mounts : mount.name => mount
+  })
 }
 
 resource "docker_network" "jenkins_controller" {
@@ -24,15 +41,6 @@ resource "docker_volume" "extra_mounts" {
   name        = each.value.name
   driver      = each.value.driver
   driver_opts = each.value.driver_opts
-}
-
-resource "docker_config" "jenkins_casc" {
-  name = "jenkins-controller-casc-${local.casc_hash}.yaml"
-  data = base64encode(local.casc_yaml)
-
-  lifecycle {
-    create_before_destroy = true
-  }
 }
 
 resource "docker_service" "jenkins_controller" {
@@ -67,7 +75,7 @@ resource "docker_service" "jenkins_controller" {
 
     container_spec {
       image = var.controller_image
-      env   = var.env
+      env   = local.controller_env
 
       dns_config {
         nameservers = var.dns_nameservers
@@ -96,19 +104,12 @@ resource "docker_service" "jenkins_controller" {
           }
         }
       }
-
-      configs {
-        config_id   = docker_config.jenkins_casc.id
-        config_name = docker_config.jenkins_casc.name
-        file_name   = format("%s/jenkins.yaml", var.home_mount_target)
-      }
-
       healthcheck {
         test         = ["CMD-SHELL", "curl --silent --show-error --fail http://127.0.0.1:8080/login > /dev/null || exit 1"]
         interval     = "30s"
         timeout      = "5s"
         retries      = 6
-        start_period = "60s"
+        start_period = "1m"
       }
     }
 

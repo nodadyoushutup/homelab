@@ -1,7 +1,11 @@
 provider_config = {
   docker = {
-    host     = "ssh://nodadyoushutup@swarm-cp-0.local"
-    ssh_opts = ["-o", "StrictHostKeyChecking=accept-new"]
+    host     = "ssh://nodadyoushutup@192.168.1.120"
+    ssh_opts = [
+      "-o", "StrictHostKeyChecking=accept-new",
+      "-o", "UserKnownHostsFile=/mnt/eapp/config/.ssh/known_hosts",
+      "-i", "/mnt/eapp/config/.ssh/id_ed25519",
+    ]
   }
 }
 

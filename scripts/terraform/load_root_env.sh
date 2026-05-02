@@ -14,10 +14,12 @@ _pipeline_env_file="${_pipeline_root_dir}/.env"
 if [[ -f "${_pipeline_env_file}" ]]; then
   _pipeline_existing_tfvars_dir_set=0
   _pipeline_existing_tfvars_home_dir_set=0
+  _pipeline_existing_jenkins_agent_tfvars_dir_set=0
   _pipeline_existing_jenkins_tfvars_dir_set=0
   _pipeline_existing_jenkins_controller_tfvars_dir_set=0
   _pipeline_existing_tfvars_dir_value=""
   _pipeline_existing_tfvars_home_dir_value=""
+  _pipeline_existing_jenkins_agent_tfvars_dir_value=""
   _pipeline_existing_jenkins_tfvars_dir_value=""
   _pipeline_existing_jenkins_controller_tfvars_dir_value=""
 
@@ -28,6 +30,10 @@ if [[ -f "${_pipeline_env_file}" ]]; then
   if [[ -n "${TFVARS_HOME_DIR+x}" ]]; then
     _pipeline_existing_tfvars_home_dir_set=1
     _pipeline_existing_tfvars_home_dir_value="${TFVARS_HOME_DIR}"
+  fi
+  if [[ -n "${JENKINS_AGENT_TFVARS_DIR+x}" ]]; then
+    _pipeline_existing_jenkins_agent_tfvars_dir_set=1
+    _pipeline_existing_jenkins_agent_tfvars_dir_value="${JENKINS_AGENT_TFVARS_DIR}"
   fi
   if [[ -n "${JENKINS_TFVARS_DIR+x}" ]]; then
     _pipeline_existing_jenkins_tfvars_dir_set=1
@@ -66,6 +72,9 @@ if [[ -f "${_pipeline_env_file}" ]]; then
   if [[ "${_pipeline_existing_tfvars_home_dir_set}" == "1" ]]; then
     export TFVARS_HOME_DIR="${_pipeline_existing_tfvars_home_dir_value}"
   fi
+  if [[ "${_pipeline_existing_jenkins_agent_tfvars_dir_set}" == "1" ]]; then
+    export JENKINS_AGENT_TFVARS_DIR="${_pipeline_existing_jenkins_agent_tfvars_dir_value}"
+  fi
   if [[ "${_pipeline_existing_jenkins_tfvars_dir_set}" == "1" ]]; then
     export JENKINS_TFVARS_DIR="${_pipeline_existing_jenkins_tfvars_dir_value}"
   fi
@@ -78,8 +87,16 @@ if [[ -z "${TFVARS_HOME_DIR:-}" && -n "${TFVARS_DIR:-}" ]]; then
   export TFVARS_HOME_DIR="${TFVARS_DIR}"
 fi
 
+if [[ -z "${JENKINS_AGENT_TFVARS_DIR:-}" && -n "${JENKINS_TFVARS_DIR:-}" ]]; then
+  export JENKINS_AGENT_TFVARS_DIR="${JENKINS_TFVARS_DIR}"
+fi
+
+if [[ -z "${JENKINS_AGENT_TFVARS_DIR:-}" && -n "${TFVARS_DIR:-}" ]]; then
+  export JENKINS_AGENT_TFVARS_DIR="${TFVARS_DIR}/jenkins-agent"
+fi
+
 if [[ -z "${JENKINS_TFVARS_DIR:-}" && -n "${TFVARS_DIR:-}" ]]; then
-  export JENKINS_TFVARS_DIR="${TFVARS_DIR}/jenkins"
+  export JENKINS_TFVARS_DIR="${JENKINS_AGENT_TFVARS_DIR:-${TFVARS_DIR}/jenkins-agent}"
 fi
 
 if [[ -z "${JENKINS_CONTROLLER_TFVARS_DIR:-}" && -n "${TFVARS_DIR:-}" ]]; then

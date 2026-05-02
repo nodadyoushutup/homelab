@@ -39,9 +39,9 @@ When a task changes an MCP server:
      Kubernetes services
 5. update the matching tfvars and companion credential assets when the service
    needs them:
-   - `/mnt/eapp/.tfvars/<service>/` for Swarm runtime inputs
-   - `/mnt/eapp/.tfvars/harbor/config.tfvars` for Harbor projects and robots
-   - `/mnt/eapp/.tfvars/vault/config.tfvars` for Kubernetes registry or app
+   - `/mnt/eapp/config/<service>/` for Swarm runtime inputs
+   - `/mnt/eapp/config/harbor/config.tfvars` for Harbor projects and robots
+   - `/mnt/eapp/config/vault/config.tfvars` for Kubernetes registry or app
      secrets consumed through External Secrets
 6. update the matching Nginx Proxy Manager and Cloudflare hostname entries when
    the server is meant to be reachable from the host Codex client
@@ -70,10 +70,10 @@ Before running the pipeline:
    - `kubernetes/<service>/` plus `kubernetes/argocd-management/` for
      Kubernetes
 2. confirm the matching runtime config inputs exist:
-   - `/mnt/eapp/.tfvars/<service>/app.tfvars` for Swarm runtime inputs
-   - `/mnt/eapp/.tfvars/vault/config.tfvars` and Harbor config entries for
+   - `/mnt/eapp/config/<service>/app.tfvars` for Swarm runtime inputs
+   - `/mnt/eapp/config/vault/config.tfvars` and Harbor config entries for
      Kubernetes registry-backed pulls when used
-3. confirm `/mnt/eapp/.tfvars/minio.backend.hcl` exists unless you are
+3. confirm `/mnt/eapp/config/minio.backend.hcl` exists unless you are
    intentionally overriding it for a Swarm Terraform run
 4. confirm any local secret file paths in tfvars exist on the Terraform runner
 5. if the service should be host-reachable, decide the final hostname and MCP
@@ -95,7 +95,7 @@ Before committing `kubernetes/mcp-argocd/`:
 
 - confirm the upstream image reference in
   `kubernetes/mcp-argocd/deployment.yaml` still exists in GHCR
-- confirm `/mnt/eapp/.tfvars/vault/config.tfvars` contains a `k8s/mcp_argocd`
+- confirm `/mnt/eapp/config/vault/config.tfvars` contains a `k8s/mcp_argocd`
   payload with `argocd_base_url`, `argocd_api_token`, `mcp_read_only`, and the
   current `argocd_insecure_skip_verify` posture
 - bootstrap the namespace-local Vault reader secret
@@ -111,7 +111,7 @@ Before committing `kubernetes/mcp-atlassian/`:
 
 - confirm the upstream image reference in
   `kubernetes/mcp-atlassian/deployment.yaml` still exists in GHCR
-- confirm `/mnt/eapp/.tfvars/vault/config.tfvars` contains a
+- confirm `/mnt/eapp/config/vault/config.tfvars` contains a
   `k8s/mcp_atlassian` payload with Jira and Confluence URLs, usernames, API
   tokens, and the current scope-filter values if the service should stay
   narrowed
@@ -133,8 +133,8 @@ Before committing `kubernetes/mcp-ast-grep/`:
   `kubernetes/mcp-ast-grep/deployment.yaml` exists or will be published in the
   same task
 - confirm the Harbor project and the Kubernetes pull robot entry exist in
-  `/mnt/eapp/.tfvars/harbor/config.tfvars`
-- confirm `/mnt/eapp/.tfvars/vault/config.tfvars` contains the matching
+  `/mnt/eapp/config/harbor/config.tfvars`
+- confirm `/mnt/eapp/config/vault/config.tfvars` contains the matching
   `k8s/mcp_ast_grep` registry credentials for the `ExternalSecret`
 - bootstrap the namespace-local Vault reader secret
   `mcp-ast-grep-vault-reader` before expecting External Secrets to sync
@@ -161,8 +161,8 @@ Before committing `kubernetes/mcp-cloudflare/`:
   `kubernetes/mcp-cloudflare/deployment.yaml` exists or will be published in
   the same task
 - confirm the Harbor project and the Kubernetes pull robot entry exist in
-  `/mnt/eapp/.tfvars/harbor/config.tfvars`
-- confirm `/mnt/eapp/.tfvars/vault/config.tfvars` contains the matching
+  `/mnt/eapp/config/harbor/config.tfvars`
+- confirm `/mnt/eapp/config/vault/config.tfvars` contains the matching
   `k8s/mcp_cloudflare` app and registry credentials for the `ExternalSecret`
 - confirm `cloudflare_api_token` and `cloudflare_zone_id` match the target zone
 - bootstrap the namespace-local Vault reader secret
@@ -181,8 +181,8 @@ Before committing `kubernetes/mcp-filesystem/`:
   `kubernetes/mcp-filesystem/deployment.yaml` exists or will be published in
   the same task
 - confirm the Harbor project and the Kubernetes pull robot entry exist in
-  `/mnt/eapp/.tfvars/harbor/config.tfvars`
-- confirm `/mnt/eapp/.tfvars/vault/config.tfvars` contains the matching
+  `/mnt/eapp/config/harbor/config.tfvars`
+- confirm `/mnt/eapp/config/vault/config.tfvars` contains the matching
   `k8s/mcp_filesystem` registry credentials for the `ExternalSecret`
 - bootstrap the namespace-local Vault reader secret
   `mcp-filesystem-vault-reader` before expecting External Secrets to sync
@@ -200,8 +200,8 @@ Before committing `kubernetes/mcp-git/`:
   `kubernetes/mcp-git/deployment.yaml` exists or will be published in the same
   task
 - confirm the Harbor project and the Kubernetes pull robot entry exist in
-  `/mnt/eapp/.tfvars/harbor/config.tfvars`
-- confirm `/mnt/eapp/.tfvars/vault/config.tfvars` contains the matching
+  `/mnt/eapp/config/harbor/config.tfvars`
+- confirm `/mnt/eapp/config/vault/config.tfvars` contains the matching
   `k8s/mcp_git` registry credentials for the `ExternalSecret`
 - bootstrap the namespace-local Vault reader secret
   `mcp-git-vault-reader` before expecting External Secrets to sync
@@ -220,7 +220,7 @@ Before committing `kubernetes/mcp-fortigate/`:
 
 - confirm the GHCR image tag referenced in
   `kubernetes/mcp-fortigate/deployment.yaml` exists
-- confirm `/mnt/eapp/.tfvars/vault/config.tfvars` contains a
+- confirm `/mnt/eapp/config/vault/config.tfvars` contains a
   `k8s/mcp_fortigate` payload with `ghcr_username`, `ghcr_password`, plus
   either `fortigate_api_token` or both `fortigate_username` and
   `fortigate_password`
@@ -241,7 +241,7 @@ Before committing `kubernetes/mcp-github/`:
 
 - confirm the image tag referenced in `kubernetes/mcp-github/deployment.yaml`
   exists in GHCR
-- confirm `/mnt/eapp/.tfvars/vault/config.tfvars` contains a `k8s/mcp_github`
+- confirm `/mnt/eapp/config/vault/config.tfvars` contains a `k8s/mcp_github`
   payload with `github_personal_access_token`, `ghcr_registry`,
   `ghcr_username`, and `ghcr_password`
 - bootstrap the namespace-local Vault reader secret
@@ -260,8 +260,8 @@ Before committing `kubernetes/mcp-google-workspace/`:
   `kubernetes/mcp-google-workspace/deployment.yaml` exists or will be
   published in the same task
 - confirm the Harbor project and the Kubernetes pull robot entry exist in
-  `/mnt/eapp/.tfvars/harbor/config.tfvars`
-- confirm `/mnt/eapp/.tfvars/vault/config.tfvars` contains the matching
+  `/mnt/eapp/config/harbor/config.tfvars`
+- confirm `/mnt/eapp/config/vault/config.tfvars` contains the matching
   `k8s/mcp_google_workspace` app and registry credentials plus the delegated
   service-account JSON payload
 - bootstrap the namespace-local Vault reader secret
@@ -294,12 +294,12 @@ Before committing `kubernetes/mcp-bash-pipeline/`:
   `kubernetes/mcp-bash-pipeline/deployment.yaml` exists or will be published in
   the same task
 - confirm the Harbor project and the Kubernetes pull robot entry exist in
-  `/mnt/eapp/.tfvars/harbor/config.tfvars`
-- confirm `/mnt/eapp/.tfvars/vault/config.tfvars` contains the matching
+  `/mnt/eapp/config/harbor/config.tfvars`
+- confirm `/mnt/eapp/config/vault/config.tfvars` contains the matching
   `k8s/mcp_bash_pipeline` registry credentials for the `ExternalSecret`
 - bootstrap the namespace-local Vault reader secret
   `mcp-bash-pipeline-vault-reader` before expecting External Secrets to sync
-- confirm the NFS exports for both `/mnt/eapp/code` and `/mnt/eapp/.tfvars`
+- confirm the NFS exports for both `/mnt/eapp/code` and `/mnt/eapp/config`
   are reachable from the selected Kubernetes worker and still represent the
   intended runtime inputs
 - confirm the configured runtime UID/GID can read and execute files from the
@@ -320,8 +320,8 @@ Before committing `kubernetes/mcp-terraform/`:
   `kubernetes/mcp-terraform/deployment.yaml` exists or will be published in the
   same task
 - confirm the Harbor project and the Kubernetes pull robot entry exist in
-  `/mnt/eapp/.tfvars/harbor/config.tfvars`
-- confirm `/mnt/eapp/.tfvars/vault/config.tfvars` contains the matching
+  `/mnt/eapp/config/harbor/config.tfvars`
+- confirm `/mnt/eapp/config/vault/config.tfvars` contains the matching
   `k8s/mcp_terraform` app and registry credentials for the `ExternalSecret`
 - bootstrap the namespace-local Vault reader secret
   `mcp-terraform-vault-reader` before expecting External Secrets to sync

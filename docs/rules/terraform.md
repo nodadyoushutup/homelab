@@ -47,7 +47,7 @@ stage names are:
 Service-specific stage names are allowed when they match the implementation
 better than the generic names. Existing examples include:
 
-- `terraform/swarm/jenkins/agent`
+- `terraform/swarm/jenkins-agent/app`
 - `terraform/swarm/jenkins-controller/app`
 - `terraform/swarm/jenkins-controller/config`
 
@@ -101,36 +101,67 @@ Use those when a stage needs repo-specific prechecks or post-init behavior.
 
 ## tfvars and Backend Rules
 
-Default tfvars live under `/mnt/eapp/.tfvars`. The common pattern is:
+Default tfvars live under `/mnt/eapp/config`. The common pattern is:
 
-- `/mnt/eapp/.tfvars/<service>/app.tfvars`
-- `/mnt/eapp/.tfvars/<service>/config.tfvars`
-- `/mnt/eapp/.tfvars/<service>/database.tfvars`
+- `/mnt/eapp/config/<service>/app.tfvars`
+- `/mnt/eapp/config/<service>/config.tfvars`
+- `/mnt/eapp/config/<service>/database.tfvars`
 
 Some services intentionally use a different basename. Existing examples include:
 
-- `nginx_proxy_manager` Terraform paths paired with `.tfvars/nginx-proxy-manager/...`
-- single-stage services that resolve to `/mnt/eapp/.tfvars/<service>.tfvars`
+- `nginx_proxy_manager` Terraform paths paired with `config/nginx-proxy-manager/...`
+- single-stage services that resolve to `/mnt/eapp/config/<service>.tfvars`
 
 The default backend file is usually:
 
-- `/mnt/eapp/.tfvars/minio.backend.hcl`
+- `/mnt/eapp/config/minio.backend.hcl`
 
 The shared scripts resolve tfvars home like this:
 
-- `TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${TFVARS_DIR:-/mnt/eapp/.tfvars}}"`
+- `TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${TFVARS_DIR:-/mnt/eapp/config}}"`
+
+For Terraform stages that reach Docker Swarm over SSH, keep the SSH material in
+the shared configuration root instead of a workstation-local home directory:
+
+- private key: `/mnt/eapp/config/.ssh/id_ed25519`
+- known hosts: `/mnt/eapp/config/.ssh/known_hosts`
+
+Prefer explicit `ssh_opts` in tfvars that point at those shared paths so Swarm
+deploys do not depend on whichever local `~/.ssh` state happens to be present
+on the runner.
+
+Also keep the SSH target itself portable across runners:
+
+- prefer an explicit remote user in `host = "ssh://user@host"`
+- prefer a container-resolvable IP or standard DNS name over mDNS-only
+  `.local` hostnames
 
 `scripts/terraform/load_root_env.sh` preserves already-exported values for:
 
 - `TFVARS_DIR`
 - `TFVARS_HOME_DIR`
+- `JENKINS_AGENT_TFVARS_DIR`
 - `JENKINS_TFVARS_DIR`
 - `JENKINS_CONTROLLER_TFVARS_DIR`
 
 Jenkins-specific defaults remain special cases:
 
-- `JENKINS_TFVARS_DIR` defaults to `${TFVARS_DIR}/jenkins`
+- `JENKINS_AGENT_TFVARS_DIR` defaults to `${TFVARS_DIR}/jenkins-agent`
+- `JENKINS_TFVARS_DIR` is kept as a legacy alias and resolves to the
+  `jenkins-agent` tfvars directory when not set explicitly
 - `JENKINS_CONTROLLER_TFVARS_DIR` defaults to `${TFVARS_DIR}/jenkins-controller`
+- Jenkins controller and agent secret handoff now defaults to the shared
+  configuration root mounted at `/mnt/eapp/config`, with controller-written
+  secret files under `/mnt/eapp/config/jenkins-controller/agent-secrets/`
+- Jenkins controller JCasC now defaults to the literal YAML companion file
+  `/mnt/eapp/config/jenkins-controller/jenkins.yaml`, and the Jenkins agent
+  stage reads that same file to derive inbound agent service definitions
+- Jenkins agent services must mount `/mnt/eapp/config` as a direct bind mount
+  from the host path, not as a Swarm-local named volume, so every node sees the
+  same NFS-backed configuration and agent secret files
+- Jenkins agent node entries in that YAML should use `nodeDescription` for the
+  target Swarm hostname when the agent stage needs deterministic per-service
+  placement from the same source-of-truth file
 
 If a stage needs fixed inputs and must reject overrides, document that in the
 pipeline and keep the behavior explicit. `vault` already does this.
@@ -157,9 +188,19 @@ If either path cannot be resolved, the pipeline fails before `terraform init`.
 
 ### tfvars directory expectations
 
-`/mnt/eapp/.tfvars/<service>/` can include more than `*.tfvars` files. Companion
+`/mnt/eapp/config/<service>/` can include more than `*.tfvars` files. Companion
 assets such as `config.yaml`, `grafana.ini`, `service_account.json`, cloud-init
 YAML, or Talos patch files are normal when a stage consumes them.
+
+The Jenkins controller and agents also use the shared `/mnt/eapp/config`
+mount as their runtime handoff path for inbound agent secret files. Treat that
+Jenkins-owned subdirectory as runtime configuration data, not as a generic dump
+location for unrelated service state.
+
+Jenkins also uses a repo-external companion YAML file at
+`/mnt/eapp/config/jenkins-controller/jenkins.yaml` as the source-of-truth
+Configuration as Code document. Keep controller security, location, and node
+definitions in that file rather than re-encoding them inline in Terraform.
 
 ## Backend State Naming
 
@@ -192,7 +233,7 @@ the implementation history and external system naming.
 Examples:
 
 - Terraform path: `terraform/swarm/nginx_proxy_manager/...`
-- tfvars path: `/mnt/eapp/.tfvars/nginx-proxy-manager/...`
+- tfvars path: `/mnt/eapp/config/nginx-proxy-manager/...`
 - Terraform path: `terraform/swarm/node_exporter/...`
 
 Do not rename service paths unless the work is explicitly a migration.
@@ -212,8 +253,8 @@ prechecks. Do not rely on tribal knowledge.
 Any new externally reachable application added via Terraform must also have its
 edge configuration represented in code:
 
-- Nginx Proxy Manager tfvars under `/mnt/eapp/.tfvars/nginx-proxy-manager/`
-- Cloudflare tfvars under `/mnt/eapp/.tfvars/cloudflare/`
+- Nginx Proxy Manager tfvars under `/mnt/eapp/config/nginx-proxy-manager/`
+- Cloudflare tfvars under `/mnt/eapp/config/cloudflare/`
 
 Use explicit per-app hostnames and records. Do not treat the wildcard DNS entry
 as enough for new application onboarding.
@@ -242,8 +283,6 @@ These are valid existing exceptions, not patterns to copy by default:
 
 - `terraform/cluster/proxmox/app` uses `variable.tf`
 - `terraform/swarm/vault/{app,config}` use fixed input paths
-- `terraform/swarm/jenkins/agent` is a legacy path that reads controller
-  outputs from `terraform/swarm/jenkins-controller/app`
 - `terraform/swarm/prometheus/database` prefers
-  `/mnt/eapp/.tfvars/prometheus/database.tfvars` but falls back to
-  `/mnt/eapp/.tfvars/victoriametrics/app.tfvars`
+  `/mnt/eapp/config/prometheus/database.tfvars` but falls back to
+  `/mnt/eapp/config/victoriametrics/app.tfvars`

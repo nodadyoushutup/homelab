@@ -8,8 +8,8 @@ source "${PIPELINE_SCRIPT_ROOT}/load_root_env.sh"
 
 if [[ $# -gt 0 ]]; then
   echo "[ERR] vault app pipeline uses fixed input paths and does not accept override arguments." >&2
-  echo "      expected tfvars:  /mnt/eapp/.tfvars/vault/app.tfvars" >&2
-  echo "      expected backend: /mnt/eapp/.tfvars/minio.backend.hcl" >&2
+  echo "      expected tfvars:  /mnt/eapp/config/vault/app.tfvars" >&2
+  echo "      expected backend: /mnt/eapp/config/minio.backend.hcl" >&2
   exit 2
 fi
 
@@ -71,7 +71,7 @@ vault_post_deploy_health_check() {
   local retries=24
   local sleep_seconds=5
 
-  env_file="${TFVARS_HOME_DIR:-${TFVARS_DIR:-/mnt/eapp/.tfvars}}/vault/.env"
+  env_file="${TFVARS_HOME_DIR:-${TFVARS_DIR:-/mnt/eapp/config}}/vault/.env"
   vault_addr="${VAULT_ADDR:-}"
 
   if [[ -z "${vault_addr}" && -f "${env_file}" ]]; then
@@ -109,7 +109,7 @@ SERVICE_NAME="vault"
 STAGE_NAME="Vault app"
 ENTRYPOINT_RELATIVE="terraform/swarm/vault/app/pipeline/app.sh"
 TERRAFORM_DIR="${ROOT_DIR}/terraform/swarm/vault/app"
-TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${TFVARS_DIR:-/mnt/eapp/.tfvars}}"
+TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${TFVARS_DIR:-/mnt/eapp/config}}"
 DEFAULT_TFVARS_FILE="${TFVARS_HOME_DIR}/vault/app.tfvars"
 DEFAULT_BACKEND_FILE="${TFVARS_HOME_DIR}/minio.backend.hcl"
 

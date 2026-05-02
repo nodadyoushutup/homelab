@@ -35,7 +35,7 @@ state.
   [packer/scripts/cleanup-image.sh](../../packer/scripts/cleanup-image.sh:12).
 - The Proxmox tfvars cloud-init payload for the `development` VM includes the
   expected `ssh_authorized_keys` entry and a Docker Swarm join script in
-  `/mnt/eapp/.tfvars/proxmox/development-user-config.yaml`.
+  `/mnt/eapp/config/proxmox/development-user-config.yaml`.
 
 ## Runtime Evidence Collected
 

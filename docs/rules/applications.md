@@ -56,7 +56,7 @@ Repo examples:
 - observability: `terraform/swarm/grafana`, `prometheus`, `loki`, `alloy`,
   `graphite`, `dozzle`, `node_exporter`, `telegraf_docker_metrics`
 - infrastructure: `terraform/swarm/harbor`, `vault`,
-  `nginx_proxy_manager`, `gha-runner`, `jenkins-controller`
+  `nginx_proxy_manager`, `gha-runner`, `jenkins-agent`, `jenkins-controller`
 - management tooling: no current Swarm MCP examples
 
 Documented exception:
@@ -164,8 +164,8 @@ separate components with different failure-domain requirements.
 For both application classes, a new externally reachable HTTP endpoint is not
 complete until the edge routing is represented in code:
 
-- Nginx Proxy Manager tfvars under `/mnt/eapp/.tfvars/nginx-proxy-manager/`
-- Cloudflare tfvars under `/mnt/eapp/.tfvars/cloudflare/`
+- Nginx Proxy Manager tfvars under `/mnt/eapp/config/nginx-proxy-manager/`
+- Cloudflare tfvars under `/mnt/eapp/config/cloudflare/`
 
 Every app that is intended to be reachable through a domain must have explicit
 bound subdomains represented in those files. Do not rely on only a wildcard DNS

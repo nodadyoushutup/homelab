@@ -3,18 +3,20 @@ variable "provider_config" {
   type        = any
 }
 
-variable "casc_config" {
-  description = "Jenkins Configuration as Code object that is rendered to /var/jenkins_home/jenkins.yaml"
-  type        = any
-  default = {
-    jenkins = {
-      nodes = []
-    }
-  }
+variable "casc_config_path" {
+  description = "Path to the Jenkins Configuration as Code YAML file shared through the tfvars/configuration mount."
+  type        = string
+  default     = "/mnt/eapp/config/jenkins-controller/jenkins.yaml"
+}
+
+variable "casc_config_container_path" {
+  description = "In-container path used by JCasC to read the shared Jenkins Configuration as Code YAML file."
+  type        = string
+  default     = "/mnt/eapp/config/jenkins-controller/jenkins.yaml"
 }
 
 variable "mounts" {
-  description = "Optional extra mount definitions appended to the baked Jenkins mounts"
+  description = "Optional extra mount definitions appended after the default Jenkins mounts."
   type = list(object({
     name        = string
     target      = string
@@ -26,17 +28,45 @@ variable "mounts" {
 }
 
 variable "env" {
-  description = "Environment variables applied to the Jenkins controller container"
+  description = "Environment variables applied to the Jenkins controller container; merged over the default shared agent secret path."
   type        = map(string)
-  default = {
-    SECRETS_DIR = "/var/jenkins_home/.jenkins"
-  }
+  default     = {}
+}
+
+variable "agent_secrets_dir" {
+  description = "Shared path where the controller writes Jenkins inbound agent secret files."
+  type        = string
+  default     = "/mnt/eapp/config/jenkins-controller/agent-secrets"
+}
+
+variable "enable_shared_tfvars_mount" {
+  description = "Whether to mount the shared tfvars/configuration root into the controller container."
+  type        = bool
+  default     = true
+}
+
+variable "shared_tfvars_volume_name" {
+  description = "Docker volume name used for the shared tfvars/configuration bind mount."
+  type        = string
+  default     = "jenkins-controller-config"
+}
+
+variable "shared_tfvars_host_path" {
+  description = "Host path for the shared tfvars/configuration root bind mount."
+  type        = string
+  default     = "/mnt/eapp/config"
+}
+
+variable "shared_tfvars_mount_target" {
+  description = "Container path where the shared tfvars/configuration root is mounted."
+  type        = string
+  default     = "/mnt/eapp/config"
 }
 
 variable "controller_image" {
   description = "Jenkins controller image reference"
   type        = string
-  default     = "harbor.nodadyoushutup.com/jenkins-controller/jenkins-controller:0.0.2"
+  default     = "harbor.nodadyoushutup.com/jenkins-controller/jenkins-controller:0.0.3"
 }
 
 variable "service_name" {

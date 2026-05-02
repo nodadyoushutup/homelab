@@ -22,10 +22,11 @@ if [ -z "$AGENT_NAME" ]; then
 fi
 
 trimmed_url="${JENKINS_URL%/}"
-health_endpoint="${JENKINS_HEALTH_ENDPOINT:-${trimmed_url}/whoAmI/api/json?tree=authenticated}"
+health_endpoint="${JENKINS_HEALTH_ENDPOINT:-${trimmed_url}/login}"
 health_delay="${JENKINS_HEALTH_DELAY_SECONDS:-5}"
 health_timeout="${JENKINS_HEALTH_TIMEOUT_SECONDS:-5}"
 health_attempts="${JENKINS_HEALTH_MAX_ATTEMPTS:-60}"
+health_success_pattern="${JENKINS_HEALTH_SUCCESS_PATTERN:-}"
 
 fetch_health() {
   if [ "${JENKINS_HEALTH_INSECURE:-0}" = "1" ]; then
@@ -40,9 +41,11 @@ log "Waiting for Jenkins at ${health_endpoint}"
 i=1
 while [ "$i" -le "$health_attempts" ]; do
   response="$(fetch_health 2>/dev/null || true)"
-  if [ -n "$response" ] && printf '%s' "$response" | grep -q '"authenticated"[[:space:]]*:[[:space:]]*true'; then
-    log "Jenkins is healthy"
-    break
+  if [ -n "$response" ]; then
+    if [ -z "$health_success_pattern" ] || printf '%s' "$response" | grep -q "$health_success_pattern"; then
+      log "Jenkins is healthy"
+      break
+    fi
   fi
   log "Attempt ${i}/${health_attempts}: Jenkins not ready, sleeping ${health_delay}s"
   i=$((i + 1))
@@ -55,7 +58,7 @@ fi
 
 # Mirrors export-agent-secret.groovy sanitisation so we look up the correct file
 sanitised_name="$(printf '%s' "$AGENT_NAME" | LC_ALL=C tr -c 'A-Za-z0-9._-' '_')"
-secrets_dir="${JENKINS_SECRETS_DIR:-${HOME:-/home/jenkins}/.jenkins}"
+secrets_dir="${JENKINS_SECRETS_DIR:-/mnt/eapp/config/jenkins-controller/agent-secrets}"
 secret_file="${secrets_dir}/${sanitised_name}.secret"
 alt_secret_file=""
 [ "$sanitised_name" = "$AGENT_NAME" ] || alt_secret_file="${secrets_dir}/${AGENT_NAME}.secret"

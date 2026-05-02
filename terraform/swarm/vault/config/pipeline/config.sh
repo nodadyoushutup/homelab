@@ -8,13 +8,13 @@ source "${PIPELINE_SCRIPT_ROOT}/load_root_env.sh"
 
 if [[ $# -gt 0 ]]; then
   echo "[ERR] vault config pipeline uses fixed input paths and does not accept override arguments." >&2
-  echo "      expected tfvars:  /mnt/eapp/.tfvars/vault/config.tfvars" >&2
-  echo "      expected backend: /mnt/eapp/.tfvars/minio.backend.hcl" >&2
+  echo "      expected tfvars:  /mnt/eapp/config/vault/config.tfvars" >&2
+  echo "      expected backend: /mnt/eapp/config/minio.backend.hcl" >&2
   exit 2
 fi
 
 VAULT_UNSEAL_SCRIPT="${ROOT_DIR}/scripts/vault/unseal.sh"
-VAULT_TFVARS_HOME="${TFVARS_HOME_DIR:-${TFVARS_DIR:-/mnt/eapp/.tfvars}}"
+VAULT_TFVARS_HOME="${TFVARS_HOME_DIR:-${TFVARS_DIR:-/mnt/eapp/config}}"
 VAULT_TFVARS_DIR="${VAULT_TFVARS_HOME}/vault"
 VAULT_ENV_FILE="${VAULT_TFVARS_DIR}/.env"
 VAULT_INIT_FILE="${VAULT_TFVARS_DIR}/init.json"
@@ -24,7 +24,7 @@ SERVICE_NAME="vault"
 STAGE_NAME="Vault config"
 ENTRYPOINT_RELATIVE="terraform/swarm/vault/config/pipeline/config.sh"
 TERRAFORM_DIR="${ROOT_DIR}/terraform/swarm/vault/config"
-TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${TFVARS_DIR:-/mnt/eapp/.tfvars}}"
+TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${TFVARS_DIR:-/mnt/eapp/config}}"
 DEFAULT_TFVARS_FILE="${TFVARS_HOME_DIR}/vault/config.tfvars"
 DEFAULT_BACKEND_FILE="${TFVARS_HOME_DIR}/minio.backend.hcl"
 

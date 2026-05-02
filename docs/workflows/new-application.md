@@ -121,7 +121,7 @@ For a new Swarm app:
 3. define the image directly in the resource instead of abstracting it to a
    local
 4. if the app needs its own image build context, add `applications/<service>/`
-5. add or update the matching tfvars under `/mnt/eapp/.tfvars/<service>/`
+5. add or update the matching tfvars under `/mnt/eapp/config/<service>/`
 6. if the service has dependency order, keep it explicit as
    `database -> app -> config` or `app -> config`
 7. run the stage pipeline scripts
@@ -171,7 +171,7 @@ Swarm:
 
 - use the service's Terraform inputs and existing secret/config handling
 - keep stage-specific tfvars and companion config files under
-  `/mnt/eapp/.tfvars/<service>/`
+  `/mnt/eapp/config/<service>/`
 
 Cluster:
 
@@ -188,8 +188,8 @@ For the detailed Kubernetes secret flow, use
 If the app exposes an external HTTP endpoint:
 
 1. add or update the workload-side ingress or published app target
-2. update `/mnt/eapp/.tfvars/nginx-proxy-manager/config.tfvars`
-3. update `/mnt/eapp/.tfvars/cloudflare/config.tfvars`
+2. update `/mnt/eapp/config/nginx-proxy-manager/config.tfvars`
+3. update `/mnt/eapp/config/cloudflare/config.tfvars`
 4. run the Terraform edge stages
 5. validate the final domain with `curl` or equivalent
 
