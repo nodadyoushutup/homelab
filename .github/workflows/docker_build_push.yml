@@ -279,8 +279,10 @@ jobs:
           IFS=',' read -r -a platforms <<<"${{ steps.prepare.outputs.platforms }}"
 
           if [ "${#platforms[@]}" -eq 1 ]; then
-            docker build \
+            docker buildx build \
+              --platform "${platforms[0]}" \
               --file "${dockerfile}" \
+              --load \
               --tag "${image_base}:${version}" \
               --tag "${image_base}:latest" \
               "${docker_context}"
