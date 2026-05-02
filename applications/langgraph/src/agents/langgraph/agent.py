@@ -8,9 +8,9 @@ from homelab_langgraph.agent_factories import create_jira_agent
 
 
 APP_DIR = Path(__file__).resolve().parent
-APPS_DIR = APP_DIR.parent
-CODE_APP_DIR = APPS_DIR / "code-agent"
-JIRA_APP_DIR = APPS_DIR / "jira-agent"
+AGENTS_DIR = APP_DIR.parent
+CODE_APP_DIR = AGENTS_DIR / "code-agent"
+JIRA_APP_DIR = AGENTS_DIR / "jira-agent"
 
 code_agent = create_code_agent(CODE_APP_DIR)
 jira_agent = create_jira_agent(JIRA_APP_DIR)

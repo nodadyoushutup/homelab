@@ -3,7 +3,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-APP_DIR="${LANGGRAPH_APP_DIR:-${SCRIPT_DIR}/apps/langgraph}"
+APP_DIR="${LANGGRAPH_APP_DIR:-${SCRIPT_DIR}/src/agents/langgraph}"
 HOST="${AGENT_SERVER_HOST:-${LANGGRAPH_DEBUG_HOST:-0.0.0.0}}"
 PORT="${AGENT_SERVER_PORT:-${LANGGRAPH_DEBUG_PORT:-2124}}"
 NO_RELOAD="${AGENT_SERVER_NO_RELOAD:-${LANGGRAPH_DEBUG_NO_RELOAD:-0}}"
@@ -41,7 +41,7 @@ force_kill_port() {
 }
 
 if [[ ! -d "${APP_DIR}" ]]; then
-  echo "error: app directory not found: ${APP_DIR}" >&2
+  echo "error: agent directory not found: ${APP_DIR}" >&2
   exit 1
 fi
 
@@ -84,7 +84,7 @@ if [[ -z "${PUBLIC_HOST}" ]]; then
 fi
 
 export LANGGRAPH_CLI_NO_ANALYTICS="${LANGGRAPH_CLI_NO_ANALYTICS:-1}"
-export PYTHONPATH="${SCRIPT_DIR}/src${PYTHONPATH:+:${PYTHONPATH}}"
+export PYTHONPATH="${SCRIPT_DIR}/src/base${PYTHONPATH:+:${PYTHONPATH}}"
 
 LOCAL_HOST_DISPLAY="$([[ "${HOST}" == "0.0.0.0" ]] && echo "127.0.0.1" || echo "${HOST}")"
 

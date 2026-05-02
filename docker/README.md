@@ -26,7 +26,7 @@ The stack is intentionally development-only:
 The `langgraph-dev` service intentionally uses the image's built-in `WORKDIR`
 and `CMD`. The only LangGraph-specific overrides are the bind mount onto
 `/app/langgraph` and the separate state volume for
-`/app/langgraph/apps/langgraph/.langgraph_api`.
+`/app/langgraph/src/agents/langgraph/.langgraph_api`.
 
 The `chat-ui-dev` service keeps the image config minimal, but its public client
 config is baked at build time because it is a Next.js production build.

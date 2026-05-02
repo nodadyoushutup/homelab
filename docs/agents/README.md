@@ -71,15 +71,15 @@ both the Python file and the Markdown file exist.
 ## Runtime Prompt Source
 
 The runtime prompt source for repo-managed LangGraph agents lives alongside the
-apps themselves.
+agents themselves.
 
 Current prompt-source pattern:
 
-- app-level prompt text should live in
-  `applications/langgraph/apps/<app-name>/system_prompt.md`
+- agent-level prompt text should live in
+  `applications/langgraph/src/agents/<agent-name>/system_prompt.md`
 - internal subagent prompt text should live in
-  `applications/langgraph/apps/<app-name>/subagents/<subagent-name>/system_prompt.md`
-- Python wiring under `applications/langgraph/src/` should load those Markdown
+  `applications/langgraph/src/agents/<agent-name>/subagents/<subagent-name>/system_prompt.md`
+- Python wiring under `applications/langgraph/src/base/` should load those Markdown
   files and pass the resulting text into the runtime's `system_prompt`
   argument
 

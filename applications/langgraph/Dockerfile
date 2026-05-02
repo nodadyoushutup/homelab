@@ -13,7 +13,7 @@ RUN pip install --upgrade pip && \
     pip install -r /app/langgraph/requirements.txt && \
     pip install -e .
 
-WORKDIR /app/langgraph/apps/langgraph
+WORKDIR /app/langgraph/src/agents/langgraph
 
 EXPOSE 2024
 

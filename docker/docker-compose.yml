@@ -17,7 +17,7 @@ services:
       - "2124:2024"
     volumes:
       - ../applications/langgraph:/app/langgraph
-      - langgraph_state:/app/langgraph/apps/langgraph/.langgraph_api
+      - langgraph_state:/app/langgraph/src/agents/langgraph/.langgraph_api
 
   chat-ui-dev:
     image: homelab/langchain-agent-chat:latest

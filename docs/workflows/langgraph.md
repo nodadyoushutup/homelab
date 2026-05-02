@@ -10,10 +10,10 @@ rules.
 
 Use this workflow for:
 
-- changes under `applications/langgraph/src/`
-- changes to deployable app configs under `applications/langgraph/apps/*/`
-- changes to app-local or subagent-local skills
-- changes to app-local or subagent-local MCP wiring
+- changes under `applications/langgraph/src/base/`
+- changes to deployable agent configs under `applications/langgraph/src/agents/*/`
+- changes to agent-local or subagent-local skills
+- changes to agent-local or subagent-local MCP wiring
 - changes to the top-level `docker/` LangGraph dev stack
 
 ## Standard Flow
@@ -22,21 +22,21 @@ When a task changes the LangGraph implementation:
 
 1. decide whether the change affects:
    - shared LangGraph package code
-   - a deployable app boundary
+   - a deployable agent boundary
    - an internal Deep Agents subagent
    - skills
    - MCP wiring
 2. read `docs/rules/langgraph.md` before editing
-3. keep shared code in `applications/langgraph/src/` and app
-   entrypoints/configs in `applications/langgraph/apps/<app-name>/`
+3. keep shared code in `applications/langgraph/src/base/` and agent
+   entrypoints/configs in `applications/langgraph/src/agents/<agent-name>/`
 4. decide whether the target app should expose:
    - one graph
    - multiple sibling graphs in one deployment
    - internal Deep Agents subagents inside one graph
-   - prefer a single app-level agent first; add internal subagents only when a
+   - prefer a single agent-level agent first; add internal subagents only when a
      narrower capability needs its own tool surface, skills, or prompt
-5. if the task adds a new deployable app:
-   - create its app directory
+5. if the task adds a new deployable agent:
+   - create its agent directory
    - add `agent.py`
    - add `langgraph.json`
    - add `system_prompt.md`
@@ -50,7 +50,7 @@ When a task changes the LangGraph implementation:
      skill rules back into the owning app and delete the obsolete subagent
      config
 7. if the task adds MCP-backed tools:
-   - keep app-level MCP configs with the app
+   - keep agent-level MCP configs with the agent
    - keep subagent-level MCP configs with the subagent
    - prefer HTTP/SSE transports for anything intended to be deployed
    - when the backing MCP server exposes a broader shared workspace than the
@@ -66,7 +66,7 @@ When a task changes the LangGraph implementation:
    - keep code, config, file, path, filesystem, and MCP workspace questions
      routed through the `Code` specialist instead of answered directly by the
      parent
-   - keep prompt text in the relevant app-local or subagent-local
+   - keep prompt text in the relevant agent-local or subagent-local
      `system_prompt.md` file instead of reintroducing long inline Python prompts
    - keep the relevant contract docs under `docs/agents/` in sync
 10. validate the Python structure after the change
@@ -81,8 +81,8 @@ When a task changes the LangGraph implementation:
    - document the expected ports, env file, and restart workflow
 14. if the task also updates the default deployed Homelab runtime manifests:
    - keep the Kubernetes app family under `kubernetes/langgraph/`
-   - keep the launched LangGraph app boundary under
-     `applications/langgraph/apps/langgraph/`
+   - keep the launched LangGraph agent boundary under
+     `applications/langgraph/src/agents/langgraph/`
 
 ## Validation
 
@@ -110,15 +110,15 @@ After changing the LangGraph scaffold:
 
 Use this rough pattern:
 
-- `applications/langgraph/src/`: shared package and reusable helpers
-- `applications/langgraph/apps/<deployable-agent>/`: one deployable app
+- `applications/langgraph/src/base/`: shared package and reusable helpers
+- `applications/langgraph/src/agents/<deployable-agent>/`: one deployable agent
   boundary, which may expose one graph or multiple sibling graphs
-- `applications/langgraph/apps/<deployable-agent>/subagents/<subagent>/`:
+- `applications/langgraph/src/agents/<deployable-agent>/subagents/<subagent>/`:
   config, skills, and MCP wiring that belong only to an internal Deep Agents
   subagent
 
 Do not move `langgraph.json` up to the monorepo root just to make local running
-feel simpler. Keep each app independently deployable.
+feel simpler. Keep each agent independently deployable.
 
 Internal subagents are optional. The current `jira-agent` intentionally runs as
 a single-layer agent and keeps its Jira operating rules at the app level.

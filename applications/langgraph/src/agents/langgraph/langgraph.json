@@ -1,6 +1,6 @@
 {
   "dependencies": [
-    "../.."
+    "../../.."
   ],
   "graphs": {
     "langgraph": "./agent.py:langgraph",

@@ -11,24 +11,24 @@ operator flow.
 This document applies to:
 
 - `applications/langgraph/`
-- repo-managed LangGraph app configs such as
-  `applications/langgraph/apps/*/langgraph.json`
-- shared LangGraph Python code under `applications/langgraph/src/`
-- app-local and subagent-local skills under
-  `applications/langgraph/apps/**/skills/`
+- repo-managed LangGraph agent configs such as
+  `applications/langgraph/src/agents/*/langgraph.json`
+- shared LangGraph Python code under `applications/langgraph/src/base/`
+- agent-local and subagent-local skills under
+  `applications/langgraph/src/agents/**/skills/`
 
 ## Source-of-Truth Rules
 
-- Keep shared Python logic under `applications/langgraph/src/` and keep
-  deployable app config in `applications/langgraph/apps/<app-name>/`.
-- Each deployable LangGraph app must keep its own `langgraph.json` in that app's
-  directory instead of relying on a monorepo-root config.
-- Each deployable LangGraph app should keep its runtime system prompt in an
-  app-local `system_prompt.md`.
+- Keep shared Python logic under `applications/langgraph/src/base/` and keep
+  deployable agent config in `applications/langgraph/src/agents/<agent-name>/`.
+- Each deployable LangGraph agent must keep its own `langgraph.json` in that
+  agent's directory instead of relying on a monorepo-root config.
+- Each deployable LangGraph agent should keep its runtime system prompt in an
+  agent-local `system_prompt.md`.
 - The top-level `docker/` directory may exist as a host-local development
   exception for bind-mounted dev containers. Do not treat it as the source of
   truth for deployment packaging or runtime ownership.
-- A single deployable app may expose multiple graphs from one `langgraph.json`
+- A single deployable agent may expose multiple graphs from one `langgraph.json`
   when those graphs belong to the same runtime boundary.
 - Treat `applications/langgraph/pyproject.toml` as the shared package
   dependency root for this monorepo scaffold unless a later change
@@ -51,7 +51,7 @@ This document applies to:
 
 ## Environment Rules
 
-- Each deployable app may own its own `.env` file in its app directory.
+- Each deployable agent may own its own `.env` file in its agent directory.
 - Internal Deep Agents subagents may also own `.env` files, but those files are
   treated as local config inputs that the parent app loads explicitly.
 - Internal Deep Agents subagents may also own `system_prompt.md` files, which
@@ -65,7 +65,7 @@ This document applies to:
 - Deployed LangGraph apps should prefer HTTP or SSE MCP servers over `stdio`
   transports, because deployed environments do not spawn local subprocesses for
   tool servers.
-- App-local `mcp.json` files define tool surfaces for the deployable app.
+- Agent-local `mcp.json` files define tool surfaces for the deployable agent.
 - Subagent-local `mcp.json` files define tool surfaces that are loaded only into
   that internal subagent.
 - Keep top-level supervisor tool surfaces thin. Domain-specific MCP access
@@ -82,7 +82,7 @@ This document applies to:
 ## Agent Composition Rules
 
 - The default deployed Homelab supervisor app boundary is
-  `applications/langgraph/apps/langgraph/`.
+  `applications/langgraph/src/agents/langgraph/`.
 - The `langgraph` app may communicate with separate deployed agents
   over A2A or another intentionally chosen remote interface.
 - Prefer co-deploying related graphs in one app boundary first, then split them
@@ -110,9 +110,9 @@ This document applies to:
 
 ## Skills Rules
 
-- Keep skills in app-local or subagent-local directories close to the code that
+- Keep skills in agent-local or subagent-local directories close to the code that
   owns them.
-- Keep runtime prompt text in app-local or subagent-local `system_prompt.md`
+- Keep runtime prompt text in agent-local or subagent-local `system_prompt.md`
   files close to the code that owns them instead of burying long prompt bodies
   inside Python string literals.
 - If a custom subagent needs its own skills, declare them explicitly instead of

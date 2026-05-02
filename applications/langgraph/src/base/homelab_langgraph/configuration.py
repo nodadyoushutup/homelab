@@ -7,7 +7,7 @@ from pathlib import Path
 from dotenv import dotenv_values
 
 
-LANGGRAPH_ROOT = Path(__file__).resolve().parents[2]
+LANGGRAPH_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_REPO_ROOT = Path("/mnt/eapp/code/homelab")
 
 

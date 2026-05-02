@@ -1,6 +1,6 @@
 {
   "dependencies": [
-    "../.."
+    "../../.."
   ],
   "graphs": {
     "code_agent": "./agent.py:agent"

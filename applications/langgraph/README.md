@@ -15,12 +15,13 @@ workshopping:
 
 ```text
 applications/langgraph/
-├── apps/
-│   ├── langgraph/
-│   ├── code-agent/
-│   └── jira-agent/
 ├── src/
-│   └── homelab_langgraph/
+│   ├── agents/
+│   │   ├── langgraph/
+│   │   ├── code-agent/
+│   │   └── jira-agent/
+│   └── base/
+│       └── homelab_langgraph/
 ├── Dockerfile
 ├── pyproject.toml
 └── requirements.txt
@@ -32,24 +33,24 @@ Each deployable agent app has its own:
 - `system_prompt.md`
 - `.env` or `.env.example`
 - optional `mcp.json`
-- app-local skills
+- agent-local skills
 
 ## Current Intent
 
 The primary local development path is one LangGraph development server that
-hosts multiple graphs from the `langgraph` app boundary, paired with a
+hosts multiple graphs from the `langgraph` agent boundary, paired with a
 local LangChain Agent Chat dev server that proxies into that same local backend.
 
 What is already in place:
 
-- a single-deployment `langgraph.json` in `apps/langgraph` that
+- a single-deployment `langgraph.json` in `src/agents/langgraph` that
   exports the supervisor, code, and Jira graphs from one server
 - shared Python package for reusable helpers
 - supervisor-local delegation to compiled specialist graphs in the same
   deployment
 - a single-layer Jira specialist that keeps create and edit rules in one app
 - Markdown-backed `system_prompt.md` files for deployable agents
-- MCP loading support from app-local `mcp.json` files
+- MCP loading support from agent-local `mcp.json` files
 - a repo-owned Docker wrapper in `Dockerfile` that packages this project and
   runs `langgraph dev`
 
@@ -60,15 +61,15 @@ What is still expected before real deployment:
 - install dependencies
 - run `./agent_server.sh` from `applications/langgraph/` for the default
   `langgraph` backend, and run `./chat.sh` from the same directory for
-  the paired LangChain Agent Chat local dev path, or run `langgraph dev` from an app
-  directory when you want a different app boundary
+  the paired LangChain Agent Chat local dev path, or run `langgraph dev` from an agent
+  directory when you want a different agent boundary
 
 ## Model And API Key Defaults
 
 The scaffold now defaults all LangGraph apps to `openai:gpt-5.4`.
 
-Set `OPENAI_API_KEY` in each deployable app's `.env` file, or inject it through
-your deployment environment. The app-local `langgraph.json` files already point
+Set `OPENAI_API_KEY` in each deployable agent's `.env` file, or inject it through
+your deployment environment. The agent-local `langgraph.json` files already point
 the runtime at each app's `.env`, so adding the key there is the simplest local
 setup path.
 
@@ -89,7 +90,7 @@ The deployment serves:
 - `code_agent`
 - `jira_agent`
 
-The split specialist app directories still exist as the source of truth for
+The split specialist agent directories still exist as the source of truth for
 their local skills, MCP config, and env defaults, but the main local bring-up
 path is now a single deployment.
 
@@ -97,7 +98,7 @@ For quick local iteration, use [`agent_server.sh`](./agent_server.sh) for the
 backend and [`chat.sh`](./chat.sh) for the frontend. They run independently in
 the foreground so each terminal shows the live logs directly while you manage
 restarts yourself. By default, `agent_server.sh` starts the `langgraph`
-app boundary on `0.0.0.0:2124` with `8` jobs per worker, and `chat.sh` starts
+agent boundary on `0.0.0.0:2124` with `8` jobs per worker, and `chat.sh` starts
 the local LangChain Agent Chat app on `0.0.0.0:3000` pointing at
 `http://127.0.0.1:2124`.
 
@@ -123,8 +124,8 @@ The container image uses the same `8` jobs-per-worker default through
 `LANGGRAPH_N_JOBS_PER_WORKER`, so you can tune the deployed runtime without
 rebuilding the image.
 
-If you need a different app boundary, run `langgraph dev` directly from that
-app directory instead of reusing the shared helper.
+If you need a different agent boundary, run `langgraph dev` directly from that
+agent directory instead of reusing the shared helper.
 
 ## Docker Dev Stack
 
@@ -165,5 +166,5 @@ Published image:
 
 - `harbor.nodadyoushutup.com/langgraph/langgraph:<tag>`
 
-The published image name now matches the deployable app boundary and the
+The published image name now matches the deployable agent boundary and the
 Kubernetes workload identity: `langgraph`.
