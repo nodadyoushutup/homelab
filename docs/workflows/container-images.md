@@ -116,6 +116,13 @@ Registry naming rules:
   `ghcr.io/<owner>/<image>:<version>` and `:latest`
 - Harbor direct-image targets publish as:
   `harbor.nodadyoushutup.com/<image>/<image>:<version>` and `:latest`
+  - single-platform Harbor direct publishes are built locally on the runner and
+    pushed with `docker push`
+  - multi-platform Harbor direct publishes are built one platform at a time,
+    pushed as per-arch tags, then assembled with `docker manifest`
+  - do not route Harbor direct-image publishes through `buildx --push` or
+    `push-by-digest` plus `imagetools create`; Harbor rejects those token flows
+    in this homelab environment
 - `harbor-runtime-set` publishes all Harbor component images in one run:
   - GHCR:
     `ghcr.io/<owner>/<component>:<version>`

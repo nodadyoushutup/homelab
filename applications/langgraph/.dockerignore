@@ -1,8 +1,13 @@
 .venv
+.venv/
 .runtime
+.runtime/
+**/.langgraph_api
+**/.langgraph_api/**
 **/__pycache__
+**/__pycache__/**
 **/*.pyc
 **/*.pyo
 **/*.pyd
 **/*.egg-info
-apps/**/.env
+src/agents/**/.env

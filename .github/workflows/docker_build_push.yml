@@ -58,6 +58,7 @@ jobs:
       platforms: ${{ steps.prepare.outputs.platforms }}
       registry_namespace: ${{ steps.prepare.outputs.registry_namespace }}
       publish_path_mode: ${{ steps.prepare.outputs.publish_path_mode }}
+      build_cache_scope: ${{ steps.prepare.outputs.build_cache_scope }}
 
     steps:
       - name: Check out the code
@@ -215,6 +216,7 @@ jobs:
           echo "image_base=$image_base" >> "$GITHUB_OUTPUT"
           echo "registry_namespace=$registry_namespace" >> "$GITHUB_OUTPUT"
           echo "publish_path_mode=$publish_path_mode" >> "$GITHUB_OUTPUT"
+          echo "build_cache_scope=${image_name}-${target_registry}" >> "$GITHUB_OUTPUT"
 
           if [ "${build_strategy}" = "direct" ]; then
             echo "::notice::Preparing ${image_name}:${version} from ${docker_context} using ${dockerfile} for ${image_base}"
@@ -250,7 +252,7 @@ jobs:
           password: ${{ secrets.HARBOR_ROBOT_SECRET }}
 
       - name: Build multi-platform image and push by digest
-        if: steps.prepare.outputs.build_strategy == 'direct'
+        if: steps.prepare.outputs.build_strategy == 'direct' && steps.prepare.outputs.target_registry != 'harbor'
         env:
           BUILDKIT_NO_CLIENT_TOKEN: "true"
         run: |
@@ -258,12 +260,100 @@ jobs:
             --platform "${{ steps.prepare.outputs.platforms }}" \
             --file "${{ steps.prepare.outputs.dockerfile }}" \
             --metadata-file image-metadata.json \
+            --cache-from "type=gha,scope=${{ steps.prepare.outputs.build_cache_scope }}" \
+            --cache-to "type=gha,mode=max,scope=${{ steps.prepare.outputs.build_cache_scope }}" \
             --output=type=image,name=${{ steps.prepare.outputs.image_base }},push=true,push-by-digest=true \
             "${{ steps.prepare.outputs.docker_context }}"
 
+      - name: Build and publish Harbor image tags
+        if: steps.prepare.outputs.build_strategy == 'direct' && steps.prepare.outputs.target_registry == 'harbor'
+        env:
+          BUILDKIT_NO_CLIENT_TOKEN: "true"
+        shell: bash
+        run: |
+          image_base="${{ steps.prepare.outputs.image_base }}"
+          version="${{ steps.prepare.outputs.version }}"
+          dockerfile="${{ steps.prepare.outputs.dockerfile }}"
+          docker_context="${{ steps.prepare.outputs.docker_context }}"
+          cache_scope="${{ steps.prepare.outputs.build_cache_scope }}"
+          IFS=',' read -r -a platforms <<<"${{ steps.prepare.outputs.platforms }}"
+
+          if [ "${#platforms[@]}" -eq 1 ]; then
+            docker build \
+              --file "${dockerfile}" \
+              --tag "${image_base}:${version}" \
+              --tag "${image_base}:latest" \
+              "${docker_context}"
+
+            docker push "${image_base}:${version}"
+            docker push "${image_base}:latest"
+            exit 0
+          fi
+
+          builder="harbor-direct-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          docker buildx create --name "${builder}" --driver docker-container --use >/dev/null
+          trap 'docker buildx rm "${builder}" >/dev/null 2>&1 || true' EXIT
+          docker buildx inspect --bootstrap "${builder}" >/dev/null
+
+          refs=()
+          latest_refs=()
+
+          for platform in "${platforms[@]}"; do
+            IFS='/' read -r os arch variant <<<"${platform}"
+            arch_tag="${version}-${arch}"
+            if [ -n "${variant:-}" ]; then
+              safe_variant="${variant//\//-}"
+              arch_tag="${arch_tag}-${safe_variant}"
+            fi
+
+            target_ref="${image_base}:${arch_tag}"
+            refs+=("${target_ref}")
+            latest_refs+=("${target_ref}")
+
+            docker buildx build \
+              --builder "${builder}" \
+              --platform "${platform}" \
+              --file "${dockerfile}" \
+              --cache-from "type=gha,scope=${cache_scope}-${arch}" \
+              --cache-to "type=gha,mode=max,scope=${cache_scope}-${arch}" \
+              --load \
+              --tag "${target_ref}" \
+              "${docker_context}"
+
+            docker push "${target_ref}"
+          done
+
+          docker manifest rm "${image_base}:${version}" >/dev/null 2>&1 || true
+          docker manifest create "${image_base}:${version}" "${refs[@]}"
+
+          docker manifest rm "${image_base}:latest" >/dev/null 2>&1 || true
+          docker manifest create "${image_base}:latest" "${latest_refs[@]}"
+
+          for platform in "${platforms[@]}"; do
+            IFS='/' read -r os arch variant <<<"${platform}"
+            arch_tag="${version}-${arch}"
+            if [ -n "${variant:-}" ]; then
+              safe_variant="${variant//\//-}"
+              arch_tag="${arch_tag}-${safe_variant}"
+            fi
+
+            target_ref="${image_base}:${arch_tag}"
+
+            if [ -n "${variant:-}" ]; then
+              docker manifest annotate "${image_base}:${version}" "${target_ref}" --os "${os}" --arch "${arch}" --variant "${variant}"
+              docker manifest annotate "${image_base}:latest" "${target_ref}" --os "${os}" --arch "${arch}" --variant "${variant}"
+            else
+              docker manifest annotate "${image_base}:${version}" "${target_ref}" --os "${os}" --arch "${arch}"
+              docker manifest annotate "${image_base}:latest" "${target_ref}" --os "${os}" --arch "${arch}"
+            fi
+          done
+
+          docker manifest push "${image_base}:${version}"
+          docker manifest push "${image_base}:latest"
+
       - name: Capture image digest
         id: image_metadata
-        if: steps.prepare.outputs.build_strategy == 'direct'
+        if: steps.prepare.outputs.build_strategy == 'direct' && steps.prepare.outputs.target_registry != 'harbor'
         run: |
           digest="$(jq -r '.["containerimage.digest"]' image-metadata.json)"
 
@@ -290,7 +380,7 @@ jobs:
   push:
     runs-on: [self-hosted, linux, homelab]
     needs: build
-    if: needs.build.outputs.build_strategy == 'direct'
+    if: needs.build.outputs.build_strategy == 'direct' && needs.build.outputs.target_registry != 'harbor'
 
     steps:
       - name: Set up Docker Buildx
