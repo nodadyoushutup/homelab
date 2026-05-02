@@ -280,6 +280,7 @@ jobs:
 
           if [ "${#platforms[@]}" -eq 1 ]; then
             docker buildx build \
+              --builder default \
               --platform "${platforms[0]}" \
               --file "${dockerfile}" \
               --load \
