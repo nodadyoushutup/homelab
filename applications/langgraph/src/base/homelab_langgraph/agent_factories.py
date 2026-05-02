@@ -4,7 +4,6 @@ from pathlib import Path
 from typing import Sequence
 
 from deepagents import CompiledSubAgent, create_deep_agent
-from langchain.agents import create_agent
 from langchain.tools import tool
 
 from .configuration import (
@@ -22,81 +21,37 @@ from .mcp_support import (
     wrap_blank_optional_args,
     wrap_filesystem_tools,
 )
-from .remote_a2a import RemoteAgentDefinition, build_remote_delegate_tool
 
 
 def create_supervisor_agent(
     app_dir: Path,
     *,
-    local_subagents: Sequence[CompiledSubAgent] | None = None,
+    local_subagents: Sequence[CompiledSubAgent],
 ):
     settings = merged_settings(app_dir)
 
     @tool
     def describe_homelab_topology() -> str:
         """Describe the specialist topology this supervisor expects."""
-        if local_subagents:
-            available = ", ".join(spec["name"] for spec in local_subagents)
-            return (
-                "This supervisor is running in a single deployment with local specialist subagents. "
-                f"Available specialists: {available}. "
-                "Route code, config, repository, path, and filesystem questions to code_agent."
-            )
+        available = ", ".join(spec["name"] for spec in local_subagents)
         return (
-            "This supervisor is wired to delegate to two remote agents: "
-            "a code agent for repository and implementation analysis, "
-            "and a jira agent for Jira-backed issue workflows."
+            "This supervisor is running in a single deployment with local specialist subagents. "
+            f"Available specialists: {available}. "
+            "Route code, config, repository, path, and filesystem questions to code_agent."
         )
 
-    if local_subagents:
-        return create_deep_agent(
-            model=settings.get("SUPERVISOR_MODEL", "openai:gpt-5.4"),
-            tools=[describe_homelab_topology],
-            system_prompt=load_system_prompt(
-                app_dir / "system_prompt.md",
-                {
-                    "specialist_topology": "specialist agents that are co-deployed in this same Agent Server",
-                    "code_delegate_instruction": "You must use the `task` tool to delegate every repository, source code, configuration, file path, filesystem, MCP workspace, or implementation question to the `code_agent` specialist before answering.",
-                    "jira_delegate_instruction": "You must use the `task` tool to delegate every explicit Jira request, including create-issue requests, to the `jira_agent` specialist before asking your own follow-up question or answering directly.",
-                },
-            ),
-            subagents=list(local_subagents),
-        )
-
-    remote_tools = [
-        build_remote_delegate_tool(
-            RemoteAgentDefinition(
-                name="call_code_agent",
-                description="Delegate any repository, code, config, path, filesystem, or implementation-analysis task to the remote Code agent.",
-                base_url=settings.get("CODE_AGENT_URL"),
-                assistant_id=settings.get("CODE_AGENT_ASSISTANT_ID"),
-                graph_id=settings.get("CODE_AGENT_GRAPH_ID"),
-                api_key=settings.get("CODE_AGENT_API_KEY"),
-            )
-        ),
-        build_remote_delegate_tool(
-            RemoteAgentDefinition(
-                name="call_jira_agent",
-                description="Delegate Jira discovery and issue-management tasks to the remote Jira agent.",
-                base_url=settings.get("JIRA_AGENT_URL"),
-                assistant_id=settings.get("JIRA_AGENT_ASSISTANT_ID"),
-                graph_id=settings.get("JIRA_AGENT_GRAPH_ID"),
-                api_key=settings.get("JIRA_AGENT_API_KEY"),
-            )
-        ),
-    ]
-
-    return create_agent(
+    return create_deep_agent(
         model=settings.get("SUPERVISOR_MODEL", "openai:gpt-5.4"),
-        tools=[describe_homelab_topology, *remote_tools],
+        tools=[describe_homelab_topology],
         system_prompt=load_system_prompt(
             app_dir / "system_prompt.md",
             {
-                "specialist_topology": "remote specialist agents instead of doing domain-specific work yourself",
-                "code_delegate_instruction": "You must use `call_code_agent` for any repository, source code, configuration, file path, filesystem, MCP workspace, or implementation question before answering.",
-                "jira_delegate_instruction": "You must use `call_jira_agent` for every explicit Jira request, including create-issue requests, before asking your own follow-up question or answering directly.",
+                "specialist_topology": "specialist agents that are co-deployed in this same Agent Server",
+                "code_delegate_instruction": "You must use the `task` tool to delegate every repository, source code, configuration, file path, filesystem, MCP workspace, or implementation question to the `code_agent` specialist before answering.",
+                "jira_delegate_instruction": "You must use the `task` tool to delegate every explicit Jira request, including create-issue requests, to the `jira_agent` specialist before asking your own follow-up question or answering directly.",
             },
         ),
+        subagents=list(local_subagents),
     )
 
 

@@ -1,6 +1,6 @@
 terraform {
   backend "s3" {
-    key = "gha-runner.tfstate"
+    key = "gha-runner-amd64.tfstate"
   }
 
   required_providers {

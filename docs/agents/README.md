@@ -12,6 +12,9 @@ input/output schemas. They are not a repo-wide contributor startup checklist.
   generic behavior.
 - Parent agents own role-specific behavior, prioritization, and decision-making.
 - Subagents own narrow capabilities and should remain reusable across parent agents.
+- The current Homelab runtime uses named in-process subagents inside one
+  LangGraph app boundary. Do not maintain repo-specific remote `call_*_agent`
+  wrappers unless a future task explicitly reintroduces a remote boundary.
 - Subagents should not assume who called them. They should rely on the incoming
   task input schema, not parent-specific hidden context.
 - Each agent or subagent should document its own accepted input schema and
@@ -134,6 +137,8 @@ the LangGraph runtime contracts or their implementation.
 Current expectations:
 
 - `Homelab` is the coordinating supervisor for runtime orchestration.
+- `Homelab` should delegate to local named specialists through the runtime's
+  native subagent surface instead of a repo-specific remote call wrapper.
 - `Code` is the mandatory specialist for code, config, repository structure,
   file paths, filesystem visibility, MCP workspace inspection, and
   implementation questions.

@@ -32,6 +32,12 @@ docker compose up -d --build
 
 For Swarm/Terraform deployment, set `github_runner_image` to the exact published tag (recommended), not `latest`.
 
+The Swarm deployment supports separate ARM64 and AMD64 runner pools from the
+same multi-arch image. In this repo, the ARM64 pool is managed from
+`terraform/swarm/gha-runner-arm64/app` for the ARM swarm workers, while the
+AMD64 pool is managed from `terraform/swarm/gha-runner-amd64/app` for the
+`development` node and its native x86_64 builds plus KVM-backed Packer jobs.
+
 ## Required env vars
 
 - `GH_RUNNER_URL`: repo or org URL
@@ -56,3 +62,6 @@ If `GH_RUNNER_URL` is unset, or no usable runner registration token can be resol
 - `GH_RUNNER_TOKEN` is a single-use registration token; for replicated services use `GH_RUNNER_ACCESS_TOKEN` to mint fresh tokens per task startup.
 - If you set `GH_RUNNER_EPHEMERAL=true`, the runner accepts a single job and exits.
 - Local compose mounts `/var/run/docker.sock` and runs as root so Docker Buildx/QEMU actions can access the host daemon.
+- The Terraform Swarm stage can advertise different custom labels per runner
+  pool, such as `arm64` for the ARM workers and `amd64,build,kvm` for the
+  x86_64 development node.

@@ -46,7 +46,7 @@ permissions:
 
 jobs:
   build:
-    runs-on: [self-hosted, linux, homelab]
+    runs-on: [self-hosted, linux, homelab, amd64, kvm]
     outputs:
       version: ${{ steps.meta.outputs.version }}
       artifact_name: ${{ steps.meta.outputs.artifact_name }}
@@ -172,7 +172,7 @@ jobs:
           retention-days: 1
 
   push:
-    runs-on: [self-hosted, linux, homelab]
+    runs-on: [self-hosted, linux, homelab, amd64, kvm]
     needs: build
     env:
       VERSION: ${{ needs.build.outputs.version }}

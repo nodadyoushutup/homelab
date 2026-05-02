@@ -4,5 +4,4 @@ __all__ = [
     "agent_factories",
     "configuration",
     "mcp_support",
-    "remote_a2a",
 ]

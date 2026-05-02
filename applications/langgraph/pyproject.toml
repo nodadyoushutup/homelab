@@ -4,13 +4,12 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "homelab-langgraph"
-version = "0.1.0"
+version = "0.1.1"
 description = "Initial LangGraph/Deep Agents monorepo scaffold for homelab agents."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
   "deepagents",
-  "httpx",
   "langchain",
   "langchain-mcp-adapters",
   "langchain-openai",

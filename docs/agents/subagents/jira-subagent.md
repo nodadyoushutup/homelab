@@ -161,8 +161,12 @@ do not answer the operating question.
 
 When wiring this subagent into a runtime:
 
-- this subagent should be exposed through `call_jira_agent`
-- do not use a generic tool name like `call_agent`
+- expose this subagent as a named local specialist when it is co-deployed with
+  its parent runtime
+- delegate through the runtime's native subagent surface, such as the Deep
+  Agents `task` tool in the default Homelab runtime
+- do not require a repo-specific remote `call_*_agent` wrapper just to reach an
+  in-process specialist
 - treat the caller message as a compact delegated request, not as a whole-user
   conversation transcript
 - default to doing the Jira work requested: inspect Jira for analysis tasks,

@@ -52,6 +52,8 @@ Do not create a doc-only agent or a Python-only agent.
 - Subagents own narrow reusable capabilities.
 - Subagents should not depend on a specific parent unless a human explicitly
   asks for a parent-specific variant.
+- Prefer runtime-local named subagents and the runtime's native delegation
+  surface over repo-specific remote `call_*_agent` wrappers.
 - When one agent delegates work to another, shape the input to match the
   callee's documented input schema and consume the callee's documented output
   schema.

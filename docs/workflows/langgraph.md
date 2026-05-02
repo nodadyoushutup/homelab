@@ -62,6 +62,9 @@ When a task changes the LangGraph implementation:
    - keep graph factory code in shared `applications/langgraph/src/` modules
      or the app's entrypoint as appropriate
    - prefer in-process composition before adding remote transport
+   - if you intentionally split a formerly local specialist into a remote app,
+     add the real transport in that same task instead of leaving unused remote
+     delegation scaffolding behind
 9. if the task changes supervisor routing or prompt text:
    - keep code, config, file, path, filesystem, and MCP workspace questions
      routed through the `Code` specialist instead of answered directly by the
@@ -101,8 +104,8 @@ After changing the LangGraph scaffold:
 5. if the change touches repo-backed filesystem MCP usage, verify that the
    exposed filesystem tools stay scoped to the intended repository root and
    that broad searches pick up the default excludes
-6. if the change touches remote delegation, verify the relevant env values and
-   graph ids before expecting A2A calls to succeed
+6. if the change touches supervisor or specialist delegation, verify that the
+   local runtime still routes to the intended named specialist
 7. if the change touches the top-level `docker/` stack, run `docker compose
    config` from `docker/` to validate the compose file
 

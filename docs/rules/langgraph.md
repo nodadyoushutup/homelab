@@ -83,11 +83,13 @@ This document applies to:
 
 - The default deployed Homelab supervisor app boundary is
   `applications/langgraph/src/agents/langgraph/`.
-- The `langgraph` app may communicate with separate deployed agents
-  over A2A or another intentionally chosen remote interface.
+- Keep the default Homelab runtime as one deployed app boundary with named
+  local specialist subagents delegated in-process.
+- Do not keep unused remote agent delegation scaffolding or repo-specific
+  `call_*_agent` wrappers in the default Homelab runtime.
 - Prefer co-deploying related graphs in one app boundary first, then split them
   into remote deployments only when scaling, ownership, or security needs make
-  the boundary worthwhile.
+  the boundary worthwhile, and add the explicit transport in that same task.
 - For local development, it is acceptable to run those same app boundaries with
   parallel `langgraph dev` processes instead of containers.
 - Repo-local debug helpers are allowed under `applications/langgraph/` when
