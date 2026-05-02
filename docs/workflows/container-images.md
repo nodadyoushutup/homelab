@@ -78,7 +78,7 @@ on the same registry.
 | `mcp-bash-pipeline` | Harbor | `kubernetes/mcp-bash-pipeline/deployment.yaml` plus `/mnt/eapp/.tfvars/harbor/config.tfvars` and `/mnt/eapp/.tfvars/vault/config.tfvars` |
 | `mcp-ast-grep` | Harbor | `kubernetes/mcp-ast-grep/deployment.yaml` plus `/mnt/eapp/.tfvars/harbor/config.tfvars` and `/mnt/eapp/.tfvars/vault/config.tfvars` |
 | `mcp-filesystem` | Harbor | `kubernetes/mcp-filesystem/deployment.yaml` plus `/mnt/eapp/.tfvars/harbor/config.tfvars` and `/mnt/eapp/.tfvars/vault/config.tfvars` |
-| `gha-runner` | Harbor | `/mnt/eapp/.tfvars/gha-runner/app.tfvars` |
+| `gha-runner` | Harbor | `/mnt/eapp/.tfvars/gha-runner-arm64/app.tfvars` and `/mnt/eapp/.tfvars/gha-runner-amd64/app.tfvars` |
 | `jenkins-controller` | Harbor | `/mnt/eapp/.tfvars/jenkins-controller/app.tfvars` |
 | `mcp-cloudflare` | Harbor | `kubernetes/mcp-cloudflare/deployment.yaml` plus `/mnt/eapp/.tfvars/harbor/config.tfvars` and `/mnt/eapp/.tfvars/vault/config.tfvars` |
 | `mcp-git` | Harbor | `kubernetes/mcp-git/deployment.yaml` plus `/mnt/eapp/.tfvars/harbor/config.tfvars` and `/mnt/eapp/.tfvars/vault/config.tfvars` |
@@ -99,6 +99,13 @@ The standard publish workflow is:
 .github/workflows/docker_build_push.yml
 ```
 
+The live workflow is intentionally routed to the AMD64 runner pool with:
+
+- `runs-on: [self-hosted, linux, homelab, amd64, build]`
+
+That keeps multi-platform image assembly and other heavyweight build jobs off
+the ARM swarm workers unless a workflow explicitly opts into ARM labels.
+
 `workflow_dispatch` inputs:
 
 - `version`: required output tag
@@ -109,6 +116,10 @@ The standard publish workflow is:
   `mcp-filesystem`, `mcp-fortigate`, `mcp-git`, `mcp-github`,
   `mcp-google-workspace`, `mcp-terraform`, `gha-runner`, `jenkins-agent`,
   `jenkins-controller`
+
+The `gha-runner` direct image target currently keeps the default
+`linux/amd64,linux/arm64` platform set, so the published Harbor/GHCR tag can be
+consumed by both runner pools in Swarm.
 
 Registry naming rules:
 

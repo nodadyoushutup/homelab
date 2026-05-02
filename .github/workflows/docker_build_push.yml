@@ -45,7 +45,7 @@ env:
 
 jobs:
   build:
-    runs-on: [self-hosted, linux, homelab]
+    runs-on: [self-hosted, linux, homelab, amd64, build]
     outputs:
       version: ${{ steps.prepare.outputs.version }}
       digest: ${{ steps.image_metadata.outputs.digest }}
@@ -381,7 +381,7 @@ jobs:
             --push
 
   push:
-    runs-on: [self-hosted, linux, homelab]
+    runs-on: [self-hosted, linux, homelab, amd64, build]
     needs: build
     if: needs.build.outputs.build_strategy == 'direct' && needs.build.outputs.target_registry != 'harbor'
 

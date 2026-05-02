@@ -24,7 +24,7 @@ variable "github_runner_access_token" {
 }
 
 variable "github_runner_image" {
-  description = "Container image reference for the runner service (prefer GHCR tag builds from workflow_dispatch)."
+  description = "Container image reference for the runner service (prefer published multi-arch tags)."
   type        = string
   default     = "ghcr.io/nodadyoushutup/gha-runner:0.0.1"
 }
@@ -32,19 +32,25 @@ variable "github_runner_image" {
 variable "github_runner_name" {
   description = "Runner display name prefix in GitHub; Task slot and Task ID are appended."
   type        = string
-  default     = "homelab-gha-runner"
+  default     = "homelab-gha-runner-amd64"
 }
 
 variable "github_runner_replicas" {
   description = "Number of runner replicas to run in Swarm."
   type        = number
-  default     = 2
+  default     = 1
 }
 
 variable "github_runner_labels" {
-  description = "Comma-separated labels advertised by the runner."
+  description = "Comma-separated labels advertised by this runner pool."
   type        = string
-  default     = "self-hosted,linux,homelab"
+  default     = "self-hosted,linux,homelab,amd64,build,kvm"
+}
+
+variable "github_runner_constraints" {
+  description = "Swarm placement constraints for this runner pool."
+  type        = list(string)
+  default     = ["node.hostname==development", "node.platform.arch==x86_64"]
 }
 
 variable "github_runner_workdir" {

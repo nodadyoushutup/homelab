@@ -14,7 +14,7 @@ When a project does not maintain a standalone docs site, this file links to the 
 | Docker Compose | `applications/minio/docker-compose.yaml`, `applications/gha-runner/docker-compose.yaml` | [Docker Compose docs](https://docs.docker.com/compose/) |
 | Docker Swarm | `terraform/swarm/**`, `docs/rules/terraform.md`, `docs/workflows/terraform.md` | [Docker Swarm docs](https://docs.docker.com/engine/swarm/) |
 | GitHub Actions | `.github/workflows/docker_build_push.yml`, `.github/workflows/packer_build_push.yml` | [GitHub Actions docs](https://docs.github.com/en/actions) |
-| GitHub Actions self-hosted runners | `applications/gha-runner/`, `terraform/swarm/gha-runner/app` | [Self-hosted runner docs](https://docs.github.com/en/actions/concepts/runners/self-hosted-runners) |
+| GitHub Actions self-hosted runners | `applications/gha-runner/`, `terraform/swarm/gha-runner-arm64/app`, `terraform/swarm/gha-runner-amd64/app` | [Self-hosted runner docs](https://docs.github.com/en/actions/concepts/runners/self-hosted-runners) |
 | QEMU | `packer/ubuntu-24.04-ndysu.pkr.hcl`, `.github/workflows/packer_build_push.yml` | [QEMU docs](https://www.qemu.org/docs/master/) |
 | cloud-init | `packer/cloud-init/user-data`, `packer/cloud-init/meta-data` | [cloud-init docs](https://docs.cloud-init.io/en/latest/) |
 

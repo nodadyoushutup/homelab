@@ -1,10 +1,5 @@
-resource "docker_network" "gha_runner" {
-  name   = "gha-runner"
-  driver = "overlay"
-}
-
 resource "docker_service" "gha_runner" {
-  name = "gha-runner"
+  name = "gha-runner-arm64"
 
   dynamic "auth" {
     for_each = try(var.provider_config.registry_auth, null) == null ? [] : [var.provider_config.registry_auth]
@@ -18,17 +13,7 @@ resource "docker_service" "gha_runner" {
 
   task_spec {
     placement {
-      constraints = ["node.labels.role==swarm-cp-0"]
-
-      platforms {
-        os           = "linux"
-        architecture = "aarch64"
-      }
-    }
-
-    networks_advanced {
-      name    = docker_network.gha_runner.id
-      aliases = ["gha-runner"]
+      constraints = var.github_runner_constraints
     }
 
     container_spec {
