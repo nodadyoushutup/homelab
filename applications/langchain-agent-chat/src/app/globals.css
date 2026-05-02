@@ -121,6 +121,8 @@
 
   body {
     @apply bg-background text-foreground;
+    font-family:
+      "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
   }
 
   :root {

@@ -77,7 +77,7 @@ You can bypass the initial setup form by setting the following environment varia
 
 ```bash
 NEXT_PUBLIC_API_URL=http://localhost:2024
-NEXT_PUBLIC_ASSISTANT_ID=agent
+NEXT_PUBLIC_ASSISTANT_ID=langgraph
 NEXT_PUBLIC_AUTH_SCHEME=
 ```
 
@@ -226,7 +226,7 @@ The quickest way to productionize LangChain Agent Chat is to use the [API Passth
 This repository already contains all of the code you need to start using this method. The only configuration you need to do is set the proper environment variables.
 
 ```bash
-NEXT_PUBLIC_ASSISTANT_ID="agent"
+NEXT_PUBLIC_ASSISTANT_ID="langgraph"
 # This should be the deployment URL of your LangGraph server
 LANGGRAPH_API_URL="https://my-agent.default.us.langgraph.app"
 # This should be the URL of your website + "/api". This is how you connect to the API proxy
