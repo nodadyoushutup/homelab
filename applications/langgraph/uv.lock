@@ -407,7 +407,6 @@ version = "0.1.1"
 source = { editable = "." }
 dependencies = [
     { name = "deepagents" },
-    { name = "httpx" },
     { name = "langchain" },
     { name = "langchain-mcp-adapters" },
     { name = "langchain-openai" },
@@ -417,7 +416,6 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "deepagents" },
-    { name = "httpx" },
     { name = "langchain" },
     { name = "langchain-mcp-adapters" },
     { name = "langchain-openai" },

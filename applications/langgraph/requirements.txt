@@ -1,5 +1,4 @@
 deepagents
-httpx
 langchain
 langchain-mcp-adapters
 langchain-openai

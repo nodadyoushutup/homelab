@@ -119,18 +119,13 @@ rely on the subagent output schema.
 
 When wiring this agent into a runtime:
 
-- this parent agent may be exposed as `call_homelab_agent`
-- the `Code` subagent should be called through `call_code_agent`
-- the `Confluence` subagent should be called through
-  `call_confluence_agent`
-- the `Kubernetes` subagent should be called through
-  `call_kubernetes_agent`
-- the `Pipeline` subagent should be called through `call_pipeline_agent`
-- the `Terraform` subagent should be called through
-  `call_terraform_agent`
-- the `Jira` subagent should be called through `call_jira_agent`
-- do not use a generic tool name like `call_agent`
-- do not reuse the parent tool name for the subagent or vice versa
+- keep the parent graph exposed as the runtime's `Homelab` entrypoint
+- expose specialists as named local subagents in the same runtime when they are
+  co-deployed
+- delegate through the runtime's native subagent surface, which is currently
+  the Deep Agents `task` tool in the default Homelab runtime
+- do not add repo-specific remote `call_*_agent` wrappers unless a future task
+  intentionally reintroduces a separate remote deployment boundary
 
 When you call the Code subagent:
 
@@ -258,7 +253,7 @@ Formatting rule:
 
 ## Call triggers
 
-Call `call_code_agent` when:
+Delegate to the `Code` subagent when:
 
 - the task mentions code, config, files, paths, repository structure,
   filesystem contents, or MCP workspace visibility in any way
@@ -269,7 +264,7 @@ Call `call_code_agent` when:
 - the question seems simple or read-only, but still depends on repository or
   filesystem-backed facts
 
-Call `call_jira_agent` when:
+Delegate to the `Jira` subagent when:
 
 - the task needs Jira issue, project, board, sprint, changelog, or workflow
   context before implementation or coordination
@@ -283,7 +278,7 @@ Call `call_jira_agent` when:
   mutation, and the same Jira-specialized subagent should continue through the
   action when possible
 
-Call `call_confluence_agent` when:
+Delegate to the `Confluence` subagent when:
 
 - the task needs Confluence page, space, attachment, comment, or page-history
   context before implementation or coordination
@@ -297,7 +292,7 @@ Call `call_confluence_agent` when:
   Confluence mutation, and the same Confluence-specialized subagent should
   continue through the action when possible
 
-Call `call_kubernetes_agent` when:
+Delegate to the `Kubernetes` subagent when:
 
 - the task needs Kubernetes manifest, namespace, ingress, service, secret,
   storage, overlay, or Argo CD wiring context before implementation or
@@ -307,7 +302,7 @@ Call `call_kubernetes_agent` when:
 - you need manifest-backed delivery context before deciding the next technical
   step
 
-Call `call_pipeline_agent` when:
+Delegate to the `Pipeline` subagent when:
 
 - the task needs repo-managed stage pipeline, entrypoint, tfvars, or rollout
   context before implementation or coordination
@@ -319,7 +314,7 @@ Call `call_pipeline_agent` when:
   pipeline execution, and the same pipeline-specialized subagent should
   continue through the action when possible
 
-Call `call_terraform_agent` when:
+Delegate to the `Terraform` subagent when:
 
 - the task needs Terraform stage, provider, variable, module, resource, or
   pipeline context before implementation or coordination
