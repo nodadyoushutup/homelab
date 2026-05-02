@@ -37,6 +37,9 @@ same multi-arch image. In this repo, the ARM64 pool is managed from
 `terraform/swarm/gha-runner-arm64/app` for the ARM swarm workers, while the
 AMD64 pool is managed from `terraform/swarm/gha-runner-amd64/app` for the
 `development` node and its native x86_64 builds plus KVM-backed Packer jobs.
+The Docker image publish workflow now fans direct image builds out to those
+native runner pools in parallel, then publishes the final multi-arch manifest
+tags after both native arch images are available.
 
 ## Required env vars
 

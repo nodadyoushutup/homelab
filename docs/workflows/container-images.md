@@ -99,12 +99,20 @@ The standard publish workflow is:
 .github/workflows/docker_build_push.yml
 ```
 
-The live workflow is intentionally routed to the AMD64 runner pool with:
+The live workflow now uses a native per-architecture fan-out for direct image
+builds:
 
-- `runs-on: [self-hosted, linux, homelab, amd64, build]`
+- `prepare` runs on the AMD64 runner pool to resolve inputs and target
+  metadata
+- `build_direct_amd64` runs on
+  `[self-hosted, linux, homelab, amd64, build]`
+- `build_direct_arm64` runs on `[self-hosted, linux, homelab, arm64]`
+- `publish_direct_manifest` runs on the AMD64 runner pool after the native
+  arch builds complete
 
-That keeps multi-platform image assembly and other heavyweight build jobs off
-the ARM swarm workers unless a workflow explicitly opts into ARM labels.
+That means multi-platform direct images are built in parallel on their native
+runner architectures, then combined into the final version and `latest`
+manifests afterward.
 
 `workflow_dispatch` inputs:
 
@@ -119,7 +127,9 @@ the ARM swarm workers unless a workflow explicitly opts into ARM labels.
 
 The `gha-runner` direct image target currently keeps the default
 `linux/amd64,linux/arm64` platform set, so the published Harbor/GHCR tag can be
-consumed by both runner pools in Swarm.
+consumed by both runner pools in Swarm. Those two arch images are now built
+natively on the matching AMD64 and ARM64 runner pools before the final manifest
+tags are published.
 
 Registry naming rules:
 
@@ -127,10 +137,16 @@ Registry naming rules:
   `ghcr.io/<owner>/<image>:<version>` and `:latest`
 - Harbor direct-image targets publish as:
   `harbor.nodadyoushutup.com/<image>/<image>:<version>` and `:latest`
+  - direct-image targets first push per-arch helper tags such as
+    `:<version>-amd64` and `:<version>-arm64`
+  - the final `:<version>` and `:latest` tags are published afterward as
+    manifests assembled from those native per-arch helper tags
   - single-platform Harbor direct publishes are built locally on the runner and
-    pushed with `docker push`
-  - multi-platform Harbor direct publishes are built one platform at a time,
-    pushed as per-arch tags, then assembled with `docker manifest`
+    pushed as a single native arch tag before the final manifest alias is
+    published
+  - multi-platform Harbor direct publishes are built one platform at a time on
+    the matching native runner, pushed as per-arch tags, then assembled with
+    `docker manifest`
   - do not route Harbor direct-image publishes through `buildx --push` or
     `push-by-digest` plus `imagetools create`; Harbor rejects those token flows
     in this homelab environment
