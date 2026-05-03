@@ -46,15 +46,25 @@ variable "enable_shared_tfvars_mount" {
 }
 
 variable "shared_tfvars_volume_name" {
-  description = "Docker volume name used for the shared tfvars/configuration bind mount."
+  description = "Docker volume name used for the shared tfvars/configuration mount."
   type        = string
   default     = "jenkins-controller-config"
 }
 
-variable "shared_tfvars_host_path" {
-  description = "Host path for the shared tfvars/configuration root bind mount."
+variable "shared_tfvars_volume_driver" {
+  description = "Docker volume driver used for the shared tfvars/configuration mount."
   type        = string
-  default     = "/mnt/eapp/config"
+  default     = "local"
+}
+
+variable "shared_tfvars_volume_driver_opts" {
+  description = "Docker volume driver options for the shared tfvars/configuration mount. Defaults to mounting the shared NFS export directly."
+  type        = map(string)
+  default = {
+    type   = "nfs"
+    o      = "addr=192.168.1.100,nfsvers=4.2,rw"
+    device = ":/mnt/eapp/config"
+  }
 }
 
 variable "shared_tfvars_mount_target" {

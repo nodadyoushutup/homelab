@@ -7,22 +7,9 @@ locals {
     SECRETS_DIR         = var.agent_secrets_dir
   }
   controller_env = merge(local.default_env, var.env)
-  default_mounts_by_name = var.enable_shared_tfvars_mount ? {
-    (var.shared_tfvars_volume_name) = {
-      name   = var.shared_tfvars_volume_name
-      target = var.shared_tfvars_mount_target
-      driver = "local"
-      driver_opts = {
-        type   = "none"
-        o      = "bind"
-        device = var.shared_tfvars_host_path
-      }
-      no_copy = false
-    }
-  } : {}
-  extra_mounts_by_name = merge(local.default_mounts_by_name, {
+  extra_mounts_by_name = {
     for mount in var.mounts : mount.name => mount
-  })
+  }
 }
 
 resource "docker_network" "jenkins_controller" {
@@ -85,6 +72,22 @@ resource "docker_service" "jenkins_controller" {
         type   = "volume"
         source = docker_volume.jenkins_controller_home.name
         target = var.home_mount_target
+      }
+
+      dynamic "mounts" {
+        for_each = var.enable_shared_tfvars_mount ? [var.shared_tfvars_volume_name] : []
+
+        content {
+          type   = "volume"
+          source = mounts.value
+          target = var.shared_tfvars_mount_target
+
+          volume_options {
+            driver_name    = var.shared_tfvars_volume_driver
+            driver_options = var.shared_tfvars_volume_driver_opts
+            no_copy        = false
+          }
+        }
       }
 
       dynamic "mounts" {

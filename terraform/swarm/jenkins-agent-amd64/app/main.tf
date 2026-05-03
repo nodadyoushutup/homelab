@@ -106,12 +106,18 @@ resource "docker_service" "jenkins_agent" {
       }
 
       dynamic "mounts" {
-        for_each = var.enable_shared_tfvars_mount ? [1] : []
+        for_each = var.enable_shared_tfvars_mount ? [var.shared_tfvars_volume_name] : []
 
         content {
-          type   = "bind"
-          source = var.shared_tfvars_host_path
+          type   = "volume"
+          source = mounts.value
           target = var.shared_tfvars_mount_target
+
+          volume_options {
+            driver_name    = var.shared_tfvars_volume_driver
+            driver_options = var.shared_tfvars_volume_driver_opts
+            no_copy        = false
+          }
         }
       }
 

@@ -178,9 +178,10 @@ Jenkins-specific defaults remain special cases:
   `agent_image` manifest does not advertise the required target architecture
 - Jenkins controller `config` is the Terraform-managed Jenkins API stage for
   folders, multibranch jobs, and optional SCM checkout credentials
-- Jenkins agent services must mount `/mnt/eapp/config` as a direct bind mount
-  from the host path, not as a Swarm-local named volume, so every node sees the
-  same NFS-backed configuration and agent secret files
+- Jenkins controller and agent services should mount `/mnt/eapp/config`
+  through Docker-managed NFS-backed volumes that point at the shared export on
+  `192.168.1.100:/mnt/eapp/config`, rather than relying on a host bind mount on
+  every Swarm node
 - Jenkins agent node entries in that YAML should use `nodeDescription` for the
   target Swarm hostname when the agent stage needs deterministic per-service
   placement from the same source-of-truth file
@@ -194,9 +195,10 @@ Jenkins-specific defaults remain special cases:
 - multibranch branch discovery should use wildcard include and exclude filters
   from the Jenkins controller config tfvars; keep scanning manually triggered
   unless a human explicitly asks for scheduled indexing or webhooks
-- Terraform Jenkins jobs should rely on the shared `/mnt/eapp/config` bind
-  mount for tfvars and backend auto-discovery, and should fail with an explicit
-  mount error when that directory is absent inside the runner
+- Terraform Jenkins jobs should rely on the shared `/mnt/eapp/config`
+  Docker-managed NFS-backed volume for tfvars and backend auto-discovery, and
+  should fail with an explicit mount error when that directory is absent inside
+  the runner
 - Keep those Terraform-managed Jenkins jobs manually triggered unless a human
   explicitly asks for webhooks, SCM polling, or scheduled triggers
 
@@ -228,6 +230,14 @@ If either path cannot be resolved, the pipeline fails before `terraform init`.
 `/mnt/eapp/config/<service>/` can include more than `*.tfvars` files. Companion
 assets such as `config.yaml`, `grafana.ini`, `service_account.json`, cloud-init
 YAML, or Talos patch files are normal when a stage consumes them.
+
+For Talos specifically, keep the cluster machine-secrets import bundle at:
+
+- `/mnt/eapp/config/talos/secrets.yaml`
+
+That shared file is the source-of-truth import payload for repairing
+`talos_machine_secrets.cluster` when the Talos app stage finds missing or
+poisoned remote state. Keep it in shared config, not in git.
 
 The Jenkins controller and agents also use the shared `/mnt/eapp/config`
 mount as their runtime handoff path for inbound agent secret files. Treat that

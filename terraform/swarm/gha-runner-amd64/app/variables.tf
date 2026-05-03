@@ -38,7 +38,7 @@ variable "github_runner_name" {
 variable "github_runner_replicas" {
   description = "Number of runner replicas to run in Swarm."
   type        = number
-  default     = 1
+  default     = 4
 }
 
 variable "github_runner_labels" {

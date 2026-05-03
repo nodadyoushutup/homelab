@@ -158,8 +158,8 @@ For Jenkins specifically:
 - both controller and agent containers expect the shared `/mnt/eapp/config`
   mount to be present
 - when Jenkins-side auto-discovery fails, verify the running `jenkins-agent-arm64`
-  and `jenkins-agent-amd64` services both still bind-mount host
-  `/mnt/eapp/config` to container `/mnt/eapp/config`
+  and `jenkins-agent-amd64` services still attach the Docker-managed
+  NFS-backed `/mnt/eapp/config` volume inside the container
 
 ### Run a stage with custom safety hooks
 
@@ -169,7 +169,11 @@ Some stages inject repo-specific safeguards:
   script, and validates the Vault health endpoint after apply
 - `grafana/database` and `nginx_proxy_manager/{database,config}` force
   `-parallelism=1`
-- `talos/app` uses hook logic and extra Terraform args for node replacement
+- `talos/app` uses hook logic and extra Terraform args for node replacement,
+  repairs Talos machine-secrets state from the shared secrets bundle when the
+  live API proves state is stale, and suppresses workstation-local
+  `talosconfig`/`kubeconfig` file writes on runners that cannot create the
+  configured paths
 
 If a stage has custom hooks, follow that stage's actual script rather than
 assuming the generic wrapper is the full story.
@@ -244,6 +248,21 @@ That helper uses the shared `/mnt/eapp/config` SSH material plus a temporary
 Terraform container on the Swarm manager for `docker_service` imports, so it
 works even when the local Docker provider cannot import services over SSH
 directly.
+
+For Talos `app`, the stage validates `talos_machine_secrets.cluster` against
+the live Talos API before plan/apply. When the API is reachable, it repairs
+missing or stale machine-secrets state by importing
+`/mnt/eapp/config/talos/secrets.yaml`.
+
+If that shared Talos secrets bundle does not exist yet, generate it from a
+working local Talos client config with:
+
+```bash
+python3 scripts/terraform/export_talos_secrets_from_machineconfig.py \
+  --talosconfig /home/nodadyoushutup/.talos/config \
+  --node 192.168.1.201 \
+  --output /mnt/eapp/config/talos/secrets.yaml
+```
 
 After any import repair, rerun the stage through either bash or Jenkins and
 confirm both paths now produce the same plan against the same remote state.
