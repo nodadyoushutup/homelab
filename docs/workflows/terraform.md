@@ -170,10 +170,10 @@ Some stages inject repo-specific safeguards:
 - `grafana/database` and `nginx_proxy_manager/{database,config}` force
   `-parallelism=1`
 - `talos/app` uses hook logic and extra Terraform args for node replacement,
-  repairs Talos machine-secrets state from the shared secrets bundle when the
-  live API proves state is stale, and suppresses workstation-local
-  `talosconfig`/`kubeconfig` file writes on runners that cannot create the
-  configured paths
+  repairs Talos machine-secrets state from live Talos access when the API
+  proves state is stale, and redirects workstation-local `talosconfig` /
+  `kubeconfig` writes to shared managed paths on runners that cannot create the
+  configured home-directory paths
 
 If a stage has custom hooks, follow that stage's actual script rather than
 assuming the generic wrapper is the full story.
@@ -251,17 +251,16 @@ directly.
 
 For Talos `app`, the stage validates `talos_machine_secrets.cluster` against
 the live Talos API before plan/apply. When the API is reachable, it repairs
-missing or stale machine-secrets state by importing
-`/mnt/eapp/config/talos/secrets.yaml`.
+missing or stale machine-secrets state by exporting a temporary import bundle
+from a readable Talos client config, preferring the managed shared
+`/mnt/eapp/config/talos/talosconfig` path on Jenkins-style runners.
 
-If that shared Talos secrets bundle does not exist yet, generate it from a
-working local Talos client config with:
+Seed or refresh that managed Talos client config from a working local config
+with:
 
 ```bash
-python3 scripts/terraform/export_talos_secrets_from_machineconfig.py \
-  --talosconfig /home/nodadyoushutup/.talos/config \
-  --node 192.168.1.201 \
-  --output /mnt/eapp/config/talos/secrets.yaml
+install -D -m 600 /home/nodadyoushutup/.talos/config /mnt/eapp/config/talos/talosconfig
+install -D -m 600 /home/nodadyoushutup/.kube/homelab.config /mnt/eapp/config/talos/kubeconfig
 ```
 
 After any import repair, rerun the stage through either bash or Jenkins and

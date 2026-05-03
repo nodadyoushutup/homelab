@@ -22,9 +22,17 @@ declare -A READY_IPS=()
 ALL_NODE_TARGETS=()
 CONTROL_PLANE_TARGET=""
 CONTROL_PLANE_IP=""
+MACHINE_SECRETS_STATE_ADDRESS="talos_machine_secrets.cluster"
 BOOTSTRAP_STATE_ADDRESS="talos_machine_bootstrap.cluster"
 BOOTSTRAP_STATE_ID="machine_bootstrap"
 KUBECONFIG_STATE_ADDRESS="talos_cluster_kubeconfig.cluster"
+TALOS_SECRETS_EXPORT_SCRIPT="${ROOT_DIR}/scripts/terraform/export_talos_secrets_from_machineconfig.py"
+MANAGED_TALOSCONFIG_OUTPUT_PATH="${MANAGED_TALOSCONFIG_OUTPUT_PATH:-${TFVARS_HOME_DIR}/talos/talosconfig}"
+MANAGED_KUBECONFIG_OUTPUT_PATH="${MANAGED_KUBECONFIG_OUTPUT_PATH:-${TFVARS_HOME_DIR}/talos/kubeconfig}"
+TALOS_SECRETS_IMPORT_PATH="${TALOS_SECRETS_IMPORT_PATH:-}"
+GENERATED_TALOS_SECRETS_IMPORT_PATH=""
+OVERRIDE_TALOSCONFIG_OUTPUT_PATH="__UNSET__"
+OVERRIDE_KUBECONFIG_OUTPUT_PATH="__UNSET__"
 
 NODE_SPECS=(
   "talos_machine_configuration_apply.k8s_cp_0|k8s_cp_0_node|control-plane"
@@ -59,8 +67,18 @@ append_replace_targets() {
   done
 }
 
+append_var_override() {
+  local expression="$1"
+  PLAN_ARGS_EXTRA+=("-var" "${expression}")
+  APPLY_ARGS_EXTRA+=("-var" "${expression}")
+}
+
 extract_talos_endpoint() {
   extract_tfvar_string "endpoint"
+}
+
+extract_talos_bootstrap_node() {
+  extract_tfvar_string "bootstrap_node"
 }
 
 is_talos_api_reachable() {
@@ -84,9 +102,44 @@ extract_cluster_name() {
   extract_tfvar_string "cluster_name"
 }
 
+extract_talosconfig_output_path() {
+  local from_tfvars=""
+
+  if [[ "${OVERRIDE_TALOSCONFIG_OUTPUT_PATH}" != "__UNSET__" ]]; then
+    echo "${OVERRIDE_TALOSCONFIG_OUTPUT_PATH}"
+    return 0
+  fi
+
+  from_tfvars="$(extract_tfvar_string "talosconfig_output_path")"
+  if [[ -n "${from_tfvars}" ]]; then
+    echo "${from_tfvars}"
+    return 0
+  fi
+
+  echo "${HOME}/.talos/config"
+}
+
+extract_configured_talosconfig_output_path() {
+  local from_tfvars=""
+
+  from_tfvars="$(extract_tfvar_string "talosconfig_output_path")"
+  if [[ -n "${from_tfvars}" ]]; then
+    echo "${from_tfvars}"
+    return 0
+  fi
+
+  echo "${HOME}/.talos/config"
+}
+
 extract_kubeconfig_output_path() {
   local from_tfvars=""
   local cluster_name=""
+
+  if [[ "${OVERRIDE_KUBECONFIG_OUTPUT_PATH}" != "__UNSET__" ]]; then
+    echo "${OVERRIDE_KUBECONFIG_OUTPUT_PATH}"
+    return 0
+  fi
+
   from_tfvars="$(extract_tfvar_string "kubeconfig_output_path")"
   if [[ -n "${from_tfvars}" ]]; then
     echo "${from_tfvars}"
@@ -100,6 +153,199 @@ extract_kubeconfig_output_path() {
   fi
 
   echo "${HOME}/.kube/config"
+}
+
+path_parent_is_writable_or_creatable() {
+  local target_path="$1"
+  local parent_dir=""
+
+  [[ -n "${target_path}" ]] || return 1
+
+  parent_dir="$(dirname "${target_path}")"
+  while [[ ! -e "${parent_dir}" && "${parent_dir}" != "/" ]]; do
+    parent_dir="$(dirname "${parent_dir}")"
+  done
+
+  [[ -d "${parent_dir}" && -w "${parent_dir}" ]]
+}
+
+redirect_local_file_outputs_if_unwritable() {
+  local talosconfig_path=""
+  local kubeconfig_path=""
+
+  talosconfig_path="$(extract_talosconfig_output_path)"
+  kubeconfig_path="$(extract_kubeconfig_output_path)"
+
+  if [[ -n "${talosconfig_path}" ]] && ! path_parent_is_writable_or_creatable "${talosconfig_path}"; then
+    if path_parent_is_writable_or_creatable "${MANAGED_TALOSCONFIG_OUTPUT_PATH}" && path_parent_is_writable_or_creatable "${MANAGED_KUBECONFIG_OUTPUT_PATH}"; then
+      OVERRIDE_TALOSCONFIG_OUTPUT_PATH="${MANAGED_TALOSCONFIG_OUTPUT_PATH}"
+      OVERRIDE_KUBECONFIG_OUTPUT_PATH="${MANAGED_KUBECONFIG_OUTPUT_PATH}"
+    else
+      OVERRIDE_TALOSCONFIG_OUTPUT_PATH=""
+      OVERRIDE_KUBECONFIG_OUTPUT_PATH=""
+    fi
+  fi
+
+  if [[ -n "${kubeconfig_path}" ]] && ! path_parent_is_writable_or_creatable "${kubeconfig_path}"; then
+    if path_parent_is_writable_or_creatable "${MANAGED_TALOSCONFIG_OUTPUT_PATH}" && path_parent_is_writable_or_creatable "${MANAGED_KUBECONFIG_OUTPUT_PATH}"; then
+      OVERRIDE_TALOSCONFIG_OUTPUT_PATH="${MANAGED_TALOSCONFIG_OUTPUT_PATH}"
+      OVERRIDE_KUBECONFIG_OUTPUT_PATH="${MANAGED_KUBECONFIG_OUTPUT_PATH}"
+    else
+      OVERRIDE_TALOSCONFIG_OUTPUT_PATH=""
+      OVERRIDE_KUBECONFIG_OUTPUT_PATH=""
+    fi
+  fi
+
+  if [[ "${OVERRIDE_TALOSCONFIG_OUTPUT_PATH}" == "${MANAGED_TALOSCONFIG_OUTPUT_PATH}" && "${OVERRIDE_KUBECONFIG_OUTPUT_PATH}" == "${MANAGED_KUBECONFIG_OUTPUT_PATH}" ]]; then
+    echo "[INFO] Redirecting Talos local file outputs to shared managed paths under ${TFVARS_HOME_DIR}/talos"
+    append_var_override "talosconfig_output_path=${OVERRIDE_TALOSCONFIG_OUTPUT_PATH}"
+    append_var_override "kubeconfig_output_path=${OVERRIDE_KUBECONFIG_OUTPUT_PATH}"
+    return 0
+  fi
+
+  if [[ "${OVERRIDE_TALOSCONFIG_OUTPUT_PATH}" == "" && "${OVERRIDE_KUBECONFIG_OUTPUT_PATH}" == "" ]]; then
+    echo "[INFO] Disabling Talos local file outputs on this runner (configured paths are not writable)"
+    append_var_override "talosconfig_output_path="
+    append_var_override "kubeconfig_output_path="
+  fi
+}
+
+state_has_address() {
+  local address="$1"
+  "${EXEC_SCRIPT}" state show -no-color "${address}" >/dev/null 2>&1
+}
+
+state_ca_matches_talos_endpoint() {
+  local endpoint="$1"
+  local ca_b64=""
+  local tmp_dir=""
+  local ca_file=""
+
+  if ! state_has_address "${MACHINE_SECRETS_STATE_ADDRESS}"; then
+    return 1
+  fi
+
+  ca_b64="$("${EXEC_SCRIPT}" state show -no-color "${MACHINE_SECRETS_STATE_ADDRESS}" | awk -F'"' '/ca_certificate[[:space:]]*=/{print $2; exit}')"
+  [[ -n "${ca_b64}" ]] || return 1
+
+  tmp_dir="$(mktemp -d)"
+  ca_file="${tmp_dir}/talos-ca.pem"
+  if ! printf '%s' "${ca_b64}" | base64 -d > "${ca_file}" 2>/dev/null; then
+    rm -rf "${tmp_dir}"
+    return 1
+  fi
+
+  if timeout 5 openssl s_client -verify_return_error \
+    -connect "${endpoint}:50000" \
+    -servername "${endpoint}" \
+    -CAfile "${ca_file}" \
+    </dev/null >/dev/null 2>&1; then
+    rm -rf "${tmp_dir}"
+    return 0
+  fi
+
+  rm -rf "${tmp_dir}"
+  return 1
+}
+
+ensure_talos_secrets_import_file() {
+  local bootstrap_node=""
+  local talosconfig_path=""
+  local import_path=""
+  local candidate=""
+  local -a talosconfig_candidates=()
+
+  if [[ -n "${TALOS_SECRETS_IMPORT_PATH}" && -f "${TALOS_SECRETS_IMPORT_PATH}" ]]; then
+    return 0
+  fi
+
+  bootstrap_node="$(extract_talos_bootstrap_node)"
+  talosconfig_candidates=(
+    "$(extract_talosconfig_output_path)"
+    "$(extract_configured_talosconfig_output_path)"
+    "${MANAGED_TALOSCONFIG_OUTPUT_PATH}"
+    "${HOME}/.talos/config"
+  )
+  for candidate in "${talosconfig_candidates[@]}"; do
+    if [[ -n "${candidate}" && -f "${candidate}" ]]; then
+      talosconfig_path="${candidate}"
+      break
+    fi
+  done
+
+  if [[ ! -f "${TALOS_SECRETS_EXPORT_SCRIPT}" || -z "${bootstrap_node}" || -z "${talosconfig_path}" ]]; then
+    return 1
+  fi
+
+  if [[ -n "${TALOS_SECRETS_IMPORT_PATH}" ]]; then
+    import_path="${TALOS_SECRETS_IMPORT_PATH}"
+  else
+    import_path="$(mktemp -t talos-machine-secrets-XXXXXX.yaml)"
+    GENERATED_TALOS_SECRETS_IMPORT_PATH="${import_path}"
+  fi
+
+  echo "[INFO] Exporting live Talos machine secrets to ${import_path}"
+  if python3 "${TALOS_SECRETS_EXPORT_SCRIPT}" \
+    --talosconfig "${talosconfig_path}" \
+    --node "${bootstrap_node}" \
+    --output "${import_path}" >/dev/null; then
+    if [[ -z "${TALOS_SECRETS_IMPORT_PATH}" ]]; then
+      TALOS_SECRETS_IMPORT_PATH="${import_path}"
+    fi
+    return 0
+  fi
+
+  return 1
+}
+
+cleanup_generated_talos_secrets_import_file() {
+  if [[ -n "${GENERATED_TALOS_SECRETS_IMPORT_PATH}" && -f "${GENERATED_TALOS_SECRETS_IMPORT_PATH}" ]]; then
+    rm -f "${GENERATED_TALOS_SECRETS_IMPORT_PATH}"
+  fi
+  GENERATED_TALOS_SECRETS_IMPORT_PATH=""
+  if [[ -n "${TALOS_SECRETS_IMPORT_PATH}" && ! -f "${TALOS_SECRETS_IMPORT_PATH}" ]]; then
+    TALOS_SECRETS_IMPORT_PATH=""
+  fi
+}
+
+repair_machine_secrets_state() {
+  local endpoint="$1"
+  local import_path=""
+
+  if state_ca_matches_talos_endpoint "${endpoint}"; then
+    return 0
+  fi
+
+  if state_has_address "${MACHINE_SECRETS_STATE_ADDRESS}"; then
+    echo "[WARN] ${MACHINE_SECRETS_STATE_ADDRESS} CA does not match the live Talos API; repairing it"
+  else
+    echo "[WARN] ${MACHINE_SECRETS_STATE_ADDRESS} missing from state while Talos API is reachable; importing it"
+  fi
+
+  if ! ensure_talos_secrets_import_file; then
+    echo "[ERR] Unable to repair ${MACHINE_SECRETS_STATE_ADDRESS}; expected a readable Talos config for live export" >&2
+    exit 1
+  fi
+  import_path="${TALOS_SECRETS_IMPORT_PATH}"
+
+  if state_has_address "${MACHINE_SECRETS_STATE_ADDRESS}"; then
+    "${EXEC_SCRIPT}" state rm "${MACHINE_SECRETS_STATE_ADDRESS}" >/dev/null
+  fi
+
+  if ! "${EXEC_SCRIPT}" import -input=false -var-file "${TFVARS_PATH}" "${MACHINE_SECRETS_STATE_ADDRESS}" "${import_path}"; then
+    cleanup_generated_talos_secrets_import_file
+    echo "[ERR] Failed to import ${MACHINE_SECRETS_STATE_ADDRESS} from ${import_path}" >&2
+    exit 1
+  fi
+
+  if ! state_ca_matches_talos_endpoint "${endpoint}"; then
+    cleanup_generated_talos_secrets_import_file
+    echo "[ERR] Imported ${MACHINE_SECRETS_STATE_ADDRESS}, but its CA still does not match the live Talos API" >&2
+    exit 1
+  fi
+
+  cleanup_generated_talos_secrets_import_file
+  echo "[INFO] Repaired ${MACHINE_SECRETS_STATE_ADDRESS} from ${import_path}"
 }
 
 init_node_targets() {
@@ -185,6 +431,7 @@ pipeline_pre_terraform() {
   local -a node_targets_to_replace=()
 
   init_node_targets
+  redirect_local_file_outputs_if_unwritable
   endpoint="$(extract_talos_endpoint)"
   kubeconfig_path="$(extract_kubeconfig_output_path)"
 
@@ -280,7 +527,9 @@ pipeline_post_init() {
     return 0
   fi
 
-  if "${EXEC_SCRIPT}" state show -no-color "${BOOTSTRAP_STATE_ADDRESS}" >/dev/null 2>&1; then
+  repair_machine_secrets_state "${endpoint}"
+
+  if state_has_address "${BOOTSTRAP_STATE_ADDRESS}"; then
     return 0
   fi
 

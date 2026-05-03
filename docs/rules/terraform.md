@@ -231,13 +231,17 @@ If either path cannot be resolved, the pipeline fails before `terraform init`.
 assets such as `config.yaml`, `grafana.ini`, `service_account.json`, cloud-init
 YAML, or Talos patch files are normal when a stage consumes them.
 
-For Talos specifically, keep the cluster machine-secrets import bundle at:
+For Talos specifically, treat the shared `/mnt/eapp/config/talos/` directory as
+the durable runtime handoff path for:
 
-- `/mnt/eapp/config/talos/secrets.yaml`
+- node patch YAML files consumed by the stage
+- the managed `talosconfig` and `kubeconfig` outputs used by non-interactive
+  runners such as Jenkins
 
-That shared file is the source-of-truth import payload for repairing
-`talos_machine_secrets.cluster` when the Talos app stage finds missing or
-poisoned remote state. Keep it in shared config, not in git.
+Do not rely on a long-lived `secrets.yaml` migration bundle in shared config.
+The Talos app stage exports a temporary machine-secrets import file from a
+working Talos client config only when it needs to repair
+`talos_machine_secrets.cluster`.
 
 The Jenkins controller and agents also use the shared `/mnt/eapp/config`
 mount as their runtime handoff path for inbound agent secret files. Treat that
