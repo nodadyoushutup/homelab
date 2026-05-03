@@ -117,132 +117,17 @@ build {
   ]
 
   provisioner "file" {
-    source      = "../scripts/install/packages.sh"
-    destination = "/tmp/install-packages.sh"
+    source      = "../scripts/install"
+    destination = "/tmp"
   }
 
   provisioner "shell" {
     execute_command = "sudo -E bash -eux '{{ .Path }}'"
     inline = [
-      "chmod +x /tmp/install-packages.sh",
-      "/tmp/install-packages.sh",
-    ]
-  }
-
-  provisioner "file" {
-    source      = "../scripts/install/docker.sh"
-    destination = "/tmp/install-docker.sh"
-  }
-
-  provisioner "shell" {
-    execute_command = "sudo -E bash -eux '{{ .Path }}'"
-    inline = [
-      "chmod +x /tmp/install-docker.sh",
-      "TARGET_USER=nodadyoushutup DOCKER_VERIFY=0 /tmp/install-docker.sh",
-    ]
-  }
-
-  provisioner "file" {
-    source      = "../scripts/install/terraform.sh"
-    destination = "/tmp/install-terraform.sh"
-  }
-
-  provisioner "shell" {
-    execute_command = "sudo -E bash -eux '{{ .Path }}'"
-    inline = [
-      "chmod +x /tmp/install-terraform.sh",
-      "/tmp/install-terraform.sh",
-    ]
-  }
-
-  provisioner "file" {
-    source      = "../scripts/install/ansible.sh"
-    destination = "/tmp/install-ansible.sh"
-  }
-
-  provisioner "shell" {
-    execute_command = "sudo -E bash -eux '{{ .Path }}'"
-    inline = [
-      "chmod +x /tmp/install-ansible.sh",
-      "/tmp/install-ansible.sh",
-    ]
-  }
-
-  provisioner "file" {
-    source      = "../scripts/install/kubectl.sh"
-    destination = "/tmp/install-kubectl.sh"
-  }
-
-  provisioner "shell" {
-    execute_command = "sudo -E bash -eux '{{ .Path }}'"
-    inline = [
-      "chmod +x /tmp/install-kubectl.sh",
-      "/tmp/install-kubectl.sh",
-    ]
-  }
-
-  provisioner "file" {
-    source      = "../scripts/install/k9s.sh"
-    destination = "/tmp/install-k9s.sh"
-  }
-
-  provisioner "shell" {
-    execute_command = "sudo -E bash -eux '{{ .Path }}'"
-    inline = [
-      "chmod +x /tmp/install-k9s.sh",
-      "/tmp/install-k9s.sh",
-    ]
-  }
-
-  provisioner "file" {
-    source      = "../scripts/install/packer.sh"
-    destination = "/tmp/install-packer.sh"
-  }
-
-  provisioner "shell" {
-    execute_command = "sudo -E bash -eux '{{ .Path }}'"
-    inline = [
-      "chmod +x /tmp/install-packer.sh",
-      "TARGET_USER=nodadyoushutup /tmp/install-packer.sh",
-    ]
-  }
-
-  provisioner "file" {
-    source      = "../scripts/install/minio_client.sh"
-    destination = "/tmp/install-minio-client.sh"
-  }
-
-  provisioner "shell" {
-    execute_command = "sudo -E bash -eux '{{ .Path }}'"
-    inline = [
-      "chmod +x /tmp/install-minio-client.sh",
-      "/tmp/install-minio-client.sh",
-    ]
-  }
-
-  provisioner "file" {
-    source      = "../scripts/install/node_exporter.sh"
-    destination = "/tmp/install-node-exporter.sh"
-  }
-
-  provisioner "shell" {
-    execute_command = "sudo -E bash -eux '{{ .Path }}'"
-    inline = [
-      "chmod +x /tmp/install-node-exporter.sh",
-      "/tmp/install-node-exporter.sh",
-    ]
-  }
-
-  provisioner "file" {
-    source      = "../scripts/install/kde.sh"
-    destination = "/tmp/install-kde.sh"
-  }
-
-  provisioner "shell" {
-    execute_command = "sudo -E bash -eux '{{ .Path }}'"
-    inline = [
-      "chmod +x /tmp/install-kde.sh",
-      "if [ -n '${local.kde_profile_effective}' ]; then KDE_PROFILE='${local.kde_profile_effective}' /tmp/install-kde.sh; else echo '[INFO] KDE install skipped (kde_profile unset).'; fi",
+      "find /tmp/install -maxdepth 1 -type f -name '*.sh' -exec chmod 0755 {} +",
+      "AUTOMATION_TARGET_USER=nodadyoushutup AUTOMATION_DOCKER_VERIFY=0 /tmp/install/automation_tooling.sh",
+      "/tmp/install/node_exporter.sh",
+      "if [ -n '${local.kde_profile_effective}' ]; then KDE_PROFILE='${local.kde_profile_effective}' /tmp/install/kde.sh; else echo '[INFO] KDE install skipped (kde_profile unset).'; fi",
     ]
   }
 

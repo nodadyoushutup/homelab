@@ -5,10 +5,10 @@ This directory contains a minimal Packer build that:
 - starts from the official Ubuntu 24.04 cloud image (`noble`)
 - uses a temporary `packer` SSH user/key for provisioning only
 - sets `nodadyoushutup` as UID/GID `1000:1000` directly in cloud-init
-- uploads and runs `scripts/install/packages.sh` (base packages)
-- uploads and runs `scripts/install/docker.sh`
-- uploads and runs `scripts/install/packer.sh`
-- uploads and runs `scripts/install/kde.sh`
+- uploads and runs `scripts/install/automation_tooling.sh` for the shared
+  automation toolchain
+- installs the Packer-image-only extras from `scripts/install/node_exporter.sh`
+  and optional `scripts/install/kde.sh`
 - runs a cleanup script that removes temporary SSH/provisioning access
 
 ## Prerequisites

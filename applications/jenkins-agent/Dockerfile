@@ -4,32 +4,15 @@ FROM jenkins/inbound-agent:3283.v92c105e0f819-7-jdk21
 USER root
 
 # Reuse shared install scripts from scripts/install as source-of-truth.
-COPY scripts/install/packages.sh /tmp/install-scripts/packages.sh
-COPY scripts/install/docker.sh /tmp/install-scripts/docker.sh
-COPY scripts/install/terraform.sh /tmp/install-scripts/terraform.sh
-COPY scripts/install/ansible.sh /tmp/install-scripts/ansible.sh
-COPY scripts/install/kubectl.sh /tmp/install-scripts/kubectl.sh
-COPY scripts/install/k9s.sh /tmp/install-scripts/k9s.sh
-COPY scripts/install/packer.sh /tmp/install-scripts/packer.sh
-COPY scripts/install/minio_client.sh /tmp/install-scripts/minio_client.sh
+COPY scripts/install/ /tmp/install-scripts/
 
 # Install build/runtime tooling used by pipeline jobs.
-RUN chmod 0755 /tmp/install-scripts/packages.sh \
-               /tmp/install-scripts/docker.sh \
-               /tmp/install-scripts/terraform.sh \
-               /tmp/install-scripts/ansible.sh \
-               /tmp/install-scripts/kubectl.sh \
-               /tmp/install-scripts/k9s.sh \
-               /tmp/install-scripts/packer.sh \
-               /tmp/install-scripts/minio_client.sh \
-    && /tmp/install-scripts/packages.sh \
-    && INSTALL_DOCKER_PROFILE=cli DOCKER_ENABLE_SERVICE=0 DOCKER_VERIFY=0 TARGET_USER=jenkins /tmp/install-scripts/docker.sh \
-    && /tmp/install-scripts/terraform.sh \
-    && /tmp/install-scripts/ansible.sh \
-    && /tmp/install-scripts/kubectl.sh \
-    && /tmp/install-scripts/k9s.sh \
-    && TARGET_USER=jenkins /tmp/install-scripts/packer.sh \
-    && /tmp/install-scripts/minio_client.sh \
+RUN chmod 0755 /tmp/install-scripts/*.sh \
+    && AUTOMATION_TARGET_USER=jenkins \
+       AUTOMATION_DOCKER_PROFILE=cli \
+       AUTOMATION_DOCKER_ENABLE_SERVICE=0 \
+       AUTOMATION_DOCKER_VERIFY=0 \
+       /tmp/install-scripts/automation_tooling.sh \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/install-scripts
 

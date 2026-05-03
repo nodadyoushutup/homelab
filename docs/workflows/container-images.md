@@ -113,6 +113,25 @@ pipelines/applications/build_push.sh
 pipelines/applications/build_push.jenkins
 ```
 
+## Shared Automation Tooling Bundle
+
+The `gha-runner` and `jenkins-agent` images must treat
+`scripts/install/automation_tooling.sh` as the source-of-truth for the common
+automation toolchain. That bundle chains the sibling install scripts for:
+
+- base packages
+- Docker
+- Terraform
+- Ansible
+- `kubectl`
+- `k9s`
+- Packer
+- MinIO client
+
+The Ubuntu Packer image at `packer/ubuntu-24.04-ndysu.pkr.hcl` must also use
+that same bundle for the shared tooling set, leaving only image-specific extras
+outside the bundle, such as `node_exporter.sh` and optional KDE installation.
+
 The live workflow now uses a native per-architecture fan-out for direct image
 builds:
 

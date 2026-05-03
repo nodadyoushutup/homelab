@@ -1,11 +1,17 @@
 # Custom GitHub Actions Runner (Ubuntu 24.04)
 
 This directory builds a self-hosted GitHub Actions runner image from `ubuntu:24.04`.
-The Dockerfile uses repo-level install scripts under `scripts/install/` as source-of-truth.
+The Dockerfile uses the shared automation tooling bundle at
+`scripts/install/automation_tooling.sh` as source-of-truth for the common
+infra/CI toolchain.
 
 ## What is configurable
 
-- APT packages: `scripts/install/packages.sh` arguments in `applications/gha-runner/Dockerfile`
+- Shared infra/CI tooling:
+  `scripts/install/automation_tooling.sh`
+  - base packages from `scripts/install/packages.sh`
+  - Docker CLI, Terraform, Ansible, `kubectl`, `k9s`, Packer, and MinIO client
+- Runner-specific OS/Python prereqs: `applications/gha-runner/Dockerfile`
 - Python packages: `requirements.txt`
 - Runner registration/settings: `.env` values (copy from `.env.example`)
 
