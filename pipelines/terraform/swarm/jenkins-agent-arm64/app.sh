@@ -19,17 +19,133 @@ APPLY_ARGS_EXTRA=()
 
 CONTROLLER_TERRAFORM_DIR="${ROOT_DIR}/terraform/swarm/jenkins-controller/app"
 EXPECTED_IMAGE_ARCH="arm64"
+TERRAFORM_CONSOLE_READY="0"
+REGISTRY_AUTH_ADDRESS=""
+REGISTRY_AUTH_USERNAME=""
+REGISTRY_AUTH_PASSWORD=""
+
+ensure_terraform_console_ready() {
+  if [[ "${TERRAFORM_CONSOLE_READY}" == "1" ]]; then
+    return 0
+  fi
+
+  if ! terraform -chdir="${TERRAFORM_DIR}" init -backend=false -input=false > /dev/null; then
+    echo "[ERR] Unable to initialize ${TERRAFORM_DIR} for Jenkins agent image validation." >&2
+    exit 1
+  fi
+
+  TERRAFORM_CONSOLE_READY="1"
+}
+
+terraform_console_string() {
+  local expression="$1"
+  local console_output
+  local python_cmd="${PYTHON_CMD:-python3}"
+
+  ensure_terraform_console_ready
+
+  if ! console_output="$(
+    printf '%s\n' "${expression}" | terraform -chdir="${TERRAFORM_DIR}" console -var-file="${TFVARS_PATH}" 2>/dev/null
+  )"; then
+    echo "[ERR] Unable to evaluate Terraform expression for Jenkins agent validation: ${expression}" >&2
+    exit 1
+  fi
+
+  if [[ -z "${console_output}" ]]; then
+    printf '\n'
+    return 0
+  fi
+
+  printf '%s' "${console_output}" | "${python_cmd}" -c 'import json, sys; value = json.loads(sys.stdin.read()); print("" if value is None else value)'
+}
 
 resolve_agent_image_from_terraform() {
   local agent_image
-  agent_image="$(sed -n 's/^[[:space:]]*image[[:space:]]*=[[:space:]]*"\([^"]*\)".*/\1/p' "${TERRAFORM_DIR}/main.tf" | head -n 1)"
+  agent_image="$(terraform_console_string 'var.agent_image')"
 
   if [[ -z "${agent_image}" ]]; then
-    echo "[ERR] Unable to resolve Jenkins agent image from ${TERRAFORM_DIR}/main.tf." >&2
+    echo "[ERR] Unable to resolve Jenkins agent image from Terraform input agent_image." >&2
     exit 1
   fi
 
   printf '%s\n' "${agent_image}"
+}
+
+load_registry_auth_from_terraform() {
+  if [[ -n "${REGISTRY_AUTH_USERNAME}" || -n "${REGISTRY_AUTH_PASSWORD}" || -n "${REGISTRY_AUTH_ADDRESS}" ]]; then
+    return 0
+  fi
+
+  REGISTRY_AUTH_ADDRESS="$(terraform_console_string 'try(var.provider_config.registry_auth.address, "")')"
+  REGISTRY_AUTH_USERNAME="$(terraform_console_string 'try(var.provider_config.registry_auth.username, "")')"
+  REGISTRY_AUTH_PASSWORD="$(terraform_console_string 'try(var.provider_config.registry_auth.password, "")')"
+}
+
+registry_address_from_image() {
+  local image_ref="$1"
+  local registry_candidate="${image_ref%%/*}"
+
+  case "${registry_candidate}" in
+    *.*|*:*|localhost)
+      printf '%s\n' "${registry_candidate}"
+      ;;
+    *)
+      printf '\n'
+      ;;
+  esac
+}
+
+inspect_agent_image_manifest() {
+  local agent_image="$1"
+  local manifest_output
+  local inspect_error=""
+  local registry_address=""
+  local temp_docker_config=""
+  local docker_login_error=""
+
+  if manifest_output="$(docker manifest inspect "${agent_image}" 2>&1)"; then
+    printf '%s\n' "${manifest_output}"
+    return 0
+  fi
+  inspect_error="${manifest_output}"
+
+  load_registry_auth_from_terraform
+  if [[ -z "${REGISTRY_AUTH_USERNAME}" || -z "${REGISTRY_AUTH_PASSWORD}" ]]; then
+    echo "[ERR] Unable to inspect manifest for ${agent_image}. Anonymous registry access failed and no stage registry_auth credentials are configured." >&2
+    if [[ -n "${inspect_error}" ]]; then
+      echo "[ERR] docker manifest inspect: $(printf '%s' "${inspect_error}" | tr '\n' ' ')" >&2
+    fi
+    return 1
+  fi
+
+  registry_address="${REGISTRY_AUTH_ADDRESS:-$(registry_address_from_image "${agent_image}")}"
+  if [[ -z "${registry_address}" ]]; then
+    echo "[ERR] Unable to determine a registry address for ${agent_image} during manifest validation." >&2
+    return 1
+  fi
+
+  temp_docker_config="$(mktemp -d -t docker-config-XXXXXX)"
+
+  if ! docker_login_error="$(
+    printf '%s' "${REGISTRY_AUTH_PASSWORD}" | DOCKER_CONFIG="${temp_docker_config}" docker login "${registry_address}" \
+      --username "${REGISTRY_AUTH_USERNAME}" \
+      --password-stdin 2>&1
+  )"; then
+    rm -rf "${temp_docker_config}"
+    echo "[ERR] Unable to authenticate to ${registry_address} for Jenkins agent image validation." >&2
+    echo "[ERR] docker login: $(printf '%s' "${docker_login_error}" | tr '\n' ' ')" >&2
+    return 1
+  fi
+
+  if ! manifest_output="$(DOCKER_CONFIG="${temp_docker_config}" docker manifest inspect "${agent_image}" 2>&1)"; then
+    rm -rf "${temp_docker_config}"
+    echo "[ERR] Unable to inspect manifest for ${agent_image} after authenticating to ${registry_address}." >&2
+    echo "[ERR] docker manifest inspect: $(printf '%s' "${manifest_output}" | tr '\n' ' ')" >&2
+    return 1
+  fi
+
+  rm -rf "${temp_docker_config}"
+  printf '%s\n' "${manifest_output}"
 }
 
 assert_agent_image_architecture() {
@@ -42,8 +158,7 @@ assert_agent_image_architecture() {
   fi
 
   echo "[INFO] Validating Jenkins agent image supports ${EXPECTED_IMAGE_ARCH}: ${agent_image}"
-  if ! manifest_output="$(docker manifest inspect "${agent_image}" 2>/dev/null)"; then
-    echo "[ERR] Unable to inspect manifest for ${agent_image}." >&2
+  if ! manifest_output="$(inspect_agent_image_manifest "${agent_image}")"; then
     exit 1
   fi
 

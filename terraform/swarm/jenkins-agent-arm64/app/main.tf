@@ -89,7 +89,7 @@ resource "docker_service" "jenkins_agent" {
     }
 
     container_spec {
-      image = "harbor.nodadyoushutup.com/jenkins-agent/jenkins-agent:0.0.10"
+      image = var.agent_image
       env = merge(local.agent_env, {
         JENKINS_URL        = var.jenkins_url
         JENKINS_AGENT_NAME = each.value.name

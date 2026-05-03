@@ -33,6 +33,12 @@ variable "env" {
   default     = {}
 }
 
+variable "agent_image" {
+  description = "Jenkins agent image reference validated during stage preflight and applied to each agent service."
+  type        = string
+  default     = "harbor.nodadyoushutup.com/jenkins-agent/jenkins-agent:0.0.10"
+}
+
 variable "service_name_prefix" {
   description = "Docker Swarm service name prefix for Jenkins agents."
   type        = string

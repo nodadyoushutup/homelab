@@ -152,7 +152,9 @@ For Jenkins specifically:
   tfvars include and exclude wildcards to narrow branch discovery when needed
 - the split Jenkins agent app stages validate that the Terraform-defined
   Jenkins agent image manifest actually contains the expected target
-  architecture before Terraform apply proceeds
+  architecture before Terraform apply proceeds, reusing the stage
+  `provider_config.registry_auth` credentials when registry authentication is
+  required
 - the controller app stage writes inbound agent secret files under
   `/mnt/eapp/config/jenkins-controller/agent-secrets/`
 - both controller and agent containers expect the shared `/mnt/eapp/config`

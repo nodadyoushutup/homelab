@@ -176,7 +176,8 @@ Jenkins-specific defaults remain special cases:
   hostname placement in the same YAML source-of-truth
 - Split Jenkins agent stage entrypoints should fail fast when the Terraform-
   defined Jenkins agent image manifest does not advertise the required target
-  architecture
+  architecture, using the same stage `registry_auth` credentials when the
+  registry requires authentication
 - Jenkins controller `config` is the Terraform-managed Jenkins API stage for
   folders, multibranch jobs, and optional SCM checkout credentials
 - Jenkins controller and agent services should mount `/mnt/eapp/config`
