@@ -12,10 +12,11 @@ if ! declare -f purge_main >/dev/null 2>&1; then
   source "${SCRIPT_DIR}/base.sh"
 fi
 
-APP_NAME="nginx-proxy-manager"
-SERVICE_REGEX="^(nginx-proxy-manager|mysql)$"
-NETWORK_REGEX="^(nginx-proxy-manager|nginx-proxy-manager-mysql)$"
-VOLUME_REGEX="^(nginx-proxy-manager-data|nginx-proxy-manager-letsencrypt|mysql-data)$"
-IMAGE_REGEX="(^jc21/nginx-proxy-manager:|^jc21/mariadb-aria:)"
+APP_NAME="harbor"
+SERVICE_REGEX="^(harbor-log|registry|registryctl|postgresql|redis|core|portal|jobservice|proxy|trivy-adapter)$"
+NETWORK_REGEX="^harbor$"
+IMAGE_REGEX="(^goharbor/|^redis:|^postgres:|^aquasec/trivy:)"
+REMOVE_CONFIGS="false"
+REMOVE_SECRETS="false"
 
 purge_main "$@"

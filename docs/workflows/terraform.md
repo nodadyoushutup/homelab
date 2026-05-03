@@ -226,6 +226,25 @@ scripts/terraform/grafana_config_import_existing.sh
 Use `--dry-run` first if you want to inspect the import commands before they
 touch shared state.
 
+For Docker-backed Swarm `app` and `database` stages, reconcile existing
+networks, volumes, configs, and services into remote state with:
+
+```bash
+scripts/terraform/repair_docker_remote_state.sh
+```
+
+Use `--only` to limit the repair scope while you validate one service at a
+time:
+
+```bash
+scripts/terraform/repair_docker_remote_state.sh --only 'grafana/database'
+```
+
+That helper uses the shared `/mnt/eapp/config` SSH material plus a temporary
+Terraform container on the Swarm manager for `docker_service` imports, so it
+works even when the local Docker provider cannot import services over SSH
+directly.
+
 After any import repair, rerun the stage through either bash or Jenkins and
 confirm both paths now produce the same plan against the same remote state.
 

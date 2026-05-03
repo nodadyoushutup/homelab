@@ -13,5 +13,10 @@ if ! declare -f purge_main >/dev/null 2>&1; then
 fi
 
 APP_NAME="grafana"
+SERVICE_REGEX='^grafana($|-)'
+NETWORK_REGEX='^grafana($|-)'
+VOLUME_REGEX='^grafana($|-)'
+CONFIG_REGEX="^grafana-ini-"
+IMAGE_REGEX="(^grafana/grafana:|^postgres:)"
 
 purge_main "$@"

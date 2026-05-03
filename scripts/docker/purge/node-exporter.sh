@@ -13,5 +13,8 @@ if ! declare -f purge_main >/dev/null 2>&1; then
 fi
 
 APP_NAME="node-exporter"
+SERVICE_REGEX="^node-exporter$"
+NETWORK_REGEX="^node-exporter$"
+IMAGE_REGEX="^prom/node-exporter:"
 
 purge_main "$@"

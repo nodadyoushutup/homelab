@@ -13,5 +13,9 @@ if ! declare -f purge_main >/dev/null 2>&1; then
 fi
 
 APP_NAME="telegraf-docker-metrics"
+SERVICE_REGEX="^telegraf-docker-metrics$"
+NETWORK_REGEX="^telegraf-docker-metrics$"
+CONFIG_REGEX="^telegraf-docker-metrics-"
+IMAGE_REGEX="^telegraf:"
 
 purge_main "$@"

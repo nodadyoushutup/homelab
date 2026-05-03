@@ -6,50 +6,85 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BASE_LIB="${SCRIPT_DIR}/base.sh"
-KNOWN_SERVICES=(dozzle gha-runner grafana graphite jenkins minio nginx-proxy-manager node-exporter prometheus telegraf-docker-metrics webserver-image)
+KNOWN_SERVICES=(
+  alloy
+  docker_volume_backup
+  dozzle
+  gha-runner-amd64
+  gha-runner-arm64
+  grafana
+  graphite
+  harbor
+  jenkins-agent-amd64
+  jenkins-agent-arm64
+  jenkins-controller
+  loki
+  nginx_proxy_manager
+  node_exporter
+  prometheus
+  telegraf_docker_metrics
+  vault
+  webserver-image
+)
 declare -A SERVICE_MAP=(
+  [alloy]="alloy"
+  [docker-volume-backup]="docker_volume_backup"
+  [docker_volume_backup]="docker_volume_backup"
   [dozzle]="dozzle"
   [gha-runner]="gha-runner"
   [gha_runner]="gha-runner"
+  [gha-runner-amd64]="gha-runner-amd64"
+  [gha_runner_amd64]="gha-runner-amd64"
+  [gha-runner-arm64]="gha-runner-arm64"
+  [gha_runner_arm64]="gha-runner-arm64"
   [github-actions-runner]="gha-runner"
   [github_actions_runner]="gha-runner"
   [actions-runner]="gha-runner"
   [actions_runner]="gha-runner"
   [grafana]="grafana"
   [graphite]="graphite"
+  [harbor]="harbor"
+  [jenkins]="jenkins"
+  [jenkins-agent]="jenkins-agent"
+  [jenkins_agent]="jenkins-agent"
+  [jenkins-agent-amd64]="jenkins-agent-amd64"
+  [jenkins_agent_amd64]="jenkins-agent-amd64"
+  [jenkins-agent-arm64]="jenkins-agent-arm64"
+  [jenkins_agent_arm64]="jenkins-agent-arm64"
+  [jenkins-controller]="jenkins-controller"
+  [jenkins_controller]="jenkins-controller"
+  [jenkins-config]="jenkins-controller"
+  [jenkins_config]="jenkins-controller"
+  [loki]="loki"
+  [minio]="minio"
+  [nginx-proxy-manager]="nginx_proxy_manager"
+  [nginx_proxy_manager]="nginx_proxy_manager"
+  [nginx-proxy]="nginx_proxy_manager"
+  [npm]="nginx_proxy_manager"
+  [node-exporter]="node_exporter"
+  [node_exporter]="node_exporter"
+  [prometheus]="prometheus"
+  [telegraf-docker-metrics]="telegraf_docker_metrics"
+  [telegraf_docker_metrics]="telegraf_docker_metrics"
+  [telegraf]="telegraf_docker_metrics"
+  [docker-metrics]="telegraf_docker_metrics"
+  [docker_metrics]="telegraf_docker_metrics"
+  [vault]="vault"
   [webserver-image]="webserver-image"
   [webserver_image]="webserver-image"
   [image-webserver]="webserver-image"
   [image_webserver]="webserver-image"
   [image-server]="webserver-image"
   [images-webserver]="webserver-image"
-  [jenkins]="jenkins"
-  [jenkins-controller]="jenkins"
-  [jenkins_controller]="jenkins"
-  [jenkins-agent]="jenkins"
-  [jenkins_agent]="jenkins"
-  [jenkins-config]="jenkins"
-  [jenkins_config]="jenkins"
-  [minio]="minio"
-  [nginx-proxy-manager]="nginx-proxy-manager"
-  [nginx_proxy_manager]="nginx-proxy-manager"
-  [nginx-proxy]="nginx-proxy-manager"
-  [npm]="nginx-proxy-manager"
-  [node-exporter]="node-exporter"
-  [node_exporter]="node-exporter"
-  [prometheus]="prometheus"
-  [telegraf-docker-metrics]="telegraf-docker-metrics"
-  [telegraf_docker_metrics]="telegraf-docker-metrics"
-  [telegraf]="telegraf-docker-metrics"
-  [docker-metrics]="telegraf-docker-metrics"
-  [docker_metrics]="telegraf-docker-metrics"
 )
 
 usage() {
   cat <<EOF
 Usage: $(basename "$0") <service|all> [manager_host]
 
-service       One of: ${KNOWN_SERVICES[*]} (or "all" to purge everything)
+service       One of: ${KNOWN_SERVICES[*]} (or "all" to purge every repo-managed
+              Swarm app). Legacy aliases such as "jenkins", "gha-runner",
+              "nginx-proxy-manager", and "minio" are still accepted.
 manager_host  Optional SSH target; if set, purge runs there via SSH. Without it,
               the purge script executes locally (use when already on swarm-cp-0).
 EOF
@@ -158,15 +193,10 @@ fi
 SERVICE_INPUT="$1"
 TARGET_HOST="${2:-}"
 
-if [[ "${SERVICE_INPUT,,}" == "all" ]]; then
-  for svc in "${KNOWN_SERVICES[@]}"; do
-    # Minio runs outside the swarm cluster; skip it on blanket purges to avoid errors.
-    if [[ "${svc}" == "minio" ]]; then
-      echo "==> Skipping minio (managed outside swarm)"
-      continue
-    fi
-    run_purge "${svc}" "${TARGET_HOST}"
-  done
+  if [[ "${SERVICE_INPUT,,}" == "all" ]]; then
+    for svc in "${KNOWN_SERVICES[@]}"; do
+      run_purge "${svc}" "${TARGET_HOST}"
+    done
 else
   run_purge "${SERVICE_INPUT}" "${TARGET_HOST}"
 fi

@@ -12,10 +12,11 @@ if ! declare -f purge_main >/dev/null 2>&1; then
   source "${SCRIPT_DIR}/base.sh"
 fi
 
-APP_NAME="nginx-proxy-manager"
-SERVICE_REGEX="^(nginx-proxy-manager|mysql)$"
-NETWORK_REGEX="^(nginx-proxy-manager|nginx-proxy-manager-mysql)$"
-VOLUME_REGEX="^(nginx-proxy-manager-data|nginx-proxy-manager-letsencrypt|mysql-data)$"
-IMAGE_REGEX="(^jc21/nginx-proxy-manager:|^jc21/mariadb-aria:)"
+APP_NAME="telegraf_docker_metrics"
+APP_DESC="telegraf_docker_metrics"
+SERVICE_REGEX="^telegraf-docker-metrics$"
+NETWORK_REGEX="^telegraf-docker-metrics$"
+CONFIG_REGEX="^telegraf-docker-metrics-"
+IMAGE_REGEX="^telegraf:"
 
 purge_main "$@"

@@ -167,30 +167,75 @@ remove_items() {
 purge_node_assets() {
   local node_label=$1
   local had_error=0
+  local -a container_list_cmd volume_list_cmd network_list_cmd image_list_cmd
+
+  if [[ -n "${SERVICE_REGEX:-}" ]]; then
+    container_list_cmd=(
+      bash -lc
+      "docker ps -a --format '{{.ID}} {{.Names}}' | awk -v regex=\"\$1\" '\$2 ~ regex {print \$1}'"
+      _
+      "${SERVICE_REGEX}"
+    )
+  else
+    container_list_cmd=(docker ps -aq --filter name="${SERVICE_FILTER}")
+  fi
+
+  if [[ -n "${VOLUME_REGEX:-}" ]]; then
+    volume_list_cmd=(
+      bash -lc
+      "docker volume ls --format '{{.Name}}' | awk -v regex=\"\$1\" '\$1 ~ regex {print \$1}'"
+      _
+      "${VOLUME_REGEX}"
+    )
+  else
+    volume_list_cmd=(docker volume ls --filter name="${VOLUME_FILTER}" --format '{{.Name}}')
+  fi
+
+  if [[ -n "${NETWORK_REGEX:-}" ]]; then
+    network_list_cmd=(
+      bash -lc
+      "docker network ls --format '{{.ID}} {{.Name}}' | awk -v regex=\"\$1\" '\$2 ~ regex {print \$1}'"
+      _
+      "${NETWORK_REGEX}"
+    )
+  else
+    network_list_cmd=(docker network ls --filter name="${NETWORK_FILTER}" --format '{{.ID}}')
+  fi
+
+  if [[ -n "${IMAGE_REGEX:-}" ]]; then
+    image_list_cmd=(
+      bash -lc
+      "docker image ls --format '{{.Repository}}:{{.Tag}} {{.ID}}' | awk -v regex=\"\$1\" '\$1 ~ regex {print \$2}'"
+      _
+      "${IMAGE_REGEX}"
+    )
+  else
+    image_list_cmd=(docker image ls --filter "reference=${IMAGE_FILTER}" --quiet)
+  fi
 
   if ! remove_items "containers on ${node_label}" \
-    docker ps -aq --filter name="${SERVICE_FILTER}" \
+    "${container_list_cmd[@]}" \
     :: docker rm -f
   then
     had_error=1
   fi
 
   if ! remove_items "volumes on ${node_label}" \
-    docker volume ls --filter name="${VOLUME_FILTER}" --format '{{.Name}}' \
+    "${volume_list_cmd[@]}" \
     :: docker volume rm -f
   then
     had_error=1
   fi
 
   if ! remove_items "networks on ${node_label}" \
-    docker network ls --filter name="${NETWORK_FILTER}" --format '{{.ID}}' \
+    "${network_list_cmd[@]}" \
     :: docker network rm
   then
     had_error=1
   fi
 
   if ! remove_items "images on ${node_label}" \
-    docker image ls --filter "reference=${IMAGE_FILTER}" --quiet \
+    "${image_list_cmd[@]}" \
     :: docker image rm -f
   then
     had_error=1
@@ -294,6 +339,13 @@ purge_main() {
   NETWORK_FILTER="${NETWORK_FILTER:-${APP_NAME}}"
   VOLUME_FILTER="${VOLUME_FILTER:-${APP_NAME}}"
   IMAGE_FILTER="${IMAGE_FILTER:-*${APP_NAME}*}"
+  STACK_REGEX="${STACK_REGEX:-}"
+  SERVICE_REGEX="${SERVICE_REGEX:-}"
+  CONFIG_REGEX="${CONFIG_REGEX:-}"
+  SECRET_REGEX="${SECRET_REGEX:-}"
+  NETWORK_REGEX="${NETWORK_REGEX:-}"
+  VOLUME_REGEX="${VOLUME_REGEX:-}"
+  IMAGE_REGEX="${IMAGE_REGEX:-}"
 
   REMOVE_STACKS="${REMOVE_STACKS:-true}"
   REMOVE_CONFIGS="${REMOVE_CONFIGS:-true}"
@@ -323,24 +375,63 @@ purge_main() {
 
   if [[ "${manager_ops_available}" == "true" ]]; then
     if [[ "${REMOVE_STACKS}" == "true" ]]; then
+      local -a stack_list_cmd
+      if [[ -n "${STACK_REGEX}" ]]; then
+        stack_list_cmd=(
+          bash -lc
+          "docker stack ls --format '{{.Name}}' | awk -v regex=\"\$1\" '\$1 ~ regex {print \$1}'"
+          _
+          "${STACK_REGEX}"
+        )
+      else
+        stack_list_cmd=(
+          bash -lc
+          "docker stack ls --format '{{.Name}}' | awk '/${STACK_MATCH}/'"
+        )
+      fi
+
       if ! remove_items "stacks" \
-        bash -lc "docker stack ls --format '{{.Name}}' | awk '/${STACK_MATCH}/'" \
+        "${stack_list_cmd[@]}" \
         :: docker stack rm
       then
         echo "    warning: failed to remove one or more stacks" >&2
       fi
     fi
 
+    local -a service_list_cmd
+    if [[ -n "${SERVICE_REGEX}" ]]; then
+      service_list_cmd=(
+        bash -lc
+        "docker service ls --format '{{.ID}} {{.Name}}' | awk -v regex=\"\$1\" '\$2 ~ regex {print \$1}'"
+        _
+        "${SERVICE_REGEX}"
+      )
+    else
+      service_list_cmd=(docker service ls --filter name="${SERVICE_FILTER}" --format '{{.ID}}')
+    fi
+
     if ! remove_items "services" \
-      docker service ls --filter name="${SERVICE_FILTER}" --format '{{.ID}}' \
+      "${service_list_cmd[@]}" \
       :: docker service rm
     then
       echo "    warning: failed to remove one or more services" >&2
     fi
 
     if [[ "${REMOVE_CONFIGS}" == "true" ]]; then
+      local -a config_list_cmd
+      if [[ -n "${CONFIG_REGEX}" ]]; then
+        config_list_cmd=(
+          bash -lc
+          "docker config ls --format '{{.ID}} {{.Name}}' | awk -v regex=\"\$1\" '\$2 ~ regex {print \$1}'"
+          _
+          "${CONFIG_REGEX}"
+        )
+      else
+        config_list_cmd=(docker config ls --filter name="${CONFIG_FILTER}" --format '{{.ID}}')
+      fi
+
       if ! remove_items "configs" \
-        docker config ls --filter name="${CONFIG_FILTER}" --format '{{.ID}}' \
+        "${config_list_cmd[@]}" \
         :: docker config rm
       then
         echo "    warning: failed to remove one or more configs" >&2
@@ -348,8 +439,20 @@ purge_main() {
     fi
 
     if [[ "${REMOVE_SECRETS}" == "true" ]]; then
+      local -a secret_list_cmd
+      if [[ -n "${SECRET_REGEX}" ]]; then
+        secret_list_cmd=(
+          bash -lc
+          "docker secret ls --format '{{.ID}} {{.Name}}' | awk -v regex=\"\$1\" '\$2 ~ regex {print \$1}'"
+          _
+          "${SECRET_REGEX}"
+        )
+      else
+        secret_list_cmd=(docker secret ls --filter name="${SECRET_FILTER}" --format '{{.ID}}')
+      fi
+
       if ! remove_items "secrets" \
-        docker secret ls --filter name="${SECRET_FILTER}" --format '{{.ID}}' \
+        "${secret_list_cmd[@]}" \
         :: docker secret rm
       then
         echo "    warning: failed to remove one or more secrets" >&2

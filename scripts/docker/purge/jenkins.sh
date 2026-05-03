@@ -13,5 +13,9 @@ if ! declare -f purge_main >/dev/null 2>&1; then
 fi
 
 APP_NAME="jenkins"
+SERVICE_REGEX='^jenkins-(controller|agent-amd64|agent-arm64)($|-)'
+NETWORK_REGEX='^jenkins$'
+VOLUME_REGEX='^(jenkins-controller-(home|config)|jenkins-agent-(amd64|arm64)-(config|home($|-).*))$'
+IMAGE_REGEX="(^harbor.nodadyoushutup.com/jenkins-controller/jenkins-controller:|^harbor.nodadyoushutup.com/jenkins-agent/jenkins-agent:)"
 
 purge_main "$@"

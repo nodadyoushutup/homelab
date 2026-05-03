@@ -12,10 +12,8 @@ if ! declare -f purge_main >/dev/null 2>&1; then
   source "${SCRIPT_DIR}/base.sh"
 fi
 
-APP_NAME="nginx-proxy-manager"
-SERVICE_REGEX="^(nginx-proxy-manager|mysql)$"
-NETWORK_REGEX="^(nginx-proxy-manager|nginx-proxy-manager-mysql)$"
-VOLUME_REGEX="^(nginx-proxy-manager-data|nginx-proxy-manager-letsencrypt|mysql-data)$"
-IMAGE_REGEX="(^jc21/nginx-proxy-manager:|^jc21/mariadb-aria:)"
+APP_NAME="gha-runner-amd64"
+SERVICE_REGEX="^gha-runner-amd64$"
+IMAGE_REGEX="^ghcr.io/nodadyoushutup/gha-runner:"
 
 purge_main "$@"

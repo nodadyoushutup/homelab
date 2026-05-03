@@ -266,6 +266,20 @@ For new Docker Swarm applications:
 
 This is current repo policy, not a suggestion.
 
+## Swarm Purge Scripts
+
+Canonical Swarm purge scripts live under `scripts/docker/purge/`.
+
+- Keep one canonical purge script at `scripts/docker/purge/<service>.sh` for
+  each active runtime root under `terraform/swarm/<service>/`.
+- Match the canonical purge script name to the Terraform service path name, even
+  when Docker object names use hyphens instead of underscores.
+- Use service-specific regex or filter overrides in that script when a service
+  owns related assets from multiple stages, such as app and database resources.
+- Compatibility alias scripts are allowed, but `scripts/docker/purge/purge.sh
+  all` should iterate only the canonical active runtime roots to avoid duplicate
+  purges.
+
 ## Naming Rules
 
 Match existing service naming instead of trying to normalize the whole tree.

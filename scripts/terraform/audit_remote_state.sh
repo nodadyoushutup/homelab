@@ -10,6 +10,65 @@ source "${SCRIPT_DIR}/load_root_env.sh"
 BACKEND_FILE="${BACKEND_FILE:-${TFVARS_HOME_DIR:-${TFVARS_DIR:-/mnt/eapp/config}}/minio.backend.hcl}"
 ONLY_PATTERN=""
 
+resolve_stage_tfvars() {
+  local stage_dir="$1"
+  local rel_service
+  local service_dir
+  local stage_name
+  local hyphen_service_dir
+  local candidate
+  local candidates=()
+
+  rel_service="${stage_dir#${ROOT_DIR}/terraform/swarm/}"
+  service_dir="${rel_service%/*}"
+  stage_name="${rel_service##*/}"
+  hyphen_service_dir="${service_dir//_/-}"
+
+  candidates+=("${TFVARS_HOME_DIR}/${service_dir}/${stage_name}.tfvars")
+  if [[ "${hyphen_service_dir}" != "${service_dir}" ]]; then
+    candidates+=("${TFVARS_HOME_DIR}/${hyphen_service_dir}/${stage_name}.tfvars")
+  fi
+  candidates+=("${TFVARS_HOME_DIR}/${service_dir}.tfvars")
+  if [[ "${hyphen_service_dir}" != "${service_dir}" ]]; then
+    candidates+=("${TFVARS_HOME_DIR}/${hyphen_service_dir}.tfvars")
+  fi
+
+  case "${service_dir}/${stage_name}" in
+    prometheus/database)
+      candidates+=("${TFVARS_HOME_DIR}/victoriametrics/app.tfvars")
+      ;;
+  esac
+
+  for candidate in "${candidates[@]}"; do
+    if [[ -f "${candidate}" ]]; then
+      realpath "${candidate}"
+      return 0
+    fi
+  done
+
+  return 1
+}
+
+collection_has_instances() {
+  local stage_dir="$1"
+  local tf_data_dir="$2"
+  local tfvars_file="$3"
+  local collection_expr="$4"
+  local rendered
+
+  rendered="$(
+    TF_DATA_DIR="${tf_data_dir}" terraform -chdir="${stage_dir}" console -var-file "${tfvars_file}" <<EOF
+try(length(${collection_expr}) > 0, (${collection_expr}) > 0)
+EOF
+  )"
+
+  python3 -c 'import json, sys
+value = sys.stdin.read().strip()
+if not value:
+    raise SystemExit(1)
+print("1" if json.loads(value) else "0")' <<<"${rendered}"
+}
+
 usage() {
   cat <<USAGE
 Usage: scripts/terraform/audit_remote_state.sh [--backend <path>] [--only <regex>]
@@ -85,25 +144,52 @@ import sys
 stage_dir = pathlib.Path(sys.argv[1])
 
 for tf_file in sorted(stage_dir.glob("*.tf")):
-    text = tf_file.read_text()
-    for resource_type, resource_name, body in re.findall(
-        r'resource\s+"([^"]+)"\s+"([^"]+)"\s+\{(.*?)\n\}',
-        text,
-        re.S,
-    ):
-        mode = "collection" if re.search(r'^\s*(for_each|count)\s*=', body, re.M) else "singleton"
-        print(f"{resource_type}.{resource_name}\t{mode}")
+    lines = tf_file.read_text().splitlines()
+    idx = 0
+    while idx < len(lines):
+        line = lines[idx]
+        match = re.match(r'\s*resource\s+"([^"]+)"\s+"([^"]+)"\s*\{', line)
+        if not match:
+            idx += 1
+            continue
+
+        resource_type = match.group(1)
+        resource_name = match.group(2)
+        depth = line.count("{") - line.count("}")
+        idx += 1
+        top_level_lines = []
+
+        while idx < len(lines) and depth > 0:
+            current = lines[idx]
+            if depth == 1:
+                top_level_lines.append(current)
+            depth += current.count("{") - current.count("}")
+            idx += 1
+
+        collection_expr = ""
+        for entry in top_level_lines:
+            expr_match = re.match(r'^\s*(for_each|count)\s*=\s*(.+?)\s*$', entry)
+            if expr_match:
+                collection_expr = expr_match.group(2).strip()
+                break
+
+        mode = "collection" if collection_expr else "singleton"
+        print(f"{resource_type}.{resource_name}\t{mode}\t{collection_expr}")
 PY
 )
-  mapfile -t state_resources < <(TF_DATA_DIR="${tmp_tf_data}" terraform -chdir="${stage_dir}" state list 2>/dev/null | sort || true)
+  mapfile -t state_resources < <(TF_DATA_DIR="${tmp_tf_data}" terraform -chdir="${stage_dir}" state list 2>/dev/null | grep -v '^data\.' | sort || true)
 
   defined_exact=()
   defined_collections=()
+  tfvars_file=""
+  if [[ "${rel_stage}" == terraform/swarm/* ]]; then
+    tfvars_file="$(resolve_stage_tfvars "${stage_dir}" || true)"
+  fi
+
   for entry in "${defined_resources[@]}"; do
-    address="${entry%%$'\t'*}"
-    mode="${entry##*$'\t'}"
+    IFS=$'\t' read -r address mode collection_expr <<<"${entry}"
     if [[ "${mode}" == "collection" ]]; then
-      defined_collections+=("${address}")
+      defined_collections+=("${address}"$'\t'"${collection_expr}")
     else
       defined_exact+=("${address}")
     fi
@@ -116,8 +202,13 @@ PY
     fi
   done
   for resource in "${defined_collections[@]}"; do
-    if ! printf '%s\n' "${state_resources[@]}" | grep -Eq "^${resource}(\\[.+\\])?$"; then
-      missing_resources+=("${resource}")
+    address="${resource%%$'\t'*}"
+    collection_expr="${resource#*$'\t'}"
+    if ! printf '%s\n' "${state_resources[@]}" | grep -Eq "^${address}(\\[.+\\])?$"; then
+      if [[ -n "${tfvars_file}" ]] && [[ "$(collection_has_instances "${stage_dir}" "${tmp_tf_data}" "${tfvars_file}" "${collection_expr}" || echo 1)" == "0" ]]; then
+        continue
+      fi
+      missing_resources+=("${address}")
     fi
   done
 
@@ -129,7 +220,8 @@ PY
 
     matched_collection="0"
     for collection in "${defined_collections[@]}"; do
-      if [[ "${resource}" == "${collection}" ]] || [[ "${resource}" == "${collection}"[* ]]; then
+      address="${collection%%$'\t'*}"
+      if [[ "${resource}" == "${address}" ]] || [[ "${resource}" == "${address}"[* ]]; then
         matched_collection="1"
         break
       fi
