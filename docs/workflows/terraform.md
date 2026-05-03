@@ -155,6 +155,11 @@ For Jenkins specifically:
   architecture before Terraform apply proceeds, reusing the stage
   `provider_config.registry_auth` credentials when registry authentication is
   required
+- change Jenkins agent pool shape in
+  `/mnt/eapp/config/jenkins-controller/jenkins.yaml`; the controller config
+  stage reconciles the Jenkins node definitions from that file, and the split
+  agent app stages then create or remove the matching arch-filtered Swarm
+  services
 - the controller app stage writes inbound agent secret files under
   `/mnt/eapp/config/jenkins-controller/agent-secrets/`
 - both controller and agent containers expect the shared `/mnt/eapp/config`

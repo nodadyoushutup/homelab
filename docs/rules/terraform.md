@@ -174,6 +174,10 @@ Jenkins-specific defaults remain special cases:
 - Split Jenkins agent stages should filter that shared JCasC node set by
   architecture label tokens such as `arm64` and `amd64`, while keeping
   hostname placement in the same YAML source-of-truth
+- The same shared Jenkins JCasC YAML is also the source-of-truth for each
+  agent node's `numExecutors`, so collapsing a pool from many `1`-executor
+  nodes into one multi-executor node should be done there rather than by
+  changing the Terraform service replica count
 - Split Jenkins agent stage entrypoints should fail fast when the Terraform-
   defined Jenkins agent image manifest does not advertise the required target
   architecture, using the same stage `registry_auth` credentials when the
@@ -254,6 +258,8 @@ Jenkins also uses a repo-external companion YAML file at
 `/mnt/eapp/config/jenkins-controller/jenkins.yaml` as the source-of-truth
 Configuration as Code document. Keep controller security, location, and node
 definitions in that file rather than re-encoding them inline in Terraform.
+That includes whether an architecture pool is modeled as several `1`-executor
+nodes or one node with multiple executors.
 
 ## Backend State Naming
 
