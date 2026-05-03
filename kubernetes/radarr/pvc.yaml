@@ -34,5 +34,5 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 20Gi
+      storage: 100Gi
   storageClassName: truenas-iscsi-csi-retain
