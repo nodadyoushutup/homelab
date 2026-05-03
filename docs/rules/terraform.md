@@ -177,7 +177,7 @@ Jenkins-specific defaults remain special cases:
 - Split Jenkins agent stage entrypoints should fail fast when the configured
   `agent_image` manifest does not advertise the required target architecture
 - Jenkins controller `config` is the Terraform-managed Jenkins API stage for
-  folders, jobs, and optional SCM checkout credentials
+  folders, multibranch jobs, and optional SCM checkout credentials
 - Jenkins agent services must mount `/mnt/eapp/config` as a direct bind mount
   from the host path, not as a Swarm-local named volume, so every node sees the
   same NFS-backed configuration and agent secret files
@@ -186,8 +186,14 @@ Jenkins-specific defaults remain special cases:
   placement from the same source-of-truth file
 - Jenkins jobs should be defined as repo-tracked `*.jenkins` files under
   `pipelines/`; the Jenkins controller config stage mirrors the directory tree
-  beneath that root into Jenkins folders and renders job XML from templates
-  under `terraform/swarm/jenkins-controller/config/job/`
+  beneath that root into Jenkins folders and renders multibranch job XML from
+  templates under `terraform/swarm/jenkins-controller/config/job/`
+- each repo-tracked `*.jenkins` file becomes one multibranch parent job whose
+  `scriptPath` points at that file, so Jenkins indexes matching branches in the
+  repository instead of pinning every job to one shared branch
+- multibranch branch discovery should use wildcard include and exclude filters
+  from the Jenkins controller config tfvars; keep scanning manually triggered
+  unless a human explicitly asks for scheduled indexing or webhooks
 - Terraform Jenkins jobs should rely on the shared `/mnt/eapp/config` bind
   mount for tfvars and backend auto-discovery, and should fail with an explicit
   mount error when that directory is absent inside the runner
@@ -243,6 +249,11 @@ Patterns already used in this repo:
 - multi-stage service: `<service>-<stage>.tfstate`
 
 Do not share one state file across multiple stages.
+
+The remote backend object for that stage is the shared source-of-truth for both
+shell and Jenkins execution. If a stage plans to create resources that already
+exist remotely, treat that as a state reconciliation problem first, not as a
+reason to bypass the backend.
 
 ## New Swarm Work
 

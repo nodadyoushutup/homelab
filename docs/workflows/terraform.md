@@ -144,8 +144,12 @@ For Jenkins specifically:
   should become a Jenkins job; keep the existing `.sh` entrypoint as the stage
   source-of-truth that the Jenkins wrapper executes
 - `pipelines/terraform/swarm/jenkins-controller/config.sh` reconciles the
-  Terraform-managed Jenkins folders, XML job definitions, and optional SCM
-  checkout credential for private GitHub access
+  Terraform-managed Jenkins folders, multibranch XML job definitions, optional
+  SCM checkout credential for private GitHub access, and branch discovery
+  filters for each repo-tracked `*.jenkins` path
+- each multibranch parent job indexes the repository for branches that contain
+  its configured `*.jenkins` script path; use the Jenkins controller config
+  tfvars include and exclude wildcards to narrow branch discovery when needed
 - the split Jenkins agent app stages validate that the configured `agent_image`
   manifest actually contains the expected target architecture before Terraform
   apply proceeds
@@ -185,6 +189,45 @@ Typical examples:
 - open the service URL or API after an `app` stage
 - verify DNS or proxy host behavior after Cloudflare or NPM config
 - confirm FortiGate VIP/policy behavior after network changes
+
+## State Audit And Repair
+
+When Jenkins and shell entrypoints disagree with reality, treat remote state as
+the first thing to audit. The shared backend is what makes bash and Jenkins
+interchangeable for a given stage.
+
+Audit all Terraform stages against remote state with:
+
+```bash
+scripts/terraform/audit_remote_state.sh
+```
+
+Use `--only` to narrow the audit to one service or stage:
+
+```bash
+scripts/terraform/audit_remote_state.sh --only 'grafana/config'
+```
+
+Interpret the audit like this:
+
+- `IN_SYNC`: all defined resource addresses exist in remote state
+- `STATE_EMPTY`: code defines resources but the remote state object is empty
+- `MISSING_STATE`: some code-defined resources are missing from remote state
+- `ORPHANED_STATE`: remote state still contains resources no longer defined in code
+- `PARTIAL`: both missing and orphaned entries exist
+
+For Grafana `config`, existing folders, data sources, and dashboards can be
+reconciled into remote state with:
+
+```bash
+scripts/terraform/grafana_config_import_existing.sh
+```
+
+Use `--dry-run` first if you want to inspect the import commands before they
+touch shared state.
+
+After any import repair, rerun the stage through either bash or Jenkins and
+confirm both paths now produce the same plan against the same remote state.
 
 ## Endpoint Changes
 

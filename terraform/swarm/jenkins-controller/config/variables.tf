@@ -22,9 +22,39 @@ variable "github_repo_url" {
 }
 
 variable "github_repo_branch" {
-  description = "Git branch Jenkins should use when loading pipeline definitions from SCM."
+  description = "Legacy single-branch pipeline input retained for tfvars compatibility. Multibranch jobs ignore this value."
   type        = string
   default     = "main"
+}
+
+variable "branch_discovery_includes" {
+  description = "Space-separated wildcard branch patterns Jenkins should include when indexing multibranch jobs."
+  type        = string
+  default     = "*"
+}
+
+variable "branch_discovery_excludes" {
+  description = "Space-separated wildcard branch patterns Jenkins should exclude when indexing multibranch jobs."
+  type        = string
+  default     = ""
+}
+
+variable "prune_dead_branches" {
+  description = "Whether Jenkins should prune deleted branches from multibranch jobs."
+  type        = bool
+  default     = true
+}
+
+variable "orphaned_item_days_to_keep" {
+  description = "Days to keep orphaned multibranch child jobs. Use -1 to keep indefinitely."
+  type        = number
+  default     = -1
+}
+
+variable "orphaned_item_num_to_keep" {
+  description = "Number of orphaned multibranch child jobs to keep. Use -1 to keep indefinitely."
+  type        = number
+  default     = 20
 }
 
 variable "github_credentials_id" {

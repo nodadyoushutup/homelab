@@ -10,8 +10,20 @@ provider_config = {
 job_definition_root = "pipelines"
 job_definition_glob = "**/*.jenkins"
 
-github_repo_url    = "https://github.com/nodadyoushutup/homelab.git"
+github_repo_url = "https://github.com/nodadyoushutup/homelab.git"
+
+# Legacy no-op retained so older tfvars files still load cleanly after the
+# move to multibranch jobs.
 github_repo_branch = "main"
+
+# Multibranch discovery patterns use Jenkins wildcard matching. Examples:
+# "*" for all branches, "main release/*" for a narrow allowlist.
+branch_discovery_includes = "*"
+branch_discovery_excludes = ""
+
+prune_dead_branches        = true
+orphaned_item_days_to_keep = -1
+orphaned_item_num_to_keep  = 20
 
 # For private repository checkout, either point at an existing credential ID or
 # let Terraform create it. If Terraform manages the credential, the GitHub

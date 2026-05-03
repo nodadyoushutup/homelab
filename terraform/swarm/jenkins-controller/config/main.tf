@@ -10,7 +10,8 @@ locals {
       script_path        = repo_relative_file
       job_name           = trimsuffix(basename(repo_relative_file), ".jenkins")
       folder_path        = dirname(trimsuffix(trimprefix(repo_relative_file, "${local.job_definition_root}/"), ".jenkins")) == "." ? "" : dirname(trimsuffix(trimprefix(repo_relative_file, "${local.job_definition_root}/"), ".jenkins"))
-      description        = "Managed by Terraform. Runs ${replace(repo_relative_file, ".jenkins", ".sh")} from this repository."
+      description        = "Managed by Terraform. Multibranch pipeline for ${replace(repo_relative_file, ".jenkins", ".sh")} from this repository."
+      source_id          = md5("${var.github_repo_url}:${repo_relative_file}")
     }
   }
 
@@ -104,11 +105,15 @@ resource "jenkins_job" "pipeline_job" {
   )
 
   template = templatefile("${path.module}/job/pipeline.xml.tftpl", {
-    description    = each.value.description
-    project_url    = trimsuffix(var.github_repo_url, ".git")
-    repo_url       = var.github_repo_url
-    repo_branch    = var.github_repo_branch
-    script_path    = each.value.script_path
-    credentials_id = local.effective_github_credentials_id
+    description                = each.value.description
+    repo_url                   = var.github_repo_url
+    script_path                = each.value.script_path
+    source_id                  = each.value.source_id
+    credentials_id             = local.effective_github_credentials_id
+    branch_includes            = var.branch_discovery_includes
+    branch_excludes            = var.branch_discovery_excludes
+    prune_dead_branches        = var.prune_dead_branches
+    orphaned_item_days_to_keep = var.orphaned_item_days_to_keep
+    orphaned_item_num_to_keep  = var.orphaned_item_num_to_keep
   })
 }
