@@ -1,14 +1,13 @@
-# Proxmox Development VM SSH Investigation (Temporary)
+# Proxmox AMD64 Runner VM SSH Investigation (Temporary)
 
-This is a temporary investigation plan for the `development` VM under
+This is a temporary investigation plan for the AMD64 runner VM under
 `terraform/cluster/proxmox/app`. The immediate goal is to unblock SSH access
-and Docker Swarm onboarding for the AMD64 development VM. The follow-up goal is
-to identify why freshly deployed images can boot into a broken SSH/package
-state.
+and Docker Swarm onboarding for the AMD64 runner VM. The follow-up goal is to
+identify why freshly deployed images can boot into a broken SSH/package state.
 
 ## Current Status
 
-- Immediate priority: restore working SSH on the current `development` VM so it
+- Immediate priority: restore working SSH on the current `runner-amd64` VM so it
   can be used for debugging and Docker Swarm worker onboarding.
 - Deferred priority: root-cause why newly deployed VMs repeatedly boot with
   broken SSH even though the Terraform cloud-init config includes the expected
@@ -16,7 +15,7 @@ state.
 
 ## Repo-Backed Facts
 
-- The Proxmox `development` VM is created from the custom Ubuntu image and is
+- The Proxmox AMD64 runner VM is created from the custom Ubuntu image and is
   wired to custom cloud-init user and network data in
   [terraform/cluster/proxmox/app/main.tf](../../terraform/cluster/proxmox/app/main.tf:311)
   and
@@ -33,9 +32,9 @@ state.
   `authorized_keys`, so first-boot cloud-init is responsible for restoring SSH
   key access in
   [packer/scripts/cleanup-image.sh](../../packer/scripts/cleanup-image.sh:12).
-- The Proxmox tfvars cloud-init payload for the `development` VM includes the
+- The Proxmox tfvars cloud-init payload for the AMD64 runner VM includes the
   expected `ssh_authorized_keys` entry and a Docker Swarm join script in
-  `/mnt/eapp/config/proxmox/development-user-config.yaml`.
+  `/mnt/eapp/config/proxmox/runner-amd64-user-config.yaml`.
 
 ## Runtime Evidence Collected
 
@@ -68,7 +67,7 @@ than a simple cloud-init misconfiguration.
 
 ## Immediate Unblock
 
-1. Repair SSH on the current `development` VM manually so debugging and Swarm
+1. Repair SSH on the current `runner-amd64` VM manually so debugging and Swarm
    onboarding can continue.
 2. Confirm the VM can accept SSH from the operator host.
 3. Join the VM to the Docker Swarm controlled by `swarm-cp-0.local`.
@@ -77,12 +76,12 @@ than a simple cloud-init misconfiguration.
 
 ### Recovery Performed
 
-- The `development` VM was joined successfully by targeting the live manager
+- The `runner-amd64` VM was joined successfully by targeting the live manager
   listener at `192.168.1.120:2377`.
-- The `development` VM also needed the shared NFS-backed
+- The `runner-amd64` VM also needed the shared NFS-backed
   `/mnt/eapp/config` mount from `192.168.1.100:/mnt/eapp/config` before
   Swarm workloads that bind-mount repo configuration could start successfully.
-- After a Docker daemon restart, the `development` worker kept trying the stale
+- After a Docker daemon restart, the `runner-amd64` worker kept trying the stale
   manager address `192.168.1.26:2377`; recovery required forcing the worker to
   leave and rejoin the swarm against `192.168.1.120:2377`.
 - Existing workers `swarm-wk-0` through `swarm-wk-4` were recovered by:
@@ -134,7 +133,7 @@ than a simple cloud-init misconfiguration.
 
 This temporary plan is complete when:
 
-1. a freshly deployed `development` VM accepts SSH without manual repair
+1. a freshly deployed `runner-amd64` VM accepts SSH without manual repair
 2. `dpkg --audit` is clean on first boot
 3. `/usr/sbin/sshd` exists and `ssh.service` starts normally
 4. the VM can auto-join or be safely joined to the Docker Swarm

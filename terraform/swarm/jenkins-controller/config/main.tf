@@ -26,8 +26,27 @@ locals {
     folder_path => {
       name        = basename(folder_path)
       parent_path = length(split("/", folder_path)) > 1 ? join("/", slice(split("/", folder_path), 0, length(split("/", folder_path)) - 1)) : ""
+      depth       = length(split("/", folder_path))
       description = "Managed by Terraform from ${local.job_definition_root}/${folder_path}"
     }
+  }
+
+  folder_specs_level_1 = {
+    for folder_path, spec in local.folder_specs :
+    folder_path => spec
+    if spec.depth == 1
+  }
+
+  folder_specs_level_2 = {
+    for folder_path, spec in local.folder_specs :
+    folder_path => spec
+    if spec.depth == 2
+  }
+
+  folder_specs_level_3 = {
+    for folder_path, spec in local.folder_specs :
+    folder_path => spec
+    if spec.depth == 3
   }
 
   manage_github_credentials = (
@@ -40,11 +59,26 @@ locals {
   effective_github_credentials_id = local.manage_github_credentials ? jenkins_credential_username.github[0].name : var.github_credentials_id
 }
 
-resource "jenkins_folder" "pipeline_folder" {
-  for_each = local.folder_specs
+resource "jenkins_folder" "pipeline_folder_level_1" {
+  for_each = local.folder_specs_level_1
 
   name        = each.value.name
-  folder      = each.value.parent_path == "" ? null : jenkins_folder.pipeline_folder[each.value.parent_path].id
+  description = each.value.description
+}
+
+resource "jenkins_folder" "pipeline_folder_level_2" {
+  for_each = local.folder_specs_level_2
+
+  name        = each.value.name
+  folder      = jenkins_folder.pipeline_folder_level_1[each.value.parent_path].id
+  description = each.value.description
+}
+
+resource "jenkins_folder" "pipeline_folder_level_3" {
+  for_each = local.folder_specs_level_3
+
+  name        = each.value.name
+  folder      = jenkins_folder.pipeline_folder_level_2[each.value.parent_path].id
   description = each.value.description
 }
 
@@ -61,8 +95,13 @@ resource "jenkins_credential_username" "github" {
 resource "jenkins_job" "pipeline_job" {
   for_each = local.job_specs
 
-  name   = each.value.job_name
-  folder = each.value.folder_path == "" ? null : jenkins_folder.pipeline_folder[each.value.folder_path].id
+  name = each.value.job_name
+  folder = (
+    each.value.folder_path == "" ? null :
+    length(split("/", each.value.folder_path)) == 1 ? jenkins_folder.pipeline_folder_level_1[each.value.folder_path].id :
+    length(split("/", each.value.folder_path)) == 2 ? jenkins_folder.pipeline_folder_level_2[each.value.folder_path].id :
+    jenkins_folder.pipeline_folder_level_3[each.value.folder_path].id
+  )
 
   template = templatefile("${path.module}/job/pipeline.xml.tftpl", {
     description    = each.value.description

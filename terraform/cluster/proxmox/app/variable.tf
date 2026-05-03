@@ -3,12 +3,12 @@ variable "provider_config" {
   type        = any
 }
 
-variable "development_user_config_path" {
+variable "runner_amd64_user_config_path" {
   description = "Absolute path to the cloud-init user-data YAML template file."
   type        = string
 }
 
-variable "development_network_config_path" {
+variable "runner_amd64_network_config_path" {
   description = "Absolute path to the cloud-init network-data YAML file."
   type        = string
 }

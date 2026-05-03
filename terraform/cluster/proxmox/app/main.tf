@@ -22,14 +22,14 @@ resource "proxmox_virtual_environment_download_file" "talos_v1_12_4cloud_image" 
   upload_timeout      = 1800
 }
 
-resource "proxmox_virtual_environment_file" "development_user_config" {
+resource "proxmox_virtual_environment_file" "runner_amd64_user_config" {
   content_type = "snippets"
   datastore_id = "local"
   node_name    = "pve"
 
   source_raw {
-    data      = file(var.development_user_config_path)
-    file_name = "development-user-config.yaml"
+    data      = file(var.runner_amd64_user_config_path)
+    file_name = "runner-amd64-user-config.yaml"
   }
 }
 
@@ -165,14 +165,14 @@ resource "proxmox_virtual_environment_file" "k8s_wk_10_user_config" {
   }
 }
 
-resource "proxmox_virtual_environment_file" "development_network_config" {
+resource "proxmox_virtual_environment_file" "runner_amd64_network_config" {
   content_type = "snippets"
   datastore_id = "local"
   node_name    = "pve"
 
   source_raw {
-    data      = file(var.development_network_config_path)
-    file_name = "development-network-config.yaml"
+    data      = file(var.runner_amd64_network_config_path)
+    file_name = "runner-amd64-network-config.yaml"
   }
 }
 
@@ -308,10 +308,10 @@ resource "proxmox_virtual_environment_file" "k8s_wk_10_network_config" {
   }
 }
 
-resource "proxmox_virtual_environment_vm" "development_vm" {
+resource "proxmox_virtual_environment_vm" "runner_amd64_vm" {
   node_name = "pve"
   vm_id     = 1101
-  name      = "development"
+  name      = "runner-amd64"
   bios      = "ovmf"
   machine   = "q35"
   started   = true
@@ -340,13 +340,14 @@ resource "proxmox_virtual_environment_vm" "development_vm" {
     datastore_id = "virtualization"
     interface    = "scsi0"
     file_id      = proxmox_virtual_environment_download_file.ubuntu_24_cloud_image.id
-    size         = 20
+    size         = 50
   }
 
   initialization {
     datastore_id         = "local-lvm"
-    user_data_file_id    = proxmox_virtual_environment_file.development_user_config.id
-    network_data_file_id = proxmox_virtual_environment_file.development_network_config.id
+    interface            = "ide2"
+    user_data_file_id    = proxmox_virtual_environment_file.runner_amd64_user_config.id
+    network_data_file_id = proxmox_virtual_environment_file.runner_amd64_network_config.id
   }
 
   network_device {
@@ -359,8 +360,8 @@ resource "proxmox_virtual_environment_vm" "development_vm" {
 
   depends_on = [
     proxmox_virtual_environment_download_file.ubuntu_24_cloud_image,
-    proxmox_virtual_environment_file.development_user_config,
-    proxmox_virtual_environment_file.development_network_config,
+    proxmox_virtual_environment_file.runner_amd64_user_config,
+    proxmox_virtual_environment_file.runner_amd64_network_config,
   ]
 }
 

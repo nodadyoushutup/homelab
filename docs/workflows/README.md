@@ -23,8 +23,8 @@ govern those workflows.
 - `mcp-servers.md`: operator workflow for repo-managed MCP servers
 - `new-application.md`: how to classify a new app and then onboard it through
   the correct platform workflow
-- `proxmox-development-vm-ssh-temp.md`: temporary investigation plan for the
-  broken SSH/package state seen on freshly deployed `development` VMs
+- `proxmox-runner-amd64-vm-ssh-temp.md`: temporary investigation plan for the
+  broken SSH/package state seen on freshly deployed AMD64 runner VMs
 - `kubernetes.md`: standard Kubernetes delivery and validation flow
 - `kubernetes-kustomize-patterns.md`: multi-instance Kustomize workflow using
   qBittorrent as the reference pattern

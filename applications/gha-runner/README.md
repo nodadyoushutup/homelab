@@ -42,7 +42,7 @@ The Swarm deployment supports separate ARM64 and AMD64 runner pools from the
 same multi-arch image. In this repo, the ARM64 pool is managed from
 `terraform/swarm/gha-runner-arm64/app` for the ARM swarm workers, while the
 AMD64 pool is managed from `terraform/swarm/gha-runner-amd64/app` for the
-`development` node and its native x86_64 builds plus KVM-backed Packer jobs.
+`runner-amd64` node and its native x86_64 builds plus KVM-backed Packer jobs.
 The Docker image publish workflow now fans direct image builds out to those
 native runner pools in parallel, then publishes the final multi-arch manifest
 tags after both native arch images are available.
@@ -73,4 +73,4 @@ If `GH_RUNNER_URL` is unset, or no usable runner registration token can be resol
 - Local compose mounts `/var/run/docker.sock` and runs as root so Docker Buildx/QEMU actions can access the host daemon.
 - The Terraform Swarm stage can advertise different custom labels per runner
   pool, such as `arm64` for the ARM workers and `amd64,build,kvm` for the
-  x86_64 development node.
+  x86_64 `runner-amd64` node.

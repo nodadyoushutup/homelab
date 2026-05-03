@@ -1,0 +1,44 @@
+pipeline {
+  agent { label 'swarm' }
+
+  options {
+    ansiColor('xterm')
+    buildDiscarder(logRotator(numToKeepStr: '20'))
+    disableConcurrentBuilds(abortPrevious: true)
+    timestamps()
+  }
+
+  parameters {
+    string(name: 'TFVARS_FILE', defaultValue: '', description: 'Optional tfvars path; leave empty to auto-discover defaults')
+    string(name: 'BACKEND_FILE', defaultValue: '', description: 'Optional backend config path; leave empty to auto-discover defaults')
+  }
+
+  stages {
+    stage('Run Terraform Stage') {
+      steps {
+        sh(
+          label: 'swarm/harbor/app',
+          script: '''#!/usr/bin/env bash
+set -euo pipefail
+
+args=()
+if [ -n "${TFVARS_FILE}" ]; then
+  args+=(--tfvars "${TFVARS_FILE}")
+fi
+if [ -n "${BACKEND_FILE}" ]; then
+  args+=(--backend "${BACKEND_FILE}")
+fi
+
+./pipelines/terraform/swarm/harbor/app.sh "${args[@]}"
+'''
+        )
+      }
+    }
+  }
+
+  post {
+    always {
+      cleanWs(deleteDirs: true, notFailBuild: true)
+    }
+  }
+}

@@ -50,7 +50,7 @@ variable "github_runner_labels" {
 variable "github_runner_constraints" {
   description = "Swarm placement constraints for this runner pool."
   type        = list(string)
-  default     = ["node.hostname==development", "node.platform.arch==x86_64"]
+  default     = ["node.hostname==runner-amd64", "node.platform.arch==x86_64"]
 }
 
 variable "github_runner_workdir" {
