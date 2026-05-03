@@ -116,9 +116,6 @@ Helpful overrides:
 Compatibility note:
 - `agent_server.sh` still accepts the previous `LANGGRAPH_DEBUG_*` variables as
   fallbacks.
-- `chat.sh` still accepts the previous `LANGCHAIN_AGENT_CHAT_DEBUG_*` and
-  `CHAT_UI_DEBUG_*` variables as
-  fallbacks.
 
 The container image uses the same `8` jobs-per-worker default through
 `LANGGRAPH_N_JOBS_PER_WORKER`, so you can tune the deployed runtime without
@@ -133,21 +130,22 @@ For fast host-local development with bind-mounted source code, use the
 top-level [`docker/`](./../../docker/README.md) directory. That stack is a
 development-only exception to the normal app-boundary layout:
 
-- `docker/docker-compose.yml` starts one LangGraph dev container plus one chat
-  UI dev container
+- `docker/docker-compose.yml` starts one LangGraph dev container plus one
+  LangChain Agent Chat dev container
 - local Docker images are built from this repo for the dev stack
 - LangGraph code is mounted from the host `applications/langgraph` directory to
   `/app/langgraph` inside the container so restarts pick up live code
 - the LangGraph code mount overrides the baked app path inside that container
 - the LangGraph dev container otherwise uses the image's own default `WORKDIR`
   and `CMD`, so it stays close to the published runtime shape
-- the chat UI image is built from the local
+- the LangChain Agent Chat image is built from the local
   `applications/langchain-agent-chat` source tree and serves the built Next.js
   app from the image
-- chat UI `NEXT_PUBLIC_*` values are compiled at build time, so changing the
-  public browser URL requires rebuilding `chat-ui-dev`
-- chat UI proxy traffic to LangGraph uses the Compose service DNS name plus the
-  container port, currently `http://langgraph-dev:2024`
+- LangChain Agent Chat `NEXT_PUBLIC_*` values are compiled at build time, so
+  changing the public browser URL requires rebuilding
+  `langchain-agent-chat-dev`
+- LangChain Agent Chat proxy traffic to LangGraph uses the Compose service DNS
+  name plus the container port, currently `http://langgraph-dev:2024`
 
 Use this when you want quick containerized restarts on your host machine. Do
 not treat it as the source of truth for deployment packaging.

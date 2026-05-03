@@ -96,9 +96,9 @@ This document applies to:
   they stay as thin wrappers around one documented app boundary and do not
   replace the app-local `langgraph.json` source of truth.
 - A top-level `docker/docker-compose.yml` is also allowed for local LangGraph
-  plus chat-ui development when it is clearly documented as a dev-only bind
-  mount workflow and does not replace the app-local deployment sources of
-  truth.
+  plus LangChain Agent Chat development when it is clearly documented as a
+  dev-only bind mount workflow and does not replace the app-local deployment
+  sources of truth.
 - A repo-local debug helper may also launch a paired local frontend for the
   same app boundary when it is clearly part of the same dev loop and the helper
   prints the resulting backend and frontend URLs explicitly.

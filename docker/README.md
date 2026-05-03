@@ -15,21 +15,25 @@ The stack is intentionally development-only:
   `/app/langgraph` in the container, matching the published image layout
 - the LangGraph bind mount overrides the baked application files inside that
   container
-- the chat UI image is built from `applications/langchain-agent-chat` in this
+- the LangChain Agent Chat image is built from
+  `applications/langchain-agent-chat` in this
   repo and serves the compiled Next.js app from the image
-- changing chat UI `NEXT_PUBLIC_*` values requires rebuilding `chat-ui-dev`
-- the chat UI proxies to LangGraph over the Compose network using
+- changing LangChain Agent Chat `NEXT_PUBLIC_*` values requires rebuilding
+  `langchain-agent-chat-dev`
+- the LangChain Agent Chat frontend proxies to LangGraph over the Compose
+  network using
   `http://langgraph-dev:2024`
 - restart the affected service after code or dependency changes, and rebuild
-  the chat UI service when the public browser URL changes
+  the LangChain Agent Chat service when the public browser URL changes
 
 The `langgraph-dev` service intentionally uses the image's built-in `WORKDIR`
 and `CMD`. The only LangGraph-specific overrides are the bind mount onto
 `/app/langgraph` and the separate state volume for
 `/app/langgraph/src/agents/langgraph/.langgraph_api`.
 
-The `chat-ui-dev` service keeps the image config minimal, but its public client
-config is baked at build time because it is a Next.js production build.
+The `langchain-agent-chat-dev` service keeps the image config minimal, but its
+public client config is baked at build time because it is a Next.js production
+build.
 
 Local image tags:
 
@@ -53,7 +57,7 @@ docker compose up -d --build
 Default endpoints:
 
 - LangGraph: `http://localhost:2124`
-- Chat UI: `http://localhost:3000`
+- LangChain Agent Chat: `http://localhost:3000`
 
 Secrets live in [`./.env`](./.env).
 
