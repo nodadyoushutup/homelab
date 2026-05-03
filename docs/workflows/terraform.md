@@ -137,6 +137,9 @@ For Jenkins specifically:
 - `pipelines/terraform/swarm/jenkins-controller/app.sh` should run before
   `pipelines/terraform/swarm/jenkins-agent-arm64/app.sh` and
   `pipelines/terraform/swarm/jenkins-agent-amd64/app.sh`
+- Terraform Jenkins jobs pass optional `TFVARS_FILE` and `BACKEND_FILE`
+  overrides through `scripts/terraform/jenkins_stage_runner.sh`; leave those
+  parameters empty to use normal auto-discovery
 - add or update repo-tracked `*.jenkins` files under `pipelines/` when a stage
   should become a Jenkins job; keep the existing `.sh` entrypoint as the stage
   source-of-truth that the Jenkins wrapper executes
@@ -150,6 +153,9 @@ For Jenkins specifically:
   `/mnt/eapp/config/jenkins-controller/agent-secrets/`
 - both controller and agent containers expect the shared `/mnt/eapp/config`
   mount to be present
+- when Jenkins-side auto-discovery fails, verify the running `jenkins-agent-arm64`
+  and `jenkins-agent-amd64` services both still bind-mount host
+  `/mnt/eapp/config` to container `/mnt/eapp/config`
 
 ### Run a stage with custom safety hooks
 

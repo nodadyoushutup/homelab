@@ -119,10 +119,25 @@ resolve_backend() {
   return 1
 }
 
+emit_shared_config_hint() {
+  local home_dir="$1"
+
+  if [[ -d "${home_dir}" ]]; then
+    return 0
+  fi
+
+  echo "[ERR] TFVARS home directory not found: ${home_dir}" >&2
+  if [[ "${home_dir}" == "/mnt/eapp/config"* ]]; then
+    echo "[ERR] Expected the shared Jenkins/Terraform config mount at /mnt/eapp/config." >&2
+    echo "[ERR] Ensure the Jenkins agent bind-mounts the host path to /mnt/eapp/config." >&2
+  fi
+}
+
 TFVARS_PATH=""
 if TFVARS_PATH="$(resolve_tfvars "${TFVARS_ARG}" "${TERRAFORM_DIR}" "${DEFAULT_TFVARS_FILE}" "${DEFAULT_TFVARS_BASENAME}" "${TFVARS_HOME_DIR}")"; then
   :
 else
+  emit_shared_config_hint "${TFVARS_HOME_DIR}"
   echo "[ERR] Unable to determine a TFVARS file" >&2
   exit 1
 fi
@@ -136,6 +151,7 @@ else
   if [[ ${BACKEND_STATUS} -eq 2 ]]; then
     exit 1
   fi
+  emit_shared_config_hint "${TFVARS_HOME_DIR}"
   echo "[ERR] Unable to determine a backend config file" >&2
   exit 1
 fi

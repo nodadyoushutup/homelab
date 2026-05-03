@@ -82,6 +82,11 @@ Every stage is expected to have a thin canonical entrypoint script under
 stage metadata and then sources the shared wrapper at
 `scripts/terraform/swarm_pipeline.sh`.
 
+Terraform-backed Jenkins jobs should keep their Groovy wrapper thin and invoke
+the stage through `scripts/terraform/jenkins_stage_runner.sh` so unset optional
+`TFVARS_FILE` and `BACKEND_FILE` parameters do not break auto-discovery under
+`set -u`.
+
 Keep a thin compatibility wrapper at
 `terraform/<type>/<service>/<stage>/pipeline/<stage>.sh` while existing bash
 callers or tooling still depend on the legacy Terraform-local path.
@@ -183,6 +188,9 @@ Jenkins-specific defaults remain special cases:
   `pipelines/`; the Jenkins controller config stage mirrors the directory tree
   beneath that root into Jenkins folders and renders job XML from templates
   under `terraform/swarm/jenkins-controller/config/job/`
+- Terraform Jenkins jobs should rely on the shared `/mnt/eapp/config` bind
+  mount for tfvars and backend auto-discovery, and should fail with an explicit
+  mount error when that directory is absent inside the runner
 - Keep those Terraform-managed Jenkins jobs manually triggered unless a human
   explicitly asks for webhooks, SCM polling, or scheduled triggers
 

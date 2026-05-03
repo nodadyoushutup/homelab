@@ -21,15 +21,7 @@ pipeline {
           script: '''#!/usr/bin/env bash
 set -euo pipefail
 
-args=()
-if [ -n "${TFVARS_FILE}" ]; then
-  args+=(--tfvars "${TFVARS_FILE}")
-fi
-if [ -n "${BACKEND_FILE}" ]; then
-  args+=(--backend "${BACKEND_FILE}")
-fi
-
-./pipelines/terraform/swarm/gha-runner-amd64/app.sh "${args[@]}"
+./scripts/terraform/jenkins_stage_runner.sh ./pipelines/terraform/swarm/gha-runner-amd64/app.sh
 '''
         )
       }
