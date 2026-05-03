@@ -91,14 +91,6 @@ if [[ -z "${JENKINS_AGENT_TFVARS_DIR:-}" && -n "${JENKINS_TFVARS_DIR:-}" ]]; the
   export JENKINS_AGENT_TFVARS_DIR="${JENKINS_TFVARS_DIR}"
 fi
 
-if [[ -z "${JENKINS_AGENT_TFVARS_DIR:-}" && -n "${TFVARS_DIR:-}" ]]; then
-  export JENKINS_AGENT_TFVARS_DIR="${TFVARS_DIR}/jenkins-agent"
-fi
-
-if [[ -z "${JENKINS_TFVARS_DIR:-}" && -n "${TFVARS_DIR:-}" ]]; then
-  export JENKINS_TFVARS_DIR="${JENKINS_AGENT_TFVARS_DIR:-${TFVARS_DIR}/jenkins-agent}"
-fi
-
 if [[ -z "${JENKINS_CONTROLLER_TFVARS_DIR:-}" && -n "${TFVARS_DIR:-}" ]]; then
   export JENKINS_CONTROLLER_TFVARS_DIR="${TFVARS_DIR}/jenkins-controller"
 fi

@@ -116,8 +116,8 @@ For a new Swarm app:
 
 1. create the Terraform stage directory or directories under
    `terraform/swarm/<service>/`
-2. add `main.tf`, `provider.tf`, `variables.tf`, and a pipeline entrypoint under
-   `pipeline/`
+2. add `main.tf`, `provider.tf`, `variables.tf`, and a canonical pipeline
+   entrypoint under `pipelines/terraform/swarm/<service>/`
 3. define the image directly in the resource instead of abstracting it to a
    local
 4. if the app needs its own image build context, add `applications/<service>/`

@@ -9,7 +9,8 @@ Why this exists:
 - reuses the workspace-header pattern from the repo's other workspace-mounted
   MCP servers
 - keeps deployment behavior centered on the repo's documented pipeline
-  contract under `terraform/**/pipeline/*.sh`
+  contract under `pipelines/terraform/**/*.sh`, with legacy
+  `terraform/**/pipeline/*.sh` wrappers accepted as compatibility aliases
 
 Current scope:
 
@@ -20,6 +21,6 @@ Current scope:
 Current exclusions:
 
 - arbitrary command execution
-- non-pipeline shell scripts outside `terraform/**/pipeline/*.sh`
+- non-pipeline shell scripts outside `pipelines/terraform/**/*.sh`
 - a few known host-dependent pipelines that rely on operator-local bootstrap
   behavior outside this container's current runtime contract

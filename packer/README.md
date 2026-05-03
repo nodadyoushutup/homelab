@@ -27,6 +27,12 @@ From repo root:
 ./packer/build.sh --version 0.0.1
 ```
 
+Run the repo-native build-and-upload pipeline equivalent of the GHA workflow:
+
+```bash
+./pipelines/packer/build_push.sh --version 0.0.1
+```
+
 By default, KDE is not installed (headless image). To enable KDE:
 
 ```bash
@@ -61,6 +67,12 @@ Upload-only (existing built artifacts for a version):
 ```bash
 ./packer/upload.sh 0.0.1 --target webserver --build_arch both
 ./packer/upload.sh 0.0.1 --build_arch amd64
+```
+
+The tracked Jenkins wrapper for the same flow lives at:
+
+```text
+pipelines/packer/build_push.jenkins
 ```
 
 ## Output
@@ -123,3 +135,8 @@ packer/keys/packer-nodadyoushutup.pub
 - `packer/build.sh` reserves architecture filtering; pass `--build_arch` instead of raw Packer `-only`/`-except`.
 - `packer/build.sh` enables Packer debug logs by default (`PACKER_LOG=1`); disable with `--no_packer_log`.
 - `packer/upload.sh` accepts `--target webserver` and `--build_arch amd64|arm64|both`.
+- `pipelines/packer/build_push.sh` mirrors the GitHub Actions
+  `packer_build_push` inputs and runs `packer/build.sh` followed by
+  `packer/upload.sh`.
+- `pipelines/packer/build_push.jenkins` is the in-repo Jenkins Pipeline
+  wrapper for the same flow.

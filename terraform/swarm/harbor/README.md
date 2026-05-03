@@ -28,5 +28,5 @@ These are configurable via tfvars.
 
 ## Pipeline Entrypoints
 
-- `terraform/swarm/harbor/app/pipeline/app.sh`
-- `terraform/swarm/harbor/config/pipeline/config.sh`
+- `pipelines/terraform/swarm/harbor/app.sh`
+- `pipelines/terraform/swarm/harbor/config.sh`

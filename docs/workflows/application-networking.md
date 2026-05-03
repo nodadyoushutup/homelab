@@ -104,7 +104,7 @@ aligned with the MCP HTTP path the client will use.
 The normal pipeline is:
 
 ```bash
-terraform/swarm/nginx_proxy_manager/config/pipeline/config.sh
+pipelines/terraform/swarm/nginx_proxy_manager/config.sh
 ```
 
 ## Step 5: Update Cloudflare tfvars
@@ -125,7 +125,7 @@ Do not rely on the wildcard record as the only entry for a new app.
 The normal pipeline is:
 
 ```bash
-terraform/remote/cloudflare/config/pipeline/config.sh
+pipelines/terraform/remote/cloudflare/config.sh
 ```
 
 ## Step 6: Apply In Order
@@ -133,8 +133,8 @@ terraform/remote/cloudflare/config/pipeline/config.sh
 Use this order for a new endpoint:
 
 1. app-side workload changes
-2. `terraform/swarm/nginx_proxy_manager/config/pipeline/config.sh`
-3. `terraform/remote/cloudflare/config/pipeline/config.sh`
+2. `pipelines/terraform/swarm/nginx_proxy_manager/config.sh`
+3. `pipelines/terraform/remote/cloudflare/config.sh`
 
 This keeps the upstream and proxy path ready before publishing the DNS target.
 

@@ -9,6 +9,12 @@ variable "casc_config_path" {
   default     = "/mnt/eapp/config/jenkins-controller/jenkins.yaml"
 }
 
+variable "agent_label_filter" {
+  description = "Required Jenkins label tokens used to select matching node definitions from JCasC."
+  type        = list(string)
+  default     = ["amd64"]
+}
+
 variable "mounts" {
   description = "Optional extra mount definitions appended after the default shared tfvars/configuration mount."
   type = list(object({
@@ -36,7 +42,7 @@ variable "agent_image" {
 variable "service_name_prefix" {
   description = "Docker Swarm service name prefix for Jenkins agents."
   type        = string
-  default     = "jenkins-agent"
+  default     = "jenkins-agent-amd64"
 }
 
 variable "network_name" {
@@ -60,7 +66,7 @@ variable "default_remote_fs" {
 variable "home_volume_name_prefix" {
   description = "Docker volume name prefix used for Jenkins agent home persistence."
   type        = string
-  default     = "jenkins-agent-home"
+  default     = "jenkins-agent-amd64-home"
 }
 
 variable "agent_secrets_dir" {
@@ -78,7 +84,7 @@ variable "enable_shared_tfvars_mount" {
 variable "shared_tfvars_volume_name" {
   description = "Docker volume name used for the shared tfvars/configuration bind mount."
   type        = string
-  default     = "jenkins-agent-config"
+  default     = "jenkins-agent-amd64-config"
 }
 
 variable "shared_tfvars_host_path" {
@@ -94,9 +100,9 @@ variable "shared_tfvars_mount_target" {
 }
 
 variable "placement_constraints" {
-  description = "Swarm placement constraints applied to Jenkins agent services."
+  description = "Swarm placement constraints applied to matching Jenkins agent services in addition to any hostname derived from JCasC."
   type        = list(string)
-  default     = []
+  default     = ["node.platform.arch==x86_64"]
 }
 
 variable "dns_nameservers" {

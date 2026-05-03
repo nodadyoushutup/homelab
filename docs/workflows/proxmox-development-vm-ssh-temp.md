@@ -79,6 +79,12 @@ than a simple cloud-init misconfiguration.
 
 - The `development` VM was joined successfully by targeting the live manager
   listener at `192.168.1.120:2377`.
+- The `development` VM also needed the shared NFS-backed
+  `/mnt/eapp/config` mount from `192.168.1.100:/mnt/eapp/config` before
+  Swarm workloads that bind-mount repo configuration could start successfully.
+- After a Docker daemon restart, the `development` worker kept trying the stale
+  manager address `192.168.1.26:2377`; recovery required forcing the worker to
+  leave and rejoin the swarm against `192.168.1.120:2377`.
 - Existing workers `swarm-wk-0` through `swarm-wk-4` were recovered by:
   1. removing their stale node records from the manager
   2. restarting Docker after moving aside stale local Swarm state

@@ -307,7 +307,8 @@ Delegate to the `Pipeline` subagent when:
 - the task needs repo-managed stage pipeline, entrypoint, tfvars, or rollout
   context before implementation or coordination
 - the code or operational question depends on how a deployable workflow is
-  executed under `terraform/**/pipeline/*.sh`
+  executed under `pipelines/terraform/**/*.sh` or the legacy
+  `terraform/**/pipeline/*.sh` wrappers
 - the task asks to inspect, validate, or run a bounded pipeline action through
   the configured pipeline MCP tools
 - the parent needs pipeline discovery or prerequisite analysis before a

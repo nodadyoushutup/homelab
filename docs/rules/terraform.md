@@ -47,7 +47,8 @@ stage names are:
 Service-specific stage names are allowed when they match the implementation
 better than the generic names. Existing examples include:
 
-- `terraform/swarm/jenkins-agent/app`
+- `terraform/swarm/jenkins-agent-arm64/app`
+- `terraform/swarm/jenkins-agent-amd64/app`
 - `terraform/swarm/jenkins-controller/app`
 - `terraform/swarm/jenkins-controller/config`
 
@@ -60,8 +61,8 @@ terraform/<type>/<service>/<stage>/
   main.tf
   provider.tf
   variables.tf
-  pipeline/
-    <stage>.sh
+
+pipelines/terraform/<type>/<service>/<stage>.sh
 ```
 
 Additional files are fine when they are part of the implementation, for example:
@@ -76,9 +77,14 @@ Use `variables.tf` for new work. A few older directories still use
 
 ## Pipeline Conventions
 
-Every stage is expected to have a thin entrypoint script under `pipeline/`.
-That script defines the stage metadata and then sources the shared wrapper at
+Every stage is expected to have a thin canonical entrypoint script under
+`pipelines/terraform/<type>/<service>/<stage>.sh`. That script defines the
+stage metadata and then sources the shared wrapper at
 `scripts/terraform/swarm_pipeline.sh`.
+
+Keep a thin compatibility wrapper at
+`terraform/<type>/<service>/<stage>/pipeline/<stage>.sh` while existing bash
+callers or tooling still depend on the legacy Terraform-local path.
 
 The normal entrypoint responsibilities are:
 
@@ -146,22 +152,39 @@ Also keep the SSH target itself portable across runners:
 
 Jenkins-specific defaults remain special cases:
 
-- `JENKINS_AGENT_TFVARS_DIR` defaults to `${TFVARS_DIR}/jenkins-agent`
-- `JENKINS_TFVARS_DIR` is kept as a legacy alias and resolves to the
-  `jenkins-agent` tfvars directory when not set explicitly
+- `JENKINS_AGENT_ARM64_TFVARS_DIR` defaults to
+  `${TFVARS_DIR}/jenkins-agent-arm64`
+- `JENKINS_AGENT_AMD64_TFVARS_DIR` defaults to
+  `${TFVARS_DIR}/jenkins-agent-amd64`
+- `JENKINS_AGENT_TFVARS_DIR` remains a backward-compat passthrough when
+  explicitly exported, but new Jenkins agent work should use the arch-specific
+  directories above
 - `JENKINS_CONTROLLER_TFVARS_DIR` defaults to `${TFVARS_DIR}/jenkins-controller`
 - Jenkins controller and agent secret handoff now defaults to the shared
   configuration root mounted at `/mnt/eapp/config`, with controller-written
   secret files under `/mnt/eapp/config/jenkins-controller/agent-secrets/`
 - Jenkins controller JCasC now defaults to the literal YAML companion file
   `/mnt/eapp/config/jenkins-controller/jenkins.yaml`, and the Jenkins agent
-  stage reads that same file to derive inbound agent service definitions
+  stages read that same file to derive inbound agent service definitions
+- Split Jenkins agent stages should filter that shared JCasC node set by
+  architecture label tokens such as `arm64` and `amd64`, while keeping
+  hostname placement in the same YAML source-of-truth
+- Split Jenkins agent stage entrypoints should fail fast when the configured
+  `agent_image` manifest does not advertise the required target architecture
+- Jenkins controller `config` is the Terraform-managed Jenkins API stage for
+  folders, jobs, and optional SCM checkout credentials
 - Jenkins agent services must mount `/mnt/eapp/config` as a direct bind mount
   from the host path, not as a Swarm-local named volume, so every node sees the
   same NFS-backed configuration and agent secret files
 - Jenkins agent node entries in that YAML should use `nodeDescription` for the
   target Swarm hostname when the agent stage needs deterministic per-service
   placement from the same source-of-truth file
+- Jenkins jobs should be defined as repo-tracked `*.jenkins` files under
+  `pipelines/`; the Jenkins controller config stage mirrors the directory tree
+  beneath that root into Jenkins folders and renders job XML from templates
+  under `terraform/swarm/jenkins-controller/config/job/`
+- Keep those Terraform-managed Jenkins jobs manually triggered unless a human
+  explicitly asks for webhooks, SCM polling, or scheduled triggers
 
 If a stage needs fixed inputs and must reject overrides, document that in the
 pipeline and keep the behavior explicit. `vault` already does this.

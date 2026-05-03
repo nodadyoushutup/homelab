@@ -11,9 +11,9 @@ If the target service is one of the Swarm-hosted MCP servers, also use
 
 ## Standard Execution Model
 
-Terraform is normally executed through stage entrypoint scripts under
-`terraform/<type>/<service>/<stage>/pipeline/`. Those entrypoints delegate to
-`scripts/terraform/swarm_pipeline.sh`, which handles:
+Terraform is normally executed through canonical stage entrypoint scripts under
+`pipelines/terraform/<type>/<service>/<stage>.sh`. Those entrypoints delegate
+to `scripts/terraform/swarm_pipeline.sh`, which handles:
 
 1. environment checks
 2. tfvars/backend resolution
@@ -24,17 +24,21 @@ Terraform is normally executed through stage entrypoint scripts under
 The common operator pattern is:
 
 ```bash
-terraform/<type>/<service>/<stage>/pipeline/<stage>.sh
+pipelines/terraform/<type>/<service>/<stage>.sh
 ```
+
+Legacy wrappers under `terraform/<type>/<service>/<stage>/pipeline/<stage>.sh`
+still forward to the canonical scripts so existing bash callers keep working
+during the migration.
 
 Examples:
 
 ```bash
-terraform/swarm/grafana/database/pipeline/database.sh
-terraform/swarm/grafana/app/pipeline/app.sh
-terraform/swarm/grafana/config/pipeline/config.sh
-terraform/network/fortigate/config/pipeline/config.sh
-terraform/remote/cloudflare/config/pipeline/config.sh
+pipelines/terraform/swarm/grafana/database.sh
+pipelines/terraform/swarm/grafana/app.sh
+pipelines/terraform/swarm/grafana/config.sh
+pipelines/terraform/network/fortigate/config.sh
+pipelines/terraform/remote/cloudflare/config.sh
 ```
 
 ## Before You Run a Stage
@@ -56,13 +60,13 @@ The usual stage order is:
 Most stages can be run with no arguments:
 
 ```bash
-terraform/swarm/grafana/app/pipeline/app.sh
+pipelines/terraform/swarm/grafana/app.sh
 ```
 
 Most stages also accept optional overrides:
 
 ```bash
-terraform/swarm/grafana/app/pipeline/app.sh \
+pipelines/terraform/swarm/grafana/app.sh \
   --tfvars /mnt/eapp/config/grafana/app.tfvars \
   --backend /mnt/eapp/config/minio.backend.hcl
 ```
@@ -70,7 +74,7 @@ terraform/swarm/grafana/app/pipeline/app.sh \
 Positional arguments are also supported:
 
 ```bash
-terraform/swarm/grafana/app/pipeline/app.sh \
+pipelines/terraform/swarm/grafana/app.sh \
   /mnt/eapp/config/grafana/app.tfvars \
   /mnt/eapp/config/minio.backend.hcl
 ```
@@ -111,10 +115,10 @@ handle that manually.
 Example:
 
 ```bash
-terraform/swarm/harbor/app/pipeline/app.sh
-terraform/swarm/harbor/config/pipeline/config.sh
-terraform/swarm/nginx_proxy_manager/config/pipeline/config.sh
-terraform/remote/cloudflare/config/pipeline/config.sh
+pipelines/terraform/swarm/harbor/app.sh
+pipelines/terraform/swarm/harbor/config.sh
+pipelines/terraform/swarm/nginx_proxy_manager/config.sh
+pipelines/terraform/remote/cloudflare/config.sh
 ```
 
 ### Update app config that talks to a live API
@@ -130,8 +134,18 @@ Examples in the repo include `grafana`, `harbor`, `jenkins-controller`, and
 
 For Jenkins specifically:
 
-- `terraform/swarm/jenkins-controller/app/pipeline/app.sh` should run before
-  `terraform/swarm/jenkins-agent/app/pipeline/app.sh`
+- `pipelines/terraform/swarm/jenkins-controller/app.sh` should run before
+  `pipelines/terraform/swarm/jenkins-agent-arm64/app.sh` and
+  `pipelines/terraform/swarm/jenkins-agent-amd64/app.sh`
+- add or update repo-tracked `*.jenkins` files under `pipelines/` when a stage
+  should become a Jenkins job; keep the existing `.sh` entrypoint as the stage
+  source-of-truth that the Jenkins wrapper executes
+- `pipelines/terraform/swarm/jenkins-controller/config.sh` reconciles the
+  Terraform-managed Jenkins folders, XML job definitions, and optional SCM
+  checkout credential for private GitHub access
+- the split Jenkins agent app stages validate that the configured `agent_image`
+  manifest actually contains the expected target architecture before Terraform
+  apply proceeds
 - the controller app stage writes inbound agent secret files under
   `/mnt/eapp/config/jenkins-controller/agent-secrets/`
 - both controller and agent containers expect the shared `/mnt/eapp/config`

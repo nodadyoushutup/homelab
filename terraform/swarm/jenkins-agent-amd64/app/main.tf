@@ -1,16 +1,44 @@
 locals {
   casc_config     = yamldecode(file(var.casc_config_path))
   requested_nodes = try(local.casc_config.jenkins.nodes, [])
-  agent_definitions = {
+
+  normalized_label_filter = toset([
+    for label in var.agent_label_filter : lower(trimspace(label))
+    if trimspace(label) != ""
+  ])
+
+  casc_node_definitions = {
     for node in local.requested_nodes : trimspace(tostring(node.permanent.name)) => {
       name      = trimspace(tostring(node.permanent.name))
       safe_name = lower(replace(trimspace(tostring(node.permanent.name)), "/[^0-9A-Za-z_.-]/", "-"))
       remote_fs = trimspace(tostring(try(node.permanent.remoteFS, var.default_remote_fs)))
-      placement_constraints = trimspace(tostring(try(node.permanent.nodeDescription, ""))) != "" ? [
-        "node.hostname==${trimspace(tostring(node.permanent.nodeDescription))}"
-      ] : var.placement_constraints
+      label_tokens = toset([
+        for token in split(" ", replace(
+          trimspace(tostring(try(
+            node.permanent.labelString,
+            join(" ", try(node.permanent.labels, []))
+          ))),
+          ",",
+          " "
+        )) : lower(trimspace(token))
+        if trimspace(token) != ""
+      ])
+      placement_constraints = concat(
+        var.placement_constraints,
+        trimspace(tostring(try(node.permanent.nodeDescription, ""))) != "" ? [
+          "node.hostname==${trimspace(tostring(node.permanent.nodeDescription))}"
+        ] : []
+      )
     } if try(trimspace(tostring(node.permanent.name)) != "", false)
   }
+
+  agent_definitions = {
+    for node_name, node in local.casc_node_definitions : node_name => node
+    if length(local.normalized_label_filter) == 0 || alltrue([
+      for label in local.normalized_label_filter : contains(node.label_tokens, label)
+    ])
+  }
+
   default_env = {
     JENKINS_SECRETS_DIR = var.agent_secrets_dir
   }

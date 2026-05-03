@@ -1,6 +1,6 @@
 terraform {
   backend "s3" {
-    key = "jenkins-agent.tfstate"
+    key = "jenkins-agent-arm64.tfstate"
   }
 
   required_providers {

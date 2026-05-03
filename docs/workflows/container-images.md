@@ -18,6 +18,11 @@ new image tag into a Terraform-managed runtime. Use
 under `kubernetes/`. Use [docs/rules/mcp-servers.md](./../rules/mcp-servers.md)
 for MCP-specific runtime guardrails.
 
+Repo-native publish entrypoints for the same workflow now also live at:
+
+- `pipelines/applications/build_push.sh`
+- `pipelines/applications/build_push.jenkins`
+
 ## Current Harbor State
 
 The repo and live environment currently agree on these Harbor basics:
@@ -79,7 +84,7 @@ on the same registry.
 | `mcp-ast-grep` | Harbor | `kubernetes/mcp-ast-grep/deployment.yaml` plus `/mnt/eapp/config/harbor/config.tfvars` and `/mnt/eapp/config/vault/config.tfvars` |
 | `mcp-filesystem` | Harbor | `kubernetes/mcp-filesystem/deployment.yaml` plus `/mnt/eapp/config/harbor/config.tfvars` and `/mnt/eapp/config/vault/config.tfvars` |
 | `gha-runner` | Harbor | `/mnt/eapp/config/gha-runner-arm64/app.tfvars` and `/mnt/eapp/config/gha-runner-amd64/app.tfvars` |
-| `jenkins-agent` | Harbor | `/mnt/eapp/config/jenkins-agent/app.tfvars` |
+| `jenkins-agent` | Harbor | `/mnt/eapp/config/jenkins-agent-arm64/app.tfvars` and `/mnt/eapp/config/jenkins-agent-amd64/app.tfvars` |
 | `jenkins-controller` | Harbor | `/mnt/eapp/config/jenkins-controller/app.tfvars` |
 | `mcp-cloudflare` | Harbor | `kubernetes/mcp-cloudflare/deployment.yaml` plus `/mnt/eapp/config/harbor/config.tfvars` and `/mnt/eapp/config/vault/config.tfvars` |
 | `mcp-git` | Harbor | `kubernetes/mcp-git/deployment.yaml` plus `/mnt/eapp/config/harbor/config.tfvars` and `/mnt/eapp/config/vault/config.tfvars` |
@@ -98,6 +103,14 @@ The standard publish workflow is:
 
 ```text
 .github/workflows/docker_build_push.yml
+```
+
+Repo-native equivalents mirror the same operator-facing inputs for local and
+Jenkins use:
+
+```text
+pipelines/applications/build_push.sh
+pipelines/applications/build_push.jenkins
 ```
 
 The live workflow now uses a native per-architecture fan-out for direct image
@@ -138,6 +151,11 @@ consumed by both runner pools in Swarm. Those two arch images are now built
 natively on the matching AMD64 and ARM64 runner pools before the final manifest
 tags are published.
 
+The `jenkins-agent` direct image target must also publish both `linux/amd64`
+and `linux/arm64` whenever the split Swarm Jenkins agent stages are consuming a
+shared manifest or manifest-list digest. An `arm64`-only digest will leave the
+amd64 agent pool stuck at `0/1` in Swarm scheduling.
+
 Registry naming rules:
 
 - GHCR direct-image targets publish as:
@@ -172,6 +190,14 @@ Harbor workflow credentials come from these GitHub Actions secrets:
 - `HARBOR_ROBOT_SECRET`
 
 GHCR publishes use the repository-scoped `GITHUB_TOKEN`.
+
+For the repo-native Docker pipelines:
+
+- GHCR login defaults to `GHCR_USERNAME` plus `GHCR_TOKEN`, with
+  `GITHUB_ACTOR` and `GITHUB_TOKEN` accepted as fallbacks
+- Harbor login defaults to `HARBOR_USERNAME` plus `HARBOR_PASSWORD`
+- the Jenkins wrapper can optionally bind username/password credentials by ID
+  before invoking the bash entrypoint
 
 ## Harbor Image Factory
 
@@ -236,7 +262,7 @@ images. The desired Harbor-managed project set now includes:
 If Harbor config changes are meant to go live, run:
 
 ```bash
-terraform/swarm/harbor/config/pipeline/config.sh
+pipelines/terraform/swarm/harbor/config.sh
 ```
 
 ## Standard Change Flow

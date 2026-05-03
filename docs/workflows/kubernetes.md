@@ -156,7 +156,7 @@ For the detailed Vault -> External Secrets workflow, use
 The short version is:
 
 1. update `/mnt/eapp/config/vault/config.tfvars`
-2. run `terraform/swarm/vault/config/pipeline/config.sh`
+2. run `pipelines/terraform/swarm/vault/config.sh`
 3. apply `SecretStore`
 4. apply `ExternalSecret`
 5. confirm the generated Kubernetes `Secret` exists

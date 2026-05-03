@@ -13,7 +13,7 @@ layout and guardrails.
 The standard repo flow is:
 
 1. define the secret payload in `/mnt/eapp/config/vault/config.tfvars`
-2. run `terraform/swarm/vault/config/pipeline/config.sh`
+2. run `pipelines/terraform/swarm/vault/config.sh`
 3. let Terraform write the payload into Vault KV v2 under `secret/<group>/<name>`
 4. create a namespace-local Vault token secret in Kubernetes
 5. point a `SecretStore` at Vault
@@ -35,7 +35,7 @@ The source of truth for secret values is:
 The Terraform stage that writes those values into Vault is:
 
 - `terraform/swarm/vault/config`
-- `terraform/swarm/vault/config/pipeline/config.sh`
+- `pipelines/terraform/swarm/vault/config.sh`
 
 Do not treat manual `vault kv put` calls or manual UI edits as the steady-state
 workflow for Kubernetes app secrets in this repo.
@@ -152,7 +152,7 @@ If the Vault host changes, rerun the installer against the new manager.
 After updating `/mnt/eapp/config/vault/config.tfvars`, run:
 
 ```bash
-terraform/swarm/vault/config/pipeline/config.sh
+pipelines/terraform/swarm/vault/config.sh
 ```
 
 That stage uses fixed input paths and does not accept override args. It also:
@@ -303,7 +303,7 @@ env:
 For a new app or a secret rotation, use this order:
 
 1. update `/mnt/eapp/config/vault/config.tfvars`
-2. run `terraform/swarm/vault/config/pipeline/config.sh`
+2. run `pipelines/terraform/swarm/vault/config.sh`
 3. create or refresh the namespace-local `<app>-vault-reader` secret if needed
 4. apply `secretstore.yaml`
 5. apply `externalsecret.yaml`
@@ -360,7 +360,7 @@ scripts/vault/unseal.sh
 Then rerun:
 
 ```bash
-terraform/swarm/vault/config/pipeline/config.sh
+pipelines/terraform/swarm/vault/config.sh
 ```
 
 ### `ExternalSecret` is not syncing

@@ -1,0 +1,24 @@
+# Jenkins config stage tfvars example.
+provider_config = {
+  jenkins = {
+    server_url = "https://jenkins.example.com"
+    username   = "admin"
+    password   = "replace-with-jenkins-api-token"
+  }
+}
+
+job_definition_root = "pipelines"
+job_definition_glob = "**/*.jenkins"
+
+github_repo_url    = "https://github.com/nodadyoushutup/homelab.git"
+github_repo_branch = "main"
+
+# For private repository checkout, either point at an existing credential ID or
+# let Terraform create it. If Terraform manages the credential, the GitHub
+# token will be stored in Terraform state.
+github_credentials_id     = "github-homelab"
+manage_github_credentials = false
+
+# Uncomment to let Terraform create the Jenkins checkout credential.
+# github_credentials_username = "github-username"
+# github_credentials_password = "replace-with-github-personal-access-token"

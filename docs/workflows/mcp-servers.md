@@ -84,7 +84,7 @@ Before running the pipeline:
 The normal invocation stays the standard Terraform stage entrypoint:
 
 ```bash
-terraform/swarm/<service>/app/pipeline/app.sh
+pipelines/terraform/swarm/<service>/app.sh
 ```
 
 ## Service-Specific Preflight
@@ -342,7 +342,7 @@ Run the stage through its platform owner:
 For Swarm MCP servers:
 
 ```bash
-terraform/swarm/<service>/app/pipeline/app.sh
+pipelines/terraform/swarm/<service>/app.sh
 ```
 
 For Kubernetes MCP servers, commit and push the manifests and let Argo CD
@@ -361,8 +361,8 @@ If the task also changes the MCP hostname route, apply the edge config after the
 service stage:
 
 ```bash
-terraform/swarm/nginx_proxy_manager/config/pipeline/config.sh
-terraform/remote/cloudflare/config/pipeline/config.sh
+pipelines/terraform/swarm/nginx_proxy_manager/config.sh
+pipelines/terraform/remote/cloudflare/config.sh
 ```
 
 ## Validation
