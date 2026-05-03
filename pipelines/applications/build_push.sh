@@ -23,14 +23,14 @@ die() {
 
 usage() {
   cat <<'EOF_USAGE'
-Usage: pipelines/applications/build_push.sh --version <version> --target_registry <github|harbor> --build_target <target> [options]
+Usage: pipelines/applications/build_push.sh --version <version> --target_registry <github|harbor|both> --build_target <target> [options]
 
 Emulates the repo's Docker GitHub Actions workflow with a repo-native bash
 entrypoint.
 
 Required:
   --version <X.Y.Z>                Version tag to publish
-  --target_registry <value>        Registry target: github or harbor
+  --target_registry <value>        Registry target: github, harbor, or both
   --build_target <value>           Build target from the workflow target list
 
 Options:
@@ -78,27 +78,42 @@ registry_login() {
   require_cmd docker
 
   case "${TARGET_REGISTRY}" in
+    both)
+      registry_login_github
+      registry_login_harbor
+      ;;
     github)
-      local username token
-      username="${GITHUB_USERNAME:-${GHCR_USERNAME:-${GITHUB_ACTOR:-}}}"
-      token="${GITHUB_TOKEN_VALUE:-${GHCR_TOKEN:-${GITHUB_TOKEN:-}}}"
-
-      [[ -n "${username}" ]] || die "GitHub registry username is required via --github_username, GHCR_USERNAME, or GITHUB_ACTOR"
-      [[ -n "${token}" ]] || die "GitHub registry token is required via --github_token, GHCR_TOKEN, or GITHUB_TOKEN"
-
-      printf '%s' "${token}" | docker login ghcr.io --username "${username}" --password-stdin >/dev/null
+      registry_login_github
       ;;
     harbor)
-      local username password
-      username="${HARBOR_USERNAME_VALUE:-${HARBOR_USERNAME:-}}"
-      password="${HARBOR_PASSWORD_VALUE:-${HARBOR_PASSWORD:-}}"
-
-      [[ -n "${username}" ]] || die "Harbor username is required via --harbor_username or HARBOR_USERNAME"
-      [[ -n "${password}" ]] || die "Harbor password is required via --harbor_password or HARBOR_PASSWORD"
-
-      printf '%s' "${password}" | docker login "${HARBOR_REGISTRY}" --username "${username}" --password-stdin >/dev/null
+      registry_login_harbor
+      ;;
+    *)
+      die "Unsupported target_registry: ${TARGET_REGISTRY}"
       ;;
   esac
+}
+
+registry_login_github() {
+  local username token
+  username="${GITHUB_USERNAME:-${GHCR_USERNAME:-${GITHUB_ACTOR:-}}}"
+  token="${GITHUB_TOKEN_VALUE:-${GHCR_TOKEN:-${GITHUB_TOKEN:-}}}"
+
+  [[ -n "${username}" ]] || die "GitHub registry username is required via --github_username, GHCR_USERNAME, or GITHUB_ACTOR"
+  [[ -n "${token}" ]] || die "GitHub registry token is required via --github_token, GHCR_TOKEN, or GITHUB_TOKEN"
+
+  printf '%s' "${token}" | docker login ghcr.io --username "${username}" --password-stdin >/dev/null
+}
+
+registry_login_harbor() {
+  local username password
+  username="${HARBOR_USERNAME_VALUE:-${HARBOR_USERNAME:-}}"
+  password="${HARBOR_PASSWORD_VALUE:-${HARBOR_PASSWORD:-}}"
+
+  [[ -n "${username}" ]] || die "Harbor username is required via --harbor_username or HARBOR_USERNAME"
+  [[ -n "${password}" ]] || die "Harbor password is required via --harbor_password or HARBOR_PASSWORD"
+
+  printf '%s' "${password}" | docker login "${HARBOR_REGISTRY}" --username "${username}" --password-stdin >/dev/null
 }
 
 resolve_build_target() {
@@ -203,24 +218,35 @@ resolve_build_target() {
 
 resolve_registry_target() {
   case "${TARGET_REGISTRY}" in
+    both)
+      PUBLISH_GITHUB="1"
+      PUBLISH_HARBOR="1"
+      ;;
     github)
-      REGISTRY_NAMESPACE="${GHCR_NAMESPACE}"
-      PUBLISH_PATH_MODE="namespace-component"
-      if [[ "${BUILD_STRATEGY}" == "direct" ]]; then
-        IMAGE_BASE="${GHCR_NAMESPACE}/${IMAGE_NAME}"
-      fi
+      PUBLISH_GITHUB="1"
+      PUBLISH_HARBOR="0"
       ;;
     harbor)
-      REGISTRY_NAMESPACE="${HARBOR_REGISTRY}"
-      PUBLISH_PATH_MODE="project-per-image"
-      if [[ "${BUILD_STRATEGY}" == "direct" ]]; then
-        IMAGE_BASE="${HARBOR_REGISTRY}/${IMAGE_NAME}/${IMAGE_NAME}"
-      fi
+      PUBLISH_GITHUB="0"
+      PUBLISH_HARBOR="1"
       ;;
     *)
       die "Unsupported target_registry: ${TARGET_REGISTRY}"
       ;;
   esac
+
+  GHCR_IMAGE_BASE=""
+  HARBOR_IMAGE_BASE=""
+
+  if [[ "${BUILD_STRATEGY}" == "direct" ]]; then
+    if [[ "${PUBLISH_GITHUB}" == "1" ]]; then
+      GHCR_IMAGE_BASE="${GHCR_NAMESPACE}/${IMAGE_NAME}"
+    fi
+
+    if [[ "${PUBLISH_HARBOR}" == "1" ]]; then
+      HARBOR_IMAGE_BASE="${HARBOR_REGISTRY}/${IMAGE_NAME}/${IMAGE_NAME}"
+    fi
+  fi
 }
 
 resolve_platforms() {
@@ -257,12 +283,28 @@ resolve_platforms() {
 
 build_direct_arch() {
   local arch="$1"
+  local -a image_refs tag_args
   local image_ref
-  image_ref="${IMAGE_BASE}:${VERSION}-${arch}"
+  image_refs=()
+  tag_args=()
+
+  if [[ "${PUBLISH_GITHUB}" == "1" ]]; then
+    image_ref="${GHCR_IMAGE_BASE}:${VERSION}-${arch}"
+    image_refs+=("${image_ref}")
+    tag_args+=(--tag "${image_ref}")
+  fi
+
+  if [[ "${PUBLISH_HARBOR}" == "1" ]]; then
+    image_ref="${HARBOR_IMAGE_BASE}:${VERSION}-${arch}"
+    image_refs+=("${image_ref}")
+    tag_args+=(--tag "${image_ref}")
+  fi
+
+  [[ "${#image_refs[@]}" -gt 0 ]] || die "No registry targets were prepared for publish"
 
   ensure_buildx
 
-  log "Building ${IMAGE_NAME}:${VERSION}-${arch} from ${DOCKERFILE}"
+  log "Building ${IMAGE_NAME}:${VERSION}-${arch} from ${DOCKERFILE} for ${TARGET_REGISTRY}"
   (
     cd "${ROOT_DIR}"
     docker buildx build \
@@ -270,66 +312,92 @@ build_direct_arch() {
       --provenance=false \
       --file "${DOCKERFILE}" \
       --load \
-      --tag "${image_ref}" \
+      "${tag_args[@]}" \
       "${DOCKER_CONTEXT}"
   )
 
-  log "Pushing ${image_ref}"
-  docker push "${image_ref}"
+  for image_ref in "${image_refs[@]}"; do
+    log "Pushing ${image_ref}"
+    docker push "${image_ref}"
+  done
 }
 
 publish_direct_manifests() {
-  local refs=()
-
-  if [[ "${BUILD_AMD64}" == "1" ]]; then
-    refs+=("${IMAGE_BASE}:${VERSION}-amd64")
-  fi
-  if [[ "${BUILD_ARM64}" == "1" ]]; then
-    refs+=("${IMAGE_BASE}:${VERSION}-arm64")
-  fi
-
-  [[ "${#refs[@]}" -gt 0 ]] || die "No per-architecture image refs were prepared for manifest publish"
-
   export DOCKER_CLI_EXPERIMENTAL=enabled
 
-  docker manifest rm "${IMAGE_BASE}:${VERSION}" >/dev/null 2>&1 || true
-  docker manifest create "${IMAGE_BASE}:${VERSION}" "${refs[@]}"
+  publish_manifest_for_base() {
+    local image_base="$1"
+    local refs=()
+    local ref arch
 
-  docker manifest rm "${IMAGE_BASE}:latest" >/dev/null 2>&1 || true
-  docker manifest create "${IMAGE_BASE}:latest" "${refs[@]}"
+    if [[ "${BUILD_AMD64}" == "1" ]]; then
+      refs+=("${image_base}:${VERSION}-amd64")
+    fi
+    if [[ "${BUILD_ARM64}" == "1" ]]; then
+      refs+=("${image_base}:${VERSION}-arm64")
+    fi
 
-  local ref arch
-  for ref in "${refs[@]}"; do
-    arch="${ref##*-}"
-    docker manifest annotate "${IMAGE_BASE}:${VERSION}" "${ref}" --os linux --arch "${arch}"
-    docker manifest annotate "${IMAGE_BASE}:latest" "${ref}" --os linux --arch "${arch}"
-  done
+    [[ "${#refs[@]}" -gt 0 ]] || die "No per-architecture image refs were prepared for manifest publish"
 
-  log "Publishing manifest tags ${IMAGE_BASE}:${VERSION} and ${IMAGE_BASE}:latest"
-  docker manifest push "${IMAGE_BASE}:${VERSION}"
-  docker manifest push "${IMAGE_BASE}:latest"
+    docker manifest rm "${image_base}:${VERSION}" >/dev/null 2>&1 || true
+    docker manifest create "${image_base}:${VERSION}" "${refs[@]}"
+
+    docker manifest rm "${image_base}:latest" >/dev/null 2>&1 || true
+    docker manifest create "${image_base}:latest" "${refs[@]}"
+
+    for ref in "${refs[@]}"; do
+      arch="${ref##*-}"
+      docker manifest annotate "${image_base}:${VERSION}" "${ref}" --os linux --arch "${arch}"
+      docker manifest annotate "${image_base}:latest" "${ref}" --os linux --arch "${arch}"
+    done
+
+    log "Publishing manifest tags ${image_base}:${VERSION} and ${image_base}:latest"
+    docker manifest push "${image_base}:${VERSION}"
+    docker manifest push "${image_base}:latest"
+  }
+
+  if [[ "${PUBLISH_GITHUB}" == "1" ]]; then
+    publish_manifest_for_base "${GHCR_IMAGE_BASE}"
+  fi
+
+  if [[ "${PUBLISH_HARBOR}" == "1" ]]; then
+    publish_manifest_for_base "${HARBOR_IMAGE_BASE}"
+  fi
 }
 
 build_harbor_runtime_set() {
-  local -a args
-  args=(
-    --namespace "${REGISTRY_NAMESPACE}"
-    --tag "${VERSION}"
-    --path-mode "${PUBLISH_PATH_MODE}"
-    --platforms "${PLATFORMS_CSV}"
-    --push
-  )
+  publish_runtime_set() {
+    local namespace="$1"
+    local path_mode="$2"
+    local -a args
 
-  if [[ "${INSTALL_BINFMT}" == "1" ]]; then
-    args+=(--install-binfmt)
+    args=(
+      --namespace "${namespace}"
+      --tag "${VERSION}"
+      --path-mode "${path_mode}"
+      --platforms "${PLATFORMS_CSV}"
+      --push
+    )
+
+    if [[ "${INSTALL_BINFMT}" == "1" ]]; then
+      args+=(--install-binfmt)
+    fi
+
+    log "Building Harbor runtime set:${VERSION} for ${PLATFORMS_CSV} into ${namespace}"
+    (
+      cd "${ROOT_DIR}"
+      chmod 0755 applications/harbor/scripts/build-multiarch.sh
+      applications/harbor/scripts/build-multiarch.sh "${args[@]}"
+    )
+  }
+
+  if [[ "${PUBLISH_GITHUB}" == "1" ]]; then
+    publish_runtime_set "${GHCR_NAMESPACE}" "namespace-component"
   fi
 
-  log "Building Harbor runtime set:${VERSION} for ${PLATFORMS_CSV}"
-  (
-    cd "${ROOT_DIR}"
-    chmod 0755 applications/harbor/scripts/build-multiarch.sh
-    applications/harbor/scripts/build-multiarch.sh "${args[@]}"
-  )
+  if [[ "${PUBLISH_HARBOR}" == "1" ]]; then
+    publish_runtime_set "${HARBOR_REGISTRY}" "project-per-image"
+  fi
 }
 
 VERSION=""

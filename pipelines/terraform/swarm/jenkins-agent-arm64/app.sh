@@ -20,12 +20,12 @@ APPLY_ARGS_EXTRA=()
 CONTROLLER_TERRAFORM_DIR="${ROOT_DIR}/terraform/swarm/jenkins-controller/app"
 EXPECTED_IMAGE_ARCH="arm64"
 
-resolve_agent_image_from_tfvars() {
+resolve_agent_image_from_terraform() {
   local agent_image
-  agent_image="$(sed -n 's/^[[:space:]]*agent_image[[:space:]]*=[[:space:]]*"\([^"]*\)".*/\1/p' "${TFVARS_PATH}" | head -n 1)"
+  agent_image="$(sed -n 's/^[[:space:]]*image[[:space:]]*=[[:space:]]*"\([^"]*\)".*/\1/p' "${TERRAFORM_DIR}/main.tf" | head -n 1)"
 
   if [[ -z "${agent_image}" ]]; then
-    echo "[ERR] Unable to resolve agent_image from ${TFVARS_PATH}." >&2
+    echo "[ERR] Unable to resolve Jenkins agent image from ${TERRAFORM_DIR}/main.tf." >&2
     exit 1
   fi
 
@@ -34,7 +34,7 @@ resolve_agent_image_from_tfvars() {
 
 assert_agent_image_architecture() {
   local agent_image manifest_output
-  agent_image="$(resolve_agent_image_from_tfvars)"
+  agent_image="$(resolve_agent_image_from_terraform)"
 
   if ! command -v docker >/dev/null 2>&1; then
     echo "[ERR] docker is required to validate Jenkins agent image manifests." >&2

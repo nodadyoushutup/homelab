@@ -150,9 +150,9 @@ For Jenkins specifically:
 - each multibranch parent job indexes the repository for branches that contain
   its configured `*.jenkins` script path; use the Jenkins controller config
   tfvars include and exclude wildcards to narrow branch discovery when needed
-- the split Jenkins agent app stages validate that the configured `agent_image`
-  manifest actually contains the expected target architecture before Terraform
-  apply proceeds
+- the split Jenkins agent app stages validate that the Terraform-defined
+  Jenkins agent image manifest actually contains the expected target
+  architecture before Terraform apply proceeds
 - the controller app stage writes inbound agent secret files under
   `/mnt/eapp/config/jenkins-controller/agent-secrets/`
 - both controller and agent containers expect the shared `/mnt/eapp/config`

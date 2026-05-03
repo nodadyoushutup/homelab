@@ -33,12 +33,6 @@ variable "env" {
   default     = {}
 }
 
-variable "agent_image" {
-  description = "Jenkins agent image reference."
-  type        = string
-  default     = "harbor.nodadyoushutup.com/jenkins-agent/jenkins-agent:latest"
-}
-
 variable "service_name_prefix" {
   description = "Docker Swarm service name prefix for Jenkins agents."
   type        = string

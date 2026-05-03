@@ -11,7 +11,8 @@ pipeline {
   parameters {
     string(name: 'AGENT_LABEL', defaultValue: 'swarm && amd64', description: 'Jenkins agent label to run this pipeline on')
     string(name: 'VERSION', defaultValue: '', description: 'Version to publish, for example 0.0.3')
-    choice(name: 'TARGET_REGISTRY', choices: ['harbor', 'github'], description: 'Registry target for this publish')
+    choice(name: 'TARGET_REGISTRY', choices: ['both', 'harbor', 'github'], description: 'Registry target for this publish')
+    choice(name: 'BUILD_PLATFORMS', choices: ['both', 'amd64', 'arm64'], description: 'Architectures to build')
     choice(name: 'BUILD_TARGET', choices: [
       'langchain-agent-chat',
       'langgraph',
@@ -29,7 +30,6 @@ pipeline {
       'jenkins-agent',
       'jenkins-controller',
     ], description: 'Build target')
-    choice(name: 'BUILD_PLATFORMS', choices: ['both', 'amd64', 'arm64'], description: 'Architectures to build')
     booleanParam(name: 'INSTALL_BINFMT', defaultValue: false, description: 'Install qemu/binfmt before cross-architecture builds')
     string(name: 'GITHUB_CREDENTIALS_ID', defaultValue: '', description: 'Optional Jenkins username/password credential ID for GHCR publish auth')
     string(name: 'HARBOR_CREDENTIALS_ID', defaultValue: '', description: 'Optional Jenkins username/password credential ID for Harbor publish auth')
@@ -68,13 +68,17 @@ fi
 ./pipelines/applications/build_push.sh "\${args[@]}"
 """
 
-          if (params.TARGET_REGISTRY == 'github' && params.GITHUB_CREDENTIALS_ID?.trim()) {
-            withCredentials([usernamePassword(credentialsId: params.GITHUB_CREDENTIALS_ID, usernameVariable: 'GHCR_USERNAME', passwordVariable: 'GHCR_TOKEN')]) {
-              sh(label: 'docker build/push via GHCR', script: command)
-            }
-          } else if (params.TARGET_REGISTRY == 'harbor' && params.HARBOR_CREDENTIALS_ID?.trim()) {
-            withCredentials([usernamePassword(credentialsId: params.HARBOR_CREDENTIALS_ID, usernameVariable: 'HARBOR_USERNAME', passwordVariable: 'HARBOR_PASSWORD')]) {
-              sh(label: 'docker build/push via Harbor', script: command)
+          def bindings = []
+          if (params.TARGET_REGISTRY in ['github', 'both'] && params.GITHUB_CREDENTIALS_ID?.trim()) {
+            bindings << usernamePassword(credentialsId: params.GITHUB_CREDENTIALS_ID, usernameVariable: 'GHCR_USERNAME', passwordVariable: 'GHCR_TOKEN')
+          }
+          if (params.TARGET_REGISTRY in ['harbor', 'both'] && params.HARBOR_CREDENTIALS_ID?.trim()) {
+            bindings << usernamePassword(credentialsId: params.HARBOR_CREDENTIALS_ID, usernameVariable: 'HARBOR_USERNAME', passwordVariable: 'HARBOR_PASSWORD')
+          }
+
+          if (bindings) {
+            withCredentials(bindings) {
+              sh(label: "docker build/push via ${params.TARGET_REGISTRY}", script: command)
             }
           } else {
             sh(label: 'docker build/push', script: command)

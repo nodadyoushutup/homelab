@@ -174,8 +174,9 @@ Jenkins-specific defaults remain special cases:
 - Split Jenkins agent stages should filter that shared JCasC node set by
   architecture label tokens such as `arm64` and `amd64`, while keeping
   hostname placement in the same YAML source-of-truth
-- Split Jenkins agent stage entrypoints should fail fast when the configured
-  `agent_image` manifest does not advertise the required target architecture
+- Split Jenkins agent stage entrypoints should fail fast when the Terraform-
+  defined Jenkins agent image manifest does not advertise the required target
+  architecture
 - Jenkins controller `config` is the Terraform-managed Jenkins API stage for
   folders, multibranch jobs, and optional SCM checkout credentials
 - Jenkins controller and agent services should mount `/mnt/eapp/config`

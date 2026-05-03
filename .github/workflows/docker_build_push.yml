@@ -9,11 +9,21 @@ on:
       target_registry:
         description: "Registry target for this publish"
         required: true
-        default: harbor
+        default: both
         type: choice
         options:
+          - both
           - github
           - harbor
+      build_platforms:
+        description: "Architectures to build"
+        required: true
+        default: both
+        type: choice
+        options:
+          - both
+          - amd64
+          - arm64
       build_target:
         description: "Build target"
         required: true
@@ -34,15 +44,6 @@ on:
           - gha-runner
           - jenkins-agent
           - jenkins-controller
-      build_platforms:
-        description: "Architectures to build"
-        required: true
-        default: both
-        type: choice
-        options:
-          - both
-          - amd64
-          - arm64
 
 permissions:
   contents: write
@@ -58,16 +59,17 @@ jobs:
     outputs:
       version: ${{ steps.prepare.outputs.version }}
       target_registry: ${{ steps.prepare.outputs.target_registry }}
+      publish_github: ${{ steps.prepare.outputs.publish_github }}
+      publish_harbor: ${{ steps.prepare.outputs.publish_harbor }}
       build_strategy: ${{ steps.prepare.outputs.build_strategy }}
-      image_base: ${{ steps.prepare.outputs.image_base }}
+      ghcr_image_base: ${{ steps.prepare.outputs.ghcr_image_base }}
+      harbor_image_base: ${{ steps.prepare.outputs.harbor_image_base }}
       image_name: ${{ steps.prepare.outputs.image_name }}
       docker_context: ${{ steps.prepare.outputs.docker_context }}
       dockerfile: ${{ steps.prepare.outputs.dockerfile }}
       platforms: ${{ steps.prepare.outputs.platforms }}
       build_amd64: ${{ steps.prepare.outputs.build_amd64 }}
       build_arm64: ${{ steps.prepare.outputs.build_arm64 }}
-      registry_namespace: ${{ steps.prepare.outputs.registry_namespace }}
-      publish_path_mode: ${{ steps.prepare.outputs.publish_path_mode }}
 
     steps:
       - name: Check out the code
@@ -84,6 +86,8 @@ jobs:
           build_target="${{ github.event.inputs.build_target }}"
           requested_platforms="${{ github.event.inputs.build_platforms }}"
           supported_platforms="linux/amd64,linux/arm64"
+          publish_github=false
+          publish_harbor=false
 
           if [ -z "$version" ]; then
             echo "Version could not be determined" >&2
@@ -188,19 +192,15 @@ jobs:
           fi
 
           case "$target_registry" in
+            both)
+              publish_github=true
+              publish_harbor=true
+              ;;
             github)
-              registry_namespace="${GHCR_NAMESPACE}"
-              publish_path_mode="namespace-component"
-              if [ "${build_strategy}" = "direct" ]; then
-                image_base="${GHCR_NAMESPACE}/${image_name}"
-              fi
+              publish_github=true
               ;;
             harbor)
-              registry_namespace="${HARBOR_REGISTRY}"
-              publish_path_mode="project-per-image"
-              if [ "${build_strategy}" = "direct" ]; then
-                image_base="${HARBOR_REGISTRY}/${image_name}/${image_name}"
-              fi
+              publish_harbor=true
               ;;
             *)
               echo "Unsupported target_registry: $target_registry" >&2
@@ -209,7 +209,18 @@ jobs:
           esac
 
           dockerfile="${dockerfile:-}"
-          image_base="${image_base:-}"
+          ghcr_image_base=""
+          harbor_image_base=""
+
+          if [ "${build_strategy}" = "direct" ]; then
+            if [ "${publish_github}" = "true" ]; then
+              ghcr_image_base="${GHCR_NAMESPACE}/${image_name}"
+            fi
+
+            if [ "${publish_harbor}" = "true" ]; then
+              harbor_image_base="${HARBOR_REGISTRY}/${image_name}/${image_name}"
+            fi
+          fi
 
           case "$requested_platforms" in
             both)
@@ -260,6 +271,8 @@ jobs:
 
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "target_registry=$target_registry" >> "$GITHUB_OUTPUT"
+          echo "publish_github=$publish_github" >> "$GITHUB_OUTPUT"
+          echo "publish_harbor=$publish_harbor" >> "$GITHUB_OUTPUT"
           echo "build_strategy=$build_strategy" >> "$GITHUB_OUTPUT"
           echo "image_name=$image_name" >> "$GITHUB_OUTPUT"
           echo "docker_context=$docker_context" >> "$GITHUB_OUTPUT"
@@ -267,14 +280,13 @@ jobs:
           echo "platforms=$platforms" >> "$GITHUB_OUTPUT"
           echo "build_amd64=$build_amd64" >> "$GITHUB_OUTPUT"
           echo "build_arm64=$build_arm64" >> "$GITHUB_OUTPUT"
-          echo "image_base=$image_base" >> "$GITHUB_OUTPUT"
-          echo "registry_namespace=$registry_namespace" >> "$GITHUB_OUTPUT"
-          echo "publish_path_mode=$publish_path_mode" >> "$GITHUB_OUTPUT"
+          echo "ghcr_image_base=$ghcr_image_base" >> "$GITHUB_OUTPUT"
+          echo "harbor_image_base=$harbor_image_base" >> "$GITHUB_OUTPUT"
 
           if [ "${build_strategy}" = "direct" ]; then
-            echo "::notice::Preparing native direct builds for ${platforms} from ${docker_context} using ${dockerfile}."
+            echo "::notice::Preparing native direct builds for ${platforms} from ${docker_context} using ${dockerfile} and target_registry=${target_registry}."
           else
-            echo "::notice::Preparing Harbor runtime set:${version} from ${docker_context} for ${registry_namespace} using ${publish_path_mode}."
+            echo "::notice::Preparing Harbor runtime set:${version} from ${docker_context} for target_registry=${target_registry}."
           fi
 
   build_direct_amd64:
@@ -292,7 +304,7 @@ jobs:
           install: true
 
       - name: Log in to GitHub Container Registry
-        if: needs.prepare.outputs.target_registry == 'github'
+        if: needs.prepare.outputs.publish_github == 'true'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -300,7 +312,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Validate Harbor credentials
-        if: needs.prepare.outputs.target_registry == 'harbor'
+        if: needs.prepare.outputs.publish_harbor == 'true'
         env:
           HARBOR_USERNAME: ${{ secrets.HARBOR_ROBOT_USERNAME }}
           HARBOR_PASSWORD: ${{ secrets.HARBOR_ROBOT_SECRET }}
@@ -311,7 +323,7 @@ jobs:
           fi
 
       - name: Log in to Harbor Registry
-        if: needs.prepare.outputs.target_registry == 'harbor'
+        if: needs.prepare.outputs.publish_harbor == 'true'
         uses: docker/login-action@v3
         with:
           registry: ${{ env.HARBOR_REGISTRY }}
@@ -323,7 +335,25 @@ jobs:
         run: |
           set -euo pipefail
 
-          image_ref="${{ needs.prepare.outputs.image_base }}:${{ needs.prepare.outputs.version }}-amd64"
+          image_refs=()
+          tag_args=()
+
+          if [ "${{ needs.prepare.outputs.publish_github }}" = "true" ]; then
+            image_ref="${{ needs.prepare.outputs.ghcr_image_base }}:${{ needs.prepare.outputs.version }}-amd64"
+            image_refs+=("${image_ref}")
+            tag_args+=(--tag "${image_ref}")
+          fi
+
+          if [ "${{ needs.prepare.outputs.publish_harbor }}" = "true" ]; then
+            image_ref="${{ needs.prepare.outputs.harbor_image_base }}:${{ needs.prepare.outputs.version }}-amd64"
+            image_refs+=("${image_ref}")
+            tag_args+=(--tag "${image_ref}")
+          fi
+
+          if [ "${#image_refs[@]}" -eq 0 ]; then
+            echo "No registry targets were prepared for this publish." >&2
+            exit 1
+          fi
 
           docker buildx build \
             --builder default \
@@ -331,10 +361,12 @@ jobs:
             --provenance=false \
             --file "${{ needs.prepare.outputs.dockerfile }}" \
             --load \
-            --tag "${image_ref}" \
+            "${tag_args[@]}" \
             "${{ needs.prepare.outputs.docker_context }}"
 
-          docker push "${image_ref}"
+          for image_ref in "${image_refs[@]}"; do
+            docker push "${image_ref}"
+          done
 
   build_direct_arm64:
     needs: prepare
@@ -351,7 +383,7 @@ jobs:
           install: true
 
       - name: Log in to GitHub Container Registry
-        if: needs.prepare.outputs.target_registry == 'github'
+        if: needs.prepare.outputs.publish_github == 'true'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -359,7 +391,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Validate Harbor credentials
-        if: needs.prepare.outputs.target_registry == 'harbor'
+        if: needs.prepare.outputs.publish_harbor == 'true'
         env:
           HARBOR_USERNAME: ${{ secrets.HARBOR_ROBOT_USERNAME }}
           HARBOR_PASSWORD: ${{ secrets.HARBOR_ROBOT_SECRET }}
@@ -370,7 +402,7 @@ jobs:
           fi
 
       - name: Log in to Harbor Registry
-        if: needs.prepare.outputs.target_registry == 'harbor'
+        if: needs.prepare.outputs.publish_harbor == 'true'
         uses: docker/login-action@v3
         with:
           registry: ${{ env.HARBOR_REGISTRY }}
@@ -382,7 +414,25 @@ jobs:
         run: |
           set -euo pipefail
 
-          image_ref="${{ needs.prepare.outputs.image_base }}:${{ needs.prepare.outputs.version }}-arm64"
+          image_refs=()
+          tag_args=()
+
+          if [ "${{ needs.prepare.outputs.publish_github }}" = "true" ]; then
+            image_ref="${{ needs.prepare.outputs.ghcr_image_base }}:${{ needs.prepare.outputs.version }}-arm64"
+            image_refs+=("${image_ref}")
+            tag_args+=(--tag "${image_ref}")
+          fi
+
+          if [ "${{ needs.prepare.outputs.publish_harbor }}" = "true" ]; then
+            image_ref="${{ needs.prepare.outputs.harbor_image_base }}:${{ needs.prepare.outputs.version }}-arm64"
+            image_refs+=("${image_ref}")
+            tag_args+=(--tag "${image_ref}")
+          fi
+
+          if [ "${#image_refs[@]}" -eq 0 ]; then
+            echo "No registry targets were prepared for this publish." >&2
+            exit 1
+          fi
 
           docker buildx build \
             --builder default \
@@ -390,10 +440,12 @@ jobs:
             --provenance=false \
             --file "${{ needs.prepare.outputs.dockerfile }}" \
             --load \
-            --tag "${image_ref}" \
+            "${tag_args[@]}" \
             "${{ needs.prepare.outputs.docker_context }}"
 
-          docker push "${image_ref}"
+          for image_ref in "${image_refs[@]}"; do
+            docker push "${image_ref}"
+          done
 
   publish_direct_manifest:
     needs:
@@ -411,7 +463,7 @@ jobs:
 
     steps:
       - name: Log in to GitHub Container Registry
-        if: needs.prepare.outputs.target_registry == 'github'
+        if: needs.prepare.outputs.publish_github == 'true'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -419,7 +471,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Validate Harbor credentials
-        if: needs.prepare.outputs.target_registry == 'harbor'
+        if: needs.prepare.outputs.publish_harbor == 'true'
         env:
           HARBOR_USERNAME: ${{ secrets.HARBOR_ROBOT_USERNAME }}
           HARBOR_PASSWORD: ${{ secrets.HARBOR_ROBOT_SECRET }}
@@ -430,7 +482,7 @@ jobs:
           fi
 
       - name: Log in to Harbor Registry
-        if: needs.prepare.outputs.target_registry == 'harbor'
+        if: needs.prepare.outputs.publish_harbor == 'true'
         uses: docker/login-action@v3
         with:
           registry: ${{ env.HARBOR_REGISTRY }}
@@ -442,37 +494,49 @@ jobs:
         run: |
           set -euo pipefail
 
-          image_base="${{ needs.prepare.outputs.image_base }}"
           version="${{ needs.prepare.outputs.version }}"
-          refs=()
 
-          if [ "${{ needs.prepare.outputs.build_amd64 }}" = "true" ]; then
-            refs+=("${image_base}:${version}-amd64")
+          publish_manifest_tags() {
+            local image_base="$1"
+            local refs=()
+            local ref arch
+
+            if [ "${{ needs.prepare.outputs.build_amd64 }}" = "true" ]; then
+              refs+=("${image_base}:${version}-amd64")
+            fi
+
+            if [ "${{ needs.prepare.outputs.build_arm64 }}" = "true" ]; then
+              refs+=("${image_base}:${version}-arm64")
+            fi
+
+            if [ "${#refs[@]}" -eq 0 ]; then
+              echo "No per-architecture image refs were prepared for manifest publish." >&2
+              exit 1
+            fi
+
+            docker manifest rm "${image_base}:${version}" >/dev/null 2>&1 || true
+            docker manifest create "${image_base}:${version}" "${refs[@]}"
+
+            docker manifest rm "${image_base}:latest" >/dev/null 2>&1 || true
+            docker manifest create "${image_base}:latest" "${refs[@]}"
+
+            for ref in "${refs[@]}"; do
+              arch="${ref##*-}"
+              docker manifest annotate "${image_base}:${version}" "${ref}" --os linux --arch "${arch}"
+              docker manifest annotate "${image_base}:latest" "${ref}" --os linux --arch "${arch}"
+            done
+
+            docker manifest push "${image_base}:${version}"
+            docker manifest push "${image_base}:latest"
+          }
+
+          if [ "${{ needs.prepare.outputs.publish_github }}" = "true" ]; then
+            publish_manifest_tags "${{ needs.prepare.outputs.ghcr_image_base }}"
           fi
 
-          if [ "${{ needs.prepare.outputs.build_arm64 }}" = "true" ]; then
-            refs+=("${image_base}:${version}-arm64")
+          if [ "${{ needs.prepare.outputs.publish_harbor }}" = "true" ]; then
+            publish_manifest_tags "${{ needs.prepare.outputs.harbor_image_base }}"
           fi
-
-          if [ "${#refs[@]}" -eq 0 ]; then
-            echo "No per-architecture image refs were prepared for manifest publish." >&2
-            exit 1
-          fi
-
-          docker manifest rm "${image_base}:${version}" >/dev/null 2>&1 || true
-          docker manifest create "${image_base}:${version}" "${refs[@]}"
-
-          docker manifest rm "${image_base}:latest" >/dev/null 2>&1 || true
-          docker manifest create "${image_base}:latest" "${refs[@]}"
-
-          for ref in "${refs[@]}"; do
-            arch="${ref##*-}"
-            docker manifest annotate "${image_base}:${version}" "${ref}" --os linux --arch "${arch}"
-            docker manifest annotate "${image_base}:latest" "${ref}" --os linux --arch "${arch}"
-          done
-
-          docker manifest push "${image_base}:${version}"
-          docker manifest push "${image_base}:latest"
 
   build_harbor_runtime_set:
     needs: prepare
@@ -492,7 +556,7 @@ jobs:
           install: true
 
       - name: Log in to GitHub Container Registry
-        if: needs.prepare.outputs.target_registry == 'github'
+        if: needs.prepare.outputs.publish_github == 'true'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -500,7 +564,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Validate Harbor credentials
-        if: needs.prepare.outputs.target_registry == 'harbor'
+        if: needs.prepare.outputs.publish_harbor == 'true'
         env:
           HARBOR_USERNAME: ${{ secrets.HARBOR_ROBOT_USERNAME }}
           HARBOR_PASSWORD: ${{ secrets.HARBOR_ROBOT_SECRET }}
@@ -511,7 +575,7 @@ jobs:
           fi
 
       - name: Log in to Harbor Registry
-        if: needs.prepare.outputs.target_registry == 'harbor'
+        if: needs.prepare.outputs.publish_harbor == 'true'
         uses: docker/login-action@v3
         with:
           registry: ${{ env.HARBOR_REGISTRY }}
@@ -522,9 +586,26 @@ jobs:
         env:
           DOCKER_CLI_EXPERIMENTAL: enabled
         run: |
+          set -euo pipefail
+
           chmod 0755 applications/harbor/scripts/build-multiarch.sh
-          applications/harbor/scripts/build-multiarch.sh \
-            --namespace "${{ needs.prepare.outputs.registry_namespace }}" \
-            --tag "${{ needs.prepare.outputs.version }}" \
-            --path-mode "${{ needs.prepare.outputs.publish_path_mode }}" \
-            --push
+
+          publish_runtime_set() {
+            local namespace="$1"
+            local path_mode="$2"
+
+            applications/harbor/scripts/build-multiarch.sh \
+              --namespace "${namespace}" \
+              --tag "${{ needs.prepare.outputs.version }}" \
+              --path-mode "${path_mode}" \
+              --platforms "${{ needs.prepare.outputs.platforms }}" \
+              --push
+          }
+
+          if [ "${{ needs.prepare.outputs.publish_github }}" = "true" ]; then
+            publish_runtime_set "${GHCR_NAMESPACE}" "namespace-component"
+          fi
+
+          if [ "${{ needs.prepare.outputs.publish_harbor }}" = "true" ]; then
+            publish_runtime_set "${HARBOR_REGISTRY}" "project-per-image"
+          fi

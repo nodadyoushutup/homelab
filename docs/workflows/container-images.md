@@ -84,7 +84,7 @@ on the same registry.
 | `mcp-ast-grep` | Harbor | `kubernetes/mcp-ast-grep/deployment.yaml` plus `/mnt/eapp/config/harbor/config.tfvars` and `/mnt/eapp/config/vault/config.tfvars` |
 | `mcp-filesystem` | Harbor | `kubernetes/mcp-filesystem/deployment.yaml` plus `/mnt/eapp/config/harbor/config.tfvars` and `/mnt/eapp/config/vault/config.tfvars` |
 | `gha-runner` | Harbor | `/mnt/eapp/config/gha-runner-arm64/app.tfvars` and `/mnt/eapp/config/gha-runner-amd64/app.tfvars` |
-| `jenkins-agent` | Harbor | `/mnt/eapp/config/jenkins-agent-arm64/app.tfvars` and `/mnt/eapp/config/jenkins-agent-amd64/app.tfvars` |
+| `jenkins-agent` | Harbor | `terraform/swarm/jenkins-agent-arm64/app/main.tf` and `terraform/swarm/jenkins-agent-amd64/app/main.tf` |
 | `jenkins-controller` | Harbor | `/mnt/eapp/config/jenkins-controller/app.tfvars` |
 | `mcp-cloudflare` | Harbor | `kubernetes/mcp-cloudflare/deployment.yaml` plus `/mnt/eapp/config/harbor/config.tfvars` and `/mnt/eapp/config/vault/config.tfvars` |
 | `mcp-git` | Harbor | `kubernetes/mcp-git/deployment.yaml` plus `/mnt/eapp/config/harbor/config.tfvars` and `/mnt/eapp/config/vault/config.tfvars` |
@@ -150,19 +150,21 @@ manifests afterward.
 `workflow_dispatch` inputs:
 
 - `version`: required output tag
-- `target_registry`: `github` or `harbor`
-- `build_target`:
-  `langchain-agent-chat`, `langgraph`, `harbor-runtime-set`,
-  `mcp-ast-grep`, `mcp-bash-pipeline`, `mcp-cloudflare`,
-  `mcp-filesystem`, `mcp-fortigate`, `mcp-git`, `mcp-github`,
-  `mcp-google-workspace`, `mcp-terraform`, `gha-runner`, `jenkins-agent`,
-  `jenkins-controller`
+- `target_registry`: `both` (default), `github`, or `harbor`
 - `build_platforms`: `both` (default), `amd64`, or `arm64`
   - this acts as a filter against the target's supported platform set
   - if a target only supports `linux/amd64`, choosing `both` still builds only
     `linux/amd64`
   - if the selected target does not support the requested architecture, the
     workflow fails during `prepare`
+- `build_target`:
+  `langchain-agent-chat`, `langgraph`, `harbor-runtime-set`,
+  `mcp-ast-grep`, `mcp-bash-pipeline`, `mcp-cloudflare`,
+  `mcp-filesystem`, `mcp-fortigate`, `mcp-git`, `mcp-github`,
+  `mcp-google-workspace`, `mcp-terraform`, `gha-runner`, `jenkins-agent`,
+  `jenkins-controller`
+  - keep this input last in the GitHub Actions YAML so the application picker
+    stays at the bottom of the manual dispatch form
 
 The `gha-runner` direct image target currently keeps the default
 `linux/amd64,linux/arm64` platform set, so the published Harbor/GHCR tag can be
@@ -181,6 +183,8 @@ Registry naming rules:
   `ghcr.io/<owner>/<image>:<version>` and `:latest`
 - Harbor direct-image targets publish as:
   `harbor.nodadyoushutup.com/<image>/<image>:<version>` and `:latest`
+- choosing `target_registry=both` publishes the same build to both naming
+  schemes in one workflow run
   - direct-image targets first push per-arch helper tags such as
     `:<version>-amd64` and `:<version>-arm64`
   - the final `:<version>` and `:latest` tags are published afterward as
