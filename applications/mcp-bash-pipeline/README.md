@@ -9,8 +9,7 @@ Why this exists:
 - reuses the workspace-header pattern from the repo's other workspace-mounted
   MCP servers
 - keeps deployment behavior centered on the repo's documented pipeline
-  contract under `pipelines/terraform/**/*.sh`, with legacy
-  `terraform/**/pipeline/*.sh` wrappers accepted as compatibility aliases
+  contract under `pipelines/terraform/**/*.sh`
 
 Current scope:
 

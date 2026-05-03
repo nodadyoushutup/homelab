@@ -103,7 +103,6 @@ BLOCKED_PIPELINES: dict[str, str] = {
 }
 
 PIPELINES_ROOT = Path("pipelines/terraform")
-LEGACY_TERRAFORM_PIPELINE_ROOT = Path("terraform")
 
 
 MCP = FastMCP(
@@ -173,32 +172,11 @@ def _resolve_workspace_root(context: Context | None, explicit_workspace_root: st
     return workspace_root
 
 
-def _legacy_wrapper_relative_from_canonical(relative_path: str) -> str:
-    parts = Path(relative_path).parts
-    if len(parts) != 5 or parts[0] != "pipelines" or parts[1] != "terraform":
-        raise ValueError(f"Unsupported canonical pipeline path: {relative_path}")
-
-    _, _, infra_type, service, filename = parts
-    stage = Path(filename).stem
-    return f"terraform/{infra_type}/{service}/{stage}/pipeline/{filename}"
-
-
-def _canonical_relative_from_legacy(relative_path: str) -> str:
-    parts = Path(relative_path).parts
-    if len(parts) != 6 or parts[0] != "terraform" or parts[4] != "pipeline":
-        raise ValueError(f"Unsupported legacy pipeline path: {relative_path}")
-
-    _, infra_type, service, stage, _, filename = parts
-    return f"pipelines/terraform/{infra_type}/{service}/{filename}"
-
-
 def _canonical_pipeline_relative(relative_path: str) -> str:
     normalized = Path(relative_path).as_posix()
     if normalized.startswith("pipelines/terraform/") and normalized.endswith(".sh"):
         return normalized
-    if normalized.startswith("terraform/") and "/pipeline/" in normalized and normalized.endswith(".sh"):
-        return _canonical_relative_from_legacy(normalized)
-    raise ValueError("pipeline_path must point to a repo-managed Terraform pipeline entrypoint")
+    raise ValueError("pipeline_path must point to a repo-managed Terraform pipeline entrypoint under pipelines/terraform/")
 
 
 def _canonical_pipeline_abspath(workspace_root: Path, relative_path: str) -> Path:
@@ -207,12 +185,9 @@ def _canonical_pipeline_abspath(workspace_root: Path, relative_path: str) -> Pat
 
 def _pipeline_catalog(workspace_root: Path) -> list[dict[str, Any]]:
     canonical_root = workspace_root / PIPELINES_ROOT
-    legacy_root = workspace_root / LEGACY_TERRAFORM_PIPELINE_ROOT
 
     if canonical_root.exists():
         pipeline_files = sorted(canonical_root.rglob("*.sh"))
-    elif legacy_root.exists():
-        pipeline_files = sorted(legacy_root.rglob("pipeline/*.sh"))
     else:
         return []
 
@@ -221,12 +196,9 @@ def _pipeline_catalog(workspace_root: Path) -> list[dict[str, Any]]:
         discovered_relative_path = pipeline_file.relative_to(workspace_root).as_posix()
         relative_path = _canonical_pipeline_relative(discovered_relative_path)
         blocked_reason = BLOCKED_PIPELINES.get(relative_path)
-        legacy_wrapper_path = _legacy_wrapper_relative_from_canonical(relative_path)
         entries.append(
             {
                 "path": relative_path,
-                "legacy_wrapper_path": legacy_wrapper_path,
-                "legacy_wrapper_exists": (workspace_root / legacy_wrapper_path).is_file(),
                 "supported": blocked_reason is None,
                 "reason": blocked_reason or "",
             }
@@ -323,7 +295,7 @@ def inspect_stage_pipeline(
     pipeline_path: str = Field(
         description=(
             "Absolute or workspace-relative path to a Terraform pipeline .sh file. "
-            "Canonical paths live under pipelines/terraform/; legacy terraform/**/pipeline/*.sh wrappers are accepted."
+            "Repo-managed Terraform entrypoints live under pipelines/terraform/."
         )
     ),
     context: Context | None = None,
@@ -336,7 +308,6 @@ def inspect_stage_pipeline(
     target_root = _resolve_workspace_root(context, workspace_root)
     resolved_pipeline = _resolve_pipeline_path(target_root, pipeline_path)
     relative_path = resolved_pipeline.relative_to(target_root).as_posix()
-    legacy_wrapper_path = _legacy_wrapper_relative_from_canonical(relative_path)
     blocked_reason = BLOCKED_PIPELINES.get(relative_path, "")
     content = _read_text(resolved_pipeline)
     preview, preview_truncated = _truncate_output(content, min(SETTINGS.max_output_chars, 8000))
@@ -344,8 +315,6 @@ def inspect_stage_pipeline(
         "workspace_root": str(target_root),
         "requested_pipeline_path": pipeline_path,
         "pipeline_path": relative_path,
-        "legacy_wrapper_path": legacy_wrapper_path,
-        "legacy_wrapper_exists": (target_root / legacy_wrapper_path).is_file(),
         "absolute_path": str(resolved_pipeline),
         "supported": blocked_reason == "",
         "reason": blocked_reason,
@@ -360,7 +329,7 @@ def run_stage_pipeline(
     pipeline_path: str = Field(
         description=(
             "Absolute or workspace-relative path to a supported Terraform pipeline .sh file. "
-            "Canonical paths live under pipelines/terraform/; legacy terraform/**/pipeline/*.sh wrappers are accepted."
+            "Repo-managed Terraform entrypoints live under pipelines/terraform/."
         )
     ),
     timeout_seconds: int = Field(
@@ -377,7 +346,6 @@ def run_stage_pipeline(
     target_root = _resolve_workspace_root(context, workspace_root)
     resolved_pipeline = _resolve_pipeline_path(target_root, pipeline_path)
     relative_path = resolved_pipeline.relative_to(target_root).as_posix()
-    legacy_wrapper_path = _legacy_wrapper_relative_from_canonical(relative_path)
     blocked_reason = BLOCKED_PIPELINES.get(relative_path)
     if blocked_reason:
         raise ValueError(f"Pipeline is blocked for this server: {blocked_reason}")
@@ -407,7 +375,6 @@ def run_stage_pipeline(
         return {
             "requested_pipeline_path": pipeline_path,
             "pipeline_path": relative_path,
-            "legacy_wrapper_path": legacy_wrapper_path,
             "workspace_root": str(target_root),
             "command": shlex.join(command),
             "timeout_seconds": effective_timeout,
@@ -429,7 +396,6 @@ def run_stage_pipeline(
         return {
             "requested_pipeline_path": pipeline_path,
             "pipeline_path": relative_path,
-            "legacy_wrapper_path": legacy_wrapper_path,
             "workspace_root": str(target_root),
             "command": shlex.join(command),
             "timeout_seconds": effective_timeout,

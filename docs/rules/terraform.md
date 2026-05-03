@@ -77,7 +77,7 @@ Use `variables.tf` for new work. A few older directories still use
 
 ## Pipeline Conventions
 
-Every stage is expected to have a thin canonical entrypoint script under
+Every stage is expected to have one canonical entrypoint script under
 `pipelines/terraform/<type>/<service>/<stage>.sh`. That script defines the
 stage metadata and then sources the shared wrapper at
 `scripts/terraform/swarm_pipeline.sh`.
@@ -86,10 +86,6 @@ Terraform-backed Jenkins jobs should keep their Groovy wrapper thin and invoke
 the stage through `scripts/terraform/jenkins_stage_runner.sh` so unset optional
 `TFVARS_FILE` and `BACKEND_FILE` parameters do not break auto-discovery under
 `set -u`.
-
-Keep a thin compatibility wrapper at
-`terraform/<type>/<service>/<stage>/pipeline/<stage>.sh` while existing bash
-callers or tooling still depend on the legacy Terraform-local path.
 
 The normal entrypoint responsibilities are:
 

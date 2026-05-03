@@ -374,10 +374,8 @@ This document applies to the current MCP server set:
   execute files from the NFS-mounted repo path; do not fall back to root
   against a root-squashed workspace mount
 - Tool model: keep the server limited to typed pipeline tools for
-  `pipelines/terraform/**/*.sh`; keep legacy
-  `terraform/**/pipeline/*.sh` wrappers accepted only as compatibility aliases
-  and do not widen the server into arbitrary shell execution or a generic
-  terminal bridge
+  `pipelines/terraform/**/*.sh` and do not widen the server into arbitrary
+  shell execution or a generic terminal bridge
 - Execution model: prefer repo-managed Terraform stage entrypoints that already
   conform to the shared `scripts/terraform/swarm_pipeline.sh` contract; keep
   known host-dependent pipelines explicitly blocked until the container runtime

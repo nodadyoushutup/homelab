@@ -27,10 +27,6 @@ The common operator pattern is:
 pipelines/terraform/<type>/<service>/<stage>.sh
 ```
 
-Legacy wrappers under `terraform/<type>/<service>/<stage>/pipeline/<stage>.sh`
-still forward to the canonical scripts so existing bash callers keep working
-during the migration.
-
 Examples:
 
 ```bash
