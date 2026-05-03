@@ -7,7 +7,7 @@ ROOT_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR}/load_root_env.sh"
 
-BACKEND_FILE="${BACKEND_FILE:-${TFVARS_HOME_DIR:-${TFVARS_DIR:-/mnt/eapp/config}}/minio.backend.hcl}"
+BACKEND_FILE="${BACKEND_FILE:-${TFVARS_HOME_DIR:-${CONFIG_DIR:-/mnt/eapp/config}}/minio.backend.hcl}"
 ONLY_PATTERN=""
 
 resolve_stage_tfvars() {

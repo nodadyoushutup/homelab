@@ -14,7 +14,7 @@ if [[ -f "${ROOT_ENV_LOADER}" ]]; then
   source "${ROOT_ENV_LOADER}"
 fi
 
-VAULT_TFVARS_HOME="${TFVARS_HOME_DIR:-${TFVARS_DIR:-/mnt/eapp/config}}"
+VAULT_TFVARS_HOME="${TFVARS_HOME_DIR:-${CONFIG_DIR:-/mnt/eapp/config}}"
 VAULT_TFVARS_DIR="${VAULT_TFVARS_DIR:-${VAULT_TFVARS_HOME}/vault}"
 VAULT_ENV_FILE="${VAULT_TFVARS_DIR}/.env"
 DEFAULT_VAULT_ADDR="${DEFAULT_VAULT_ADDR:-http://swarm-cp-0.local:8200}"

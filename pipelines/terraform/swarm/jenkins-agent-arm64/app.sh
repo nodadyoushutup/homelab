@@ -11,7 +11,7 @@ STAGE_NAME="Jenkins agent arm64 app"
 ENTRYPOINT_RELATIVE="pipelines/terraform/swarm/jenkins-agent-arm64/app.sh"
 TERRAFORM_DIR="${ROOT_DIR}/terraform/swarm/jenkins-agent-arm64/app"
 
-JENKINS_AGENT_ARM64_TFVARS_DIR="${JENKINS_AGENT_ARM64_TFVARS_DIR:-${TFVARS_DIR:-/mnt/eapp/config}/jenkins-agent-arm64}"
+JENKINS_AGENT_ARM64_TFVARS_DIR="${JENKINS_AGENT_ARM64_TFVARS_DIR:-${CONFIG_DIR:-/mnt/eapp/config}/jenkins-agent-arm64}"
 DEFAULT_TFVARS_FILE="${DEFAULT_TFVARS_FILE:-${JENKINS_AGENT_ARM64_TFVARS_DIR}/app.tfvars}"
 
 PLAN_ARGS_EXTRA=()

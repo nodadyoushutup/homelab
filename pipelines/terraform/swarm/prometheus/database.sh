@@ -10,7 +10,7 @@ SERVICE_NAME="prometheus"
 STAGE_NAME="Prometheus database (VictoriaMetrics)"
 ENTRYPOINT_RELATIVE="pipelines/terraform/swarm/prometheus/database.sh"
 TERRAFORM_DIR="${ROOT_DIR}/terraform/swarm/prometheus/database"
-TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${TFVARS_DIR:-/mnt/eapp/config}}"
+TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${CONFIG_DIR:-/mnt/eapp/config}}"
 
 if [[ -z "${DEFAULT_TFVARS_FILE:-}" ]]; then
   if [[ -f "${TFVARS_HOME_DIR}/prometheus/database.tfvars" ]]; then

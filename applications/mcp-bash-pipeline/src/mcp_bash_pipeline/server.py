@@ -34,7 +34,7 @@ class Settings:
     http_path: str
     default_workspace_root: str
     allowed_workspace_roots: list[Path]
-    tfvars_root: Path
+    config_root: Path
     workspace_root_header: str
     workspace_root_query_param: str
     workspace_name_header: str
@@ -49,7 +49,7 @@ def load_settings() -> Settings:
     default_workspace_root = os.getenv("BASH_PIPELINE_DEFAULT_WORKSPACE_ROOT", "").strip()
     allowed_roots_raw = os.getenv("BASH_PIPELINE_ALLOWED_WORKSPACE_ROOTS", "/mnt/eapp/code")
     allowed_workspace_roots = [Path(root).resolve() for root in allowed_roots_raw.split(":") if root.strip()]
-    tfvars_root = Path(os.getenv("BASH_PIPELINE_TFVARS_ROOT", "/mnt/eapp/config")).resolve()
+    config_root = Path(os.getenv("BASH_PIPELINE_CONFIG_ROOT", "/mnt/eapp/config")).resolve()
 
     default_allowed_hosts = [
         "127.0.0.1",
@@ -77,7 +77,7 @@ def load_settings() -> Settings:
         http_path=os.getenv("BASH_PIPELINE_HTTP_PATH", "/mcp"),
         default_workspace_root=default_workspace_root,
         allowed_workspace_roots=allowed_workspace_roots,
-        tfvars_root=tfvars_root,
+        config_root=config_root,
         workspace_root_header=os.getenv("BASH_PIPELINE_WORKSPACE_ROOT_HEADER", "x-workspace-root"),
         workspace_root_query_param=os.getenv("BASH_PIPELINE_WORKSPACE_ROOT_QUERY_PARAM", "workspace_root"),
         workspace_name_header=os.getenv("BASH_PIPELINE_WORKSPACE_NAME_HEADER", "x-homelab-workspace"),
@@ -236,8 +236,8 @@ def server_info(context: Context | None = None) -> dict[str, Any]:
     """Return workspace, path, and runtime policy details for the pipeline server."""
     requested_workspace_root = _get_request_workspace_root(context)
     requested_workspace_name = _get_request_workspace_name(context)
-    tfvars_root_exists = SETTINGS.tfvars_root.exists()
-    tfvars_root_is_dir = SETTINGS.tfvars_root.is_dir()
+    config_root_exists = SETTINGS.config_root.exists()
+    config_root_is_dir = SETTINGS.config_root.is_dir()
 
     resolved_workspace_root = ""
     workspace_error = ""
@@ -249,9 +249,9 @@ def server_info(context: Context | None = None) -> dict[str, Any]:
     return {
         "default_workspace_root": SETTINGS.default_workspace_root,
         "allowed_workspace_roots": [str(root) for root in SETTINGS.allowed_workspace_roots],
-        "tfvars_root": str(SETTINGS.tfvars_root),
-        "tfvars_root_exists": tfvars_root_exists,
-        "tfvars_root_is_dir": tfvars_root_is_dir,
+        "config_root": str(SETTINGS.config_root),
+        "config_root_exists": config_root_exists,
+        "config_root_is_dir": config_root_is_dir,
         "workspace_root_header": SETTINGS.workspace_root_header,
         "workspace_root_query_param": SETTINGS.workspace_root_query_param,
         "workspace_name_header": SETTINGS.workspace_name_header,
@@ -352,9 +352,9 @@ def run_stage_pipeline(
 
     effective_timeout = SETTINGS.default_timeout_seconds if timeout_seconds <= 0 else timeout_seconds
     env = os.environ.copy()
-    # Always drive the shared Terraform wrapper from the service-configured tfvars root.
-    env["TFVARS_HOME_DIR"] = str(SETTINGS.tfvars_root)
-    env["TFVARS_DIR"] = str(SETTINGS.tfvars_root)
+    # Always drive the shared Terraform wrapper from the service-configured config root.
+    env["TFVARS_HOME_DIR"] = str(SETTINGS.config_root)
+    env["CONFIG_DIR"] = str(SETTINGS.config_root)
     env.setdefault("HOME", "/tmp/mcp-bash-pipeline")
 
     command = ["bash", str(resolved_pipeline)]

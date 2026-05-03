@@ -53,7 +53,7 @@ spec:
               value: /mnt/eapp/code/homelab
             - name: BASH_PIPELINE_ALLOWED_WORKSPACE_ROOTS
               value: /mnt/eapp/code
-            - name: BASH_PIPELINE_TFVARS_ROOT
+            - name: BASH_PIPELINE_CONFIG_ROOT
               value: /mnt/eapp/config
             - name: BASH_PIPELINE_WORKSPACE_ROOT_HEADER
               value: x-workspace-root

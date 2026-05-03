@@ -14,7 +14,7 @@ if [[ $# -gt 0 ]]; then
 fi
 
 VAULT_UNSEAL_SCRIPT="${ROOT_DIR}/scripts/vault/unseal.sh"
-VAULT_TFVARS_HOME="${TFVARS_HOME_DIR:-${TFVARS_DIR:-/mnt/eapp/config}}"
+VAULT_TFVARS_HOME="${TFVARS_HOME_DIR:-${CONFIG_DIR:-/mnt/eapp/config}}"
 VAULT_TFVARS_DIR="${VAULT_TFVARS_HOME}/vault"
 VAULT_ENV_FILE="${VAULT_TFVARS_DIR}/.env"
 VAULT_INIT_FILE="${VAULT_TFVARS_DIR}/init.json"
@@ -24,7 +24,7 @@ SERVICE_NAME="vault"
 STAGE_NAME="Vault config"
 ENTRYPOINT_RELATIVE="pipelines/terraform/swarm/vault/config.sh"
 TERRAFORM_DIR="${ROOT_DIR}/terraform/swarm/vault/config"
-TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${TFVARS_DIR:-/mnt/eapp/config}}"
+TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${CONFIG_DIR:-/mnt/eapp/config}}"
 DEFAULT_TFVARS_FILE="${TFVARS_HOME_DIR}/vault/config.tfvars"
 DEFAULT_BACKEND_FILE="${TFVARS_HOME_DIR}/minio.backend.hcl"
 

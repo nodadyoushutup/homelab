@@ -10,7 +10,7 @@ SERVICE_NAME="talos"
 STAGE_NAME="Talos cluster"
 ENTRYPOINT_RELATIVE="pipelines/terraform/cluster/talos/app.sh"
 TERRAFORM_DIR="${ROOT_DIR}/terraform/cluster/talos/app"
-TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${TFVARS_DIR:-/mnt/eapp/config}}"
+TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${CONFIG_DIR:-/mnt/eapp/config}}"
 DEFAULT_TFVARS_FILE="${DEFAULT_TFVARS_FILE:-${TFVARS_HOME_DIR}/talos/app.tfvars}"
 DEFAULT_BACKEND_FILE="${DEFAULT_BACKEND_FILE:-${TFVARS_HOME_DIR}/minio.backend.hcl}"
 

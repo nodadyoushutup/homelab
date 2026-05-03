@@ -13,8 +13,8 @@ SERVICE_NAME="vault-auto-unseal.service"
 TARGET_HOST="${TARGET_HOST:-swarm-cp-0.local}"
 TARGET_USER="${TARGET_USER:-${USER}}"
 REMOTE_REPO_DIR="${REMOTE_REPO_DIR:-/mnt/eapp/code/homelab}"
-REMOTE_TFVARS_HOME="${REMOTE_TFVARS_HOME:-${TFVARS_HOME_DIR:-${TFVARS_DIR:-/mnt/eapp/config}}}"
-LOCAL_TFVARS_HOME="${LOCAL_TFVARS_HOME:-${TFVARS_HOME_DIR:-${TFVARS_DIR:-/mnt/eapp/config}}}"
+REMOTE_TFVARS_HOME="${REMOTE_TFVARS_HOME:-${TFVARS_HOME_DIR:-${CONFIG_DIR:-/mnt/eapp/config}}}"
+LOCAL_TFVARS_HOME="${LOCAL_TFVARS_HOME:-${TFVARS_HOME_DIR:-${CONFIG_DIR:-/mnt/eapp/config}}}"
 SYNC_ARTIFACTS="1"
 
 log_info() {

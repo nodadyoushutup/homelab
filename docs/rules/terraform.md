@@ -123,9 +123,10 @@ The default backend file is usually:
 
 - `/mnt/eapp/config/minio.backend.hcl`
 
-The shared scripts resolve tfvars home like this:
+`CONFIG_DIR` is the canonical shared configuration root. The shared scripts
+resolve tfvars home like this:
 
-- `TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${TFVARS_DIR:-/mnt/eapp/config}}"`
+- `TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${CONFIG_DIR:-/mnt/eapp/config}}"`
 
 For Terraform stages that reach Docker Swarm over SSH, keep the SSH material in
 the shared configuration root instead of a workstation-local home directory:
@@ -145,7 +146,7 @@ Also keep the SSH target itself portable across runners:
 
 `scripts/terraform/load_root_env.sh` preserves already-exported values for:
 
-- `TFVARS_DIR`
+- `CONFIG_DIR`
 - `TFVARS_HOME_DIR`
 - `JENKINS_AGENT_TFVARS_DIR`
 - `JENKINS_TFVARS_DIR`
@@ -154,13 +155,13 @@ Also keep the SSH target itself portable across runners:
 Jenkins-specific defaults remain special cases:
 
 - `JENKINS_AGENT_ARM64_TFVARS_DIR` defaults to
-  `${TFVARS_DIR}/jenkins-agent-arm64`
+  `${CONFIG_DIR}/jenkins-agent-arm64`
 - `JENKINS_AGENT_AMD64_TFVARS_DIR` defaults to
-  `${TFVARS_DIR}/jenkins-agent-amd64`
+  `${CONFIG_DIR}/jenkins-agent-amd64`
 - `JENKINS_AGENT_TFVARS_DIR` remains a backward-compat passthrough when
   explicitly exported, but new Jenkins agent work should use the arch-specific
   directories above
-- `JENKINS_CONTROLLER_TFVARS_DIR` defaults to `${TFVARS_DIR}/jenkins-controller`
+- `JENKINS_CONTROLLER_TFVARS_DIR` defaults to `${CONFIG_DIR}/jenkins-controller`
 - Jenkins controller and agent secret handoff now defaults to the shared
   configuration root mounted at `/mnt/eapp/config`, with controller-written
   secret files under `/mnt/eapp/config/jenkins-controller/agent-secrets/`

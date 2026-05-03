@@ -10,7 +10,7 @@ SERVICE_NAME="harbor"
 STAGE_NAME="Harbor config"
 ENTRYPOINT_RELATIVE="pipelines/terraform/swarm/harbor/config.sh"
 TERRAFORM_DIR="${ROOT_DIR}/terraform/swarm/harbor/config"
-TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${TFVARS_DIR:-/mnt/eapp/config}}"
+TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${CONFIG_DIR:-/mnt/eapp/config}}"
 DEFAULT_TFVARS_FILE="${DEFAULT_TFVARS_FILE:-${TFVARS_HOME_DIR}/harbor/config.tfvars}"
 DEFAULT_BACKEND_FILE="${DEFAULT_BACKEND_FILE:-${TFVARS_HOME_DIR}/minio.backend.hcl}"
 

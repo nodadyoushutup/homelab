@@ -24,7 +24,7 @@ if [[ ! -f "${stage_script}" ]]; then
 fi
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-shared_config_dir="${TFVARS_HOME_DIR:-${TFVARS_DIR:-/mnt/eapp/config}}"
+shared_config_dir="${TFVARS_HOME_DIR:-${CONFIG_DIR:-/mnt/eapp/config}}"
 
 if [[ -z "${TFVARS_FILE:-}" || -z "${BACKEND_FILE:-}" ]]; then
   "${script_dir}/jenkins_stage_mount_check.sh" "${shared_config_dir}"
