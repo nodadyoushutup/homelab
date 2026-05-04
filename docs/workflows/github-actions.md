@@ -34,9 +34,15 @@ GitHub's repository self-hosted runner delete endpoint requires repository
 administration permission. Configure a repository secret named
 `RUNNER_ADMIN_TOKEN` with a token that has the required repository admin access.
 
-The workflow falls back to `GITHUB_TOKEN` only as a last resort and warns when
-that happens, because the default workflow token may not have enough permission
-for runner deletion.
+The workflow does not rely on `GITHUB_TOKEN` for runner administration.
+GitHub's repository runner list/delete endpoints require repository
+`Administration` permission, and that permission is outside the normal workflow
+token permission set.
+
+Behavior when the secret is missing:
+
+- `push` and `schedule` runs log a warning and skip cleanup
+- manual `workflow_dispatch` runs fail fast with an explicit setup message
 
 ## Validation
 

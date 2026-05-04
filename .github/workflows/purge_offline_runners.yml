@@ -28,9 +28,9 @@ jobs:
     env:
       API_URL: ${{ github.api_url }}
       REPOSITORY: ${{ github.repository }}
+      EVENT_NAME: ${{ github.event_name }}
       DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run || 'false' }}
       RUNNER_ADMIN_TOKEN: ${{ secrets.RUNNER_ADMIN_TOKEN }}
-      FALLBACK_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Purge offline repository runners
         shell: bash
@@ -38,17 +38,18 @@ jobs:
           set -euo pipefail
 
           token="${RUNNER_ADMIN_TOKEN:-}"
-          if [ -n "${token}" ]; then
-            echo "::notice::Using RUNNER_ADMIN_TOKEN for repository runner administration."
-          else
-            token="${FALLBACK_GITHUB_TOKEN:-}"
-            echo "::warning::RUNNER_ADMIN_TOKEN is not configured. GitHub documents repository runner deletion as requiring repository administration permission, so the default GITHUB_TOKEN may not be sufficient."
+          if [ -z "${token}" ]; then
+            message="RUNNER_ADMIN_TOKEN is not configured. GitHub's repository self-hosted runner endpoints require repository administration permission, so GITHUB_TOKEN cannot be relied on for this workflow."
+            if [ "${EVENT_NAME}" = "workflow_dispatch" ]; then
+              echo "${message}" >&2
+              exit 1
+            fi
+
+            echo "::warning::${message} Skipping automatic cleanup for ${EVENT_NAME}."
+            exit 0
           fi
 
-          if [ -z "${token}" ]; then
-            echo "No API token is available for runner administration." >&2
-            exit 1
-          fi
+          echo "::notice::Using RUNNER_ADMIN_TOKEN for repository runner administration."
 
           workdir="$(mktemp -d)"
           trap 'rm -rf "${workdir}"' EXIT
