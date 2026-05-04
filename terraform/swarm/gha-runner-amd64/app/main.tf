@@ -17,7 +17,7 @@ resource "docker_service" "gha_runner" {
     }
 
     container_spec {
-      image = var.github_runner_image
+      image = "harbor.nodadyoushutup.com/gha-runner/gha-runner:0.0.3"
       user  = "0:0"
 
       env = {
