@@ -163,6 +163,9 @@ For Jenkins specifically:
 - when Jenkins-side auto-discovery fails, verify the running `jenkins-agent-arm64`
   and `jenkins-agent-amd64` services still attach the Docker-managed
   NFS-backed `/mnt/eapp/config` volume inside the container
+- the `gha-runner-amd64` and `gha-runner-arm64` app stages now use the same
+  Docker-managed NFS-backed `/mnt/eapp/config` mount pattern when runner jobs
+  need access to shared repo configuration
 
 ### Run a stage with custom safety hooks
 

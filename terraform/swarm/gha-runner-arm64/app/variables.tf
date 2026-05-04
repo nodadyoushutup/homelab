@@ -77,3 +77,37 @@ variable "github_runner_remove_token" {
   sensitive   = true
   default     = ""
 }
+
+variable "enable_shared_tfvars_mount" {
+  description = "Whether to mount the shared tfvars/configuration root into the runner container."
+  type        = bool
+  default     = true
+}
+
+variable "shared_tfvars_volume_name" {
+  description = "Docker volume name used for the shared tfvars/configuration mount."
+  type        = string
+  default     = "gha-runner-arm64-config"
+}
+
+variable "shared_tfvars_volume_driver" {
+  description = "Docker volume driver used for the shared tfvars/configuration mount."
+  type        = string
+  default     = "local"
+}
+
+variable "shared_tfvars_volume_driver_opts" {
+  description = "Docker volume driver options for the shared tfvars/configuration mount. Defaults to mounting the shared NFS export directly."
+  type        = map(string)
+  default = {
+    type   = "nfs"
+    o      = "addr=192.168.1.100,nfsvers=4.2,rw"
+    device = ":/mnt/eapp/config"
+  }
+}
+
+variable "shared_tfvars_mount_target" {
+  description = "Container path where the shared tfvars/configuration root is mounted."
+  type        = string
+  default     = "/mnt/eapp/config"
+}

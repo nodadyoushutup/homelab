@@ -53,6 +53,22 @@ resource "docker_service" "gha_runner" {
         type   = "bind"
       }
 
+      dynamic "mounts" {
+        for_each = var.enable_shared_tfvars_mount ? [var.shared_tfvars_volume_name] : []
+
+        content {
+          type   = "volume"
+          source = mounts.value
+          target = var.shared_tfvars_mount_target
+
+          volume_options {
+            driver_name    = var.shared_tfvars_volume_driver
+            driver_options = var.shared_tfvars_volume_driver_opts
+            no_copy        = false
+          }
+        }
+      }
+
       healthcheck {
         test = ["CMD-SHELL", "test -f /tmp/gha-runner-ready"]
 

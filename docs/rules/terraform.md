@@ -185,6 +185,9 @@ Jenkins-specific defaults remain special cases:
   through Docker-managed NFS-backed volumes that point at the shared export on
   `192.168.1.100:/mnt/eapp/config`, rather than relying on a host bind mount on
   every Swarm node
+- GitHub Actions runner services that need shared repo configuration should use
+  the same Docker-managed NFS-backed `/mnt/eapp/config` mount pattern instead
+  of host bind mounts so the service remains portable across Swarm nodes
 - Jenkins agent node entries in that YAML should use `nodeDescription` for the
   target Swarm hostname when the agent stage needs deterministic per-service
   placement from the same source-of-truth file
