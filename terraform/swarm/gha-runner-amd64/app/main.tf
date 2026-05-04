@@ -53,19 +53,19 @@ resource "docker_service" "gha_runner" {
         type   = "bind"
       }
 
-      dynamic "mounts" {
-        for_each = var.enable_shared_tfvars_mount ? [var.shared_tfvars_volume_name] : []
+      mounts {
+        type   = "volume"
+        source = "gha-runner-amd64-config"
+        target = "/mnt/eapp/config"
 
-        content {
-          type   = "volume"
-          source = mounts.value
-          target = var.shared_tfvars_mount_target
-
-          volume_options {
-            driver_name    = var.shared_tfvars_volume_driver
-            driver_options = var.shared_tfvars_volume_driver_opts
-            no_copy        = false
+        volume_options {
+          driver_name = "local"
+          driver_options = {
+            type   = "nfs"
+            o      = "addr=192.168.1.100,nfsvers=4.2,rw"
+            device = ":/mnt/eapp/config"
           }
+          no_copy = false
         }
       }
 
