@@ -1,0 +1,137 @@
+name: Purge Offline Repository Runners
+
+on:
+  push:
+    paths:
+      - ".github/workflows/**"
+      - "terraform/swarm/gha-runner*/**"
+  schedule:
+    - cron: "17 4 * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "List offline runners without deleting them"
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  actions: write
+
+concurrency:
+  group: purge-offline-repository-runners
+  cancel-in-progress: false
+
+jobs:
+  purge:
+    runs-on: ubuntu-latest
+    env:
+      API_URL: ${{ github.api_url }}
+      REPOSITORY: ${{ github.repository }}
+      DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run || 'false' }}
+      RUNNER_ADMIN_TOKEN: ${{ secrets.RUNNER_ADMIN_TOKEN }}
+      FALLBACK_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Purge offline repository runners
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          token="${RUNNER_ADMIN_TOKEN:-}"
+          if [ -n "${token}" ]; then
+            echo "::notice::Using RUNNER_ADMIN_TOKEN for repository runner administration."
+          else
+            token="${FALLBACK_GITHUB_TOKEN:-}"
+            echo "::warning::RUNNER_ADMIN_TOKEN is not configured. GitHub documents repository runner deletion as requiring repository administration permission, so the default GITHUB_TOKEN may not be sufficient."
+          fi
+
+          if [ -z "${token}" ]; then
+            echo "No API token is available for runner administration." >&2
+            exit 1
+          fi
+
+          workdir="$(mktemp -d)"
+          trap 'rm -rf "${workdir}"' EXIT
+
+          page=1
+          runner_count=0
+
+          while :; do
+            response_path="${workdir}/runners-${page}.json"
+            http_code="$(
+              curl \
+                --silent \
+                --show-error \
+                --location \
+                --output "${response_path}" \
+                --write-out "%{http_code}" \
+                --header "Accept: application/vnd.github+json" \
+                --header "Authorization: Bearer ${token}" \
+                --header "X-GitHub-Api-Version: 2022-11-28" \
+                "${API_URL}/repos/${REPOSITORY}/actions/runners?per_page=100&page=${page}"
+            )"
+
+            if [ "${http_code}" != "200" ]; then
+              echo "Failed to list repository runners (HTTP ${http_code})." >&2
+              cat "${response_path}" >&2
+              exit 1
+            fi
+
+            current_count="$(
+              python3 -c 'import json, sys; payload = json.load(open(sys.argv[1], encoding="utf-8")); print(len(payload.get("runners", [])))' "${response_path}"
+            )"
+
+            if [ "${current_count}" = "0" ]; then
+              break
+            fi
+
+            python3 -c "import json, sys; payload = json.load(open(sys.argv[1], encoding='utf-8')); [print(f\"{runner['id']}\t{runner['name']}\t{runner.get('os', 'unknown')}\t{str(runner.get('busy', False)).lower()}\") for runner in payload.get('runners', []) if runner.get('status') == 'offline']" "${response_path}" >> "${workdir}/offline-runners.tsv"
+
+            runner_count=$((runner_count + current_count))
+            page=$((page + 1))
+          done
+
+          if [ "${runner_count}" -eq 0 ]; then
+            echo "::notice::No repository runners are registered."
+            exit 0
+          fi
+
+          if [ ! -f "${workdir}/offline-runners.tsv" ]; then
+            echo "::notice::Scanned ${runner_count} repository runner(s). No offline runners found."
+            exit 0
+          fi
+
+          offline_count="$(wc -l < "${workdir}/offline-runners.tsv" | tr -d ' ')"
+          echo "::notice::Found ${offline_count} offline runner(s) out of ${runner_count} registered runner(s)."
+
+          while IFS=$'\t' read -r runner_id runner_name runner_os runner_busy; do
+            [ -n "${runner_id}" ] || continue
+
+            if [ "${DRY_RUN}" = "true" ]; then
+              echo "::notice::Dry run: would remove offline runner '${runner_name}' (id=${runner_id}, os=${runner_os}, busy=${runner_busy})."
+              continue
+            fi
+
+            delete_response_path="${workdir}/delete-${runner_id}.txt"
+            delete_http_code="$(
+              curl \
+                --silent \
+                --show-error \
+                --location \
+                --output "${delete_response_path}" \
+                --write-out "%{http_code}" \
+                --request DELETE \
+                --header "Accept: application/vnd.github+json" \
+                --header "Authorization: Bearer ${token}" \
+                --header "X-GitHub-Api-Version: 2022-11-28" \
+                "${API_URL}/repos/${REPOSITORY}/actions/runners/${runner_id}"
+            )"
+
+            if [ "${delete_http_code}" != "204" ]; then
+              echo "Failed to delete offline runner '${runner_name}' (id=${runner_id}, HTTP ${delete_http_code})." >&2
+              cat "${delete_response_path}" >&2
+              exit 1
+            fi
+
+            echo "::notice::Removed offline runner '${runner_name}' (id=${runner_id}, os=${runner_os}, busy=${runner_busy})."
+          done < "${workdir}/offline-runners.tsv"

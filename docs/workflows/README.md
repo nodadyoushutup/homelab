@@ -16,6 +16,7 @@ govern those workflows.
   publish workflow
 - `confluence.md`: standard Confluence discovery and documentation-analysis
   workflow
+- `github-actions.md`: repository-maintenance GitHub Actions workflows
 - `git.md`: default staging, commit, and push workflow for normal repo changes
 - `jira.md`: standard Jira discovery and issue-analysis workflow
 - `langgraph.md`: standard LangGraph monorepo and Deep Agents implementation
