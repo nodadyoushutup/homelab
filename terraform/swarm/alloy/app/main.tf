@@ -40,7 +40,7 @@ resource "docker_service" "alloy" {
     }
 
     container_spec {
-      image = "grafana/alloy:latest@sha256:f50931848bd8178774521767bb46b905e1a081301950ff28d7623c9db7c01076"
+      image = "grafana/alloy:latest@sha256:51aeb9d829239345070619dad3edd6873186f913c84f45b365b74574fcb38ec0"
       user  = "0:0"
 
       args = [
