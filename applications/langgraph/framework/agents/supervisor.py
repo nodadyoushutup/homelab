@@ -5,6 +5,8 @@ from typing import Sequence
 from deepagents import CompiledSubAgent
 from langchain.tools import tool
 
+from framework.mcp_support import load_mcp_tools
+
 from .base import BaseAgent
 
 
@@ -41,7 +43,8 @@ class HomelabSupervisorAgent(BaseAgent):
                 "Specialists do not transfer directly to each other."
             )
 
-        return [describe_homelab_topology]
+        rag_tools = load_mcp_tools(self.app_dir / "mcp.json")
+        return [describe_homelab_topology, *rag_tools]
 
     def subagents(self) -> list[CompiledSubAgent]:
         return self.local_subagents

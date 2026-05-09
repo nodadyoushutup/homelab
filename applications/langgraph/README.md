@@ -24,6 +24,7 @@ applications/langgraph/
 │   │   ├── code/
 │   │   ├── jira/
 │   │   └── tech-lead/
+│   ├── mcp.json
 │   ├── agent.py
 │   ├── langgraph.json
 │   └── system_prompt.md
@@ -85,7 +86,9 @@ What is already in place:
 - a single-layer Jira specialist that keeps create and edit rules in one app
 - a single-layer Tech Lead specialist with repo-scoped filesystem MCP tooling
 - Markdown-backed `system_prompt.md` files for deployable agents
-- MCP loading support from agent-local `mcp.json` files
+- MCP loading support from agent-local **`mcp.json`** files (**supervisor** uses
+  `agent/mcp.json` for homelab-wide **mcp-rag**; specialists each have
+  **`subagents/<name>/mcp.json`**)
 - a repo-owned Docker wrapper in `Dockerfile` that packages this project and
   runs `langgraph dev`
 

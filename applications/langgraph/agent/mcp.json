@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "mcp-rag": {
+      "transport": "http",
+      "url": "https://mcp.rag.nodadyoushutup.com/mcp",
+      "x_api_key_from_env": "MCP_RAG_API_KEY"
+    }
+  }
+}
