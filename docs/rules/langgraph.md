@@ -12,15 +12,18 @@ This document applies to:
 
 - `applications/langgraph/`
 - repo-managed LangGraph agent configs such as
-  `applications/langgraph/src/agents/*/langgraph.json`
-- shared LangGraph Python code under `applications/langgraph/src/base/`
+  `applications/langgraph/agent/langgraph.json` and
+  `applications/langgraph/agent/subagents/*/langgraph.json`
+- shared LangGraph Python code under `applications/langgraph/framework/`
 - agent-local and subagent-local skills under
-  `applications/langgraph/src/agents/**/skills/`
+  `applications/langgraph/agent/**/skills/`
 
 ## Source-of-Truth Rules
 
-- Keep shared Python logic under `applications/langgraph/src/base/` and keep
-  deployable agent config in `applications/langgraph/src/agents/<agent-name>/`.
+- Keep shared Python logic under `applications/langgraph/framework/` and keep
+  the default deployable agent boundary under `applications/langgraph/agent/`,
+  with co-deployed specialist config in
+  `applications/langgraph/agent/subagents/<specialist-name>/`.
 - Each deployable LangGraph agent must keep its own `langgraph.json` in that
   agent's directory instead of relying on a monorepo-root config.
 - Each deployable LangGraph agent should keep its runtime system prompt in an
@@ -51,14 +54,15 @@ This document applies to:
 
 ## Environment Rules
 
-- Each deployable agent may own its own `.env` file in its agent directory.
-- Internal Deep Agents subagents may also own `.env` files, but those files are
-  treated as local config inputs that the parent app loads explicitly.
+- Keep local secrets and model overrides in the homelab-wide file
+  `<repo>/.secrets/.env` instead of per-agent or per-subagent ``.env`` files.
+  ``framework.configuration.merged_settings`` loads that path (override with
+  ``HOMELAB_SECRETS_ENV`` when needed). The LangGraph app no longer declares an
+  ``env`` entry in each ``langgraph.json``.
 - Internal Deep Agents subagents may also own `system_prompt.md` files, which
   the parent app should load explicitly when building those subagents.
-- Do not assume subagent-local `.env` files create isolated process
-  environments. Only separately deployed apps get real process-level env
-  isolation.
+- Do not assume subagent-local env files create isolated process environments.
+  Only separately deployed apps get real process-level env isolation.
 
 ## MCP Rules
 
@@ -82,7 +86,7 @@ This document applies to:
 ## Agent Composition Rules
 
 - The default deployed Homelab supervisor app boundary is
-  `applications/langgraph/src/agents/langgraph/`.
+  `applications/langgraph/agent/`.
 - Keep the default Homelab runtime as one deployed app boundary with named
   local specialist subagents delegated in-process.
 - Do not keep unused remote agent delegation scaffolding or repo-specific
@@ -94,7 +98,10 @@ This document applies to:
   parallel `langgraph dev` processes instead of containers.
 - Repo-local debug helpers are allowed under `applications/langgraph/` when
   they stay as thin wrappers around one documented app boundary and do not
-  replace the app-local `langgraph.json` source of truth.
+  replace the app-local `langgraph.json` source of truth. Keep the container
+  image definition and optional shell entrypoints under
+  `applications/langgraph/docker/` so the Python tree stays separate from
+  packaging glue.
 - A top-level `docker/docker-compose.yml` is also allowed for local LangGraph
   plus LangChain Agent Chat development when it is clearly documented as a
   dev-only bind mount workflow and does not replace the app-local deployment

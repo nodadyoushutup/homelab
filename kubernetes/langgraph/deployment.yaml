@@ -31,7 +31,7 @@ spec:
         - name: langgraph
           image: harbor.nodadyoushutup.com/langgraph/langgraph:2026.05.02.160008
           imagePullPolicy: Always
-          workingDir: /app/langgraph/src/agents/langgraph
+          workingDir: /app/langgraph/agent
           command:
             - sh
             - -c
@@ -60,7 +60,7 @@ spec:
               protocol: TCP
           volumeMounts:
             - name: state
-              mountPath: /app/langgraph/src/agents/langgraph/.langgraph_api
+              mountPath: /app/langgraph/agent/.langgraph_api
           startupProbe:
             httpGet:
               path: /docs

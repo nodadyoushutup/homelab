@@ -16,8 +16,6 @@ dependencies = [
   "python-dotenv",
 ]
 
-[tool.setuptools]
-package-dir = {"" = "src/base"}
-
 [tool.setuptools.packages.find]
-where = ["src/base"]
+where = ["."]
+include = ["framework"]

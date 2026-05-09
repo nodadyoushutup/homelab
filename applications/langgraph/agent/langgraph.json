@@ -1,11 +1,10 @@
 {
   "dependencies": [
-    "../../.."
+    ".."
   ],
   "graphs": {
     "langgraph": "./agent.py:langgraph",
     "code_agent": "./agent.py:code_agent",
     "jira_agent": "./agent.py:jira_agent"
-  },
-  "env": ".env"
+  }
 }

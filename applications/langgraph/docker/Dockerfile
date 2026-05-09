@@ -12,14 +12,14 @@ COPY README.md pyproject.toml requirements.txt /app/langgraph/
 RUN --mount=type=cache,target=/root/.cache/pip \
     pip install -r /app/langgraph/requirements.txt
 
-COPY src/base /app/langgraph/src/base
+COPY framework /app/langgraph/framework
 
 RUN --mount=type=cache,target=/root/.cache/pip \
     pip install -e .
 
-COPY src/agents /app/langgraph/src/agents
+COPY agent /app/langgraph/agent
 
-WORKDIR /app/langgraph/src/agents/langgraph
+WORKDIR /app/langgraph/agent
 
 EXPOSE 2024
 

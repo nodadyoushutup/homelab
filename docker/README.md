@@ -28,8 +28,10 @@ The stack is intentionally development-only:
 
 The `langgraph-dev` service intentionally uses the image's built-in `WORKDIR`
 and `CMD`. The only LangGraph-specific overrides are the bind mount onto
-`/app/langgraph` and the separate state volume for
-`/app/langgraph/src/agents/langgraph/.langgraph_api`.
+`/app/langgraph`, the separate state volume for
+`/app/langgraph/agent/.langgraph_api`, and `env_file: ../.secrets/.env` so API
+keys and model overrides match local host development (create that file at the
+homelab repo root if it does not exist yet).
 
 The `langchain-agent-chat-dev` service keeps the image config minimal, but its
 public client config is baked at build time because it is a Next.js production

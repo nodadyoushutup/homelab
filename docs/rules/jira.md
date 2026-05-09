@@ -73,11 +73,11 @@ This document applies to:
   that context into the technical task rather than treating Jira as a separate
   silo.
 - Keep repo-specific Jira custom field meanings and usage rules in the
-  `jira-custom-fields` skill under `applications/langgraph/src/agents/jira-agent/skills/`.
+  `jira-custom-fields` skill under `applications/langgraph/agent/subagents/jira-agent/skills/`.
 - Keep repo-specific Jira required field rules and stage-gate logic in the
-  `jira-required-fields` skill under `applications/langgraph/src/agents/jira-agent/skills/`.
+  `jira-required-fields` skill under `applications/langgraph/agent/subagents/jira-agent/skills/`.
 - Keep repo-specific stage-aware workflow guidance in the `jira-workflow` skill
-  under `applications/langgraph/src/agents/jira-agent/skills/`.
+  under `applications/langgraph/agent/subagents/jira-agent/skills/`.
 - Do not allow a ticket to progress out of `REQUIREMENTS` until all required
   Jira fields are filled and a hard verification check confirms that state.
 - Jira agents should identify the current workflow stage before acting and tie

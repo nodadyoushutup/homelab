@@ -12,8 +12,8 @@ docs to check before doing substantive work.
   composition rules
 - `docs/workflows/langgraph.md`: LangGraph implementation workflow
 - `docs/agents/README.md`: LangGraph runtime contract index
-- `docs/agents/homelab-agent.md` and `docs/agents/subagents/*.md`: LangGraph
-  runtime instruction and I/O contracts for deployed agents
+- `docs/agents/homelab-agent/homelab-agent.md` and `docs/subagents/*/*.md`:
+  LangGraph runtime instruction and I/O contracts for deployed agents
 
 ## Repo Notes
 

@@ -34,20 +34,22 @@ input/output schemas. They are not a repo-wide contributor startup checklist.
 
 ## File map
 
-- `homelab-agent.md`: the current top-level supervisor definition for the
-  Homelab agent, including its native input/output schema
-- `subagents/code-subagent.md`: reusable code capability definition, including
-  its native input/output schema
-- `subagents/confluence-subagent.md`: reusable Confluence discovery and
+- `homelab-agent/homelab-agent.md`: the current top-level supervisor definition
+  for the Homelab agent, including its native input/output schema
+- `../subagents/code-subagent/code-subagent.md`: reusable code capability
+  definition, including its native input/output schema
+- `../subagents/confluence-subagent/confluence-subagent.md`: reusable Confluence
+  discovery and operations capability definition, including its native
+  input/output schema
+- `../subagents/kubernetes-subagent/kubernetes-subagent.md`: reusable Kubernetes
+  analysis capability definition, including its native input/output schema
+- `../subagents/pipeline-subagent/pipeline-subagent.md`: reusable pipeline
+  inspection and execution capability definition, including its native
+  input/output schema
+- `../subagents/terraform-subagent/terraform-subagent.md`: reusable Terraform
+  analysis capability definition, including its native input/output schema
+- `../subagents/jira-subagent/jira-subagent.md`: reusable Jira discovery and
   operations capability definition, including its native input/output schema
-- `subagents/kubernetes-subagent.md`: reusable Kubernetes analysis capability
-  definition, including its native input/output schema
-- `subagents/pipeline-subagent.md`: reusable pipeline inspection and execution
-  capability definition, including its native input/output schema
-- `subagents/terraform-subagent.md`: reusable Terraform analysis capability
-  definition, including its native input/output schema
-- `subagents/jira-subagent.md`: reusable Jira discovery and operations
-  capability definition, including its native input/output schema
 
 ## Required creation artifacts
 
@@ -57,14 +59,14 @@ implementation and the Markdown contract docs in the same change.
 Required parent-agent artifacts:
 
 - repo-managed Python implementation under `applications/langgraph/`
-- `docs/agents/<agent-name>-agent.md`
+- `docs/agents/<agent-name>-agent/<agent-name>-agent.md`
 - matching updates in this file for the current agent set, file map, and
   runtime prompt source
 
 Required subagent artifacts:
 
 - repo-managed Python implementation under `applications/langgraph/`
-- `docs/agents/subagents/<subagent-name>-subagent.md`
+- `docs/subagents/<subagent-name>-subagent/<subagent-name>-subagent.md`
 - matching updates in this file for the current agent set, file map, and
   runtime prompt source
 
@@ -79,10 +81,13 @@ agents themselves.
 Current prompt-source pattern:
 
 - agent-level prompt text should live in
-  `applications/langgraph/src/agents/<agent-name>/system_prompt.md`
-- internal subagent prompt text should live in
-  `applications/langgraph/src/agents/<agent-name>/subagents/<subagent-name>/system_prompt.md`
-- Python wiring under `applications/langgraph/src/base/` should load those Markdown
+  `applications/langgraph/agent/system_prompt.md`
+- specialist prompt text should live in
+  `applications/langgraph/agent/subagents/<specialist-name>/system_prompt.md`
+- nested internal subagent prompts, when used, should live under the owning
+  specialist, for example
+  `applications/langgraph/agent/subagents/<specialist-name>/subagents/<internal-name>/system_prompt.md`
+- Python wiring under `applications/langgraph/framework/` should load those Markdown
   files and pass the resulting text into the runtime's `system_prompt`
   argument
 
@@ -90,20 +95,20 @@ These docs remain the human-readable runtime contracts and schema references.
 
 Current intent:
 
-- keep `homelab-agent.md` as the instruction contract for the parent `Homelab`
-  agent
-- keep `subagents/code-subagent.md` as the instruction contract for the `Code`
-  subagent
-- keep `subagents/confluence-subagent.md` as the instruction contract for the
-  `Confluence` subagent
-- keep `subagents/kubernetes-subagent.md` as the instruction contract for the
-  `Kubernetes` subagent
-- keep `subagents/pipeline-subagent.md` as the instruction contract for the
-  `Pipeline` subagent
-- keep `subagents/terraform-subagent.md` as the instruction contract for the
-  `Terraform` subagent
-- keep `subagents/jira-subagent.md` as the instruction contract for the
-  single-layer `Jira` subagent
+- keep `homelab-agent/homelab-agent.md` as the instruction contract for the
+  parent `Homelab` agent
+- keep `../subagents/code-subagent/code-subagent.md` as the instruction contract
+  for the `Code` subagent
+- keep `../subagents/confluence-subagent/confluence-subagent.md` as the
+  instruction contract for the `Confluence` subagent
+- keep `../subagents/kubernetes-subagent/kubernetes-subagent.md` as the
+  instruction contract for the `Kubernetes` subagent
+- keep `../subagents/pipeline-subagent/pipeline-subagent.md` as the instruction
+  contract for the `Pipeline` subagent
+- keep `../subagents/terraform-subagent/terraform-subagent.md` as the
+  instruction contract for the `Terraform` subagent
+- keep `../subagents/jira-subagent/jira-subagent.md` as the instruction contract
+  for the single-layer `Jira` subagent
 - use each agent's own documented schema as the source of truth for how that
   agent accepts input and returns output
 

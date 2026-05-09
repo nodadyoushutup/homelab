@@ -59,7 +59,7 @@ planning/**
 *.egg-info/
 
 # Exports
-exports/**
+data/exports/**
 
 # Packer generated artifacts/logs
 packer/output/**

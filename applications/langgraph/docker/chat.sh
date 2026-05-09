@@ -3,7 +3,8 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-APP_DIR="${LANGCHAIN_AGENT_CHAT_APP_DIR:-${SCRIPT_DIR}/../langchain-agent-chat}"
+ROOT_DIR="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
+APP_DIR="${LANGCHAIN_AGENT_CHAT_APP_DIR:-${ROOT_DIR}/../langchain-agent-chat}"
 HOST="${LANGCHAIN_AGENT_CHAT_HOST:-0.0.0.0}"
 PORT="${LANGCHAIN_AGENT_CHAT_PORT:-3000}"
 PUBLIC_API_URL="${LANGCHAIN_AGENT_CHAT_PUBLIC_API_URL:-}"

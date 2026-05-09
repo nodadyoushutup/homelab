@@ -1,0 +1,15 @@
+# Ignore rules for `docker build -f docker/Dockerfile` with context this repo's
+# `applications/langgraph/` root. Root `.dockerignore` symlinks to this file.
+.venv
+.venv/
+.runtime
+.runtime/
+**/.langgraph_api
+**/.langgraph_api/**
+**/__pycache__
+**/__pycache__/**
+**/*.pyc
+**/*.pyo
+**/*.pyd
+**/*.egg-info
+agent/**/.env

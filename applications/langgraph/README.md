@@ -15,14 +15,24 @@ workshopping:
 
 ```text
 applications/langgraph/
-├── src/
-│   ├── agents/
-│   │   ├── langgraph/
+├── agent/
+│   ├── subagents/
 │   │   ├── code-agent/
 │   │   └── jira-agent/
-│   └── base/
-│       └── homelab_langgraph/
-├── Dockerfile
+│   ├── agent.py
+│   ├── langgraph.json
+│   └── system_prompt.md
+├── docker/
+│   ├── Dockerfile
+│   ├── agent_server.sh
+│   ├── chat.sh
+│   └── .dockerignore
+├── framework/
+│   ├── __init__.py
+│   ├── agent_factories.py
+│   ├── configuration.py
+│   └── mcp_support.py
+├── .dockerignore -> docker/.dockerignore
 ├── pyproject.toml
 └── requirements.txt
 ```
@@ -31,9 +41,14 @@ Each deployable agent app has its own:
 
 - `langgraph.json`
 - `system_prompt.md`
-- `.env` or `.env.example`
 - optional `mcp.json`
 - agent-local skills
+
+Secrets and shared model defaults live only in the homelab root file
+`.secrets/.env`. Do not add `applications/langgraph/agent/.env` (or other
+per-app dotenv files); if an old `agent/.env` is still on disk, move any
+variables into `.secrets/.env` and remove it so nothing shadows the central
+file via the process environment.
 
 ## Current Intent
 
@@ -43,7 +58,7 @@ local LangChain Agent Chat dev server that proxies into that same local backend.
 
 What is already in place:
 
-- a single-deployment `langgraph.json` in `src/agents/langgraph` that
+- a single-deployment `langgraph.json` in `agent/` that
   exports the supervisor, code, and Jira graphs from one server
 - shared Python package for reusable helpers
 - supervisor-local delegation to compiled specialist graphs in the same
@@ -56,11 +71,12 @@ What is already in place:
 
 What is still expected before real deployment:
 
-- replace `.env.example` files with real `.env` files or deployment secrets
+- keep `.secrets/.env` at the homelab repo root filled in for local runs, or use
+  cluster secrets in Kubernetes instead of that file
 - replace `.mcp.json.example`-style placeholders with real `mcp.json` configs
 - install dependencies
-- run `./agent_server.sh` from `applications/langgraph/` for the default
-  `langgraph` backend, and run `./chat.sh` from the same directory for
+- run `./docker/agent_server.sh` from `applications/langgraph/` for the default
+  `langgraph` backend, and run `./docker/chat.sh` from the same directory for
   the paired LangChain Agent Chat local dev path, or run `langgraph dev` from an agent
   directory when you want a different agent boundary
 
@@ -68,10 +84,10 @@ What is still expected before real deployment:
 
 The scaffold now defaults all LangGraph apps to `openai:gpt-5.4`.
 
-Set `OPENAI_API_KEY` in each deployable agent's `.env` file, or inject it through
-your deployment environment. The agent-local `langgraph.json` files already point
-the runtime at each app's `.env`, so adding the key there is the simplest local
-setup path.
+Set `OPENAI_API_KEY` and related keys in `.secrets/.env` at the homelab repo root,
+or inject them through your deployment environment (for example the
+`langgraph-app-env` ExternalSecret in Kubernetes). Local `docker compose` and
+`docker/agent_server.sh` both read that file.
 
 ## Runtime
 
@@ -82,7 +98,8 @@ the Docker `CMD` from [`Dockerfile`](./Dockerfile):
 - `langgraph dev --host 0.0.0.0 --port 2024 --no-browser --no-reload --n-jobs-per-worker 8`
 
 The homelab hostname `https://langgraph.nodadyoushutup.com` is intended to
-front that Kubernetes deployment.
+front that Kubernetes deployment. See [`docker/README.md`](./docker/README.md)
+for build context and ignore-file notes.
 
 The deployment serves:
 
@@ -94,11 +111,11 @@ The split specialist agent directories still exist as the source of truth for
 their local skills, MCP config, and env defaults, but the main local bring-up
 path is now a single deployment.
 
-For quick local iteration, use [`agent_server.sh`](./agent_server.sh) for the
-backend and [`chat.sh`](./chat.sh) for the frontend. They run independently in
+For quick local iteration, use [`docker/agent_server.sh`](./docker/agent_server.sh) for the
+backend and [`docker/chat.sh`](./docker/chat.sh) for the frontend. They run independently in
 the foreground so each terminal shows the live logs directly while you manage
-restarts yourself. By default, `agent_server.sh` starts the `langgraph`
-agent boundary on `0.0.0.0:2124` with `8` jobs per worker, and `chat.sh` starts
+restarts yourself. By default, `docker/agent_server.sh` starts the `langgraph`
+agent boundary on `0.0.0.0:2124` with `8` jobs per worker, and `docker/chat.sh` starts
 the local LangChain Agent Chat app on `0.0.0.0:3000` pointing at
 `http://127.0.0.1:2124`.
 
@@ -112,14 +129,16 @@ Helpful overrides:
 - `LANGCHAIN_AGENT_CHAT_ASSISTANT_ID`: frontend default graph id override
 - `LANGCHAIN_AGENT_CHAT_LANGGRAPH_API_URL`: frontend proxy upstream override
 - `LANGCHAIN_AGENT_CHAT_CLEAR_PORT=0`: skip automatic frontend port cleanup
+- `HOMELAB_SECRETS_ENV`: absolute path to the dotenv file to use instead of
+  `<repo>/.secrets/.env` (same variable as ``framework.configuration``)
 
 Compatibility note:
-- `agent_server.sh` still accepts the previous `LANGGRAPH_DEBUG_*` variables as
+- `docker/agent_server.sh` still accepts the previous `LANGGRAPH_DEBUG_*` variables as
   fallbacks.
 
 The container image uses the same `8` jobs-per-worker default through
 `LANGGRAPH_N_JOBS_PER_WORKER`, so you can tune the deployed runtime without
-rebuilding the image.
+rebuilding the image. The image is defined in [`docker/Dockerfile`](./docker/Dockerfile).
 
 If you need a different agent boundary, run `langgraph dev` directly from that
 agent directory instead of reusing the shared helper.
@@ -158,7 +177,7 @@ Build context:
 
 Dockerfile path:
 
-- `applications/langgraph/Dockerfile`
+- `applications/langgraph/docker/Dockerfile`
 
 Published image:
 

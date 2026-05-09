@@ -2,15 +2,15 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from homelab_langgraph.agent_factories import create_supervisor_agent
-from homelab_langgraph.agent_factories import create_code_agent
-from homelab_langgraph.agent_factories import create_jira_agent
+from framework.agent_factories import create_supervisor_agent
+from framework.agent_factories import create_code_agent
+from framework.agent_factories import create_jira_agent
 
 
 APP_DIR = Path(__file__).resolve().parent
-AGENTS_DIR = APP_DIR.parent
-CODE_APP_DIR = AGENTS_DIR / "code-agent"
-JIRA_APP_DIR = AGENTS_DIR / "jira-agent"
+SUBAGENTS_DIR = APP_DIR / "subagents"
+CODE_APP_DIR = SUBAGENTS_DIR / "code-agent"
+JIRA_APP_DIR = SUBAGENTS_DIR / "jira-agent"
 
 code_agent = create_code_agent(CODE_APP_DIR)
 jira_agent = create_jira_agent(JIRA_APP_DIR)

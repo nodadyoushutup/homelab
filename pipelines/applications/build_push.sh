@@ -133,7 +133,7 @@ resolve_build_target() {
     langgraph)
       IMAGE_NAME="langgraph"
       DOCKER_CONTEXT="applications/langgraph"
-      DOCKERFILE="applications/langgraph/Dockerfile"
+      DOCKERFILE="applications/langgraph/docker/Dockerfile"
       SUPPORTED_PLATFORMS="linux/amd64"
       BUILD_STRATEGY="direct"
       ;;

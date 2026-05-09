@@ -7,8 +7,20 @@ from pathlib import Path
 from dotenv import dotenv_values
 
 
-LANGGRAPH_ROOT = Path(__file__).resolve().parents[3]
-DEFAULT_REPO_ROOT = Path("/mnt/eapp/code/homelab")
+LANGGRAPH_ROOT = Path(__file__).resolve().parents[1]
+
+
+def default_repo_root() -> Path:
+    """Infer homelab repo root from ``applications/langgraph`` layout."""
+    return LANGGRAPH_ROOT.parent.parent.resolve()
+
+
+def secrets_env_path() -> Path:
+    """Homelab-wide secrets file (not per-agent ``.env``)."""
+    override = os.environ.get("HOMELAB_SECRETS_ENV")
+    if override:
+        return Path(override).expanduser().resolve()
+    return (default_repo_root() / ".secrets" / ".env").resolve()
 
 
 def load_env_file(path: Path) -> dict[str, str]:
@@ -20,9 +32,15 @@ def load_env_file(path: Path) -> dict[str, str]:
 
 
 def merged_settings(app_dir: Path, *extra_env_files: Path) -> dict[str, str]:
-    """Merge local env files with the process environment."""
+    """Merge homelab secrets, optional extra env files, then the process environment.
+
+    ``app_dir`` is retained for call-site compatibility; configuration is loaded from
+    ``secrets_env_path()`` (default ``<repo>/.secrets/.env``) instead of per-agent
+    ``.env`` files.
+    """
+    _ = app_dir
     merged: dict[str, str] = {}
-    merged.update(load_env_file(app_dir / ".env"))
+    merged.update(load_env_file(secrets_env_path()))
     for env_file in extra_env_files:
         merged.update(load_env_file(env_file))
     merged.update({key: value for key, value in os.environ.items() if value is not None})
@@ -61,10 +79,11 @@ def split_csv(value: str | None) -> list[str]:
 
 def resolve_repo_root(configured_path: str | None = None) -> Path:
     """Resolve the repository root used for repo-scoped filesystem access."""
+    root = default_repo_root()
     if not configured_path:
-        return DEFAULT_REPO_ROOT
+        return root
 
     path = Path(configured_path).expanduser()
     if path.is_absolute():
         return path.resolve()
-    return (DEFAULT_REPO_ROOT / path).resolve()
+    return (root / path).resolve()

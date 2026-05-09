@@ -6,9 +6,13 @@ services:
     pull_policy: never
     build:
       context: ../applications/langgraph
-      dockerfile: Dockerfile
+      dockerfile: docker/Dockerfile
+    # Override stale image WorkingDir (e.g. /app/langgraph/apps/...): the OCI
+    # runtime mkdirs cwd on start; NFS root_squash makes that fail for root.
+    working_dir: /app/langgraph/agent
+    env_file:
+      - ../.secrets/.env
     environment:
-      OPENAI_API_KEY: ${OPENAI_API_KEY}
       CODE_REPOSITORY_ROOT: /mnt/eapp/code/homelab
       PYTHONDONTWRITEBYTECODE: "1"
       PYTHONUNBUFFERED: "1"
@@ -17,7 +21,7 @@ services:
       - "2124:2024"
     volumes:
       - ../applications/langgraph:/app/langgraph
-      - langgraph_state:/app/langgraph/src/agents/langgraph/.langgraph_api
+      - langgraph_state:/app/langgraph/agent/.langgraph_api
 
   langchain-agent-chat-dev:
     image: homelab/langchain-agent-chat:latest

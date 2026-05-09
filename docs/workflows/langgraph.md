@@ -10,8 +10,9 @@ rules.
 
 Use this workflow for:
 
-- changes under `applications/langgraph/src/base/`
-- changes to deployable agent configs under `applications/langgraph/src/agents/*/`
+- changes under `applications/langgraph/framework/`
+- changes to deployable agent configs under `applications/langgraph/agent/`
+  and `applications/langgraph/agent/subagents/*/`
 - changes to agent-local or subagent-local skills
 - changes to agent-local or subagent-local MCP wiring
 - changes to the top-level `docker/` LangGraph dev stack
@@ -27,8 +28,9 @@ When a task changes the LangGraph implementation:
    - skills
    - MCP wiring
 2. read `docs/rules/langgraph.md` before editing
-3. keep shared code in `applications/langgraph/src/base/` and agent
-   entrypoints/configs in `applications/langgraph/src/agents/<agent-name>/`
+3. keep shared code in `applications/langgraph/framework/` and the
+   default Homelab agent boundary under `applications/langgraph/agent/`,
+   with specialist directories under `applications/langgraph/agent/subagents/`
 4. decide whether the target app should expose:
    - one graph
    - multiple sibling graphs in one deployment
@@ -40,7 +42,8 @@ When a task changes the LangGraph implementation:
    - add `agent.py`
    - add `langgraph.json`
    - add `system_prompt.md`
-   - add `.env.example`
+   - document any new settings in the homelab ``.secrets/.env`` pattern (see
+     ``.secrets/.env.example`` when present); do not add per-agent ``.env`` files
 6. if the task adds a new internal Deep Agents subagent:
    - add its task-specific config directory inside the owning app
    - add `system_prompt.md`
@@ -59,7 +62,7 @@ When a task changes the LangGraph implementation:
      tree
 8. if the task changes one app from a single graph to multiple sibling graphs:
    - keep those graph exports together in that app's `langgraph.json`
-   - keep graph factory code in shared `applications/langgraph/src/` modules
+   - keep graph factory code in shared `applications/langgraph/framework/` modules
      or the app's entrypoint as appropriate
    - prefer in-process composition before adding remote transport
    - if you intentionally split a formerly local specialist into a remote app,
@@ -85,20 +88,20 @@ When a task changes the LangGraph implementation:
 14. if the task also updates the default deployed Homelab runtime manifests:
    - keep the Kubernetes app family under `kubernetes/langgraph/`
    - keep the launched LangGraph agent boundary under
-     `applications/langgraph/src/agents/langgraph/`
+     `applications/langgraph/agent/`
 
 ## Validation
 
 After changing the LangGraph scaffold:
 
-1. run a syntax check such as `python3 -m compileall applications/langgraph`
+1. run a syntax check such as
+   `python3 -m compileall applications/langgraph/agent applications/langgraph/framework`
 2. validate any `langgraph.json` files you changed
 3. if dependencies are installed, start the target app locally from its app
-   directory with `langgraph dev`, or use
-   `applications/langgraph/agent_server.sh` for the default
-   `langgraph` backend and `applications/langgraph/chat.sh` for the
+   directory with `langgraph dev`, or use `applications/langgraph/docker/agent_server.sh`
+   for the default `langgraph` backend and `applications/langgraph/docker/chat.sh` for the
    paired local LangChain Agent Chat app when you are intentionally testing that local
-   dev path
+   dev path (ensure ``.secrets/.env`` exists at the homelab repo root for those helpers)
 4. if the change touches supervisor routing, verify that code and filesystem
    questions still delegate to the `Code` specialist
 5. if the change touches repo-backed filesystem MCP usage, verify that the
@@ -113,12 +116,13 @@ After changing the LangGraph scaffold:
 
 Use this rough pattern:
 
-- `applications/langgraph/src/base/`: shared package and reusable helpers
-- `applications/langgraph/src/agents/<deployable-agent>/`: one deployable agent
+- `applications/langgraph/framework/`: shared Python package (`import framework`)
+  and reusable helpers
+- `applications/langgraph/agent/`: default Homelab deployable agent
   boundary, which may expose one graph or multiple sibling graphs
-- `applications/langgraph/src/agents/<deployable-agent>/subagents/<subagent>/`:
-  config, skills, and MCP wiring that belong only to an internal Deep Agents
-  subagent
+- `applications/langgraph/agent/subagents/<specialist>/`: specialist
+  prompts, skills, MCP wiring, and optional standalone `langgraph dev` configs
+  for the co-deployed Code and Jira graphs
 
 Do not move `langgraph.json` up to the monorepo root just to make local running
 feel simpler. Keep each agent independently deployable.

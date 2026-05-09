@@ -1,4 +1,4 @@
-"""Shared package for the LangGraph homelab scaffold."""
+"""Shared LangGraph helpers for this application (import as `framework`)."""
 
 __all__ = [
     "agent_factories",
