@@ -66,5 +66,9 @@ url = "https://mcp.google-workspace.nodadyoushutup.com/mcp"
 url = "https://mcp.bash-pipeline.nodadyoushutup.com/mcp"
 http_headers = { "x-workspace-root" = "/mnt/eapp/code/homelab", "x-homelab-workspace" = "homelab" }
 
+[mcp_servers.mcp_rag]
+url = "https://mcp.rag.nodadyoushutup.com/mcp"
+env_http_headers = { "x-api-key" = "MCP_RAG_API_KEY" }
+
 [mcp_servers.mcp_terraform]
 url = "https://mcp.terraform.nodadyoushutup.com/mcp"

@@ -41,3 +41,7 @@ docs to check before doing substantive work.
   `mcp_filesystem` MCP server once it is available in project config.
   Use direct shell or local file-edit access only to bootstrap, repair, or
   validate that MCP path.
+- Repo RAG MCP URL is `https://mcp.rag.nodadyoushutup.com/mcp`. Cursor project
+  `.cursor/mcp.json` includes the URL; set `x-api-key` matching `MCP_RAG_API_KEY`
+  via User-level Cursor MCP/`~/.cursor/mcp.json` when the Swarm service enforces auth.
+  LangGraph fills the header from `.secrets/.env`; Codex uses `env_http_headers` in `.codex/config.toml`.

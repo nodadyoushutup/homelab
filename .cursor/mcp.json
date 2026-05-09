@@ -5,6 +5,9 @@
     },
     "mcp_playwright": {
       "url": "https://mcp.playwright.nodadyoushutup.com/mcp"
+    },
+    "mcp_rag": {
+      "url": "https://mcp.rag.nodadyoushutup.com/mcp"
     }
   }
 }

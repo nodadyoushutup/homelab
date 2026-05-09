@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 import threading
 from copy import deepcopy
 from pathlib import Path
@@ -118,8 +119,24 @@ def _normalize_server_config(raw_servers: dict[str, dict[str, Any]]) -> dict[str
                 "transport": "http" if transport != "sse" else "sse",
                 "url": url,
             }
-            if server_config.get("headers"):
-                normalized[server_name]["headers"] = server_config["headers"]
+            headers: dict[str, str] = {}
+            raw_headers = server_config.get("headers")
+            if isinstance(raw_headers, dict):
+                headers = {
+                    str(name): ""
+                    if value is None
+                    else value
+                    if isinstance(value, str)
+                    else str(value)
+                    for name, value in raw_headers.items()
+                }
+            inject_env = server_config.get("x_api_key_from_env")
+            if isinstance(inject_env, str) and inject_env.strip():
+                secret = os.getenv(inject_env.strip(), "").strip()
+                if secret:
+                    headers.setdefault("x-api-key", secret)
+            if headers:
+                normalized[server_name]["headers"] = headers
         elif transport == "stdio":
             command = server_config.get("command")
             if not command:
