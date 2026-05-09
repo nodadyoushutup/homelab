@@ -24,6 +24,8 @@ Images: publish with **`.github/workflows/docker_build_push.yml`** (`build_targe
 
 Operational note: `tree-sitter-dockerfile` is not installed as a runtime dependency because it does not publish usable wheels on **linux/arm64**; Dockerfile ingestion falls back to other chunking strategies when the grammar is unavailable.
 
+DNS/TLS parity with **`chromadb`**: **`terraform/remote/cloudflare/config`** (`/mnt/eapp/config/cloudflare/config.tfvars`) holds **`rag-engine.nodadyoushutup.com`** and **`mcp.rag.nodadyoushutup.com`** **`A`** records → **`192.168.1.120`**. **`terraform/swarm/nginx_proxy_manager/config`** (`nginx-proxy-manager/config.tfvars`) terminates HTTPS and forwards to **`192.168.1.120:9015`** (`GET /healthz`, `POST /v1/query`, …) and **`:9016`** (Cursor Streamable MCP: **`https://mcp.rag.nodadyoushutup.com/mcp`**). The zone **`*.nodadyoushutup.com`** wildcard already pointed at **`192.168.1.120`**; explicit names document RAG URLs and isolate them from wildcard changes.
+
 ## Environment variables
 
 All values belong in **`.secrets/.env`** with matching keys documented in **`.secrets/.env.example`** (no Compose-time `${VAR:-default}` pattern in `docker/docker-compose.yaml`).
