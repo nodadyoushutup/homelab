@@ -91,7 +91,7 @@ resource "docker_service" "rag_engine" {
   name = local.service_name
 
   dynamic "auth" {
-    for_each = var.registry_auth == null ? [] : [var.registry_auth]
+    for_each = try(var.provider_config.registry_auth, null) == null ? [] : [var.provider_config.registry_auth]
 
     content {
       server_address = try(auth.value.address, "ghcr.io")

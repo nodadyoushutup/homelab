@@ -20,7 +20,7 @@ Published ports (host defaults in this repo): **`chromadb` → 8010** (mapped to
 
 Stacks live under **`terraform/swarm/rag-engine/app`** and **`terraform/swarm/mcp-rag/app`**. Wrapper scripts: **`pipelines/terraform/swarm/rag-engine/app.sh`** and **`pipelines/terraform/swarm/mcp-rag/app.sh`** (same pattern as other Swarm apps; tfvars typically under `/mnt/eapp/config/<name>/app.tfvars`).
 
-Images: publish with **`.github/workflows/docker_build_push.yml`** (`build_target` **`rag-engine`** or **`mcp-rag`**; **`target_registry`** **`github`** or **`both`** for GHCR under your GitHub username; **`arm64`** when possible). Point **`image_reference`** in tfvars at the tag you pushed (for example **`ghcr.io/nodadyoushutup/rag-engine:latest`**).
+Images: publish with **`.github/workflows/docker_build_push.yml`** (`build_target` **`rag-engine`** or **`mcp-rag`**; **`target_registry`** **`github`** or **`both`** for GHCR under your GitHub username; **`arm64`** when possible). Point **`image_reference`** in tfvars at the tag you pushed (for example **`ghcr.io/nodadyoushutup/rag-engine:latest`**). Private GHCR pulls: add **`provider_config.registry_auth`** `{ address?, username, password }` (same nesting as **`terraform/swarm/gha-runner-arm64`** / **`chromadb`**).
 
 Operational note: `tree-sitter-dockerfile` is not installed as a runtime dependency because it does not publish usable wheels on **linux/arm64**; Dockerfile ingestion falls back to other chunking strategies when the grammar is unavailable.
 

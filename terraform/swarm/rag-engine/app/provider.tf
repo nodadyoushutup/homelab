@@ -16,7 +16,7 @@ provider "docker" {
   ssh_opts = var.provider_config.docker.ssh_opts
 
   dynamic "registry_auth" {
-    for_each = var.registry_auth == null ? [] : [var.registry_auth]
+    for_each = try(var.provider_config.registry_auth, null) == null ? [] : [var.provider_config.registry_auth]
 
     content {
       address  = try(registry_auth.value.address, "ghcr.io")

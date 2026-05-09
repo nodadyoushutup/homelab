@@ -1,13 +1,9 @@
 variable "provider_config" {
-  description = "Provider configuration map for Docker (host + optional ssh opts)."
+  description = <<-EOT
+    Docker remote (host + ssh_opts). Optional nested registry_auth { address?, username, password }
+    feeds both the docker provider and the Swarm service image pull — same pattern as gha-runner-arm64 / chromadb.
+  EOT
   type        = any
-}
-
-variable "registry_auth" {
-  description = "Optional registry auth for pulling the service image."
-  type        = any
-  default     = null
-  sensitive   = true
 }
 
 variable "image_reference" {

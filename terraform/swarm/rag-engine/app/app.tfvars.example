@@ -4,8 +4,10 @@
 # `arm64` or `both`. Typical GHCR refs: `ghcr.io/<owner>/rag-engine:latest` or
 # `:<version>` / `:<version>-arm64`. Harbor (if mirrored): mirror path in Harbor.
 #
-# Private GHCR: set registry_auth with address `ghcr.io`, GitHub username, and a
-# classic PAT or fine-grained token with read:packages.
+# Private GHCR: add `registry_auth` inside `provider_config` below (same shape as
+# chromadb / gha-runner-arm64). Omit `address` to default `ghcr.io`.
+#
+#   provider_config = { docker = {…}, registry_auth = { username = "…", password = "…" } }
 
 provider_config = {
   docker = {
@@ -16,6 +18,8 @@ provider_config = {
       "-i", "/mnt/eapp/config/.ssh/id_ed25519",
     ]
   }
+
+  # registry_auth = { username = "…", password = "…" }
 }
 
 image_reference     = "ghcr.io/nodadyoushutup/rag-engine:latest"

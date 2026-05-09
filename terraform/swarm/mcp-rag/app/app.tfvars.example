@@ -1,5 +1,8 @@
 # See `rag-engine/app/app.tfvars.example` for the GitHub Actions build/push flow.
 # Deploy `rag-engine` before or with `mcp-rag` so the `rag-engine` overlay exists.
+#
+# Optional private registry: nest `registry_auth` under `provider_config` (same as
+# chromadb / gha-runner). Default `address` when omitted is Harbor for this image.
 
 provider_config = {
   docker = {
@@ -10,6 +13,8 @@ provider_config = {
       "-i", "/mnt/eapp/config/.ssh/id_ed25519",
     ]
   }
+
+  # registry_auth = { username = "robot$harbor", password = "…" }
 }
 
 image_reference = "harbor.nodadyoushutup.com/mcp-rag/mcp-rag:latest"
