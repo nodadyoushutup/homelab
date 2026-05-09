@@ -13,7 +13,7 @@ variable "registry_auth" {
 variable "image_reference" {
   description = "RAG engine image to run."
   type        = string
-  default     = "harbor.nodadyoushutup.com/rag-engine/rag-engine:latest"
+  default     = "ghcr.io/nodadyoushutup/rag-engine:latest"
 }
 
 variable "env_file_path" {

@@ -94,7 +94,7 @@ resource "docker_service" "rag_engine" {
     for_each = var.registry_auth == null ? [] : [var.registry_auth]
 
     content {
-      server_address = try(auth.value.address, "harbor.nodadyoushutup.com")
+      server_address = try(auth.value.address, "ghcr.io")
       username       = auth.value.username
       password       = auth.value.password
     }
