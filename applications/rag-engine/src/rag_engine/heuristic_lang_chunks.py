@@ -4,7 +4,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from rag_worker.structured_chunks import _split_oversized
+from rag_engine.structured_chunks import _split_oversized
 
 _DART_START = re.compile(
     r"(?m)^(?:@[^\n]+\n(?:\s*@[^\n]+\n)*)?"

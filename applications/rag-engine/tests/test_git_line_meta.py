@@ -1,4 +1,4 @@
-"""Tests for ``rag_worker.git_line_meta``."""
+"""Tests for ``rag_engine.git_line_meta``."""
 from __future__ import annotations
 
 import sys
@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1] / "src"
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from rag_worker import git_line_meta  # noqa: E402
+from rag_engine import git_line_meta  # noqa: E402
 
 
 class TestLineRangeApplicable(unittest.TestCase):

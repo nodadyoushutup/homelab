@@ -9,8 +9,8 @@ from typing import Any
 
 from lxml import etree
 
-from rag_worker.structured_chunks import StructuredChunk, _split_oversized
-from rag_worker.tabular_chunks import md_table
+from rag_engine.structured_chunks import StructuredChunk, _split_oversized
+from rag_engine.tabular_chunks import md_table
 
 log = logging.getLogger(__name__)
 

@@ -1,6 +1,6 @@
 # RAG in this repository (reference)
 
-Human-facing **system knowledge** for the semantic index: what it is, what gets ingested, how embeddings and storage work, and how services are run. Use this when onboarding, changing `rag-worker`, or reasoning about retrieval behavior.
+Human-facing **system knowledge** for the semantic index: what it is, what gets ingested, how embeddings and storage work, and how services are run. Use this when onboarding, changing `rag-engine`, or reasoning about retrieval behavior.
 
 **Not in this folder:** prompts, routing policy, or tool-usage rules for the Google ADK RAG sub-agent. Those live next to the agent code:
 
@@ -21,6 +21,6 @@ Human-facing **system knowledge** for the semantic index: what it is, what gets 
 ## Quick links
 
 - MCP usage (ports, headers, troubleshooting): [docs/mcp/rag.md](../mcp/rag.md)
-- Worker package summary: [docs/applications/rag-worker.md](../applications/rag-worker.md)
+- Worker package summary: [docs/applications/rag-engine.md](../applications/rag-engine.md)
 - Structured chunking checklist: [rag-structured-file-ingest-roadmap.md](../workflows/development/rag-structured-file-ingest-roadmap.md)
 - Agent + MCP integration phases: [rag-agent-mcp-integration-roadmap.md](../workflows/development/rag-agent-mcp-integration-roadmap.md)

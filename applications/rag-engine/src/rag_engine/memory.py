@@ -22,7 +22,7 @@ from typing import Any, Iterable
 import chromadb
 from google import genai
 
-from rag_worker.embed_google import build_genai_client, embed_batch
+from rag_engine.embed_google import build_genai_client, embed_batch
 
 log = logging.getLogger(__name__)
 

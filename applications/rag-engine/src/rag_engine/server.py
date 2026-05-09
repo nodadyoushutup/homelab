@@ -10,16 +10,16 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse
 from starlette.routing import Route
 
-from rag_worker.embed_google import build_genai_client
-from rag_worker.memory import (
+from rag_engine.embed_google import build_genai_client
+from rag_engine.memory import (
     forget_memory,
     list_stale_memories,
     recall_memory,
     save_memory,
     sweep_expired,
 )
-from rag_worker.pipeline import chroma_repo_collection, prune_orphan_paths, run_embed_job
-from rag_worker.query import run_query
+from rag_engine.pipeline import chroma_repo_collection, prune_orphan_paths, run_embed_job
+from rag_engine.query import run_query
 
 log = logging.getLogger(__name__)
 
@@ -34,8 +34,8 @@ def _configure_logging() -> None:
 
 _configure_logging()
 
-if not (os.getenv("RAG_WORKER_API_KEY") or "").strip():
-    log.warning("RAG_WORKER_API_KEY is empty; POST /v1/embed-commit accepts unauthenticated requests")
+if not (os.getenv("RAG_ENGINE_API_KEY") or "").strip():
+    log.warning("RAG_ENGINE_API_KEY is empty; POST /v1/embed-commit accepts unauthenticated requests")
 
 
 async def healthz(_: Request) -> JSONResponse:
@@ -43,7 +43,7 @@ async def healthz(_: Request) -> JSONResponse:
 
 
 async def rag_query(request: Request) -> JSONResponse:
-    expected = (os.getenv("RAG_WORKER_API_KEY") or "").strip()
+    expected = (os.getenv("RAG_ENGINE_API_KEY") or "").strip()
     if expected:
         got = (request.headers.get("x-api-key") or "").strip()
         if not hmac.compare_digest(got, expected):
@@ -87,7 +87,7 @@ async def rag_query(request: Request) -> JSONResponse:
 
 
 async def embed_commit(request: Request) -> JSONResponse:
-    expected = (os.getenv("RAG_WORKER_API_KEY") or "").strip()
+    expected = (os.getenv("RAG_ENGINE_API_KEY") or "").strip()
     if expected:
         got = (request.headers.get("x-api-key") or "").strip()
         if not hmac.compare_digest(got, expected):
@@ -114,7 +114,7 @@ async def embed_commit(request: Request) -> JSONResponse:
 
 
 async def reconcile_orphans(request: Request) -> JSONResponse:
-    expected = (os.getenv("RAG_WORKER_API_KEY") or "").strip()
+    expected = (os.getenv("RAG_ENGINE_API_KEY") or "").strip()
     if expected:
         got = (request.headers.get("x-api-key") or "").strip()
         if not hmac.compare_digest(got, expected):
@@ -140,7 +140,7 @@ async def reconcile_orphans(request: Request) -> JSONResponse:
 
 
 def _check_api_key(request: Request) -> JSONResponse | None:
-    expected = (os.getenv("RAG_WORKER_API_KEY") or "").strip()
+    expected = (os.getenv("RAG_ENGINE_API_KEY") or "").strip()
     if not expected:
         return None
     got = (request.headers.get("x-api-key") or "").strip()

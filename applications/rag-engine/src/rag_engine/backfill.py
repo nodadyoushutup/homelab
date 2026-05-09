@@ -1,6 +1,6 @@
 """One-shot filesystem walk to populate Chroma (legacy / full index).
 
-Run inside the rag-worker image (same env as the HTTP server), e.g.:
+Run inside the rag-engine image (same env as the HTTP server), e.g.:
 
   ./scripts/rag/backfill.sh
   ./scripts/rag/backfill.sh --dry-run
@@ -24,9 +24,9 @@ import subprocess
 import sys
 from typing import Any
 
-from rag_worker.embed_google import build_genai_client
-from rag_worker.path_rules import load_exclude_segments
-from rag_worker.pipeline import (
+from rag_engine.embed_google import build_genai_client
+from rag_engine.path_rules import load_exclude_segments
+from rag_engine.pipeline import (
     _allowed_prefixes,
     _collection,
     collect_backfill_relative_paths,
@@ -214,7 +214,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
     _configure_logging()
-    log = logging.getLogger("rag_worker.backfill")
+    log = logging.getLogger("rag_engine.backfill")
 
     if args.prune_orphans_only and args.prune_orphans:
         log.warning("backfill: --prune-orphans-only wins over --prune-orphans")

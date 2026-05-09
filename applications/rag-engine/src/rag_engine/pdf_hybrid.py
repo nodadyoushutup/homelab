@@ -8,8 +8,8 @@ import re
 from difflib import SequenceMatcher
 from typing import Any
 
-from rag_worker.chunking import chunk_text
-from rag_worker.structured_chunks import StructuredChunk
+from rag_engine.chunking import chunk_text
+from rag_engine.structured_chunks import StructuredChunk
 
 log = logging.getLogger(__name__)
 

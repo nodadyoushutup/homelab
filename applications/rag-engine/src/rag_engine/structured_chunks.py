@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from rag_worker.chunking import chunk_text
+from rag_engine.chunking import chunk_text
 
 log = logging.getLogger(__name__)
 
@@ -866,7 +866,7 @@ def chunks_xml(rel_path: str, source: str, *, max_chars: int, overlap: int) -> l
 
 
 def chunks_javascript(rel_path: str, source: str, *, max_chars: int, overlap: int) -> list[StructuredChunk]:
-    from rag_worker.tree_sitter_languages import chunks_javascript_ts
+    from rag_engine.tree_sitter_languages import chunks_javascript_ts
 
     return chunks_javascript_ts(rel_path, source, max_chars=max_chars, overlap=overlap)
 
@@ -998,7 +998,7 @@ def chunks_json(rel_path: str, source: str, *, max_chars: int, overlap: int) -> 
 
 def build_structured_chunks(rel_path: str, source: str) -> tuple[str | None, list[StructuredChunk]]:
     """Return (chunk_strategy or None, chunks). Empty list means caller should use char fallback."""
-    from rag_worker import tree_sitter_languages as tsl
+    from rag_engine import tree_sitter_languages as tsl
 
     strat = structured_strategy_for_path(rel_path)
     if not strat:
@@ -1024,7 +1024,7 @@ def build_structured_chunks(rel_path: str, source: str) -> tuple[str | None, lis
         chunks = tsl.chunks_ipynb(rel_path, source, max_chars=max_chars, overlap=overlap)
         return ("ast_ipynb", chunks) if chunks else (None, [])
     if strat == "ast_csv":
-        from rag_worker.tabular_chunks import chunks_csv
+        from rag_engine.tabular_chunks import chunks_csv
 
         chunks = chunks_csv(rel_path, source, max_chars=max_chars, overlap=overlap)
         return ("ast_csv", chunks) if chunks else (None, [])
@@ -1106,22 +1106,22 @@ def build_structured_chunks(rel_path: str, source: str) -> tuple[str | None, lis
         )
         return ("ast_less", chunks) if chunks else (None, [])
     if strat == "ast_dart":
-        from rag_worker.heuristic_lang_chunks import chunks_dart
+        from rag_engine.heuristic_lang_chunks import chunks_dart
 
         chunks = chunks_dart(rel_path, source, max_chars=max_chars, overlap=overlap)
         return ("ast_dart", chunks) if chunks else (None, [])
     if strat == "ast_clojure":
-        from rag_worker.heuristic_lang_chunks import chunks_clojure
+        from rag_engine.heuristic_lang_chunks import chunks_clojure
 
         chunks = chunks_clojure(rel_path, source, max_chars=max_chars, overlap=overlap)
         return ("ast_clojure", chunks) if chunks else (None, [])
     if strat == "ast_fsharp":
-        from rag_worker.heuristic_lang_chunks import chunks_fsharp
+        from rag_engine.heuristic_lang_chunks import chunks_fsharp
 
         chunks = chunks_fsharp(rel_path, source, max_chars=max_chars, overlap=overlap)
         return ("ast_fsharp", chunks) if chunks else (None, [])
     if strat == "ast_vbnet":
-        from rag_worker.heuristic_lang_chunks import chunks_vbnet
+        from rag_engine.heuristic_lang_chunks import chunks_vbnet
 
         chunks = chunks_vbnet(rel_path, source, max_chars=max_chars, overlap=overlap)
         return ("ast_vbnet", chunks) if chunks else (None, [])

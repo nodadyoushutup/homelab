@@ -6,7 +6,7 @@ from typing import Any
 
 from google import genai
 
-from rag_worker.embed_google import embed_batch
+from rag_engine.embed_google import embed_batch
 
 log = logging.getLogger(__name__)
 

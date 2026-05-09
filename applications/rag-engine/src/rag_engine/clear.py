@@ -1,6 +1,6 @@
 """Wipe RAG vectors out of Chroma.
 
-Run inside the rag-worker image (same env as the HTTP server), e.g.:
+Run inside the rag-engine image (same env as the HTTP server), e.g.:
 
   ./scripts/rag/clear.sh                    # drop the configured collection
   ./scripts/rag/clear.sh --all-collections  # drop every collection on the server
@@ -93,7 +93,7 @@ def _delete_collections(
     client: chromadb.api.client.Client,
     names: list[str],
 ) -> dict[str, Any]:
-    log = logging.getLogger("rag_worker.clear")
+    log = logging.getLogger("rag_engine.clear")
     deleted: list[str] = []
     errors: list[str] = []
     for name in names:
@@ -132,7 +132,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
     _configure_logging()
-    log = logging.getLogger("rag_worker.clear")
+    log = logging.getLogger("rag_engine.clear")
 
     host = (os.getenv("RAG_CHROMA_HOST") or "chromadb").strip()
     port = int((os.getenv("RAG_CHROMA_PORT") or "8000").strip())

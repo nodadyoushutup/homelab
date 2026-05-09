@@ -29,8 +29,8 @@ if str(ROOT_DIR) not in sys.path:
 log = logging.getLogger(__name__)
 
 MCP_API_KEY_ENV = "MCP_RAG_API_KEY"
-WORKER_BASE_ENV = "RAG_WORKER_BASE_URL"
-WORKER_KEY_ENV = "RAG_WORKER_API_KEY"
+WORKER_BASE_ENV = "RAG_ENGINE_BASE_URL"
+WORKER_KEY_ENV = "RAG_ENGINE_API_KEY"
 DEFAULT_MCP_API_KEY_HEADER = "x-api-key"
 STREAMABLE_HTTP_PATH = "/mcp"
 WORKER_QUERY_PATH = "/v1/query"
@@ -130,8 +130,8 @@ def _worker_base_url() -> str:
     raw = (os.getenv(WORKER_BASE_ENV) or "").strip().rstrip("/")
     if not raw:
         raise RuntimeError(
-            f"Missing {WORKER_BASE_ENV}. Example: http://rag-worker:8080 (Compose) or "
-            "http://127.0.0.1:9015 (host to published rag-worker port)."
+            f"Missing {WORKER_BASE_ENV}. Example: http://rag-engine:8080 (Compose) or "
+            "http://127.0.0.1:9015 (host to published rag-engine port)."
         )
     return raw
 
@@ -149,7 +149,7 @@ def _post_worker(*, path: str, body: dict[str, Any]) -> dict[str, Any]:
     if key:
         headers["x-api-key"] = key
     req = urllib.request.Request(url, data=payload, headers=headers, method="POST")
-    timeout = float(os.getenv("MCP_RAG_WORKER_TIMEOUT_SEC") or DEFAULT_REQUEST_TIMEOUT_SEC)
+    timeout = float(os.getenv("MCP_RAG_ENGINE_TIMEOUT_SEC") or DEFAULT_REQUEST_TIMEOUT_SEC)
     try:
         with urllib.request.urlopen(req, timeout=timeout) as resp:
             raw_text = resp.read().decode("utf-8", errors="replace")
@@ -162,24 +162,24 @@ def _post_worker(*, path: str, body: dict[str, Any]) -> dict[str, Any]:
         if exc.code == 401:
             return {
                 "error": "worker_unauthorized",
-                "message": "RAG worker rejected the API key. Align RAG_WORKER_API_KEY with the worker.",
+                "message": "RAG engine rejected the API key. Align RAG_ENGINE_API_KEY with the worker.",
                 "detail": detail[:2000],
             }
         if exc.code == 400:
             return {
                 "error": "worker_bad_request",
-                "message": f"RAG worker returned 400 from {path} (invalid input).",
+                "message": f"RAG engine returned 400 from {path} (invalid input).",
                 "detail": detail[:2000],
             }
         return {
             "error": "worker_http_error",
-            "message": f"RAG worker HTTP {exc.code} from {path}",
+            "message": f"RAG engine HTTP {exc.code} from {path}",
             "detail": detail[:2000],
         }
     except urllib.error.URLError as exc:
         return {
             "error": "worker_unreachable",
-            "message": f"Could not reach RAG worker at {base}: {exc}",
+            "message": f"Could not reach RAG engine at {base}: {exc}",
         }
     except json.JSONDecodeError as exc:
         return {"error": "worker_invalid_json", "message": str(exc)}
@@ -225,7 +225,7 @@ def create_mcp() -> FastMCP:
         name="mcp-rag",
         instructions=(
             "Thin MCP for the repository RAG index AND long-term agent memory. Calls the "
-            "rag-worker HTTP API so all reads/writes use the same embedding model as ingest "
+            "rag-engine HTTP API so all reads/writes use the same embedding model as ingest "
             "(not raw Chroma).\n\n"
             "Tools:\n"
             "- rag_search: semantic search over INDEXED REPO CODE/DOCS. Use for orientation "
@@ -263,7 +263,7 @@ def create_mcp() -> FastMCP:
         n_results: int = 20,
         where: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        """Semantic search over the indexed repository via rag-worker (Gemini embeddings + Chroma).
+        """Semantic search over the indexed repository via rag-engine (Gemini embeddings + Chroma).
 
         Use specific anchors (paths, symbols, Odoo model names like purchase.order, error strings).
         Use `where` only when narrowing by known metadata (see rag-agent-mcp-integration-roadmap).

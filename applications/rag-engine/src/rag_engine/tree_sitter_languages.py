@@ -6,7 +6,7 @@ import logging
 import re
 from typing import Any
 
-from rag_worker.structured_chunks import StructuredChunk, _build_header, _split_oversized
+from rag_engine.structured_chunks import StructuredChunk, _build_header, _split_oversized
 
 log = logging.getLogger(__name__)
 

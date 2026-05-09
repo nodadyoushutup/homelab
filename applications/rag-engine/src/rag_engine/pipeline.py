@@ -11,11 +11,11 @@ from typing import Any, Callable, TypeVar
 import chromadb
 import httpx
 
-from rag_worker.chunking import chunk_text
-from rag_worker.embed_google import build_genai_client, embed_batch
-from rag_worker.memory import mark_memories_stale_for_paths
-from rag_worker.path_rules import file_has_excluded_suffix, path_has_excluded_segment
-from rag_worker.office_chunks import (
+from rag_engine.chunking import chunk_text
+from rag_engine.embed_google import build_genai_client, embed_batch
+from rag_engine.memory import mark_memories_stale_for_paths
+from rag_engine.path_rules import file_has_excluded_suffix, path_has_excluded_segment
+from rag_engine.office_chunks import (
     build_docx_chunks,
     build_odt_chunks,
     build_pptx_chunks,
@@ -23,10 +23,10 @@ from rag_worker.office_chunks import (
     office_odt_profile,
     office_pptx_profile,
 )
-from rag_worker.pdf_hybrid import build_pdf_hybrid_chunks, pdf_ingest_profile
-from rag_worker.git_line_meta import GIT_LINE_META_VERSION, enrich_chunk_git_metadata
-from rag_worker.structured_chunks import build_structured_chunks, index_schema_version
-from rag_worker.tabular_chunks import build_xlsx_chunks, tabular_csv_profile, tabular_xlsx_profile
+from rag_engine.pdf_hybrid import build_pdf_hybrid_chunks, pdf_ingest_profile
+from rag_engine.git_line_meta import GIT_LINE_META_VERSION, enrich_chunk_git_metadata
+from rag_engine.structured_chunks import build_structured_chunks, index_schema_version
+from rag_engine.tabular_chunks import build_xlsx_chunks, tabular_csv_profile, tabular_xlsx_profile
 
 log = logging.getLogger(__name__)
 

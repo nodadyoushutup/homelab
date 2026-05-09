@@ -2,10 +2,10 @@
 
 ## Embedding model
 
-- Default embedding model id: **`RAG_EMBEDDING_MODEL`**, falling back to **`gemini-embedding-001`** (see `applications/rag-worker/src/rag_worker/server.py` for query defaults and `memory.py` for memory paths).
-- Client code uses **`google.genai`** and shared helpers in **`applications/rag-worker/src/rag_worker/embed_google.py`** (`build_genai_client`, `embed_batch`).
+- Default embedding model id: **`RAG_EMBEDDING_MODEL`**, falling back to **`gemini-embedding-001`** (see `applications/rag-engine/src/rag_engine/server.py` for query defaults and `memory.py` for memory paths).
+- Client code uses **`google.genai`** and shared helpers in **`applications/rag-engine/src/rag_engine/embed_google.py`** (`build_genai_client`, `embed_batch`).
 
-**Query path:** `run_query` in `query.py` embeds the user query with `embed_batch` using the same model name, then calls Chroma with `query_embeddings`. Mismatched models between ingest and query produce unreliable retrieval—hence the “always go through `rag-worker`” rule.
+**Query path:** `run_query` in `query.py` embeds the user query with `embed_batch` using the same model name, then calls Chroma with `query_embeddings`. Mismatched models between ingest and query produce unreliable retrieval—hence the “always go through `rag-engine`” rule.
 
 ## Chroma
 
