@@ -1,1 +1,1 @@
-"""RAG ingest worker: Google embeddings into ChromaDB."""
+"""RAG ingest engine: Google embeddings into ChromaDB."""

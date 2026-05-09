@@ -900,5 +900,5 @@ def sweep_expired(*, dry_run: bool = False, kinds: list[str] | None = None) -> d
 
 
 def build_default_genai_client() -> genai.Client:
-    """Convenience for callers that just want the same client the worker uses."""
+    """Convenience for callers that just want the same client the engine uses."""
     return build_genai_client()

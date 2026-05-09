@@ -17,8 +17,8 @@
 | Collection env | Default name | Contents |
 | --- | --- | --- |
 | `RAG_CHROMA_COLLECTION` | `repo_rag` | Repo corpus chunks (code, docs, PDFs, etc.) |
-| `RAG_MEMORY_EPISODIC_COLLECTION` | `memories_episodic` | Episodic memories (worker memory API) |
-| `RAG_MEMORY_DECLARATIVE_COLLECTION` | `memories_declarative` | Declarative memories (worker memory API) |
+| `RAG_MEMORY_EPISODIC_COLLECTION` | `memories_episodic` | Episodic memories (engine memory API) |
+| `RAG_MEMORY_DECLARATIVE_COLLECTION` | `memories_declarative` | Declarative memories (engine memory API) |
 
 Repo RAG and memory share the **same embedding stack**; they differ by **collection** and **document/metadata schema**.
 

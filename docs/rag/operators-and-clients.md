@@ -20,7 +20,7 @@ Published ports (host defaults in this repo): **`chromadb` → 8010** (mapped to
 
 All values belong in **`.secrets/.env`** with matching keys documented in **`.secrets/.env.example`** (no Compose-time `${VAR:-default}` pattern in `docker/docker-compose.yaml`).
 
-**Worker / Chroma / embed:** `RAG_CHROMA_HOST`, `RAG_CHROMA_PORT`, `RAG_CHROMA_COLLECTION`, `RAG_EMBEDDING_MODEL`, `RAG_ENGINE_API_KEY`, memory collection names, memory TTL and scoring tunables (`RAG_MEMORY_*` — see `.secrets/.env.example` and `docker/docker-compose.yaml` `rag-engine` service).
+**Engine / Chroma / embed:** `RAG_CHROMA_HOST`, `RAG_CHROMA_PORT`, `RAG_CHROMA_COLLECTION`, `RAG_EMBEDDING_MODEL`, `RAG_ENGINE_API_KEY`, memory collection names, memory TTL and scoring tunables (`RAG_MEMORY_*` — see `.secrets/.env.example` and `docker/docker-compose.yaml` `rag-engine` service).
 
 **Ingest scope:** `RAG_ALLOWED_PATH_PREFIXES`, and hook alignment `RAG_HOOK_INCLUDE_PREFIXES`.
 
@@ -40,6 +40,6 @@ Step-by-step MCP config, authentication headers, and troubleshooting table:
 
 ## Application-level doc
 
-Short pointer to the worker package layout:
+Short pointer to the engine package layout:
 
 - [docs/applications/rag-engine.md](../applications/rag-engine.md)
