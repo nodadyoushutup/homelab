@@ -252,7 +252,7 @@ def create_mcp() -> FastMCP:
         ),
         host=os.getenv("HOST", "0.0.0.0"),
         port=int(os.getenv("PORT", "8080")),
-        log_level=os.getenv("LOG_LEVEL", "INFO").upper(),
+        log_level=os.getenv("MCP_RAG_LOG_LEVEL", os.getenv("LOG_LEVEL", "INFO")).upper(),
         streamable_http_path=streamable_http_path,
         stateless_http=True,
     )
@@ -585,7 +585,7 @@ def _build_parser() -> argparse.ArgumentParser:
 
 def main(argv: Sequence[str] | None = None) -> int:
     logging.basicConfig(
-        level=os.getenv("LOG_LEVEL", "INFO").upper(),
+        level=os.getenv("MCP_RAG_LOG_LEVEL", os.getenv("LOG_LEVEL", "INFO")).upper(),
         format="%(asctime)s %(levelname)s %(name)s %(message)s",
     )
     parser = _build_parser()

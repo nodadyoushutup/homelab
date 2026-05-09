@@ -187,6 +187,16 @@ resolve_build_target() {
       DOCKER_CONTEXT="applications/mcp-terraform"
       BUILD_STRATEGY="direct"
       ;;
+    mcp-rag)
+      IMAGE_NAME="mcp-rag"
+      DOCKER_CONTEXT="applications/mcp-rag"
+      BUILD_STRATEGY="direct"
+      ;;
+    rag-engine)
+      IMAGE_NAME="rag-engine"
+      DOCKER_CONTEXT="applications/rag-engine"
+      BUILD_STRATEGY="direct"
+      ;;
     gha-runner)
       IMAGE_NAME="gha-runner"
       DOCKER_CONTEXT="."

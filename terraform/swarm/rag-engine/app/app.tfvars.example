@@ -1,0 +1,30 @@
+# Build/push images first (native arm64 recommended): GitHub Actions workflow
+# `.github/workflows/docker_build_push.yml` → build_target `rag-engine` (and/or
+# `mcp-rag`), target_registry `harbor` or `both`, build_platforms `arm64` or
+# `both`. Then set image_reference to the published tag, e.g.
+# `harbor.nodadyoushutup.com/rag-engine/rag-engine:<version>` (manifest) or
+# `...:<version>-arm64` for a single-arch tag.
+#
+# Optional: set registry_auth when Swarm must pull from Harbor with a robot
+# account (same pattern as other MCP apps under terraform/swarm/*/app).
+
+provider_config = {
+  docker = {
+    host = "ssh://nodadyoushutup@192.168.1.120"
+    ssh_opts = [
+      "-o", "StrictHostKeyChecking=no",
+      "-o", "UserKnownHostsFile=/mnt/eapp/config/.ssh/known_hosts",
+      "-i", "/mnt/eapp/config/.ssh/id_ed25519",
+    ]
+  }
+}
+
+image_reference     = "harbor.nodadyoushutup.com/rag-engine/rag-engine:latest"
+published_port      = 9015
+endpoint_host       = "192.168.1.120"
+env_file_path       = "/mnt/eapp/code/homelab/.secrets/.env"
+workspace_host_path = "/mnt/eapp/code/homelab"
+
+env = {
+  RAG_ENGINE_API_KEY = "replace-me"
+}

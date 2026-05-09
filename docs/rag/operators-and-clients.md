@@ -16,6 +16,14 @@ sudo docker compose -f docker/docker-compose.yaml --env-file .secrets/.env up -d
 
 Published ports (host defaults in this repo): **`chromadb` → 8010** (mapped to the server HTTP port inside the container), **`rag-engine` → 9015**, **`mcp-rag` → 9016**. Exact mapping lives in `docker/docker-compose.yaml`.
 
+## Docker Swarm (Terraform)
+
+Stacks live under **`terraform/swarm/rag-engine/app`** and **`terraform/swarm/mcp-rag/app`**. Wrapper scripts: **`pipelines/terraform/swarm/rag-engine/app.sh`** and **`pipelines/terraform/swarm/mcp-rag/app.sh`** (same pattern as other Swarm apps; tfvars typically under `/mnt/eapp/config/<name>/app.tfvars`).
+
+Images: publish with **`.github/workflows/docker_build_push.yml`** (`build_target` **`rag-engine`** or **`mcp-rag`**; use **`harbor`** or **`both`** and **`arm64`** on a native builder when possible). Point **`image_reference`** in tfvars at the Harbor tag the workflow produces.
+
+Operational note: `tree-sitter-dockerfile` is not installed as a runtime dependency because it does not publish usable wheels on **linux/arm64**; Dockerfile ingestion falls back to other chunking strategies when the grammar is unavailable.
+
 ## Environment variables
 
 All values belong in **`.secrets/.env`** with matching keys documented in **`.secrets/.env.example`** (no Compose-time `${VAR:-default}` pattern in `docker/docker-compose.yaml`).

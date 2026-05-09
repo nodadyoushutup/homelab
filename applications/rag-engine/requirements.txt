@@ -27,7 +27,6 @@ tree-sitter-css>=0.23.0
 tree-sitter-scss>=1.0.0
 tree-sitter-groovy>=0.1.0
 tree-sitter-graphql>=0.1.0
-tree-sitter-dockerfile>=0.2.0
 tree-sitter-less>=1.0.0
 tree-sitter-nix>=0.1.0
 PyYAML>=6.0.0

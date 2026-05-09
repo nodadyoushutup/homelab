@@ -1,0 +1,23 @@
+# See `rag-engine/app/app.tfvars.example` for the GitHub Actions build/push flow.
+# Deploy `rag-engine` before or with `mcp-rag` so the `rag-engine` overlay exists.
+
+provider_config = {
+  docker = {
+    host = "ssh://nodadyoushutup@192.168.1.120"
+    ssh_opts = [
+      "-o", "StrictHostKeyChecking=no",
+      "-o", "UserKnownHostsFile=/mnt/eapp/config/.ssh/known_hosts",
+      "-i", "/mnt/eapp/config/.ssh/id_ed25519",
+    ]
+  }
+}
+
+image_reference = "harbor.nodadyoushutup.com/mcp-rag/mcp-rag:latest"
+published_port  = 9016
+endpoint_host   = "192.168.1.120"
+env_file_path   = "/mnt/eapp/code/homelab/.secrets/.env"
+
+env = {
+  RAG_ENGINE_API_KEY = "replace-me"
+  MCP_RAG_API_KEY    = "replace-me"
+}

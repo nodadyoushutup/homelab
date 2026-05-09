@@ -42,6 +42,8 @@ on:
           - mcp-google-workspace
           - mcp-atlassian
           - mcp-terraform
+          - mcp-rag
+          - rag-engine
           - gha-runner
           - jenkins-agent
           - jenkins-controller
@@ -162,6 +164,16 @@ jobs:
             mcp-terraform)
               image_name="mcp-terraform"
               docker_context="applications/mcp-terraform"
+              build_strategy="direct"
+              ;;
+            mcp-rag)
+              image_name="mcp-rag"
+              docker_context="applications/mcp-rag"
+              build_strategy="direct"
+              ;;
+            rag-engine)
+              image_name="rag-engine"
+              docker_context="applications/rag-engine"
               build_strategy="direct"
               ;;
             gha-runner)

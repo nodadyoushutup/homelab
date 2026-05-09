@@ -6,7 +6,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-COPY applications/rag-engine/requirements.txt /tmp/requirements.txt
+COPY requirements.txt /tmp/requirements.txt
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -19,7 +19,7 @@ RUN apt-get update \
     && apt-get autoremove -y --purge \
     && rm -rf /var/lib/apt/lists/*
 
-COPY applications/rag-engine/src /app/src
+COPY src /app/src
 
 EXPOSE 8080
 
