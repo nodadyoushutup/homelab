@@ -51,6 +51,8 @@ planning/**
 # Environment
 *.env
 !applications/harbor/versions.env
+.secrets/**
+!.secrets/.env.example
 **/.venv/
 **/__pycache__/
 *.pyc
