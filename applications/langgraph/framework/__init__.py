@@ -2,6 +2,7 @@
 
 __all__ = [
     "agent_factories",
+    "agents",
     "configuration",
     "mcp_support",
 ]

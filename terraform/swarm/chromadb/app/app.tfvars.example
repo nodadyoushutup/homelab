@@ -1,0 +1,15 @@
+provider_config = {
+  docker = {
+    host = "ssh://nodadyoushutup@192.168.1.120"
+    ssh_opts = [
+      "-o", "StrictHostKeyChecking=no",
+      "-o", "UserKnownHostsFile=/mnt/eapp/config/.ssh/known_hosts",
+      "-i", "/mnt/eapp/config/.ssh/id_ed25519",
+    ]
+  }
+}
+
+image_reference  = "chromadb/chroma:latest@sha256:bd21353aee6ccdf4a57bd91e6001626826700f3838e1f230d4aae75bfd4889a1"
+published_port   = 8000
+endpoint_host     = "192.168.1.120"
+data_volume_name = "chromadb-data"

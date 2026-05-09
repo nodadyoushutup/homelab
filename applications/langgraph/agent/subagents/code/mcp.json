@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "transport": "http",
+      "url": "https://mcp.filesystem.nodadyoushutup.com/mcp/"
+    },
+    "ast-grep": {
+      "transport": "http",
+      "url": "https://mcp.ast-grep.nodadyoushutup.com/mcp"
+    }
+  }
+}

@@ -1,9 +1,18 @@
-export const GitHubSVG = ({ width = "100%", height = "100%" }) => (
+export const GitHubSVG = ({
+  width = "100%",
+  height = "100%",
+  className,
+}: {
+  width?: string;
+  height?: string;
+  className?: string;
+}) => (
   <svg
     role="img"
     viewBox="0 0 24 24"
     width={width}
     height={height}
+    className={className}
     xmlns="http://www.w3.org/2000/svg"
   >
     <title>GitHub</title>

@@ -45,7 +45,7 @@ spec:
             - name: NEXT_PUBLIC_API_URL
               value: https://langchain-agent-chat.nodadyoushutup.com/api
             - name: NEXT_PUBLIC_ASSISTANT_ID
-              value: langgraph
+              value: agent
             - name: NEXT_PUBLIC_AUTH_SCHEME
               value: ""
             - name: LANGGRAPH_API_URL

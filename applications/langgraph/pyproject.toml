@@ -13,9 +13,11 @@ dependencies = [
   "langchain",
   "langchain-mcp-adapters",
   "langchain-openai",
+  "langgraph-checkpoint-postgres",
+  "psycopg[binary,pool]",
   "python-dotenv",
 ]
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["framework"]
+include = ["framework", "framework.*"]

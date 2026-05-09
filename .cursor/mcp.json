@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "mcp_atlassian": {
+      "url": "https://mcp.atlassian.nodadyoushutup.com/mcp"
+    },
+    "mcp_playwright": {
+      "url": "https://mcp.playwright.nodadyoushutup.com/mcp"
+    }
+  }
+}

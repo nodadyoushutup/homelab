@@ -1,15 +1,15 @@
 import { v4 as uuidv4 } from "uuid";
-import { ReactNode, useEffect, useRef } from "react";
+import { ReactNode, useEffect, useRef, useState, FormEvent } from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useStreamContext } from "@/providers/Stream";
-import { useState, FormEvent } from "react";
 import { Button } from "../ui/button";
 import { Checkpoint, Message } from "@langchain/langgraph-sdk";
 import { AssistantMessage, AssistantMessageLoading } from "./messages/ai";
 import { HumanMessage } from "./messages/human";
 import { DO_NOT_RENDER_ID_PREFIX } from "@/lib/ensure-tool-responses";
-import { LangGraphLogoSVG } from "../icons/langgraph";
+import { APP_DISPLAY_NAME } from "@/lib/branding";
+import { AppLogo } from "../icons/app-logo";
 import { TooltipIconButton } from "./tooltip-icon-button";
 import {
   ArrowDown,
@@ -19,8 +19,11 @@ import {
   SquarePen,
   XIcon,
   Plus,
+  Moon,
+  Sun,
 } from "lucide-react";
 import { useQueryState, parseAsBoolean } from "nuqs";
+import { useTheme } from "next-themes";
 import { StickToBottom, useStickToBottomContext } from "use-stick-to-bottom";
 import ThreadHistory from "./history";
 import { toast } from "sonner";
@@ -92,11 +95,13 @@ function OpenGitHubRepo() {
           <a
             href="https://github.com/langchain-ai/agent-chat-ui"
             target="_blank"
-            className="flex items-center justify-center"
+            className="hover:text-foreground/75 text-foreground flex items-center justify-center transition-colors"
+            aria-label="Open GitHub repo"
           >
             <GitHubSVG
               width="24"
               height="24"
+              className="fill-current"
             />
           </a>
         </TooltipTrigger>
@@ -105,6 +110,35 @@ function OpenGitHubRepo() {
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
+  );
+}
+
+function ThemeToggle() {
+  const { resolvedTheme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  const isDark = mounted && resolvedTheme === "dark";
+  const label = mounted
+    ? isDark
+      ? "Switch to light mode"
+      : "Switch to dark mode"
+    : "Toggle theme";
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  return (
+    <TooltipIconButton
+      size="lg"
+      className="p-4"
+      aria-label={label}
+      tooltip={label}
+      variant="ghost"
+      onClick={() => setTheme(isDark ? "light" : "dark")}
+      disabled={!mounted}
+    >
+      {isDark ? <Sun className="size-5" /> : <Moon className="size-5" />}
+    </TooltipIconButton>
   );
 }
 
@@ -249,10 +283,10 @@ export function Thread() {
   );
 
   return (
-    <div className="flex h-screen w-full overflow-hidden">
+    <div className="bg-background text-foreground flex h-screen w-full overflow-hidden">
       <div className="relative hidden lg:flex">
         <motion.div
-          className="absolute z-20 h-full overflow-hidden border-r bg-white"
+          className="bg-background absolute z-20 h-full overflow-hidden border-r"
           style={{ width: 300 }}
           animate={
             isLargeScreen
@@ -306,7 +340,7 @@ export function Thread() {
               <div>
                 {(!chatHistoryOpen || !isLargeScreen) && (
                   <Button
-                    className="hover:bg-gray-100"
+                    className="hover:bg-accent hover:text-accent-foreground"
                     variant="ghost"
                     onClick={() => setChatHistoryOpen((p) => !p)}
                   >
@@ -318,7 +352,8 @@ export function Thread() {
                   </Button>
                 )}
               </div>
-              <div className="absolute top-2 right-4 flex items-center">
+              <div className="absolute top-2 right-4 flex items-center gap-4">
+                <ThemeToggle />
                 <OpenGitHubRepo />
               </div>
             </div>
@@ -329,7 +364,7 @@ export function Thread() {
                 <div className="absolute left-0 z-10">
                   {(!chatHistoryOpen || !isLargeScreen) && (
                     <Button
-                      className="hover:bg-gray-100"
+                      className="hover:bg-accent hover:text-accent-foreground"
                       variant="ghost"
                       onClick={() => setChatHistoryOpen((p) => !p)}
                     >
@@ -353,17 +388,19 @@ export function Thread() {
                     damping: 30,
                   }}
                 >
-                  <LangGraphLogoSVG
+                  <AppLogo
                     width={32}
                     height={32}
+                    className="size-8 rounded-full object-cover"
                   />
                   <span className="text-xl font-semibold tracking-tight">
-                    LangChain Agent Chat
+                    {APP_DISPLAY_NAME}
                   </span>
                 </motion.button>
               </div>
 
               <div className="flex items-center gap-4">
+                <ThemeToggle />
                 <div className="flex items-center">
                   <OpenGitHubRepo />
                 </div>
@@ -385,7 +422,7 @@ export function Thread() {
           <StickToBottom className="relative flex-1 overflow-hidden">
             <StickyToBottomContent
               className={cn(
-                "absolute inset-0 overflow-y-scroll px-4 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-track]:bg-transparent",
+                "app-scrollbar absolute inset-0 overflow-y-scroll px-4",
                 !chatStarted && "mt-[25vh] flex flex-col items-stretch",
                 chatStarted && "grid grid-rows-[1fr_auto]",
               )}
@@ -426,12 +463,12 @@ export function Thread() {
                 </>
               }
               footer={
-                <div className="sticky bottom-0 flex flex-col items-center gap-8 bg-white">
+                <div className="bg-background sticky bottom-0 flex flex-col items-center gap-8">
                   {!chatStarted && (
                     <div className="flex items-center gap-3">
-                      <LangGraphLogoSVG className="h-8 flex-shrink-0" />
+                      <AppLogo className="size-8 flex-shrink-0 rounded-full object-cover" />
                       <h1 className="text-2xl font-semibold tracking-tight">
-                        LangChain Agent Chat
+                        {APP_DISPLAY_NAME}
                       </h1>
                     </div>
                   )}
@@ -486,7 +523,7 @@ export function Thread() {
                             />
                             <Label
                               htmlFor="render-tool-calls"
-                              className="text-sm text-gray-600"
+                              className="text-muted-foreground text-sm"
                             >
                               Hide Tool Calls
                             </Label>
@@ -496,8 +533,8 @@ export function Thread() {
                           htmlFor="file-input"
                           className="flex cursor-pointer items-center gap-2"
                         >
-                          <Plus className="size-5 text-gray-600" />
-                          <span className="text-sm text-gray-600">
+                          <Plus className="text-muted-foreground size-5" />
+                          <span className="text-muted-foreground text-sm">
                             Upload PDF or Image
                           </span>
                         </Label>

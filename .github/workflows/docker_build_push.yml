@@ -40,6 +40,7 @@ on:
           - mcp-git
           - mcp-github
           - mcp-google-workspace
+          - mcp-atlassian
           - mcp-terraform
           - gha-runner
           - jenkins-agent
@@ -151,6 +152,11 @@ jobs:
             mcp-google-workspace)
               image_name="mcp-google-workspace"
               docker_context="applications/mcp-google-workspace"
+              build_strategy="direct"
+              ;;
+            mcp-atlassian)
+              image_name="mcp-atlassian"
+              docker_context="applications/mcp-atlassian"
               build_strategy="direct"
               ;;
             mcp-terraform)

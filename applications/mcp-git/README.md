@@ -10,10 +10,8 @@ It is designed to be:
   upstream server can open directly
 - writable as UID/GID `1000:1000` so git operations keep working on the
   NFS-backed workspace
-- deployed through Kubernetes and Argo CD instead of the retired Swarm stage
+- deployed through Docker Swarm from `terraform/swarm/mcp-git/app`
 
-The matching Kubernetes runtime lives in `kubernetes/mcp-git/`.
-
-The intended ingress endpoint is:
+The intended endpoint is:
 
 - `https://mcp.git.nodadyoushutup.com/mcp`

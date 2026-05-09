@@ -2,32 +2,38 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from framework.agent_factories import create_supervisor_agent
-from framework.agent_factories import create_code_agent
-from framework.agent_factories import create_jira_agent
+from framework.agents import CodeAgent
+from framework.agents import HomelabSupervisorAgent
+from framework.agents import JiraAgent
+from framework.agents import TechLeadAgent
 
 
 APP_DIR = Path(__file__).resolve().parent
 SUBAGENTS_DIR = APP_DIR / "subagents"
-CODE_APP_DIR = SUBAGENTS_DIR / "code-agent"
-JIRA_APP_DIR = SUBAGENTS_DIR / "jira-agent"
+CODE_APP_DIR = SUBAGENTS_DIR / "code"
+JIRA_APP_DIR = SUBAGENTS_DIR / "jira"
+TECH_LEAD_APP_DIR = SUBAGENTS_DIR / "tech-lead"
 
-code_agent = create_code_agent(CODE_APP_DIR)
-jira_agent = create_jira_agent(JIRA_APP_DIR)
-langgraph = create_supervisor_agent(
+_code = CodeAgent(CODE_APP_DIR).build()
+_jira = JiraAgent(JIRA_APP_DIR).build()
+_tech_lead = TechLeadAgent(TECH_LEAD_APP_DIR).build()
+agent = HomelabSupervisorAgent(
     APP_DIR,
     local_subagents=[
         {
-            "name": "code_agent",
-            "description": "Mandatory specialist for any code, config, repository, path, filesystem, or implementation question.",
-            "runnable": code_agent,
+            "name": "code",
+            "description": "Code specialist for repository-backed source code, configuration, filesystem, path, and implementation work. Always returns findings, changed files, risks, and next actions to the supervisor.",
+            "runnable": _code,
         },
         {
-            "name": "jira_agent",
-            "description": "Jira specialist for issue discovery, updates, comments, and workflow actions.",
-            "runnable": jira_agent,
+            "name": "jira",
+            "description": "Jira specialist for issue discovery, updates, comments, and workflow actions. Always returns Jira results to the supervisor for the next routing decision.",
+            "runnable": _jira,
+        },
+        {
+            "name": "tech_lead",
+            "description": "Tech Lead specialist for technical soundness review, architecture review, code impact analysis, workflow impact analysis, and senior implementation guidance. Always returns review findings, risks, blockers, and recommended next actions to the supervisor.",
+            "runnable": _tech_lead,
         },
     ],
-)
-
-agent = langgraph
+).build()

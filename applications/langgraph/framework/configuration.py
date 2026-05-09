@@ -12,6 +12,9 @@ LANGGRAPH_ROOT = Path(__file__).resolve().parents[1]
 
 def default_repo_root() -> Path:
     """Infer homelab repo root from ``applications/langgraph`` layout."""
+    override = os.environ.get("HOMELAB_REPO_ROOT")
+    if override:
+        return Path(override).expanduser().resolve()
     return LANGGRAPH_ROOT.parent.parent.resolve()
 
 
@@ -31,18 +34,34 @@ def load_env_file(path: Path) -> dict[str, str]:
     return {key: value for key, value in values.items() if value is not None}
 
 
+def assert_no_langgraph_local_env_files() -> None:
+    """Fail fast if ignored app-local dotenv files reappear under LangGraph."""
+    allowed = secrets_env_path()
+    local_env_files = list(LANGGRAPH_ROOT.rglob(".env"))
+    if local_env_files:
+        formatted = ", ".join(str(path) for path in sorted(local_env_files))
+        raise RuntimeError(
+            "LangGraph configuration must come from "
+            f"{allowed}; remove app-local .env file(s): {formatted}"
+        )
+
+
 def merged_settings(app_dir: Path, *extra_env_files: Path) -> dict[str, str]:
-    """Merge homelab secrets, optional extra env files, then the process environment.
+    """Merge homelab secrets, then the process environment.
 
     ``app_dir`` is retained for call-site compatibility; configuration is loaded from
     ``secrets_env_path()`` (default ``<repo>/.secrets/.env``) instead of per-agent
-    ``.env`` files.
+    ``.env`` files. ``extra_env_files`` is also retained for compatibility, but
+    intentionally ignored so LangGraph local config has a single dotenv source.
     """
-    _ = app_dir
+    _ = (app_dir, extra_env_files)
+    assert_no_langgraph_local_env_files()
+    secrets = load_env_file(secrets_env_path())
+    for key, value in secrets.items():
+        os.environ.setdefault(key, value)
+
     merged: dict[str, str] = {}
-    merged.update(load_env_file(secrets_env_path()))
-    for env_file in extra_env_files:
-        merged.update(load_env_file(env_file))
+    merged.update(secrets)
     merged.update({key: value for key, value in os.environ.items() if value is not None})
     return merged
 
@@ -69,6 +88,19 @@ def load_system_prompt(path: Path, variables: dict[str, str] | None = None) -> s
         return values[key]
 
     return re.sub(r"\{\{\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\}\}", _replace, raw_prompt)
+
+
+def load_markdown_directory(path: Path, variables: dict[str, str] | None = None) -> list[str]:
+    """Load all Markdown files in a directory in deterministic filename order."""
+    if not path.exists():
+        return []
+    if not path.is_dir():
+        raise NotADirectoryError(f"Markdown prompt path is not a directory: {path}")
+
+    return [
+        load_system_prompt(markdown_path, variables)
+        for markdown_path in sorted(path.glob("*.md"))
+    ]
 
 
 def split_csv(value: str | None) -> list[str]:

@@ -1,7 +1,7 @@
 <table align="center">
   <tr>
     <td valign="middle">
-      <img src="docs/img/avatar.png" alt="NoDad Homelab avatar" width="180" />
+      <img src="docs/resources/avatar.png" alt="NoDad Homelab avatar" width="180" />
     </td>
     <td valign="middle" style="padding-left: 18px;">
       <h1>NoDad Homelab</h1>

@@ -1,9 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { useThreads } from "@/providers/Thread";
 import { Thread } from "@langchain/langgraph-sdk";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import type { MouseEvent } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faTrashCan } from "@fortawesome/free-solid-svg-icons";
 
 import { getContentString } from "../utils";
+import { TooltipIconButton } from "../tooltip-icon-button";
 import { useQueryState, parseAsBoolean } from "nuqs";
 import {
   Sheet,
@@ -14,6 +18,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { PanelRightOpen, PanelRightClose } from "lucide-react";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { toast } from "sonner";
 
 function ThreadList({
   threads,
@@ -23,6 +28,36 @@ function ThreadList({
   onThreadClick?: (threadId: string) => void;
 }) {
   const [threadId, setThreadId] = useQueryState("threadId");
+  const { deleteThread, setThreads } = useThreads();
+  const [deletingThreadId, setDeletingThreadId] = useState<string | null>(null);
+
+  const handleDeleteThread = async (
+    e: MouseEvent<HTMLButtonElement>,
+    deletedThreadId: string,
+  ) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!window.confirm("Delete this thread? This cannot be undone.")) return;
+
+    setDeletingThreadId(deletedThreadId);
+
+    try {
+      await deleteThread(deletedThreadId);
+      setThreads((prev) =>
+        prev.filter((thread) => thread.thread_id !== deletedThreadId),
+      );
+      if (threadId === deletedThreadId) {
+        setThreadId(null);
+      }
+      toast.success("Thread deleted");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to delete thread. Please try again.");
+    } finally {
+      setDeletingThreadId(null);
+    }
+  };
 
   return (
     <div className="app-scrollbar flex h-full w-full flex-col items-start justify-start gap-2 overflow-y-scroll">
@@ -41,11 +76,11 @@ function ThreadList({
         return (
           <div
             key={t.thread_id}
-            className="w-full px-1"
+            className="group flex w-full items-center gap-1 px-1"
           >
             <Button
               variant="ghost"
-              className="w-[280px] items-start justify-start rounded-xl border border-transparent px-3 py-2 text-left font-normal text-foreground hover:border-border hover:bg-accent/70"
+              className="text-foreground hover:border-border hover:bg-accent/70 min-w-0 flex-1 items-start justify-start rounded-xl border border-transparent px-3 py-2 text-left font-normal"
               onClick={(e) => {
                 e.preventDefault();
                 onThreadClick?.(t.thread_id);
@@ -55,6 +90,20 @@ function ThreadList({
             >
               <p className="truncate text-ellipsis">{itemText}</p>
             </Button>
+            <TooltipIconButton
+              aria-label="Delete thread"
+              tooltip="Delete thread"
+              side="right"
+              size="icon"
+              className="text-muted-foreground hover:text-destructive size-8 p-2 opacity-60 transition-opacity group-hover:opacity-100 hover:opacity-100 focus-visible:opacity-100"
+              disabled={deletingThreadId === t.thread_id}
+              onClick={(e) => handleDeleteThread(e, t.thread_id)}
+            >
+              <FontAwesomeIcon
+                icon={faTrashCan}
+                className="size-3.5"
+              />
+            </TooltipIconButton>
           </div>
         );
       })}

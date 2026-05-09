@@ -16,8 +16,10 @@ RUN pnpm install --frozen-lockfile
 
 FROM base AS builder
 
+# Production image defaults. Docker dev overrides these build args from
+# docker/docker-compose.yml so dev chat stays paired with dev LangGraph.
 ARG NEXT_PUBLIC_API_URL=https://langchain-agent-chat.nodadyoushutup.com/api
-ARG NEXT_PUBLIC_ASSISTANT_ID=langgraph
+ARG NEXT_PUBLIC_ASSISTANT_ID=agent
 ARG NEXT_PUBLIC_AUTH_SCHEME=
 ARG LANGGRAPH_API_URL=https://langgraph.nodadyoushutup.com
 

@@ -1,0 +1,82 @@
+variable "provider_config" {
+  description = "Provider configuration map for Docker (host + optional ssh opts)."
+  type        = any
+}
+
+variable "registry_auth" {
+  description = "Optional registry auth for pulling the service image."
+  type        = any
+  default     = null
+  sensitive   = true
+}
+
+variable "image_reference" {
+  description = "Terraform MCP image to run."
+  type        = string
+  default     = "homelab/mcp-terraform:2026.04.16.1"
+}
+
+variable "env_file_path" {
+  description = "Optional dotenv file containing Terraform MCP secrets and settings."
+  type        = string
+  default     = ""
+}
+
+variable "env" {
+  description = "Additional environment variables to pass to the container."
+  type        = map(string)
+  default     = {}
+  sensitive   = true
+}
+
+variable "terraform_toolsets" {
+  description = "Terraform MCP toolsets used when MCP_TERRAFORM_TOOLSETS is not supplied through env."
+  type        = string
+  default     = "registry"
+}
+
+variable "published_port" {
+  description = "Swarm ingress port exposed for the Terraform MCP HTTP endpoint."
+  type        = number
+  default     = 18104
+}
+
+variable "endpoint_host" {
+  description = "Host used when reporting the external MCP URL."
+  type        = string
+  default     = "192.168.1.120"
+}
+
+variable "timezone" {
+  description = "Container timezone."
+  type        = string
+  default     = "America/New_York"
+}
+
+variable "replicas" {
+  description = "Number of MCP replicas to run."
+  type        = number
+  default     = 1
+}
+
+variable "placement_constraints" {
+  description = "Swarm placement constraints for this MCP service."
+  type        = list(string)
+  default     = ["node.labels.role==swarm-cp-0"]
+}
+
+variable "platform_architecture" {
+  description = "Docker platform architecture for placement."
+  type        = string
+  default     = "aarch64"
+}
+
+variable "dns_nameservers" {
+  description = "DNS nameservers used by the task."
+  type        = list(string)
+  default = [
+    "192.168.1.1",
+    "1.1.1.1",
+    "8.8.8.8",
+  ]
+}

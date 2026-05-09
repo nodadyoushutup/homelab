@@ -12,9 +12,11 @@ import {
   SetStateAction,
 } from "react";
 import { createClient } from "./client";
+import { resolveApiUrl } from "@/lib/api-url";
 
 interface ThreadContextType {
   getThreads: () => Promise<Thread[]>;
+  deleteThread: (threadId: string) => Promise<void>;
   threads: Thread[];
   setThreads: Dispatch<SetStateAction<Thread[]>>;
   threadsLoading: boolean;
@@ -51,9 +53,10 @@ export function ThreadProvider({ children }: { children: ReactNode }) {
 
   const getThreads = useCallback(async (): Promise<Thread[]> => {
     const resolvedAssistantId = assistantId || envAssistantId;
-    if (!apiUrl || !resolvedAssistantId) return [];
+    const resolvedApiUrl = resolveApiUrl(apiUrl);
+    if (!resolvedApiUrl || !resolvedAssistantId) return [];
     const client = createClient(
-      apiUrl,
+      resolvedApiUrl,
       getApiKey() ?? undefined,
       authScheme || undefined,
     );
@@ -68,8 +71,27 @@ export function ThreadProvider({ children }: { children: ReactNode }) {
     return threads;
   }, [apiUrl, assistantId, authScheme, envAssistantId]);
 
+  const deleteThread = useCallback(
+    async (threadId: string): Promise<void> => {
+      const resolvedApiUrl = resolveApiUrl(apiUrl);
+      if (!resolvedApiUrl) {
+        throw new Error("Missing LangGraph API URL");
+      }
+
+      const client = createClient(
+        resolvedApiUrl,
+        getApiKey() ?? undefined,
+        authScheme || undefined,
+      );
+
+      await client.threads.delete(threadId);
+    },
+    [apiUrl, authScheme],
+  );
+
   const value = {
     getThreads,
+    deleteThread,
     threads,
     setThreads,
     threadsLoading,

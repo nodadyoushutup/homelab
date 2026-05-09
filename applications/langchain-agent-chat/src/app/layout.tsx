@@ -2,10 +2,13 @@ import type { Metadata } from "next";
 import "./globals.css";
 import React from "react";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
+import { ThemeProvider } from "@/providers/theme";
+import { APP_DISPLAY_NAME } from "@/lib/branding";
+import { DevToolsThemeBridge } from "@/components/devtools-theme-bridge";
 
 export const metadata: Metadata = {
-  title: "LangChain Agent Chat",
-  description: "LangChain Agent Chat for the homelab LangGraph deployment",
+  title: APP_DISPLAY_NAME,
+  description: `${APP_DISPLAY_NAME} for the homelab LangGraph deployment`,
 };
 
 export default function RootLayout({
@@ -14,9 +17,21 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html
+      lang="en"
+      suppressHydrationWarning
+    >
       <body>
-        <NuqsAdapter>{children}</NuqsAdapter>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          storageKey="nodad-agent-chat-theme"
+          disableTransitionOnChange
+        >
+          <DevToolsThemeBridge />
+          <NuqsAdapter>{children}</NuqsAdapter>
+        </ThemeProvider>
       </body>
     </html>
   );

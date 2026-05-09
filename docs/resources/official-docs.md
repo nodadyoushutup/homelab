@@ -8,11 +8,11 @@ When a project does not maintain a standalone docs site, this file links to the 
 
 | Technology | Repo evidence | Official docs |
 | --- | --- | --- |
-| Terraform | `terraform/`, `docs/rules/terraform.md`, `docs/workflows/terraform.md` | [Terraform docs](https://developer.hashicorp.com/terraform/docs) |
+| Terraform | `terraform/`, `docs/workflows/terraform.md` | [Terraform docs](https://developer.hashicorp.com/terraform/docs) |
 | Packer | `packer/ubuntu-24.04-ndysu.pkr.hcl`, `.github/workflows/packer_build_push.yml` | [Packer docs](https://developer.hashicorp.com/packer/docs) |
 | Docker | `terraform/swarm/**`, `applications/**`, `.github/workflows/docker_build_push.yml` | [Docker docs](https://docs.docker.com/) |
 | Docker Compose | `applications/minio/docker-compose.yaml`, `applications/gha-runner/docker-compose.yaml` | [Docker Compose docs](https://docs.docker.com/compose/) |
-| Docker Swarm | `terraform/swarm/**`, `docs/rules/terraform.md`, `docs/workflows/terraform.md` | [Docker Swarm docs](https://docs.docker.com/engine/swarm/) |
+| Docker Swarm | `terraform/swarm/**`, `docs/workflows/terraform.md` | [Docker Swarm docs](https://docs.docker.com/engine/swarm/) |
 | GitHub Actions | `.github/workflows/docker_build_push.yml`, `.github/workflows/packer_build_push.yml` | [GitHub Actions docs](https://docs.github.com/en/actions) |
 | GitHub Actions self-hosted runners | `applications/gha-runner/`, `terraform/swarm/gha-runner-arm64/app`, `terraform/swarm/gha-runner-amd64/app` | [Self-hosted runner docs](https://docs.github.com/en/actions/concepts/runners/self-hosted-runners) |
 | QEMU | `packer/ubuntu-24.04-ndysu.pkr.hcl`, `.github/workflows/packer_build_push.yml` | [QEMU docs](https://www.qemu.org/docs/master/) |
@@ -24,7 +24,7 @@ When a project does not maintain a standalone docs site, this file links to the 
 | --- | --- | --- |
 | Proxmox VE | `terraform/cluster/proxmox/app` | [Proxmox VE docs index](https://pve.proxmox.com/pve-docs/index.html) |
 | Talos Linux | `terraform/cluster/talos/app`, `docs/talos-packages.md` | [Talos docs](https://www.talos.dev/latest/) |
-| Kubernetes | `kubernetes/**`, `docs/rules/kubernetes.md`, `docs/workflows/kubernetes.md` | [Kubernetes docs](https://kubernetes.io/docs/home/) |
+| Kubernetes | `kubernetes/**`, `docs/workflows/kubernetes.md` | [Kubernetes docs](https://kubernetes.io/docs/home/) |
 | Argo CD | `kubernetes/bootstrap/argocd-management-app.yaml`, `kubernetes/argocd-management/**`, `terraform/cluster/argocd/config` | [Argo CD docs](https://argo-cd.readthedocs.io/en/stable/) |
 | Helm | `kubernetes/k10/values.yaml`, `kubernetes/snapshot-controller/values.yaml`, Argo CD chart apps under `kubernetes/argocd-management/` | [Helm docs](https://helm.sh/docs/) |
 | Kustomize | `kubernetes/qbittorrent/base/kustomization.yaml`, `kubernetes/cross-seed/base/kustomization.yaml` | [Kustomize docs](https://kustomize.io/) |
@@ -39,8 +39,8 @@ When a project does not maintain a standalone docs site, this file links to the 
 
 | Technology | Repo evidence | Official docs |
 | --- | --- | --- |
-| Cloudflare | `terraform/remote/cloudflare/config`, `docs/rules/terraform.md` | [Cloudflare docs](https://developers.cloudflare.com/) |
-| Nginx Proxy Manager | `terraform/swarm/nginx_proxy_manager/{app,config,database}`, `docs/rules/terraform.md` | [Nginx Proxy Manager guide](https://nginxproxymanager.com/guide/) |
+| Cloudflare | `terraform/remote/cloudflare/config` | [Cloudflare docs](https://developers.cloudflare.com/) |
+| Nginx Proxy Manager | `terraform/swarm/nginx_proxy_manager/{app,config,database}` | [Nginx Proxy Manager guide](https://nginxproxymanager.com/guide/) |
 | FortiGate / FortiOS | `terraform/network/fortigate/config`, torrent ingress policy in `AGENTS.md` | [FortiGate docs](https://docs.fortinet.com/product/fortigate) |
 | MinIO | `applications/minio/docker-compose.yaml`, S3 backends in Terraform provider files | [MinIO docs](https://docs.min.io/) |
 | HashiCorp Vault | `terraform/swarm/vault/{app,config}`, `scripts/vault/` | [Vault docs](https://developer.hashicorp.com/vault/docs) |
@@ -59,12 +59,13 @@ When a project does not maintain a standalone docs site, this file links to the 
 | Dozzle | `terraform/swarm/dozzle/app` | [Dozzle docs](https://dozzle.dev/guide/what-is-dozzle) |
 | Harbor | `terraform/swarm/harbor/{app,config}`, `applications/harbor/` | [Harbor docs](https://goharbor.io/docs/) |
 | Jenkins | `terraform/swarm/jenkins-agent-arm64/app`, `terraform/swarm/jenkins-agent-amd64/app`, `terraform/swarm/jenkins-controller/{app,config}`, `applications/jenkins-agent/`, `applications/jenkins-controller/` | [Jenkins docs](https://www.jenkins.io/doc/) |
-| Model Context Protocol (MCP) | `applications/mcp-*`, `kubernetes/mcp-*`, `terraform/swarm/mcp-*/app` | [MCP docs](https://modelcontextprotocol.io/docs/learn) |
+| Model Context Protocol (MCP) | `applications/mcp-*`, `terraform/swarm/mcp-*/app` | [MCP docs](https://modelcontextprotocol.io/docs/learn) |
 
 ## Application workloads
 
 | Technology | Repo evidence | Official docs |
 | --- | --- | --- |
+| ChromaDB | `terraform/swarm/chromadb/app` | [Chroma Docker docs](https://docs.trychroma.com/guides/deploy/docker) |
 | qBittorrent | `kubernetes/qbittorrent/base`, `kubernetes/qbittorrent/overlays` | [qBittorrent wiki](https://github.com/qbittorrent/qBittorrent/wiki) |
 | cross-seed | `kubernetes/cross-seed/base`, `kubernetes/cross-seed/overlays` | [cross-seed docs](https://www.cross-seed.org/docs/basics/getting-started) |
 | Plex / ClusterPlex | `kubernetes/clusterplex/` | [Plex support docs](https://support.plex.tv/) |

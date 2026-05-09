@@ -3,8 +3,10 @@
     ".."
   ],
   "graphs": {
-    "langgraph": "./agent.py:langgraph",
-    "code_agent": "./agent.py:code_agent",
-    "jira_agent": "./agent.py:jira_agent"
+    "agent": "./agent.py:agent"
+  },
+  "checkpointer": {
+    "backend": "custom",
+    "path": "./postgres_checkpointer.py:create_checkpointer"
   }
 }

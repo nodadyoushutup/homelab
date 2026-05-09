@@ -41,6 +41,22 @@ FILESYSTEM_TOOL_NAMES = {
     "list_allowed_directories",
 }
 
+AST_GREP_TOOL_NAMES = {
+    "server_info",
+    "dump_syntax_tree",
+    "test_match_code_rule",
+    "find_code",
+    "find_code_by_rule",
+}
+
+AST_GREP_SEARCH_TOOL_NAMES = {
+    "find_code",
+    "find_code_by_rule",
+}
+
+DEFAULT_AST_GREP_MAX_RESULTS = 25
+MAX_AST_GREP_MAX_RESULTS = 50
+
 JIRA_JSON_STRING_FIELDS_BY_TOOL = {
     "jira_create_issue": {"additional_fields"},
     "jira_update_issue": {"fields", "additional_fields", "attachments"},
@@ -132,6 +148,22 @@ def _required_tool_args(args_schema: Any) -> set[str]:
     return set()
 
 
+def _recoverable_tool_error(tool_name: str, exc: Exception) -> list[dict[str, str]]:
+    payload = {
+        "ok": False,
+        "tool": tool_name,
+        "error_type": exc.__class__.__name__,
+        "error": str(exc),
+        "recoverable": True,
+        "instruction": (
+            "Treat this as a failed tool observation, not a fatal agent failure. "
+            "Adjust the tool arguments, call another relevant tool, ask for missing "
+            "information, or report the blocker."
+        ),
+    }
+    return _text_blocks(json.dumps(payload, indent=2, default=str))
+
+
 def load_mcp_tools(config_path: Path) -> list[Any]:
     """Load MCP tools from a local JSON config if one is present."""
     if not config_path.exists():
@@ -199,7 +231,10 @@ def wrap_blank_optional_args(
 
                 sanitized_args[key] = value
 
-            return await _raw_tool.ainvoke(sanitized_args)
+            try:
+                return await _raw_tool.ainvoke(sanitized_args)
+            except Exception as exc:
+                return _recoverable_tool_error(_raw_tool.name, exc)
 
         wrapped_tools.append(
             StructuredTool(
@@ -320,37 +355,40 @@ def wrap_filesystem_tools(raw_tools: list[Any], repo_root: Path) -> list[Any]:
             continue
 
         async def call_scoped_tool(_raw_tool=raw_tool, **kwargs: Any) -> Any:
-            tool_args = deepcopy(kwargs)
+            try:
+                tool_args = deepcopy(kwargs)
 
-            if "path" in tool_args:
-                tool_args["path"] = _normalize_repo_path(tool_args["path"], repo_root)
-            if "paths" in tool_args:
-                tool_args["paths"] = [
-                    _normalize_repo_path(path, repo_root) for path in tool_args["paths"]
-                ]
-            if "source" in tool_args:
-                tool_args["source"] = _normalize_repo_path(tool_args["source"], repo_root)
-            if "destination" in tool_args:
-                tool_args["destination"] = _normalize_repo_path(
-                    tool_args["destination"], repo_root
-                )
-            if _raw_tool.name == "search_files":
-                normalized_search_path = Path(tool_args["path"]).resolve()
-                if normalized_search_path == repo_root and _is_broad_recursive_pattern(
-                    str(tool_args.get("pattern", ""))
-                ):
-                    raise ValueError(
-                        "Broad recursive searches from the repository root are disabled "
-                        "because the upstream filesystem server walks the entire tree and "
-                        "is too slow over NFS. First call `list_directory` on "
-                        f"`{repo_root}`, then run `search_files` on a narrower subdirectory "
-                        "such as `applications`, `docs`, `kubernetes`, `terraform`, or `scripts`."
+                if "path" in tool_args:
+                    tool_args["path"] = _normalize_repo_path(tool_args["path"], repo_root)
+                if "paths" in tool_args:
+                    tool_args["paths"] = [
+                        _normalize_repo_path(path, repo_root) for path in tool_args["paths"]
+                    ]
+                if "source" in tool_args:
+                    tool_args["source"] = _normalize_repo_path(tool_args["source"], repo_root)
+                if "destination" in tool_args:
+                    tool_args["destination"] = _normalize_repo_path(
+                        tool_args["destination"], repo_root
                     )
-                tool_args["excludePatterns"] = _merge_excludes(
-                    tool_args.get("excludePatterns")
-                )
+                if _raw_tool.name == "search_files":
+                    normalized_search_path = Path(tool_args["path"]).resolve()
+                    if normalized_search_path == repo_root and _is_broad_recursive_pattern(
+                        str(tool_args.get("pattern", ""))
+                    ):
+                        raise ValueError(
+                            "Broad recursive searches from the repository root are disabled "
+                            "because the upstream filesystem server walks the entire tree and "
+                            "is too slow over NFS. First call `list_directory` on "
+                            f"`{repo_root}`, then run `search_files` on a narrower subdirectory "
+                            "such as `applications`, `docs`, `kubernetes`, `terraform`, or `scripts`."
+                        )
+                    tool_args["excludePatterns"] = _merge_excludes(
+                        tool_args.get("excludePatterns")
+                    )
 
-            return await _raw_tool.ainvoke(tool_args)
+                return await _raw_tool.ainvoke(tool_args)
+            except Exception as exc:
+                return _recoverable_tool_error(_raw_tool.name, exc)
 
         wrapped_tools.append(
             StructuredTool(
@@ -374,24 +412,34 @@ def wrap_filesystem_tools(raw_tools: list[Any], repo_root: Path) -> list[Any]:
             path: str,
             excludePatterns: list[str] | None = None,
         ) -> Any:
-            normalized_path = _normalize_repo_path(path, repo_root)
-            if Path(normalized_path).resolve() == repo_root:
-                raise ValueError(
-                    "search_repository_files requires a narrowed repo-relative directory, not "
-                    "the repository root. First inspect `/mnt/eapp/code/homelab` with "
-                    "`list_directory`, then search a specific subtree."
-                )
+            try:
+                normalized_path = _normalize_repo_path(path, repo_root)
+                if Path(normalized_path).resolve() == repo_root:
+                    raise ValueError(
+                        "search_repository_files requires a narrowed repo-relative directory, not "
+                        "the repository root. First inspect `/mnt/eapp/code/homelab` with "
+                        "`list_directory`, then search a specific subtree."
+                    )
+            except Exception as exc:
+                return _recoverable_tool_error("search_repository_files", exc)
+
             merged_excludes = _merge_excludes(excludePatterns)
             sections: list[str] = []
 
             for pattern in patterns:
-                result = await search_tool.ainvoke(
-                    {
-                        "path": normalized_path,
-                        "pattern": pattern,
-                        "excludePatterns": merged_excludes,
-                    }
-                )
+                try:
+                    result = await search_tool.ainvoke(
+                        {
+                            "path": normalized_path,
+                            "pattern": pattern,
+                            "excludePatterns": merged_excludes,
+                        }
+                    )
+                except Exception as exc:
+                    sections.append(
+                        f"{pattern}\n{_content_to_text(_recoverable_tool_error(search_tool.name, exc))}"
+                    )
+                    continue
                 sections.append(f"{pattern}\n{_content_to_text(result)}")
 
             return _text_blocks("\n\n".join(sections))
@@ -427,6 +475,79 @@ def wrap_filesystem_tools(raw_tools: list[Any], repo_root: Path) -> list[Any]:
                     "required": ["patterns", "path"],
                 },
                 coroutine=search_repository_files,
+                response_format="content",
+            )
+        )
+
+    return wrapped_tools
+
+
+def _scoped_ast_grep_description(description: str, repo_root: Path, *, search: bool = False) -> str:
+    scoped = (
+        f"{description} This runtime scopes ast-grep code search to the repository root "
+        f"`{repo_root}`. Use `.` or repo-relative paths for `project_folder`."
+    )
+    if search:
+        scoped += (
+            f" Search responses default to `max_results={DEFAULT_AST_GREP_MAX_RESULTS}` "
+            f"and are capped at `max_results={MAX_AST_GREP_MAX_RESULTS}` to preserve "
+            "agent context. Use filesystem tools only after ast-grep identifies the "
+            "specific files that need inspection."
+        )
+    return scoped
+
+
+def _bounded_ast_grep_max_results(value: Any) -> int:
+    try:
+        requested = int(value)
+    except (TypeError, ValueError):
+        requested = 0
+
+    if requested <= 0:
+        return DEFAULT_AST_GREP_MAX_RESULTS
+    return min(requested, MAX_AST_GREP_MAX_RESULTS)
+
+
+def wrap_ast_grep_tools(raw_tools: list[Any], repo_root: Path) -> list[Any]:
+    """Constrain ast-grep MCP searches to the repo and cap returned matches."""
+    repo_root = repo_root.resolve()
+    wrapped_tools: list[Any] = []
+
+    for raw_tool in raw_tools:
+        if raw_tool.name not in AST_GREP_TOOL_NAMES:
+            wrapped_tools.append(raw_tool)
+            continue
+
+        async def call_scoped_ast_grep(_raw_tool=raw_tool, **kwargs: Any) -> Any:
+            try:
+                tool_args = deepcopy(kwargs)
+
+                if _raw_tool.name in AST_GREP_SEARCH_TOOL_NAMES:
+                    tool_args["project_folder"] = _normalize_repo_path(
+                        tool_args.get("project_folder"),
+                        repo_root,
+                    )
+                    tool_args["max_results"] = _bounded_ast_grep_max_results(
+                        tool_args.get("max_results")
+                    )
+                    output_format = tool_args.get("output_format")
+                    if output_format is None or not str(output_format).strip():
+                        tool_args["output_format"] = "text"
+
+                return await _raw_tool.ainvoke(tool_args)
+            except Exception as exc:
+                return _recoverable_tool_error(_raw_tool.name, exc)
+
+        wrapped_tools.append(
+            StructuredTool(
+                name=raw_tool.name,
+                description=_scoped_ast_grep_description(
+                    raw_tool.description or "",
+                    repo_root,
+                    search=raw_tool.name in AST_GREP_SEARCH_TOOL_NAMES,
+                ),
+                args_schema=raw_tool.args_schema,
+                coroutine=call_scoped_ast_grep,
                 response_format="content",
             )
         )

@@ -13,8 +13,12 @@ input/output schemas. They are not a repo-wide contributor startup checklist.
 - Parent agents own role-specific behavior, prioritization, and decision-making.
 - Subagents own narrow capabilities and should remain reusable across parent agents.
 - The current Homelab runtime uses named in-process subagents inside one
-  LangGraph app boundary. Do not maintain repo-specific remote `call_*_agent`
-  wrappers unless a future task explicitly reintroduces a remote boundary.
+  LangGraph app boundary, exposed through one user-facing graph named `agent`.
+  Do not maintain repo-specific remote `call_*_agent` wrappers unless a future
+  task explicitly reintroduces a remote boundary.
+- The current Homelab runtime is hub-and-spoke: `agent` chooses the subagent,
+  receives the subagent response, and decides the next step. Subagents may
+  recommend another subagent, but they must not transfer directly to one.
 - Subagents should not assume who called them. They should rely on the incoming
   task input schema, not parent-specific hidden context.
 - Each agent or subagent should document its own accepted input schema and
@@ -26,47 +30,43 @@ input/output schemas. They are not a repo-wide contributor startup checklist.
 
 - Parent agent: `Homelab`
 - Subagent: `Code`
-- Subagent: `Confluence`
-- Subagent: `Kubernetes`
-- Subagent: `Pipeline`
-- Subagent: `Terraform`
 - Subagent: `Jira`
+- Subagent: `Tech Lead`
 
 ## File map
 
 - `homelab-agent/homelab-agent.md`: the current top-level supervisor definition
   for the Homelab agent, including its native input/output schema
-- `../subagents/code-subagent/code-subagent.md`: reusable code capability
-  definition, including its native input/output schema
-- `../subagents/confluence-subagent/confluence-subagent.md`: reusable Confluence
-  discovery and operations capability definition, including its native
-  input/output schema
-- `../subagents/kubernetes-subagent/kubernetes-subagent.md`: reusable Kubernetes
-  analysis capability definition, including its native input/output schema
-- `../subagents/pipeline-subagent/pipeline-subagent.md`: reusable pipeline
-  inspection and execution capability definition, including its native
-  input/output schema
-- `../subagents/terraform-subagent/terraform-subagent.md`: reusable Terraform
-  analysis capability definition, including its native input/output schema
-- `../subagents/jira-subagent/jira-subagent.md`: reusable Jira discovery and
-  operations capability definition, including its native input/output schema
+- `../subagents/code/*.md`: runtime Code repository analysis and implementation
+  prompt docs, including its native input/output schema
+- `../subagents/jira/*.md`: runtime Jira discovery and operations prompt docs,
+  including its native input/output schema
+- `../subagents/tech-lead/*.md`: runtime Tech Lead technical review prompt docs,
+  including its native input/output schema
 
 ## Required creation artifacts
 
-When adding a new repo-managed agent or subagent, create the Python
-implementation and the Markdown contract docs in the same change.
+When adding a new repo-managed runtime agent or subagent, create the concrete
+Python instantiation and the Markdown contract docs in the same change.
+Reusable builder classes under `applications/langgraph/framework/agents/` are
+implementation scaffolding; they are not part of the supported runtime set
+until an app or subagent directory instantiates and exports them.
 
 Required parent-agent artifacts:
 
-- repo-managed Python implementation under `applications/langgraph/`
+- repo-managed Python instantiation under a concrete `applications/langgraph/`
+  app directory, optionally backed by a reusable builder class in
+  `applications/langgraph/framework/agents/`
 - `docs/agents/<agent-name>-agent/<agent-name>-agent.md`
 - matching updates in this file for the current agent set, file map, and
   runtime prompt source
 
 Required subagent artifacts:
 
-- repo-managed Python implementation under `applications/langgraph/`
-- `docs/subagents/<subagent-name>-subagent/<subagent-name>-subagent.md`
+- repo-managed Python instantiation under a concrete `applications/langgraph/`
+  subagent directory, optionally backed by a reusable builder class in
+  `applications/langgraph/framework/agents/`
+- `docs/subagents/<runtime-name>/*.md`
 - matching updates in this file for the current agent set, file map, and
   runtime prompt source
 
@@ -75,21 +75,23 @@ both the Python file and the Markdown file exist.
 
 ## Runtime Prompt Source
 
-The runtime prompt source for repo-managed LangGraph agents lives alongside the
-agents themselves.
+The runtime prompt source for repo-managed LangGraph agents is assembled in
+layers.
 
 Current prompt-source pattern:
 
-- agent-level prompt text should live in
-  `applications/langgraph/agent/system_prompt.md`
-- specialist prompt text should live in
-  `applications/langgraph/agent/subagents/<specialist-name>/system_prompt.md`
+- shared guardrails for every agent and subagent live in
+  `applications/langgraph/framework/agents/system_prompts/base_system_prompt.md`
+- reusable class-level guidance lives with the reusable builder, for example
+  `applications/langgraph/framework/agents/system_prompts/jira_system_prompt.md`
+- concrete runtime object-level prompt docs live in
+  `docs/subagents/<runtime-name>/*.md`
 - nested internal subagent prompts, when used, should live under the owning
-  specialist, for example
-  `applications/langgraph/agent/subagents/<specialist-name>/subagents/<internal-name>/system_prompt.md`
-- Python wiring under `applications/langgraph/framework/` should load those Markdown
-  files and pass the resulting text into the runtime's `system_prompt`
-  argument
+  specialist's object-level docs or an equivalent `docs/subagents/<runtime-name>/`
+  directory
+- Python wiring under `applications/langgraph/framework/agents/` should load
+  those Markdown layers and pass the resulting text into the runtime's
+  `system_prompt` argument
 
 These docs remain the human-readable runtime contracts and schema references.
 
@@ -97,18 +99,12 @@ Current intent:
 
 - keep `homelab-agent/homelab-agent.md` as the instruction contract for the
   parent `Homelab` agent
-- keep `../subagents/code-subagent/code-subagent.md` as the instruction contract
-  for the `Code` subagent
-- keep `../subagents/confluence-subagent/confluence-subagent.md` as the
-  instruction contract for the `Confluence` subagent
-- keep `../subagents/kubernetes-subagent/kubernetes-subagent.md` as the
-  instruction contract for the `Kubernetes` subagent
-- keep `../subagents/pipeline-subagent/pipeline-subagent.md` as the instruction
-  contract for the `Pipeline` subagent
-- keep `../subagents/terraform-subagent/terraform-subagent.md` as the
-  instruction contract for the `Terraform` subagent
-- keep `../subagents/jira-subagent/jira-subagent.md` as the instruction contract
-  for the single-layer `Jira` subagent
+- keep `../subagents/code/*.md` as the instruction contract for the single-layer
+  `Code` subagent
+- keep `../subagents/jira/*.md` as the instruction contract for the single-layer
+  `Jira` subagent
+- keep `../subagents/tech-lead/*.md` as the instruction contract for the
+  single-layer `Tech Lead` subagent
 - use each agent's own documented schema as the source of truth for how that
   agent accepts input and returns output
 
@@ -129,6 +125,9 @@ Current expectation:
   match that documented schema
 - parent agents should use subagent output schemas to decide the next call,
   the next tool action, or the final user response
+- subagent outputs must return to the parent agent before any further specialist
+  call; a subagent-to-subagent handoff is only a recommendation in the output,
+  not a direct transfer
 - every agent should check the relevant `docs/` material before falling back to
   broad repo search
 
@@ -144,11 +143,11 @@ Current expectations:
 - `Homelab` is the coordinating supervisor for runtime orchestration.
 - `Homelab` should delegate to local named specialists through the runtime's
   native subagent surface instead of a repo-specific remote call wrapper.
-- `Code` is the mandatory specialist for code, config, repository structure,
-  file paths, filesystem visibility, MCP workspace inspection, and
-  implementation questions.
-- `Confluence`, `Kubernetes`, `Pipeline`, `Terraform`, and `Jira` remain
-  reusable specialist capabilities for their respective domains.
+- The default Homelab app exposes `agent` as the supported graph. Specialist
+  runnables are private implementation details of that supervisor unless a
+  future task explicitly creates a separate deployment boundary.
+- `Code`, `Jira`, and `Tech Lead` remain reusable specialist capabilities for
+  their respective domains.
 - If runtime routing changes materially, update both the Python wiring under
   `applications/langgraph/` and the matching contract docs in this directory.
 

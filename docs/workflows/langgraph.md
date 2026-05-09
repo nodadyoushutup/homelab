@@ -3,9 +3,6 @@
 This document describes how to operate and evolve the repo-managed LangGraph and
 Deep Agents scaffold under `applications/langgraph/`.
 
-Use [docs/rules/langgraph.md](./../rules/langgraph.md) for the steady-state
-rules.
-
 ## Scope
 
 Use this workflow for:
@@ -27,65 +24,93 @@ When a task changes the LangGraph implementation:
    - an internal Deep Agents subagent
    - skills
    - MCP wiring
-2. read `docs/rules/langgraph.md` before editing
-3. keep shared code in `applications/langgraph/framework/` and the
+2. keep shared code in `applications/langgraph/framework/` and the
    default Homelab agent boundary under `applications/langgraph/agent/`,
    with specialist directories under `applications/langgraph/agent/subagents/`
-4. decide whether the target app should expose:
+   - put reusable class-based agent builders under
+     `applications/langgraph/framework/agents/`
+   - put concrete runtime instantiation, MCP config, skills, and
+     `langgraph.json` exports in the app or subagent directory
+   - put concrete runtime prompt docs in `docs/subagents/<runtime-name>/`
+3. decide whether the target app should expose:
    - one graph
    - multiple sibling graphs in one deployment
    - internal Deep Agents subagents inside one graph
    - prefer a single agent-level agent first; add internal subagents only when a
      narrower capability needs its own tool surface, skills, or prompt
-5. if the task adds a new deployable agent:
+   - for the default Homelab runtime, keep `agent` as the only user-facing graph
+     and wire specialists as private local subagents behind that supervisor
+4. if the task adds a new deployable agent:
    - create its agent directory
    - add `agent.py`
    - add `langgraph.json`
-   - add `system_prompt.md`
+   - add object-level prompt docs under `docs/subagents/<runtime-name>/`
+   - use an existing builder class from `framework/agents/`, or add a new
+     reusable builder there when the behavior should be shared by multiple
+     concrete agents
    - document any new settings in the homelab ``.secrets/.env`` pattern (see
-     ``.secrets/.env.example`` when present); do not add per-agent ``.env`` files
-6. if the task adds a new internal Deep Agents subagent:
+     ``.secrets/.env.example`` when present); when asked to edit the LangGraph
+     `.env`, update `<repo>/.secrets/.env` itself; do not add per-agent ``.env``
+     files
+5. if the task adds a new internal Deep Agents subagent:
    - add its task-specific config directory inside the owning app
-   - add `system_prompt.md`
+   - add object-level prompt docs under `docs/subagents/<runtime-name>/`
    - add any subagent-local skills or MCP config there
+   - instantiate the appropriate `framework/agents/` builder in that directory's
+     `agent.py`, or add a new builder if the implementation should be reusable
    - wire it explicitly in the parent app code
    - if the task removes an internal subagent, fold the surviving prompt and
      skill rules back into the owning app and delete the obsolete subagent
      config
-7. if the task adds MCP-backed tools:
+6. if the task adds MCP-backed tools:
    - keep agent-level MCP configs with the agent
    - keep subagent-level MCP configs with the subagent
    - prefer HTTP/SSE transports for anything intended to be deployed
+   - wrap expected runtime MCP tool-call failures as recoverable tool results so
+     the model can retry, narrow arguments, ask for missing inputs, or report a
+     concrete blocker
    - when the backing MCP server exposes a broader shared workspace than the
      target repo, add app-side wrappers or constraints so the model sees the
      intended repository root and default excludes instead of the full shared
      tree
-8. if the task changes one app from a single graph to multiple sibling graphs:
+7. if the task changes one app from a single graph to multiple sibling graphs:
    - keep those graph exports together in that app's `langgraph.json`
-   - keep graph factory code in shared `applications/langgraph/framework/` modules
-     or the app's entrypoint as appropriate
+   - keep reusable graph builder code in
+     `applications/langgraph/framework/agents/`, with compatibility factories in
+     `applications/langgraph/framework/agent_factories.py` only when needed
    - prefer in-process composition before adding remote transport
    - if you intentionally split a formerly local specialist into a remote app,
      add the real transport in that same task instead of leaving unused remote
      delegation scaffolding behind
-9. if the task changes supervisor routing or prompt text:
-   - keep code, config, file, path, filesystem, and MCP workspace questions
-     routed through the `Code` specialist instead of answered directly by the
-     parent
-   - keep prompt text in the relevant agent-local or subagent-local
-     `system_prompt.md` file instead of reintroducing long inline Python prompts
+8. if the task changes supervisor routing or prompt text:
+   - keep routing aligned with the specialists actually wired into the runtime;
+     if a capability has no specialist, report that limitation instead of
+     inventing one
+   - preserve the return-to-supervisor contract: every specialist call returns a
+     result to `agent`, and only `agent` decides whether to call another
+     specialist, use another tool, ask the user, or answer
+   - do not add peer-to-peer specialist handoffs; model chains as
+     `agent -> specialist -> agent -> next_specialist -> agent`
+   - keep prompt text in the layered prompt sources instead of reintroducing
+     long inline Python prompts: base guardrails in
+     `framework/agents/system_prompts/base_system_prompt.md`, reusable
+     class-level guidance in framework agent prompt files, and concrete runtime
+     docs under `docs/subagents/<runtime-name>/`
    - keep the relevant contract docs under `docs/agents/` in sync
-10. validate the Python structure after the change
-11. update docs if the stable pattern changed
-12. if the task adds a repo helper script, keep it boundary-scoped and make
+9. validate the Python structure after the change
+10. update docs if the stable pattern changed
+11. if the task adds a repo helper script, keep it boundary-scoped and make
     sure it only wraps the intended app's local `langgraph dev` startup, plus
     any tightly paired local frontend that belongs to the same debug workflow
-13. if the task adds or changes the top-level `docker/` dev stack:
+12. if the task adds or changes the top-level `docker/` dev stack:
    - keep it explicitly development-only
    - mount source code from the working tree instead of replacing deployment
      sources of truth
+   - for LangChain Agent Chat dev, keep source bind-mounted and use
+     a Docker-managed volume for `node_modules` so source edits need only
+     service restarts, while dependency changes still require rebuilds
    - document the expected ports, env file, and restart workflow
-14. if the task also updates the default deployed Homelab runtime manifests:
+13. if the task also updates the default deployed Homelab runtime manifests:
    - keep the Kubernetes app family under `kubernetes/langgraph/`
    - keep the launched LangGraph agent boundary under
      `applications/langgraph/agent/`
@@ -101,15 +126,23 @@ After changing the LangGraph scaffold:
    directory with `langgraph dev`, or use `applications/langgraph/docker/agent_server.sh`
    for the default `langgraph` backend and `applications/langgraph/docker/chat.sh` for the
    paired local LangChain Agent Chat app when you are intentionally testing that local
-   dev path (ensure ``.secrets/.env`` exists at the homelab repo root for those helpers)
-4. if the change touches supervisor routing, verify that code and filesystem
-   questions still delegate to the `Code` specialist
-5. if the change touches repo-backed filesystem MCP usage, verify that the
+   dev path (ensure ``.secrets/.env`` exists at the homelab repo root; do not use
+   a LangGraph app-local ``.env`` file)
+4. if the change touches the Docker dev stack, validate the dev pair against
+   Docker endpoints only: chat at `http://localhost:3000`, chat API passthrough
+   at `http://localhost:3000/api`, and LangGraph upstream
+   `http://langgraph-dev:2024` inside Compose (`http://localhost:2124` from the
+   host)
+5. if the change touches supervisor routing, verify that only wired specialists
+   are referenced by the supervisor prompt and runtime config
+6. if the change touches repo-backed filesystem MCP usage, verify that the
    exposed filesystem tools stay scoped to the intended repository root and
    that broad searches pick up the default excludes
-6. if the change touches supervisor or specialist delegation, verify that the
-   local runtime still routes to the intended named specialist
-7. if the change touches the top-level `docker/` stack, run `docker compose
+7. if the change touches supervisor or specialist delegation, verify that the
+   local runtime still exposes the top-level `agent` graph, routes to the
+   intended named specialist, and returns specialist output to the supervisor
+   before any second specialist call
+8. if the change touches the top-level `docker/` stack, run `docker compose
    config` from `docker/` to validate the compose file
 
 ## Structure Guidance
@@ -118,14 +151,20 @@ Use this rough pattern:
 
 - `applications/langgraph/framework/`: shared Python package (`import framework`)
   and reusable helpers
+- `applications/langgraph/framework/agents/`: class-based reusable builders such
+  as `BaseAgent`, `CodeAgent`, `JiraAgent`, `TechLeadAgent`, and
+  `HomelabSupervisorAgent`
 - `applications/langgraph/agent/`: default Homelab deployable agent
   boundary, which may expose one graph or multiple sibling graphs
-- `applications/langgraph/agent/subagents/<specialist>/`: specialist
-  prompts, skills, MCP wiring, and optional standalone `langgraph dev` configs
-  for the co-deployed Code and Jira graphs
+- `applications/langgraph/agent/subagents/<specialist>/`: specialist skills,
+  MCP wiring, and optional standalone `langgraph dev` configs for co-deployed
+  specialist graphs such as Code, Jira, and Tech Lead
+- `docs/subagents/<runtime-name>/`: concrete runtime prompt docs loaded into
+  the final system prompt
 
 Do not move `langgraph.json` up to the monorepo root just to make local running
 feel simpler. Keep each agent independently deployable.
 
-Internal subagents are optional. The current `jira-agent` intentionally runs as
-a single-layer agent and keeps its Jira operating rules at the app level.
+Internal subagents are optional. The current `code`, `jira`, and `tech_lead`
+specialists intentionally run as single-layer agents and keep their operating
+rules at the app level.

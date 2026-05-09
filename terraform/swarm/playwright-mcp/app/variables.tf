@@ -1,0 +1,98 @@
+variable "provider_config" {
+  description = "Provider configuration map for Docker (host + optional ssh opts)."
+  type        = any
+}
+
+variable "image_reference" {
+  description = "Official Playwright MCP image to run."
+  type        = string
+  default     = "mcr.microsoft.com/playwright/mcp:latest"
+}
+
+variable "published_port" {
+  description = "Swarm ingress port exposed for the Playwright MCP HTTP endpoint."
+  type        = number
+  default     = 8931
+}
+
+variable "endpoint_host" {
+  description = "Host used when reporting the external MCP URL."
+  type        = string
+  default     = "192.168.1.120"
+}
+
+variable "replicas" {
+  description = "Number of Playwright MCP replicas to run."
+  type        = number
+  default     = 1
+}
+
+variable "placement_constraints" {
+  description = "Swarm placement constraints for the Playwright MCP service."
+  type        = list(string)
+  default     = ["node.labels.role==swarm-cp-0"]
+}
+
+variable "platform_architecture" {
+  description = "Docker platform architecture for placement."
+  type        = string
+  default     = "aarch64"
+}
+
+variable "allowed_hosts" {
+  description = "Host headers accepted by the HTTP MCP server. Use [\"*\"] for internal-only wildcard access."
+  type        = list(string)
+  default     = ["*"]
+}
+
+variable "output_dir" {
+  description = "Container path where Playwright MCP writes snapshots, logs, and other non-screenshot output files."
+  type        = string
+  default     = "/mnt/eapp/code/homelab/data/playwright"
+}
+
+variable "screenshot_dir" {
+  description = "Container path used as the working directory so relative screenshot filenames are written here."
+  type        = string
+  default     = "/mnt/eapp/code/homelab/data/screenshots"
+}
+
+variable "config_dir" {
+  description = "Host and container directory containing the Playwright MCP JSON config and optional init scripts."
+  type        = string
+  default     = "/mnt/eapp/code/homelab/.secrets/playwright"
+}
+
+variable "screenshots_volume_name" {
+  description = "Legacy Docker volume name for the Playwright MCP output directory."
+  type        = string
+  default     = "playwright-mcp-output"
+}
+
+variable "screenshots_nfs_server" {
+  description = "NFS server that exports the screenshot output path."
+  type        = string
+  default     = "192.168.1.100"
+}
+
+variable "screenshots_nfs_device" {
+  description = "NFS export path used for the screenshot output volume."
+  type        = string
+  default     = ":/mnt/eapp/code/homelab/data/playwright"
+}
+
+variable "screenshots_nfs_options" {
+  description = "NFS mount options for the screenshot output volume, excluding the addr option."
+  type        = string
+  default     = "nfsvers=4.2,rw"
+}
+
+variable "dns_nameservers" {
+  description = "DNS nameservers used by the Playwright MCP task."
+  type        = list(string)
+  default = [
+    "192.168.1.1",
+    "1.1.1.1",
+    "8.8.8.8",
+  ]
+}

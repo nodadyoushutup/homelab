@@ -1,0 +1,375 @@
+diff --git a/mcp_atlassian/servers/jira.py b/mcp_atlassian/servers/jira.py
+index 1111111..2222222 100644
+--- a/mcp_atlassian/servers/jira.py
++++ b/mcp_atlassian/servers/jira.py
+@@ -2375,6 +2375,264 @@ async def add_issues_to_sprint(
+     return json.dumps(result, indent=2, ensure_ascii=False)
+ 
+ 
++@jira_mcp.tool(
++    tags={"jira", "write", "toolset:jira_agile"},
++    annotations={
++        "title": "Move Issue Between Backlog And Active Sprint",
++        "readOnlyHint": False,
++    },
++)
++@check_write_access
++async def move_issue_between_backlog_and_active_sprint(
++    ctx: Context,
++    issue_key: Annotated[
++        str,
++        Field(
++            description=(
++                "Jira issue key to move between backlog and the active sprint."
++            ),
++            pattern=ISSUE_KEY_PATTERN,
++        ),
++    ],
++    direction: Annotated[
++        str,
++        Field(
++            description=(
++                "Move direction. Use 'to_active' to move from backlog to the "
++                "active sprint, or 'to_backlog' to move from a sprint to backlog."
++            )
++        ),
++    ],
++    board_id: Annotated[
++        str | None,
++        Field(
++            description=(
++                "(Optional) Jira board ID. Used to find active sprints and, "
++                "for to_backlog, to move into a specific board backlog."
++            )
++        ),
++    ] = None,
++    project_key: Annotated[
++        str | None,
++        Field(
++            description=(
++                "(Optional) Jira project key used to resolve the board when "
++                "board_id is omitted."
++            ),
++            pattern=PROJECT_KEY_PATTERN,
++        ),
++    ] = None,
++    board_name: Annotated[
++        str | None,
++        Field(
++            description=(
++                "(Optional) Board name used to resolve the target board when "
++                "board_id is omitted."
++            )
++        ),
++    ] = None,
++    sprint_id: Annotated[
++        str | None,
++        Field(
++            description=(
++                "(Optional) Explicit sprint ID for to_active. When provided, "
++                "the issue is added to this sprint without resolving active "
++                "board sprints."
++            )
++        ),
++    ] = None,
++    active_status: Annotated[
++        str,
++        Field(
++            description=(
++                "Workflow status to transition to when direction is to_active "
++                "and the board has no active sprint. Defaults to Requirements."
++            )
++        ),
++    ] = "Requirements",
++    backlog_status: Annotated[
++        str | None,
++        Field(
++            description=(
++                "(Optional) Workflow status to transition to after moving to "
++                "backlog, or as a fallback when Jira has no sprint backlog. "
++                "For HOME this is usually 'To Do'."
++            )
++        ),
++    ] = None,
++    rank_before_issue: Annotated[
++        str | None,
++        Field(
++            description=(
++                "(Optional) For to_backlog with board_id, rank the moved issue "
++                "before this issue key or ID."
++            )
++        ),
++    ] = None,
++    rank_after_issue: Annotated[
++        str | None,
++        Field(
++            description=(
++                "(Optional) For to_backlog with board_id, rank the moved issue "
++                "after this issue key or ID."
++            )
++        ),
++    ] = None,
++    rank_custom_field_id: Annotated[
++        int | None,
++        Field(
++            description=(
++                "(Optional) Rank custom field ID for board-specific backlog "
++                "moves that also set issue rank."
++            )
++        ),
++    ] = None,
++) -> str:
++    """Move a Jira issue between backlog and active sprint.
++
++    For to_active, the tool adds the issue to an explicit sprint or the board's
++    single active sprint. If the board has no active sprint, it falls back to a
++    workflow transition toward active_status.
++
++    For to_backlog, the tool calls Jira Software's backlog endpoint, removing
++    the issue from active or future sprints. If board_id is supplied or can be
++    resolved, it uses the board-specific backlog endpoint so ranking hints can
++    be applied.
++    """
++    jira = await get_jira_fetcher(ctx)
++    if not issue_key:
++        raise ValueError("issue_key is required.")
++
++    normalized_direction = direction.strip().casefold().replace("-", "_")
++    if normalized_direction not in {"to_active", "to_backlog"}:
++        raise ValueError("direction must be 'to_active' or 'to_backlog'.")
++
++    def _resolve_board() -> tuple[str | None, dict[str, Any] | None]:
++        if board_id:
++            return board_id, None
++
++        effective_project_key = project_key or issue_key.split("-", 1)[0]
++        boards = jira.get_all_agile_boards_model(
++            board_name=board_name,
++            project_key=effective_project_key,
++            start=0,
++            limit=50,
++        )
++        board_payloads = [board.to_simplified_dict() for board in boards]
++        if not board_payloads:
++            return None, {
++                "success": False,
++                "error": "No Jira agile boards matched the supplied issue context.",
++                "issue_key": issue_key,
++                "project_key": effective_project_key,
++                "board_name": board_name,
++                "boards": [],
++            }
++
++        candidates = board_payloads
++        if board_name:
++            exact_matches = [
++                board
++                for board in board_payloads
++                if str(board.get("name", "")).casefold() == board_name.casefold()
++            ]
++            if exact_matches:
++                candidates = exact_matches
++
++        if len(candidates) != 1:
++            return None, {
++                "success": False,
++                "error": "Multiple boards matched. Provide board_id to choose one.",
++                "issue_key": issue_key,
++                "project_key": effective_project_key,
++                "board_name": board_name,
++                "boards": board_payloads,
++            }
++
++        resolved_board = candidates[0]
++        resolved_board_id = str(resolved_board.get("id", ""))
++        if not resolved_board_id:
++            return None, {
++                "success": False,
++                "error": "Resolved board does not include an id.",
++                "issue_key": issue_key,
++                "board": resolved_board,
++            }
++
++        return resolved_board_id, resolved_board
++
++    def _find_transition(target_status: str) -> tuple[dict[str, Any] | None, list[dict[str, Any]]]:
++        normalized_target = target_status.strip().casefold()
++        transitions = jira.get_available_transitions(issue_key)
++
++        def _transition_matches_target(transition: dict[str, Any]) -> bool:
++            transition_name = str(transition.get("name", ""))
++            transition_name_key = transition_name.casefold()
++            to_status_key = str(transition.get("to_status", "")).casefold()
++            transition_target_key = transition_name.split(">")[-1].strip().casefold()
++            return normalized_target in {
++                to_status_key,
++                transition_name_key,
++                transition_target_key,
++            }
++
++        return (
++            next(
++                (
++                    transition
++                    for transition in transitions
++                    if _transition_matches_target(transition)
++                ),
++                None,
++            ),
++            transitions,
++        )
++
++    def _transition_to_status(target_status: str) -> dict[str, Any]:
++        matching_transition, transitions = _find_transition(target_status)
++        if matching_transition is None:
++            return {
++                "success": False,
++                "error": f"No workflow transition matched target status {target_status!r}.",
++                "issue_key": issue_key,
++                "target_status": target_status,
++                "available_transitions": transitions,
++            }
++
++        issue = jira.transition_issue(
++            issue_key=issue_key,
++            transition_id=str(matching_transition["id"]),
++        )
++        return {
++            "success": True,
++            "transition": matching_transition,
++            "issue": issue.to_simplified_dict() if issue else None,
++        }
++
++    resolved_board_id: str | None = board_id
++    resolved_board: dict[str, Any] | None = None
++
++    if normalized_direction == "to_backlog":
++        if not resolved_board_id and (project_key or board_name):
++            resolved_board_id, resolved_board = _resolve_board()
++            if isinstance(resolved_board, dict) and resolved_board.get("success") is False:
++                return json.dumps(resolved_board, indent=2, ensure_ascii=False)
++
++        backlog_payload: dict[str, Any] = {"issues": [issue_key]}
++        if rank_before_issue:
++            backlog_payload["rankBeforeIssue"] = rank_before_issue
++        if rank_after_issue:
++            backlog_payload["rankAfterIssue"] = rank_after_issue
++        if rank_custom_field_id is not None:
++            backlog_payload["rankCustomFieldId"] = rank_custom_field_id
++
++        if resolved_board_id:
++            endpoint = f"rest/agile/1.0/backlog/{resolved_board_id}/issue"
++            strategy = "board_backlog"
++        else:
++            endpoint = "rest/agile/1.0/backlog/issue"
++            strategy = "backlog"
++
++        jira.jira.post(endpoint, data=backlog_payload)
++
++        transition_result = None
++        if backlog_status:
++            transition_result = _transition_to_status(backlog_status)
++
++        result = {
++            "success": True,
++            "message": f"Issue {issue_key} moved to backlog",
++            "direction": normalized_direction,
++            "strategy": strategy,
++            "issue_key": issue_key,
++            "board_id": resolved_board_id,
++            "board": resolved_board,
++            "backlog_payload": backlog_payload,
++            "backlog_status": backlog_status,
++            "transition_result": transition_result,
++        }
++        return json.dumps(result, indent=2, ensure_ascii=False)
++
++    if sprint_id:
++        jira.add_issues_to_sprint(sprint_id, [issue_key])
++        result = {
++            "success": True,
++            "message": f"Issue {issue_key} added to sprint {sprint_id}",
++            "direction": normalized_direction,
++            "strategy": "sprint",
++            "issue_key": issue_key,
++            "sprint_id": sprint_id,
++        }
++        return json.dumps(result, indent=2, ensure_ascii=False)
++
++    resolved_board_id, resolved_board = _resolve_board()
++    if isinstance(resolved_board, dict) and resolved_board.get("success") is False:
++        return json.dumps(resolved_board, indent=2, ensure_ascii=False)
++    if not resolved_board_id:
++        raise ValueError("board_id could not be resolved.")
++
++    active_sprints = jira.get_all_sprints_from_board_model(
++        board_id=resolved_board_id,
++        state="active",
++        start=0,
++        limit=50,
++    )
++    active_sprint_payloads = [
++        sprint.to_simplified_dict() for sprint in active_sprints
++    ]
++
++    if len(active_sprint_payloads) == 1:
++        active_sprint_id = str(active_sprint_payloads[0]["id"])
++        jira.add_issues_to_sprint(active_sprint_id, [issue_key])
++        result = {
++            "success": True,
++            "message": f"Issue {issue_key} added to active sprint {active_sprint_id}",
++            "direction": normalized_direction,
++            "strategy": "active_sprint",
++            "issue_key": issue_key,
++            "board_id": resolved_board_id,
++            "board": resolved_board,
++            "sprint": active_sprint_payloads[0],
++        }
++        return json.dumps(result, indent=2, ensure_ascii=False)
++
++    if len(active_sprint_payloads) > 1:
++        result = {
++            "success": False,
++            "error": "Multiple active sprints found. Provide sprint_id to choose one.",
++            "direction": normalized_direction,
++            "issue_key": issue_key,
++            "board_id": resolved_board_id,
++            "board": resolved_board,
++            "active_sprints": active_sprint_payloads,
++        }
++        return json.dumps(result, indent=2, ensure_ascii=False)
++
++    target_active_status = (
++        active_status or "Requirements"
++    ).strip() or "Requirements"
++    transition_result = _transition_to_status(target_active_status)
++    if not transition_result.get("success"):
++        transition_result.update(
++            {
++                "direction": normalized_direction,
++                "board_id": resolved_board_id,
++                "board": resolved_board,
++            }
++        )
++        return json.dumps(transition_result, indent=2, ensure_ascii=False)
++
++    result = {
++        "success": True,
++        "message": (
++            f"Issue {issue_key} transitioned to {target_active_status} because "
++            "the board has no active sprint."
++        ),
++        "direction": normalized_direction,
++        "strategy": "transition",
++        "issue_key": issue_key,
++        "board_id": resolved_board_id,
++        "board": resolved_board,
++        "active_status": target_active_status,
++        **transition_result,
++    }
++    return json.dumps(result, indent=2, ensure_ascii=False)
++
++
+ @jira_mcp.tool(
+     tags={"jira", "read", "toolset:jira_projects"},
+     annotations={"title": "Get Project Versions", "readOnlyHint": True},

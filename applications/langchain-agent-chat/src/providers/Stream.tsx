@@ -17,12 +17,14 @@ import {
 import { useQueryState } from "nuqs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { LangGraphLogoSVG } from "@/components/icons/langgraph";
+import { AppLogo } from "@/components/icons/app-logo";
+import { APP_DISPLAY_NAME } from "@/lib/branding";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { ArrowRight } from "lucide-react";
 import { PasswordInput } from "@/components/ui/password-input";
 import { getApiKey } from "@/lib/api-key";
+import { resolveApiUrl } from "@/lib/api-url";
 import { useThreads } from "./Thread";
 import { toast } from "sonner";
 
@@ -177,7 +179,7 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   // Determine final values to use, prioritizing URL params then env vars
-  const finalApiUrl = apiUrl || envApiUrl;
+  const finalApiUrl = resolveApiUrl(apiUrl || envApiUrl);
   const finalAssistantId = assistantId || envAssistantId;
   const finalAuthScheme = authScheme || envAuthScheme || "";
 
@@ -188,14 +190,14 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
         <div className="animate-in fade-in-0 zoom-in-95 bg-background flex max-w-3xl flex-col rounded-lg border shadow-lg">
           <div className="mt-14 flex flex-col gap-2 border-b p-6">
             <div className="flex flex-col items-start gap-2">
-              <LangGraphLogoSVG className="h-7" />
+              <AppLogo className="size-7 rounded-full object-cover" />
               <h1 className="text-xl font-semibold tracking-tight">
-                LangChain Agent Chat
+                {APP_DISPLAY_NAME}
               </h1>
             </div>
             <p className="text-muted-foreground">
-              Welcome to LangChain Agent Chat! Before you get started, you need to enter
-              the URL of the deployment and the assistant / graph ID.
+              Welcome to {APP_DISPLAY_NAME}! Before you get started, you need to
+              enter the URL of the deployment and the assistant / graph ID.
             </p>
           </div>
           <form

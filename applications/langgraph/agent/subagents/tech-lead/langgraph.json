@@ -1,0 +1,8 @@
+{
+  "dependencies": [
+    "../../../"
+  ],
+  "graphs": {
+    "tech_lead": "./agent.py:agent"
+  }
+}

@@ -8,7 +8,7 @@ Homelab defaults:
 - production hostname: `https://langchain-agent-chat.nodadyoushutup.com`
 - proxied LangGraph API path: `/api`
 - production public API URL: `https://langchain-agent-chat.nodadyoushutup.com/api`
-- default assistant / graph id: `langgraph`
+- default assistant / graph id: `agent`
 - upstream Agent Server target: `https://langgraph.nodadyoushutup.com`
 
 The Kubernetes deployment overrides the upstream target to the in-cluster
@@ -76,10 +76,16 @@ After entering these values, click `Continue`. You'll then be redirected to a ch
 You can bypass the initial setup form by setting the following environment variables:
 
 ```bash
-NEXT_PUBLIC_API_URL=http://localhost:2024
-NEXT_PUBLIC_ASSISTANT_ID=langgraph
+NEXT_PUBLIC_API_URL=http://localhost:3000/api
+NEXT_PUBLIC_ASSISTANT_ID=agent
 NEXT_PUBLIC_AUTH_SCHEME=
+LANGGRAPH_API_URL=http://127.0.0.1:2124
 ```
+
+For Docker Compose development, `NEXT_PUBLIC_API_URL` is the browser-facing
+chat passthrough URL and `LANGGRAPH_API_URL` is the server-side LangGraph
+upstream. The Compose stack sets that upstream to `http://langgraph-dev:2024`
+inside the Docker network.
 
 > [!NOTE]
 > If you are connecting to a LangSmith Agent Builder deployment, set `NEXT_PUBLIC_AUTH_SCHEME=langsmith-api-key`.
@@ -226,7 +232,7 @@ The quickest way to productionize LangChain Agent Chat is to use the [API Passth
 This repository already contains all of the code you need to start using this method. The only configuration you need to do is set the proper environment variables.
 
 ```bash
-NEXT_PUBLIC_ASSISTANT_ID="langgraph"
+NEXT_PUBLIC_ASSISTANT_ID="agent"
 # This should be the deployment URL of your LangGraph server
 LANGGRAPH_API_URL="https://my-agent.default.us.langgraph.app"
 # This should be the URL of your website + "/api". This is how you connect to the API proxy

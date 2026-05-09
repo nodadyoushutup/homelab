@@ -5,11 +5,8 @@ docs to check before doing substantive work.
 
 ## Where To Look
 
-- `docs/rules/README.md`: index of repo, Kubernetes, and Terraform rules
-- `docs/workflows/README.md`: index of execution workflows
+- `docs/workflows/`: execution workflows
 - `docs/resources/README.md`: curated technology reference shelf
-- `docs/rules/langgraph.md`: LangGraph app boundaries, MCP rules, and runtime
-  composition rules
 - `docs/workflows/langgraph.md`: LangGraph implementation workflow
 - `docs/agents/README.md`: LangGraph runtime contract index
 - `docs/agents/homelab-agent/homelab-agent.md` and `docs/subagents/*/*.md`:
@@ -17,7 +14,22 @@ docs to check before doing substantive work.
 
 ## Repo Notes
 
-- Treat `docs/` as the source of truth for repeatable repo rules and workflows.
+- Treat `docs/` as the source of truth for repeatable repo guidance and
+  workflows.
+- LangGraph plus LangChain Agent Chat have two separate runtime pairs. For all
+  local debugging, code work, and quick compose up/down validation, use the
+  Docker dev pair only: `docker/docker-compose.yml` runs `langgraph-dev` at
+  `http://localhost:2124` and `langchain-agent-chat-dev` at
+  `http://localhost:3000`, with the chat proxy targeting
+  `http://langgraph-dev:2024` on the Compose network. The Kubernetes pair is
+  production only: `kubernetes/langgraph` and `kubernetes/langchain-agent-chat`.
+  Do not point Docker dev chat at Kubernetes/prod LangGraph, and do not point
+  Kubernetes/prod chat at Docker dev LangGraph.
+- For LangGraph secrets and config, the single local dotenv source of truth is
+  `<repo>/.secrets/.env`. When asked to edit the LangGraph `.env`, literally
+  update that file. Do not create or use `.env` files inside
+  `applications/langgraph/agent/`, subagent directories, or other LangGraph app
+  directories for now.
 - If a stable pattern changes, update the corresponding docs as part of the
   task.
 - Do not use a repo-wide workflow that requires choosing or locking a local

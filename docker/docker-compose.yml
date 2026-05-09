@@ -1,6 +1,18 @@
 name: homelab-dev
 
 services:
+  langgraph-postgres:
+    image: postgres:17-alpine
+    env_file:
+      - ../.secrets/.env
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - langgraph_postgres_data:/var/lib/postgresql/data
+
   langgraph-dev:
     image: homelab/langgraph:latest
     pull_policy: never
@@ -12,8 +24,11 @@ services:
     working_dir: /app/langgraph/agent
     env_file:
       - ../.secrets/.env
+    depends_on:
+      langgraph-postgres:
+        condition: service_healthy
     environment:
-      CODE_REPOSITORY_ROOT: /mnt/eapp/code/homelab
+      HOMELAB_REPO_ROOT: /app
       PYTHONDONTWRITEBYTECODE: "1"
       PYTHONUNBUFFERED: "1"
       PIP_NO_CACHE_DIR: "1"
@@ -21,6 +36,7 @@ services:
       - "2124:2024"
     volumes:
       - ../applications/langgraph:/app/langgraph
+      - ../docs:/app/docs:ro
       - langgraph_state:/app/langgraph/agent/.langgraph_api
 
   langchain-agent-chat-dev:
@@ -29,20 +45,32 @@ services:
     build:
       context: ../applications/langchain-agent-chat
       dockerfile: Dockerfile
+      target: builder
       args:
-        NEXT_PUBLIC_API_URL: http://192.168.1.36:3000/api
-        NEXT_PUBLIC_ASSISTANT_ID: langgraph
+        # Browser-facing dev chat API. Keep this on the Docker dev chat app,
+        # never on the Kubernetes/prod LangGraph endpoint.
+        NEXT_PUBLIC_API_URL: ${LANGCHAIN_AGENT_CHAT_PUBLIC_API_URL:-http://localhost:3000/api}
+        NEXT_PUBLIC_ASSISTANT_ID: agent
         NEXT_PUBLIC_AUTH_SCHEME: ""
+        # Server-side proxy target inside the Compose network.
         LANGGRAPH_API_URL: http://langgraph-dev:2024
     depends_on:
       - langgraph-dev
     environment:
-      NEXT_PUBLIC_API_URL: http://192.168.1.36:3000/api
-      NEXT_PUBLIC_ASSISTANT_ID: langgraph
+      NEXT_PUBLIC_API_URL: ${LANGCHAIN_AGENT_CHAT_PUBLIC_API_URL:-http://localhost:3000/api}
+      NEXT_PUBLIC_ASSISTANT_ID: agent
       NEXT_PUBLIC_AUTH_SCHEME: ""
       LANGGRAPH_API_URL: http://langgraph-dev:2024
       NEXT_TELEMETRY_DISABLED: "1"
+    user: "${UID:-1000}:${GID:-1000}"
+    working_dir: /app
+    command: pnpm dev --hostname 0.0.0.0 --port 3000
     ports:
       - "3000:3000"
+    volumes:
+      - ../applications/langchain-agent-chat:/app
+      - langchain_agent_chat_node_modules:/app/node_modules
 volumes:
+  langgraph_postgres_data:
   langgraph_state:
+  langchain_agent_chat_node_modules:
