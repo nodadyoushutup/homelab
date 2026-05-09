@@ -29,14 +29,14 @@ if str(ROOT_DIR) not in sys.path:
 log = logging.getLogger(__name__)
 
 MCP_API_KEY_ENV = "MCP_RAG_API_KEY"
-WORKER_BASE_ENV = "RAG_ENGINE_BASE_URL"
-WORKER_KEY_ENV = "RAG_ENGINE_API_KEY"
+ENGINE_BASE_ENV = "RAG_ENGINE_BASE_URL"
+ENGINE_KEY_ENV = "RAG_ENGINE_API_KEY"
 DEFAULT_MCP_API_KEY_HEADER = "x-api-key"
 STREAMABLE_HTTP_PATH = "/mcp"
-WORKER_QUERY_PATH = "/v1/query"
-WORKER_MEMORY_SAVE_PATH = "/v1/memory/save"
-WORKER_MEMORY_RECALL_PATH = "/v1/memory/recall"
-WORKER_MEMORY_FORGET_PATH = "/v1/memory/forget"
+ENGINE_QUERY_PATH = "/v1/query"
+ENGINE_MEMORY_SAVE_PATH = "/v1/memory/save"
+ENGINE_MEMORY_RECALL_PATH = "/v1/memory/recall"
+ENGINE_MEMORY_FORGET_PATH = "/v1/memory/forget"
 DEFAULT_REQUEST_TIMEOUT_SEC = 120.0
 
 VALID_MEMORY_KINDS = ("episodic", "declarative")
@@ -126,26 +126,26 @@ class MCPAPIKeyAuthMiddleware:
         await send({"type": "http.response.body", "body": body})
 
 
-def _worker_base_url() -> str:
-    raw = (os.getenv(WORKER_BASE_ENV) or "").strip().rstrip("/")
+def _engine_base_url() -> str:
+    raw = (os.getenv(ENGINE_BASE_ENV) or "").strip().rstrip("/")
     if not raw:
         raise RuntimeError(
-            f"Missing {WORKER_BASE_ENV}. Example: http://rag-engine:8080 (Compose) or "
+            f"Missing {ENGINE_BASE_ENV}. Example: http://rag-engine:8080 (Compose) or "
             "http://127.0.0.1:9015 (host to published rag-engine port)."
         )
     return raw
 
 
-def _worker_api_key() -> str:
-    return (os.getenv(WORKER_KEY_ENV) or "").strip()
+def _engine_api_key() -> str:
+    return (os.getenv(ENGINE_KEY_ENV) or "").strip()
 
 
-def _post_worker(*, path: str, body: dict[str, Any]) -> dict[str, Any]:
-    base = _worker_base_url()
+def _post_engine(*, path: str, body: dict[str, Any]) -> dict[str, Any]:
+    base = _engine_base_url()
     url = f"{base}{path}"
     payload = json.dumps(body).encode("utf-8")
     headers = {"Content-Type": "application/json"}
-    key = _worker_api_key()
+    key = _engine_api_key()
     if key:
         headers["x-api-key"] = key
     req = urllib.request.Request(url, data=payload, headers=headers, method="POST")
@@ -161,31 +161,31 @@ def _post_worker(*, path: str, body: dict[str, Any]) -> dict[str, Any]:
             detail = str(exc)
         if exc.code == 401:
             return {
-                "error": "worker_unauthorized",
-                "message": "RAG engine rejected the API key. Align RAG_ENGINE_API_KEY with the worker.",
+                "error": "engine_unauthorized",
+                "message": "RAG engine rejected the API key. Align RAG_ENGINE_API_KEY with the engine.",
                 "detail": detail[:2000],
             }
         if exc.code == 400:
             return {
-                "error": "worker_bad_request",
+                "error": "engine_bad_request",
                 "message": f"RAG engine returned 400 from {path} (invalid input).",
                 "detail": detail[:2000],
             }
         return {
-            "error": "worker_http_error",
+            "error": "engine_http_error",
             "message": f"RAG engine HTTP {exc.code} from {path}",
             "detail": detail[:2000],
         }
     except urllib.error.URLError as exc:
         return {
-            "error": "worker_unreachable",
+            "error": "engine_unreachable",
             "message": f"Could not reach RAG engine at {base}: {exc}",
         }
     except json.JSONDecodeError as exc:
-        return {"error": "worker_invalid_json", "message": str(exc)}
+        return {"error": "engine_invalid_json", "message": str(exc)}
     if isinstance(data, dict) and data.get("error"):
         return {
-            "error": "worker_error",
+            "error": "engine_error",
             "message": str(data.get("error")),
             "results": data.get("results"),
         }
@@ -281,7 +281,7 @@ def create_mcp() -> FastMCP:
         body: dict[str, Any] = {"query": q, "n_results": n}
         if where is not None:
             body["where"] = where
-        return _post_worker(path=WORKER_QUERY_PATH, body=body)
+        return _post_engine(path=ENGINE_QUERY_PATH, body=body)
 
     @mcp.tool()
     def memory_recall(
@@ -331,7 +331,7 @@ def create_mcp() -> FastMCP:
             if not isinstance(where, dict):
                 return {"error": "where_invalid", "message": "where must be a JSON object"}
             body["where"] = where
-        return _post_worker(path=WORKER_MEMORY_RECALL_PATH, body=body)
+        return _post_engine(path=ENGINE_MEMORY_RECALL_PATH, body=body)
 
     @mcp.tool()
     def memory_save(
@@ -364,7 +364,7 @@ def create_mcp() -> FastMCP:
 
         Do NOT call to cache rag_search answers, summarize conversation, or record
         successful tool calls. Do NOT store secrets, tokens, or PII. Dedup-on-write
-        is automatic at the worker; near-duplicates merge instead of inserting.
+        is automatic at the engine; near-duplicates merge instead of inserting.
 
         Returns: {id, kind, embedded, dedup: {action: created|merged, matched_id?}}.
         """
@@ -438,7 +438,7 @@ def create_mcp() -> FastMCP:
         commit_clean = _normalize_optional_str(commit)
         if commit_clean:
             wire["commit"] = commit_clean
-        return _post_worker(path=WORKER_MEMORY_SAVE_PATH, body=wire)
+        return _post_engine(path=ENGINE_MEMORY_SAVE_PATH, body=wire)
 
     @mcp.tool()
     def memory_forget(
@@ -482,7 +482,7 @@ def create_mcp() -> FastMCP:
             wire["id"] = single
         else:
             wire["ids"] = listed
-        return _post_worker(path=WORKER_MEMORY_FORGET_PATH, body=wire)
+        return _post_engine(path=ENGINE_MEMORY_FORGET_PATH, body=wire)
 
     @mcp.custom_route("/healthz", methods=["GET"])
     async def healthz(_: Request) -> JSONResponse:
@@ -494,7 +494,7 @@ def create_mcp() -> FastMCP:
                 "streamable_http_path": streamable_http_path,
                 "api_key_header": api_key_header,
                 "api_key_auth_enabled": bool(_mcp_api_key_value()),
-                "worker_base_configured": bool((os.getenv(WORKER_BASE_ENV) or "").strip()),
+                "engine_base_configured": bool((os.getenv(ENGINE_BASE_ENV) or "").strip()),
             }
         )
 

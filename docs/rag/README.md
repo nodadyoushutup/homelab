@@ -13,7 +13,7 @@ Human-facing **system knowledge** for the semantic index: what it is, what gets 
 
 | Doc | Purpose |
 | --- | --- |
-| [overview.md](overview.md) | Components, request paths, and how MCP, worker, and Chroma relate |
+| [overview.md](overview.md) | Components, request paths, and how MCP, engine, and Chroma relate |
 | [corpus-and-ingest.md](corpus-and-ingest.md) | Corpus layout (`docs/knowledge/`), allowlists, hooks, what is excluded |
 | [embeddings-and-storage.md](embeddings-and-storage.md) | Embedding model, batching, Chroma collections, metadata at a glance |
 | [operators-and-clients.md](operators-and-clients.md) | Compose services, env vars, Cursor MCP, ADK container wiring |
@@ -21,6 +21,6 @@ Human-facing **system knowledge** for the semantic index: what it is, what gets 
 ## Quick links
 
 - MCP usage (ports, headers, troubleshooting): [docs/mcp/rag.md](../mcp/rag.md)
-- Worker package summary: [docs/applications/rag-engine.md](../applications/rag-engine.md)
+- Engine package summary: [docs/applications/rag-engine.md](../applications/rag-engine.md)
 - Structured chunking checklist: [rag-structured-file-ingest-roadmap.md](../workflows/development/rag-structured-file-ingest-roadmap.md)
 - Agent + MCP integration phases: [rag-agent-mcp-integration-roadmap.md](../workflows/development/rag-agent-mcp-integration-roadmap.md)

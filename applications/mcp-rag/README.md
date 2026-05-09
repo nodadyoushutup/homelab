@@ -7,7 +7,7 @@ Thin MCP server: **one tool** (`rag_search`) that POSTs to `rag-engine` `/v1/que
 | Variable | Purpose |
 | -------- | ------- |
 | `RAG_ENGINE_BASE_URL` | Base URL of rag-engine (no trailing slash), e.g. `http://rag-engine:8080` in Compose or `http://127.0.0.1:9015` from the host. |
-| `RAG_ENGINE_API_KEY` | Optional; sent as `x-api-key` to the engine if non-empty (must match worker). |
+| `RAG_ENGINE_API_KEY` | Optional; sent as `x-api-key` to the engine if non-empty (must match engine). |
 | `MCP_RAG_API_KEY` | Optional; if set, required on MCP Streamable HTTP (`x-api-key`) for `/mcp`. |
 | `HOST` / `PORT` | Bind address (default `0.0.0.0:8080`). |
 | `LOG_LEVEL` | Uvicorn / logging level. |
