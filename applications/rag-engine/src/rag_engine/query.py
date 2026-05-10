@@ -4,9 +4,7 @@ import logging
 import os
 from typing import Any
 
-from google import genai
-
-from rag_engine.embed_google import embed_batch
+from rag_engine.embeddings import embed_batch, embedding_provider
 
 log = logging.getLogger(__name__)
 
@@ -20,7 +18,7 @@ def _env_int(name: str, default: int) -> int:
 
 def run_query(
     collection: Any,
-    genai_client: genai.Client,
+    genai_client: Any,
     *,
     query_text: str,
     n_results: int,
@@ -33,7 +31,8 @@ def run_query(
         return {"error": "query is empty", "results": []}
     cap = max(1, _env_int("RAG_QUERY_MAX_N_RESULTS", 50))
     n = max(1, min(int(n_results), cap))
-    vec = embed_batch(genai_client, embedding_model.strip(), [text])
+    provider = embedding_provider()
+    vec = embed_batch(genai_client, embedding_model.strip(), [text], provider=provider)
     if not vec:
         return {"error": "embedding failed", "results": []}
     kwargs: dict[str, Any] = {

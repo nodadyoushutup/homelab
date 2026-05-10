@@ -1,11 +1,15 @@
 # Embeddings and storage
 
-## Embedding model
+## Embedding provider and model
 
-- Default embedding model id: **`RAG_EMBEDDING_MODEL`**, falling back to **`gemini-embedding-001`** (see `applications/rag-engine/src/rag_engine/server.py` for query defaults and `memory.py` for memory paths).
-- Client code uses **`google.genai`** and shared helpers in **`applications/rag-engine/src/rag_engine/embed_google.py`** (`build_genai_client`, `embed_batch`).
+- Provider selector: **`RAG_EMBEDDING_PROVIDER`** supports **`google`** (default) and **`openai`**.
+- Default model id: **`RAG_EMBEDDING_MODEL`**. When unset/empty, Google uses **`gemini-embedding-001`** and OpenAI uses **`text-embedding-3-small`**.
+- Provider dispatch lives in **`applications/rag-engine/src/rag_engine/embeddings.py`**. Google-specific calls live in **`embed_google.py`**; OpenAI-specific calls live in **`embed_openai.py`**.
+- OpenAI optional dimensions override: **`RAG_OPENAI_EMBEDDING_DIMENSIONS`**. This is only sent for `text-embedding-3*` models.
 
-**Query path:** `run_query` in `query.py` embeds the user query with `embed_batch` using the same model name, then calls Chroma with `query_embeddings`. Mismatched models between ingest and query produce unreliable retrieval—hence the “always go through `rag-engine`” rule.
+**Query path:** `run_query` in `query.py` embeds the user query with `embed_batch` using the configured provider/model/dimensions, then calls Chroma with `query_embeddings`. Mismatched providers, models, or dimensions between ingest and query produce unreliable retrieval or Chroma dimension errors; hence the “always go through `rag-engine`” rule.
+
+When switching provider/model/dimensions, use a new Chroma collection (for example `repo_rag_openai`) or rebuild the existing collection. OpenAI's current embedding docs list `text-embedding-3-small` and `text-embedding-3-large`, with default dimensions 1536 and 3072 respectively.
 
 ## Chroma
 
@@ -24,7 +28,7 @@ Repo RAG and memory share the **same embedding stack**; they differ by **collect
 
 ## Chunk metadata
 
-Each stored chunk carries metadata used for filtering (`where` in query) and debugging: path, chunk index, embedding model id, content hash, chunk strategy (`ast_py`, `pdf_hybrid`, …), optional git last-touch fields, and structured extras (e.g. `xml_model` for Odoo XML).
+Each stored chunk carries metadata used for filtering (`where` in query) and debugging: path, chunk index, embedding provider, embedding model id, optional embedding dimensions override, content hash, chunk strategy (`ast_py`, `pdf_hybrid`, …), optional git last-touch fields, and structured extras (e.g. `xml_model` for Odoo XML).
 
 The authoritative table of keys for Chroma filters is maintained in the integration roadmap (agent tooling doc) because it doubles as the contract for `where` filters:
 
@@ -38,5 +42,6 @@ The authoritative table of keys for Chroma filters is maintained in the integrat
 | --- | --- |
 | Collection handles | `pipeline.py` (`chroma_repo_collection`), `memory.py` |
 | Ingest / embed jobs | `pipeline.py` (`run_embed_job`, path allowlists) |
+| Provider dispatch | `embeddings.py` |
 | Query embedding + Chroma | `query.py` |
 | HTTP API | `server.py` (`rag_query`, `embed_commit`, memory routes) |

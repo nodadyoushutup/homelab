@@ -9,7 +9,7 @@ DEFAULT_RAG_EXCLUDE_PATH_SEGMENTS = (
     "node_modules,.venv,venv,virtualenv,pipenv,__pycache__,.pytest_cache,.mypy_cache,"
     ".ruff_cache,.tox,.nox,site-packages,.adk,dist,build,.next,.nuxt,target,vendor,"
     "htmlcov,.eggs,.npm,.yarn,.pnpm-store,__MACOSX,.cache,coverage,"
-    "odoo-base,.tx,i18n"
+    "odoo-base,.tx,i18n,.terraform"
 )
 
 # Minified/vendor/binary, raster image, video, and audio suffixes (comma-separated, leading dot).
@@ -19,7 +19,8 @@ DEFAULT_RAG_EXCLUDE_FILE_SUFFIXES = (
     ".png,.jpg,.jpeg,.gif,.webp,.bmp,.tif,.tiff,.heic,.heif,.avif,.jxl,.jfif,.apng,"
     ".ppm,.pgm,.pbm,.dds,.exr,.hdr,.ktx,.ktx2,"
     ".mp4,.m4v,.mov,.avi,.mkv,.webm,.wmv,.flv,.f4v,.ogv,.mpeg,.mpg,.m2ts,.mts,.ts,.3gp,.3g2,.asf,"
-    ".mp3,.wav,.flac,.aac,.m4a,.ogg,.oga,.opus,.wma,.aiff,.aif,.alac,.mid,.midi,.amr"
+    ".mp3,.wav,.flac,.aac,.m4a,.ogg,.oga,.opus,.wma,.aiff,.aif,.alac,.mid,.midi,.amr,"
+    ".tfstate,.tfstate.backup,.tfplan"
 )
 
 

@@ -12,7 +12,13 @@ import chromadb
 import httpx
 
 from rag_engine.chunking import chunk_text
-from rag_engine.embed_google import build_genai_client, embed_batch
+from rag_engine.embeddings import (
+    build_embedding_client,
+    embed_batch,
+    embedding_dimensions_label,
+    embedding_model,
+    embedding_provider,
+)
 from rag_engine.memory import mark_memories_stale_for_paths
 from rag_engine.path_rules import file_has_excluded_suffix, path_has_excluded_segment
 from rag_engine.office_chunks import (
@@ -139,7 +145,7 @@ def _workspace_root() -> Path:
 def _allowed_prefixes() -> list[str]:
     raw = (
         os.getenv("RAG_ALLOWED_PATH_PREFIXES")
-        or "docs/,addons/cfs_addons/,applications/,AGENTS.md"
+        or "docs/,applications/,kubernetes/,terraform/,AGENTS.md"
     ).strip()
     out: list[str] = []
     for p in raw.split(","):
@@ -217,7 +223,9 @@ def _fingerprint_matches_disk(
     stored: dict | None,
     *,
     content_sha256: str,
+    provider: str,
     model: str,
+    dimensions: str,
     schema_ver: str,
     chunk_strategy: str,
     chunk_chars: int,
@@ -233,7 +241,11 @@ def _fingerprint_matches_disk(
         return False
     if (stored.get("content_sha256") or "") != content_sha256:
         return False
+    if str(stored.get("embedding_provider") or "google").lower() != provider:
+        return False
     if (stored.get("model") or "") != model:
+        return False
+    if str(stored.get("embedding_dimensions") or "") != dimensions:
         return False
     if (stored.get("index_schema_version") or "") != schema_ver:
         return False
@@ -349,7 +361,9 @@ def upsert_paths(
     *,
     skip_unchanged: bool = False,
 ) -> dict:
-    model = (os.getenv("RAG_EMBEDDING_MODEL") or "gemini-embedding-001").strip()
+    provider = embedding_provider()
+    model = embedding_model(provider)
+    dimensions = embedding_dimensions_label(provider)
     chunk_chars = int(os.getenv("RAG_CHUNK_CHARS", "1500"))
     overlap = int(os.getenv("RAG_CHUNK_OVERLAP", "200"))
     try:
@@ -444,7 +458,9 @@ def upsert_paths(
             if _fingerprint_matches_disk(
                 fp,
                 content_sha256=digest,
+                provider=provider,
                 model=model,
+                dimensions=dimensions,
                 schema_ver=schema_ver,
                 chunk_strategy=eff_strategy,
                 chunk_chars=chunk_chars,
@@ -482,7 +498,9 @@ def upsert_paths(
                 "path": rel_norm,
                 "commit": commit,
                 "chunk": i,
+                "embedding_provider": provider,
                 "model": model,
+                "embedding_dimensions": dimensions,
                 "content_sha256": digest,
                 "index_schema_version": schema_ver,
                 "chunk_strategy": eff_strategy,
@@ -499,7 +517,7 @@ def upsert_paths(
                 elif v is not None and v != "":
                     row[k] = str(v)
             metadatas.append(row)
-        embeddings = embed_batch(genai_client, model, documents)
+        embeddings = embed_batch(genai_client, model, documents, provider=provider)
         _chroma_add_batched(
             collection,
             ids=ids,
@@ -514,7 +532,7 @@ def upsert_paths(
 
 def run_embed_job(commit: str, paths: list[str], removed_paths: list[str]) -> dict:
     collection = _collection()
-    genai_client = build_genai_client()
+    genai_client = build_embedding_client()
     deleted = delete_paths(collection, removed_paths)
     up = upsert_paths(collection, genai_client, paths, commit, skip_unchanged=False)
     touched = list(set(paths) | set(removed_paths))

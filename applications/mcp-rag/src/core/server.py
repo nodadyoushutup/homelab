@@ -263,7 +263,7 @@ def create_mcp() -> FastMCP:
         n_results: int = 20,
         where: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        """Semantic search over the indexed repository via rag-engine (Gemini embeddings + Chroma).
+        """Semantic search over the indexed repository via rag-engine (shared embeddings + Chroma).
 
         Use specific anchors (paths, symbols, Odoo model names like purchase.order, error strings).
         Use `where` only when narrowing by known metadata (see rag-agent-mcp-integration-roadmap).

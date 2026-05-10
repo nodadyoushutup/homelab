@@ -13,6 +13,11 @@ locals {
   env_passthrough_keys = toset([
     "GOOGLE_API_KEY",
     "GOOGLE_GENAI_USE_VERTEXAI",
+    "OPENAI_API_KEY",
+    "OPENAI_BASE_URL",
+    "OPENAI_ORG_ID",
+    "OPENAI_ORGANIZATION",
+    "OPENAI_PROJECT",
     "GOOGLE_CLOUD_PROJECT",
     "GOOGLE_CLOUD_LOCATION",
     "RAG_ALLOWED_PATH_PREFIXES",
@@ -28,6 +33,7 @@ locals {
     "RAG_CHUNK_CHARS",
     "RAG_CHUNK_OVERLAP",
     "RAG_EMBEDDING_MODEL",
+    "RAG_EMBEDDING_PROVIDER",
     "RAG_EMBED_BASE_DELAY_SEC",
     "RAG_EMBED_MAX_DELAY_SEC",
     "RAG_EMBED_MAX_RETRIES",
@@ -51,6 +57,9 @@ locals {
     "RAG_OFFICE_DOCX_PARAS_PER_CHUNK",
     "RAG_OFFICE_ODT_PARAS_PER_CHUNK",
     "RAG_OFFICE_PPTX_SLIDES_PER_CHUNK",
+    "RAG_OPENAI_EMBEDDING_DIMENSIONS",
+    "RAG_OPENAI_EMBED_BATCH_SIZE",
+    "RAG_OPENAI_TIMEOUT_SEC",
     "RAG_PDF_FUSION_SIMILARITY",
     "RAG_PDF_MAX_PAGES",
     "RAG_PDF_OCR_DPI",
@@ -68,12 +77,14 @@ locals {
     if contains(local.env_passthrough_keys, pair.key)
   }
   default_env = {
-    TZ                    = var.timezone
-    RAG_CHROMA_HOST       = var.chroma_host
-    RAG_CHROMA_PORT       = tostring(var.chroma_port)
-    RAG_CHROMA_COLLECTION = var.chroma_collection
-    RAG_EMBEDDING_MODEL   = var.embedding_model
-    RAG_WORKSPACE_MOUNT   = var.workspace_mount
+    TZ                              = var.timezone
+    RAG_CHROMA_HOST                 = var.chroma_host
+    RAG_CHROMA_PORT                 = tostring(var.chroma_port)
+    RAG_CHROMA_COLLECTION           = var.chroma_collection
+    RAG_EMBEDDING_PROVIDER          = lower(var.embedding_provider)
+    RAG_EMBEDDING_MODEL             = var.embedding_model
+    RAG_OPENAI_EMBEDDING_DIMENSIONS = var.openai_embedding_dimensions
+    RAG_WORKSPACE_MOUNT             = var.workspace_mount
   }
   effective_env = merge(local.default_env, local.parsed_env, var.env)
 }

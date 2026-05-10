@@ -70,6 +70,35 @@ services:
     volumes:
       - ../applications/langchain-agent-chat:/app
       - langchain_agent_chat_node_modules:/app/node_modules
+
+  chromadb:
+    image: chromadb/chroma:latest
+    ports:
+      - "8010:8000"
+    volumes:
+      - ../data/chromadb:/data
+    # Matches terraform/swarm/chromadb internal port; rag-engine uses RAG_CHROMA_PORT=8000.
+
+  rag-engine:
+    image: homelab/rag-engine:latest
+    pull_policy: never
+    build:
+      context: ../applications/rag-engine
+      dockerfile: Dockerfile
+    env_file:
+      - ../.secrets/.env
+    environment:
+      RAG_CHROMA_HOST: chromadb
+      RAG_CHROMA_PORT: "8000"
+      RAG_CHROMA_COLLECTION: repo_rag
+      RAG_WORKSPACE_MOUNT: /workspace
+    volumes:
+      - ..:/workspace:ro
+    ports:
+      - "9015:8080"
+    depends_on:
+      - chromadb
+
 volumes:
   langgraph_postgres_data:
   langgraph_state:

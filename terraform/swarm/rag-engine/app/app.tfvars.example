@@ -28,6 +28,16 @@ endpoint_host       = "192.168.1.120"
 env_file_path       = "/mnt/eapp/code/homelab/.secrets/.env"
 workspace_host_path = "/mnt/eapp/code/homelab"
 
+# Google remains the default. For OpenAI, set:
+# embedding_provider = "openai"
+# embedding_model    = "text-embedding-3-small"
+# openai_embedding_dimensions = "" # optional; only for text-embedding-3* models
+#
+# If switching provider/model/dimensions, use a new Chroma collection or rebuild
+# the existing collection because vector dimensions/model spaces are not compatible.
+# chroma_collection = "repo_rag_openai"
+
 env = {
   RAG_ENGINE_API_KEY = "replace-me"
+  # OPENAI_API_KEY     = "sk-..."
 }

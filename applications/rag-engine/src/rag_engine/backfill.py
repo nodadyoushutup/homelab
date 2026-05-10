@@ -24,7 +24,7 @@ import subprocess
 import sys
 from typing import Any
 
-from rag_engine.embed_google import build_genai_client
+from rag_engine.embeddings import build_embedding_client
 from rag_engine.path_rules import load_exclude_segments
 from rag_engine.pipeline import (
     _allowed_prefixes,
@@ -306,7 +306,7 @@ def main(argv: list[str] | None = None) -> int:
 
     commit = (args.commit or "").strip() or _default_commit_label()
     collection = _collection()
-    genai_client = build_genai_client()
+    genai_client = build_embedding_client()
 
     from tqdm import tqdm
 

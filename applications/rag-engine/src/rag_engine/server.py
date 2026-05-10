@@ -10,7 +10,7 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse
 from starlette.routing import Route
 
-from rag_engine.embed_google import build_genai_client
+from rag_engine.embeddings import build_embedding_client, embedding_model
 from rag_engine.memory import (
     forget_memory,
     list_stale_memories,
@@ -62,11 +62,11 @@ async def rag_query(request: Request) -> JSONResponse:
     where = body.get("where")
     if where is not None and not isinstance(where, dict):
         return JSONResponse({"error": "where must be a JSON object"}, status_code=400)
-    model = (os.getenv("RAG_EMBEDDING_MODEL") or "gemini-embedding-001").strip()
+    model = embedding_model()
 
     def _sync():
         coll = chroma_repo_collection()
-        client = build_genai_client()
+        client = build_embedding_client()
         return run_query(
             coll,
             client,
@@ -174,7 +174,7 @@ async def memory_save_route(request: Request) -> JSONResponse:
         )
 
     def _sync():
-        client = build_genai_client()
+        client = build_embedding_client()
         return save_memory(
             genai_client=client,
             kind=str(body.get("kind") or ""),
@@ -220,7 +220,7 @@ async def memory_recall_route(request: Request) -> JSONResponse:
     query_text = str(body.get("query") or "")
 
     def _sync():
-        client = build_genai_client()
+        client = build_embedding_client()
         return recall_memory(
             genai_client=client,
             query_text=query_text,

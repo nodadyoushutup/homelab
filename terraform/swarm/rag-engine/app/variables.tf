@@ -102,9 +102,26 @@ variable "chroma_collection" {
 }
 
 variable "embedding_model" {
-  description = "Embedding model id used for ingest and query."
+  description = "Embedding model id used for ingest and query. Empty uses the provider default."
   type        = string
-  default     = "gemini-embedding-001"
+  default     = ""
+}
+
+variable "embedding_provider" {
+  description = "Embedding provider used for ingest and query: google or openai."
+  type        = string
+  default     = "google"
+
+  validation {
+    condition     = contains(["google", "openai"], lower(var.embedding_provider))
+    error_message = "embedding_provider must be google or openai."
+  }
+}
+
+variable "openai_embedding_dimensions" {
+  description = "Optional dimensions override for OpenAI text-embedding-3 models. Empty uses the model default."
+  type        = string
+  default     = ""
 }
 
 variable "workspace_host_path" {

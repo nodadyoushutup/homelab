@@ -1,6 +1,6 @@
 # mcp-rag
 
-Thin MCP server: **one tool** (`rag_search`) that POSTs to `rag-engine` `/v1/query` so agents use the same Gemini embeddings as ingest.
+Thin MCP server: **one tool** (`rag_search`) that POSTs to `rag-engine` `/v1/query` so agents use the same embedding provider/model as ingest.
 
 ## Environment
 

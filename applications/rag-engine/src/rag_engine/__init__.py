@@ -1,1 +1,1 @@
-"""RAG ingest engine: Google embeddings into ChromaDB."""
+"""RAG ingest engine: provider-configurable embeddings into ChromaDB."""

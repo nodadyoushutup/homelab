@@ -2,7 +2,7 @@
 
 ## What “RAG” means here
 
-The repo maintains a **semantic index** of allowed paths: files are chunked, embedded with Google’s embedding API, and stored in **Chroma**. Queries embed the question text with the **same model** and run a vector search so results stay comparable to ingest.
+The repo maintains a **semantic index** of allowed paths: files are chunked, embedded through the configured provider (Google by default, OpenAI optionally), and stored in **Chroma**. Queries embed the question text with the **same provider/model/dimensions** and run a vector search so results stay comparable to ingest.
 
 Downstream clients (**`mcp-rag`**, ADK, or direct HTTP) should treat **`rag-engine`** as the retrieval API, not a raw Chroma client with ad hoc settings—otherwise embeddings and collection choice can drift from what ingest used.
 
@@ -17,7 +17,7 @@ Downstream clients (**`mcp-rag`**, ADK, or direct HTTP) should treat **`rag-engi
 
 ## Typical flows
 
-**Ingest (index update):** eligible file changes → `rag-engine` pipeline (`pipeline.py`) → chunk strategies (`structured_chunks.py`, type-specific modules) → `embed_google.embed_batch` → vectors + metadata → Chroma collection (default name `repo_rag`).
+**Ingest (index update):** eligible file changes → `rag-engine` pipeline (`pipeline.py`) → chunk strategies (`structured_chunks.py`, type-specific modules) → provider dispatcher (`embeddings.py`) → vectors + metadata → Chroma collection (default name `repo_rag`).
 
 **Query:** client → `POST /v1/query` on `rag-engine` (or `rag_search` via `mcp-rag`) → embed query text → Chroma query with optional `where` metadata filter → ranked chunks returned to the client.
 

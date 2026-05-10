@@ -25,11 +25,11 @@ from rag_engine import memory  # noqa: E402
 
 
 class _FakeGenAIClient:
-    """Stand-in for ``google.genai.Client``; ``embed_batch`` is patched directly so this
+    """Stand-in embedding client; ``embed_batch`` is patched directly so this
     class only exists so the type hint passes when constructed."""
 
 
-def _fake_embed(_client, _model, texts):
+def _fake_embed(_client, _model, texts, **_kwargs):
     return [[float(len(t)), 1.0, 2.0] for t in texts]
 
 

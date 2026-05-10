@@ -1,4 +1,4 @@
-"""Long-term agent memory storage on top of the existing Chroma + Gemini stack.
+"""Long-term agent memory storage on top of the existing Chroma + embedding stack.
 
 Two collections, written through strict promotion gates:
 
@@ -20,9 +20,14 @@ from datetime import datetime, timezone
 from typing import Any, Iterable
 
 import chromadb
-from google import genai
 
-from rag_engine.embed_google import build_genai_client, embed_batch
+from rag_engine.embeddings import (
+    build_embedding_client,
+    embed_batch,
+    embedding_dimensions_label,
+    embedding_model,
+    embedding_provider,
+)
 
 log = logging.getLogger(__name__)
 
@@ -125,7 +130,7 @@ def _collection_for_kind(kind: str):
 
 
 def _embedding_model() -> str:
-    return (os.getenv("RAG_EMBEDDING_MODEL") or "gemini-embedding-001").strip()
+    return embedding_model()
 
 
 def _normalize_cited_paths(value: Any) -> list[str]:
@@ -330,6 +335,9 @@ def _build_metadata(
     ttl_days: int,
     commit: str,
     verified: bool,
+    embedding_provider_name: str,
+    embedding_model_name: str,
+    embedding_dimensions: str,
 ) -> dict[str, Any]:
     now_iso = _now_iso()
     meta: dict[str, Any] = {
@@ -339,6 +347,9 @@ def _build_metadata(
         "created_at": now_iso,
         "updated_at": now_iso,
         "commit_at_write": commit.strip(),
+        "embedding_provider": embedding_provider_name,
+        "embedding_model": embedding_model_name,
+        "embedding_dimensions": embedding_dimensions,
         "author": author.strip(),
         "verified": verified,
         "recall_count": 0,
@@ -425,7 +436,7 @@ def _merge_into_existing(
 
 def save_memory(
     *,
-    genai_client: genai.Client,
+    genai_client: Any,
     kind: str,
     source: str,
     title: str,
@@ -475,7 +486,10 @@ def save_memory(
             "scope": scope,
         },
     )
-    vectors = embed_batch(genai_client, _embedding_model(), [document])
+    provider = embedding_provider()
+    model = _embedding_model()
+    dimensions = embedding_dimensions_label(provider)
+    vectors = embed_batch(genai_client, model, [document], provider=provider)
     if not vectors:
         return {"error": "embedding_failed", "message": "embedder returned no vectors"}
     embedding = vectors[0]
@@ -520,6 +534,9 @@ def save_memory(
         ttl_days=ttl_days,
         commit=commit,
         verified=verified,
+        embedding_provider_name=provider,
+        embedding_model_name=model,
+        embedding_dimensions=dimensions,
     )
     new_id = _new_memory_id(kind)
     collection.add(
@@ -608,7 +625,7 @@ def _refresh_recall_metadata(collection, *, hit_id: str, metadata: dict[str, Any
 
 def recall_memory(
     *,
-    genai_client: genai.Client,
+    genai_client: Any,
     query_text: str,
     k: int = 3,
     kind: str = "auto",
@@ -632,7 +649,8 @@ def recall_memory(
     requested_k = max(1, int(k or 1))
     capped_k = min(requested_k, _recall_max_k())
     body_limit = _recall_body_max_chars()
-    vectors = embed_batch(genai_client, _embedding_model(), [text])
+    provider = embedding_provider()
+    vectors = embed_batch(genai_client, _embedding_model(), [text], provider=provider)
     if not vectors:
         return {"error": "embedding_failed", "message": "embedder returned no vectors", "results": []}
     embedding = vectors[0]
@@ -899,6 +917,6 @@ def sweep_expired(*, dry_run: bool = False, kinds: list[str] | None = None) -> d
     return summary
 
 
-def build_default_genai_client() -> genai.Client:
+def build_default_genai_client() -> Any:
     """Convenience for callers that just want the same client the engine uses."""
-    return build_genai_client()
+    return build_embedding_client()
