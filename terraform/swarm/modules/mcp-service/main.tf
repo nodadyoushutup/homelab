@@ -64,6 +64,16 @@ resource "docker_service" "this" {
           source    = mounts.value.source
           target    = mounts.value.target
           read_only = try(mounts.value.read_only, false)
+
+          dynamic "volume_options" {
+            for_each = try(mounts.value.volume_options, null) != null ? [mounts.value.volume_options] : []
+
+            content {
+              driver_name    = volume_options.value.driver_name
+              driver_options = volume_options.value.driver_options
+              no_copy        = try(volume_options.value.no_copy, false)
+            }
+          }
         }
       }
 

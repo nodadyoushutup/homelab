@@ -13,7 +13,7 @@ When switching provider/model/dimensions, use a new Chroma collection (for examp
 
 ## Chroma
 
-- Client: **HTTP** to the `chromadb` service (`RAG_CHROMA_HOST`, `RAG_CHROMA_PORT`; defaults suit Compose service name `chromadb` and port `8000`).
+- Client: **HTTP** to Chroma (`RAG_CHROMA_HOST`, `RAG_CHROMA_PORT`). In the Swarm layout, point the engine at the Chroma service hostname/IP and the published HTTP port (Terraform default **8000** on the Swarm host; see **`terraform/swarm/chromadb/app`**).
 - **Distance:** collections are created with **`hnsw:space` = `cosine`** (see `pipeline.py` `_collection()` and `memory.py` `_open_collection`).
 
 ## Collections (defaults)

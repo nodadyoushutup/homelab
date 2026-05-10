@@ -93,6 +93,16 @@ data "docker_network" "chromadb" {
   name = var.chromadb_network_name
 }
 
+module "code_nfs" {
+  source = "../../modules/homelab-nfs-mount"
+
+  volume_name = "${local.service_name}-mnt-eapp-code"
+  target      = "/mnt/eapp/code"
+  device      = var.nfs_code_device
+  nfs_server  = var.nfs_server
+  read_only   = true
+}
+
 resource "docker_network" "rag_engine" {
   name   = var.rag_engine_network_name
   driver = "overlay"
@@ -140,10 +150,16 @@ resource "docker_service" "rag_engine" {
       }
 
       mounts {
-        type      = "bind"
-        source    = var.workspace_host_path
-        target    = var.workspace_mount
-        read_only = true
+        type      = module.code_nfs.mount.type
+        source    = module.code_nfs.mount.source
+        target    = module.code_nfs.mount.target
+        read_only = module.code_nfs.mount.read_only
+
+        volume_options {
+          driver_name    = module.code_nfs.mount.volume_options.driver_name
+          driver_options = module.code_nfs.mount.volume_options.driver_options
+          no_copy        = module.code_nfs.mount.volume_options.no_copy
+        }
       }
 
       healthcheck {

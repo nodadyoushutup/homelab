@@ -41,10 +41,22 @@ variable "endpoint_host" {
   default     = "192.168.1.120"
 }
 
-variable "service_account_path" {
-  description = "Host path to the Google Workspace service account JSON."
+variable "service_account_container_path" {
+  description = "Path inside the container to the service account JSON (under the NFS /mnt/eapp/config mount)."
   type        = string
   default     = "/mnt/eapp/config/mcp-google-workspace/service_account.json"
+}
+
+variable "nfs_server" {
+  description = "NFS server for the shared config export."
+  type        = string
+  default     = "192.168.1.100"
+}
+
+variable "nfs_config_device" {
+  description = "NFS export for shared config (mounted read-only at /mnt/eapp/config)."
+  type        = string
+  default     = ":/mnt/eapp/config"
 }
 
 variable "timezone" {

@@ -13,6 +13,16 @@ locals {
   effective_env = merge(local.default_env, local.parsed_env, var.env)
 }
 
+module "code_nfs" {
+  source = "../../modules/homelab-nfs-mount"
+
+  volume_name = "${local.service_name}-mnt-eapp-code"
+  target      = "/mnt/eapp/code"
+  device      = var.nfs_code_device
+  nfs_server  = var.nfs_server
+  read_only   = false
+}
+
 module "mcp_atlassian" {
   source = "../../modules/mcp-service"
 
@@ -40,16 +50,5 @@ module "mcp_atlassian" {
     "--toolsets",
     "all",
   ]
-  mounts = [
-    {
-      type   = "bind"
-      source = var.screenshots_path
-      target = "/mnt/eapp/code/homelab/data/screenshots"
-    },
-    {
-      type   = "bind"
-      source = var.exports_path
-      target = "/mnt/eapp/code/homelab/data/exports"
-    },
-  ]
+  mounts = [module.code_nfs.mount]
 }

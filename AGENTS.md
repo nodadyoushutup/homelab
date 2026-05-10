@@ -21,7 +21,13 @@ docs to check before doing substantive work.
   Docker dev pair only: `docker/docker-compose.yml` runs `langgraph-dev` at
   `http://localhost:2124` and `langchain-agent-chat-dev` at
   `http://localhost:3000`, with the chat proxy targeting
-  `http://langgraph-dev:2024` on the Compose network. The Kubernetes pair is
+  `http://langgraph-dev:2024` on the Compose network.   The same file can also run **`rag-engine-dev`** and **`mcp-rag-dev`**
+  (bind-mounted source, host ports **9015** / **9016**) for fast RAG iteration;
+  **`langgraph-dev`** sets **`HOMELAB_MCP_RAG_URL`** so in-container agents use
+  that MCP. **Chroma stays on Swarm**; **`rag-engine-dev`** defaults Chroma to
+  **`192.168.1.120:8000`** via Compose (overriding **`chromadb`** in
+  **`.secrets/.env`**). Adjust with **`HOMELAB_DEV_CHROMA_HOST`** /
+  **`HOMELAB_DEV_CHROMA_PORT`** if needed. Swarm RAG deploys are unchanged. The Kubernetes pair is
   production only: `kubernetes/langgraph` and `kubernetes/langchain-agent-chat`.
   Do not point Docker dev chat at Kubernetes/prod LangGraph, and do not point
   Kubernetes/prod chat at Docker dev LangGraph.

@@ -1,6 +1,59 @@
 name: homelab-dev
 
 services:
+  # rag-engine-dev → Chroma on Swarm only. `environment` below overrides RAG_CHROMA_* from .secrets/.env
+  # so a Swarm-only hostname like `chromadb` does not break Compose (see docs/rag/operators-and-clients.md).
+  # Override: export HOMELAB_DEV_CHROMA_HOST=... HOMELAB_DEV_CHROMA_PORT=... before `docker compose up`.
+  rag-engine-dev:
+    image: homelab/rag-engine:latest
+    pull_policy: never
+    build:
+      context: ../applications/rag-engine
+      dockerfile: Dockerfile
+    env_file:
+      - ../.secrets/.env
+    environment:
+      PYTHONDONTWRITEBYTECODE: "1"
+      PYTHONUNBUFFERED: "1"
+      RAG_CHROMA_HOST: ${HOMELAB_DEV_CHROMA_HOST:-192.168.1.120}
+      RAG_CHROMA_PORT: ${HOMELAB_DEV_CHROMA_PORT:-8000}
+    ports:
+      - "9015:8080"
+    volumes:
+      - ../applications/rag-engine/src:/app/src:ro
+    healthcheck:
+      test: ["CMD", "rag-engine-healthcheck"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 25s
+
+  mcp-rag-dev:
+    image: homelab/mcp-rag:latest
+    pull_policy: never
+    build:
+      context: ../applications/mcp-rag
+      dockerfile: Dockerfile
+    env_file:
+      - ../.secrets/.env
+    environment:
+      PYTHONDONTWRITEBYTECODE: "1"
+      PYTHONUNBUFFERED: "1"
+      RAG_ENGINE_BASE_URL: http://rag-engine-dev:8080
+    depends_on:
+      rag-engine-dev:
+        condition: service_healthy
+    ports:
+      - "9016:8080"
+    volumes:
+      - ../applications/mcp-rag/src:/app/src:ro
+    healthcheck:
+      test: ["CMD", "mcp-rag", "healthcheck"]
+      interval: 5s
+      timeout: 5s
+      retries: 6
+      start_period: 15s
+
   langgraph-postgres:
     image: postgres:17-alpine
     env_file:
@@ -27,17 +80,32 @@ services:
     depends_on:
       langgraph-postgres:
         condition: service_healthy
+      mcp-rag-dev:
+        condition: service_healthy
     environment:
       HOMELAB_REPO_ROOT: /app
       PYTHONDONTWRITEBYTECODE: "1"
       PYTHONUNBUFFERED: "1"
       PIP_NO_CACHE_DIR: "1"
+      # Route MCP RAG to the compose stack (see mcp.json url_from_env on mcp-rag).
+      HOMELAB_MCP_RAG_URL: http://mcp-rag-dev:8080/mcp
     ports:
       - "2124:2024"
     volumes:
       - ../applications/langgraph:/app/langgraph
       - ../docs:/app/docs:ro
       - langgraph_state:/app/langgraph/agent/.langgraph_api
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "/usr/local/bin/langgraph_compose_healthcheck.py",
+        ]
+      interval: 10s
+      timeout: 35s
+      retries: 18
+      start_period: 120s
 
   langchain-agent-chat-dev:
     image: homelab/langchain-agent-chat:latest
@@ -55,7 +123,8 @@ services:
         # Server-side proxy target inside the Compose network.
         LANGGRAPH_API_URL: http://langgraph-dev:2024
     depends_on:
-      - langgraph-dev
+      langgraph-dev:
+        condition: service_healthy
     environment:
       NEXT_PUBLIC_API_URL: ${LANGCHAIN_AGENT_CHAT_PUBLIC_API_URL:-http://localhost:3000/api}
       NEXT_PUBLIC_ASSISTANT_ID: agent

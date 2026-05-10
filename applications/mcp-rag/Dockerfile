@@ -1,13 +1,19 @@
-FROM python:3.11-slim
+FROM python:3.11-slim-bookworm
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
+    PYTHONUNBUFFERED=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
 
 WORKDIR /app
 
 COPY requirements.txt /tmp/requirements.txt
 
-RUN pip install --no-cache-dir -r /tmp/requirements.txt
+RUN pip install --upgrade pip \
+    && pip install \
+        --retries 10 \
+        --default-timeout 120 \
+        --no-cache-dir \
+        -r /tmp/requirements.txt
 
 COPY src /app/src
 

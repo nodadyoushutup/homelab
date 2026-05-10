@@ -16,6 +16,26 @@ locals {
   effective_env = merge(local.default_env, var.env)
 }
 
+module "code_nfs" {
+  source = "../../modules/homelab-nfs-mount"
+
+  volume_name = "${local.service_name}-mnt-eapp-code"
+  target      = "/mnt/eapp/code"
+  device      = var.nfs_code_device
+  nfs_server  = var.nfs_server
+  read_only   = false
+}
+
+module "config_nfs" {
+  source = "../../modules/homelab-nfs-mount"
+
+  volume_name = "${local.service_name}-mnt-eapp-config"
+  target      = "/mnt/eapp/config"
+  device      = var.nfs_config_device
+  nfs_server  = var.nfs_server
+  read_only   = false
+}
+
 module "mcp_bash_pipeline" {
   source = "../../modules/mcp-service"
 
@@ -34,15 +54,7 @@ module "mcp_bash_pipeline" {
   user                  = "1000:1000"
   cap_drop              = ["ALL"]
   mounts = [
-    {
-      type   = "bind"
-      source = var.code_root_path
-      target = "/mnt/eapp/code"
-    },
-    {
-      type   = "bind"
-      source = var.config_root_path
-      target = "/mnt/eapp/config"
-    },
+    module.code_nfs.mount,
+    module.config_nfs.mount,
   ]
 }

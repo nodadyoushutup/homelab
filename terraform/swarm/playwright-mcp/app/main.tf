@@ -5,6 +5,16 @@ locals {
   config_file   = "${var.config_dir}/config.json"
 }
 
+module "code_nfs" {
+  source = "../../modules/homelab-nfs-mount"
+
+  volume_name = "${local.service_name}-mnt-eapp-code"
+  target      = "/mnt/eapp/code"
+  device      = var.nfs_code_device
+  nfs_server  = var.nfs_server
+  read_only   = false
+}
+
 resource "docker_network" "playwright_mcp" {
   name   = local.network_name
   driver = "overlay"
@@ -50,21 +60,16 @@ resource "docker_service" "playwright_mcp" {
       }
 
       mounts {
-        type   = "bind"
-        source = var.output_dir
-        target = var.output_dir
-      }
+        type      = module.code_nfs.mount.type
+        source    = module.code_nfs.mount.source
+        target    = module.code_nfs.mount.target
+        read_only = module.code_nfs.mount.read_only
 
-      mounts {
-        type   = "bind"
-        source = var.screenshot_dir
-        target = var.screenshot_dir
-      }
-
-      mounts {
-        type   = "bind"
-        source = var.config_dir
-        target = var.config_dir
+        volume_options {
+          driver_name    = module.code_nfs.mount.volume_options.driver_name
+          driver_options = module.code_nfs.mount.volume_options.driver_options
+          no_copy        = module.code_nfs.mount.volume_options.no_copy
+        }
       }
 
       healthcheck {

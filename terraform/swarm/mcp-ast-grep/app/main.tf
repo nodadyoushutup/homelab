@@ -13,6 +13,16 @@ locals {
   effective_env = merge(local.default_env, var.env)
 }
 
+module "code_nfs" {
+  source = "../../modules/homelab-nfs-mount"
+
+  volume_name = "${local.service_name}-mnt-eapp-code"
+  target      = "/mnt/eapp/code"
+  device      = var.nfs_code_device
+  nfs_server  = var.nfs_server
+  read_only   = true
+}
+
 module "mcp_ast_grep" {
   source = "../../modules/mcp-service"
 
@@ -30,12 +40,5 @@ module "mcp_ast_grep" {
   env                   = local.effective_env
   user                  = "1000:1000"
   cap_drop              = ["ALL"]
-  mounts = [
-    {
-      type      = "bind"
-      source    = var.code_root_path
-      target    = "/mnt/eapp/code"
-      read_only = true
-    },
-  ]
+  mounts                = [module.code_nfs.mount]
 }

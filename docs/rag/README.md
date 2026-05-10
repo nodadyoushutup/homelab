@@ -17,7 +17,7 @@ Human-facing **system knowledge** for the semantic index: what it is, what gets 
 | [overview.md](overview.md) | Components, request paths, and how MCP, engine, and Chroma relate |
 | [corpus-and-ingest.md](corpus-and-ingest.md) | Corpus layout (`docs/knowledge/`), allowlists, hooks, what is excluded |
 | [embeddings-and-storage.md](embeddings-and-storage.md) | Embedding model, batching, Chroma collections, metadata at a glance |
-| [operators-and-clients.md](operators-and-clients.md) | Compose services, env vars, Cursor MCP, LangGraph |
+| [operators-and-clients.md](operators-and-clients.md) | Swarm (Terraform), Docker dev `rag-engine-dev`/`mcp-rag-dev` + LangGraph `HOMELAB_MCP_RAG_URL`, env vars, Cursor MCP |
 
 ## Quick links
 

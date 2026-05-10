@@ -10,9 +10,19 @@ locals {
   default_env = {
     TZ                                 = var.timezone
     MCP_GOOGLE_WORKSPACE_LISTEN_PORT   = "8086"
-    WORKSPACE_MCP_SERVICE_ACCOUNT_FILE = "/workspace-secrets/service_account.json"
+    WORKSPACE_MCP_SERVICE_ACCOUNT_FILE = var.service_account_container_path
   }
   effective_env = merge(local.default_env, local.parsed_env, var.env)
+}
+
+module "config_nfs" {
+  source = "../../modules/homelab-nfs-mount"
+
+  volume_name = "${local.service_name}-mnt-eapp-config"
+  target      = "/mnt/eapp/config"
+  device      = var.nfs_config_device
+  nfs_server  = var.nfs_server
+  read_only   = true
 }
 
 module "mcp_google_workspace" {
@@ -32,12 +42,5 @@ module "mcp_google_workspace" {
   env                   = local.effective_env
   user                  = "1000:1000"
   cap_drop              = ["ALL"]
-  mounts = [
-    {
-      type      = "bind"
-      source    = var.service_account_path
-      target    = "/workspace-secrets/service_account.json"
-      read_only = true
-    },
-  ]
+  mounts                = [module.config_nfs.mount]
 }

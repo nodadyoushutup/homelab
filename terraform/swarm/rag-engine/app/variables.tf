@@ -124,14 +124,20 @@ variable "openai_embedding_dimensions" {
   default     = ""
 }
 
-variable "workspace_host_path" {
-  description = "Host path mounted read-only for repository ingest."
+variable "nfs_server" {
+  description = "NFS server for the homelab code export."
   type        = string
-  default     = "/mnt/eapp/code/homelab"
+  default     = "192.168.1.100"
+}
+
+variable "nfs_code_device" {
+  description = "NFS export for repo code (mounted read-only at /mnt/eapp/code)."
+  type        = string
+  default     = ":/mnt/eapp/code"
 }
 
 variable "workspace_mount" {
-  description = "Container path for the repository ingest mount."
+  description = "Container path for repository ingest (path under the NFS code mount)."
   type        = string
-  default     = "/workspace"
+  default     = "/mnt/eapp/code/homelab"
 }

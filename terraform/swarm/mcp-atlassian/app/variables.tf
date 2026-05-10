@@ -41,16 +41,16 @@ variable "endpoint_host" {
   default     = "192.168.1.120"
 }
 
-variable "screenshots_path" {
-  description = "Host path mounted for screenshot artifacts."
+variable "nfs_server" {
+  description = "NFS server for the homelab code export."
   type        = string
-  default     = "/mnt/eapp/code/homelab/data/screenshots"
+  default     = "192.168.1.100"
 }
 
-variable "exports_path" {
-  description = "Host path mounted for export artifacts."
+variable "nfs_code_device" {
+  description = "NFS export for repo code (mounted at /mnt/eapp/code; screenshots/exports live under homelab/data/...)."
   type        = string
-  default     = "/mnt/eapp/code/homelab/data/exports"
+  default     = ":/mnt/eapp/code"
 }
 
 variable "timezone" {

@@ -4,6 +4,18 @@ locals {
     TZ = var.timezone
   }
   effective_env = merge(local.default_env, var.env)
+
+  kubeconfig_container_path = "/mnt/eapp/config/mcp-kubernetes/kubeconfig"
+}
+
+module "config_nfs" {
+  source = "../../modules/homelab-nfs-mount"
+
+  volume_name = "${local.service_name}-mnt-eapp-config"
+  target      = "/mnt/eapp/config"
+  device      = var.nfs_config_device
+  nfs_server  = var.nfs_server
+  read_only   = true
 }
 
 module "mcp_kubernetes" {
@@ -27,7 +39,7 @@ module "mcp_kubernetes" {
     "--port",
     "8106",
     "--kubeconfig",
-    "/kubeconfig/config",
+    local.kubeconfig_container_path,
     "--cluster-provider",
     "kubeconfig",
     "--toolsets",
@@ -38,12 +50,5 @@ module "mcp_kubernetes" {
     "--disable-multi-cluster",
     "--stateless",
   ]
-  mounts = [
-    {
-      type      = "bind"
-      source    = var.kubeconfig_path
-      target    = "/kubeconfig/config"
-      read_only = true
-    },
-  ]
+  mounts = [module.config_nfs.mount]
 }

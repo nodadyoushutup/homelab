@@ -25,8 +25,10 @@ provider_config = {
 image_reference     = "ghcr.io/nodadyoushutup/rag-engine:0.0.6"
 published_port      = 9015
 endpoint_host       = "192.168.1.120"
-env_file_path       = "/mnt/eapp/code/homelab/.secrets/.env"
-workspace_host_path = "/mnt/eapp/code/homelab"
+env_file_path    = "/mnt/eapp/code/homelab/.secrets/.env"
+workspace_mount  = "/mnt/eapp/code/homelab"
+# nfs_server      = "192.168.1.100"
+# nfs_code_device = ":/mnt/eapp/code"
 
 # Google remains the default. For OpenAI, set:
 # embedding_provider = "openai"

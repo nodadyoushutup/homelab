@@ -35,16 +35,22 @@ variable "endpoint_host" {
   default     = "192.168.1.120"
 }
 
-variable "code_root_path" {
-  description = "Host path mounted as /mnt/eapp/code."
+variable "nfs_server" {
+  description = "NFS server for homelab code and config exports."
   type        = string
-  default     = "/mnt/eapp/code"
+  default     = "192.168.1.100"
 }
 
-variable "config_root_path" {
-  description = "Host path mounted as /mnt/eapp/config."
+variable "nfs_code_device" {
+  description = "NFS export for repo code (mounted at /mnt/eapp/code in the task)."
   type        = string
-  default     = "/mnt/eapp/config"
+  default     = ":/mnt/eapp/code"
+}
+
+variable "nfs_config_device" {
+  description = "NFS export for shared config (mounted at /mnt/eapp/config in the task)."
+  type        = string
+  default     = ":/mnt/eapp/config"
 }
 
 variable "timezone" {

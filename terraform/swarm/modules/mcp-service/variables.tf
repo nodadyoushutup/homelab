@@ -102,12 +102,17 @@ variable "cap_drop" {
 }
 
 variable "mounts" {
-  description = "Container mounts."
+  description = "Container mounts. For type=volume NFS, set volume_options (local driver + nfs device) like gha-runner services."
   type = list(object({
     type      = string
     source    = string
     target    = string
     read_only = optional(bool)
+    volume_options = optional(object({
+      driver_name    = string
+      driver_options = map(string)
+      no_copy        = optional(bool)
+    }))
   }))
   default = []
 }

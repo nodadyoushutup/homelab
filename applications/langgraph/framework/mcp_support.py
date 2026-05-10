@@ -113,6 +113,11 @@ def _normalize_server_config(raw_servers: dict[str, dict[str, Any]]) -> dict[str
 
         if transport in {"http", "streamable_http", "sse"}:
             url = server_config.get("url")
+            url_env = server_config.get("url_from_env")
+            if isinstance(url_env, str) and url_env.strip():
+                from_env = os.getenv(url_env.strip(), "").strip()
+                if from_env:
+                    url = from_env
             if not url:
                 continue
             normalized[server_name] = {

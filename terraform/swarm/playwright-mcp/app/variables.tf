@@ -63,28 +63,16 @@ variable "config_dir" {
   default     = "/mnt/eapp/code/homelab/.secrets/playwright"
 }
 
-variable "screenshots_volume_name" {
-  description = "Legacy Docker volume name for the Playwright MCP output directory."
-  type        = string
-  default     = "playwright-mcp-output"
-}
-
-variable "screenshots_nfs_server" {
-  description = "NFS server that exports the screenshot output path."
+variable "nfs_server" {
+  description = "NFS server for the homelab code export."
   type        = string
   default     = "192.168.1.100"
 }
 
-variable "screenshots_nfs_device" {
-  description = "NFS export path used for the screenshot output volume."
+variable "nfs_code_device" {
+  description = "NFS export for repo code (mounted at /mnt/eapp/code; output, screenshots, and config paths must live under it)."
   type        = string
-  default     = ":/mnt/eapp/code/homelab/data/playwright"
-}
-
-variable "screenshots_nfs_options" {
-  description = "NFS mount options for the screenshot output volume, excluding the addr option."
-  type        = string
-  default     = "nfsvers=4.2,rw"
+  default     = ":/mnt/eapp/code"
 }
 
 variable "dns_nameservers" {
