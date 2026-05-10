@@ -18,6 +18,7 @@ from rag_engine.memory import (
     save_memory,
     sweep_expired,
 )
+from rag_engine.backfill import options_from_api_body, run_backfill
 from rag_engine.pipeline import chroma_repo_collection, prune_orphan_paths, run_embed_job
 from rag_engine.query import run_query
 
@@ -111,6 +112,44 @@ async def embed_commit(request: Request) -> JSONResponse:
     except Exception as exc:
         log.exception("embed-commit failed")
         return JSONResponse({"error": str(exc)}, status_code=500)
+
+
+async def backfill_route(request: Request) -> JSONResponse:
+    """Run workspace backfill inside the service (same as ``python -m rag_engine.backfill``).
+
+    Long-running: ensure reverse-proxy/read timeouts are high enough. JSON body mirrors CLI flags;
+    use ``"confirm": true`` instead of ``--yes`` for mutating runs.
+    """
+    expected = (os.getenv("RAG_ENGINE_API_KEY") or "").strip()
+    if expected:
+        got = (request.headers.get("x-api-key") or "").strip()
+        if not hmac.compare_digest(got, expected):
+            return JSONResponse({"error": "Unauthorized"}, status_code=401)
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse({"error": "Invalid JSON"}, status_code=400)
+    if not isinstance(body, dict):
+        return JSONResponse({"error": "JSON body must be an object"}, status_code=400)
+
+    opts, parse_err = options_from_api_body(body)
+    if parse_err:
+        return JSONResponse({"error": parse_err}, status_code=400)
+    assert opts is not None
+
+    def _run():
+        return run_backfill(opts, interactive=False)
+
+    try:
+        code, payload = await run_in_threadpool(_run)
+    except Exception as exc:
+        log.exception("backfill failed")
+        return JSONResponse({"error": str(exc)}, status_code=500)
+
+    out = {"exit_code": code, **payload}
+    if code == 2:
+        return JSONResponse(out, status_code=400)
+    return JSONResponse(out, status_code=200)
 
 
 async def reconcile_orphans(request: Request) -> JSONResponse:
@@ -351,6 +390,7 @@ app = Starlette(
         Route("/healthz", endpoint=healthz, methods=["GET"]),
         Route("/v1/query", endpoint=rag_query, methods=["POST"]),
         Route("/v1/embed-commit", endpoint=embed_commit, methods=["POST"]),
+        Route("/v1/backfill", endpoint=backfill_route, methods=["POST"]),
         Route("/v1/reconcile-orphans", endpoint=reconcile_orphans, methods=["POST"]),
         Route("/v1/memory/save", endpoint=memory_save_route, methods=["POST"]),
         Route("/v1/memory/recall", endpoint=memory_recall_route, methods=["POST"]),

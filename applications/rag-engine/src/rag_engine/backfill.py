@@ -11,6 +11,7 @@ Run inside the rag-engine image (same env as the HTTP server), e.g.:
   ./scripts/rag/backfill.sh --yes --prune-orphans-only --prune-dry-run
 
 Requires ``chromadb`` service up and ``RAG_WORKSPACE_MOUNT`` matching the repo mount.
+Operators may trigger the same logic via ``POST /v1/backfill`` on rag-engine (see ``server.py``).
 Interactive runs print index roots and file count, then ask ``Proceed? [Y/n]`` (default Y).
 During indexing, Ctrl+C prompts for pause, stop (summary), or continue; a second Ctrl+C stops immediately.
 """
@@ -22,6 +23,7 @@ import logging
 import os
 import subprocess
 import sys
+from dataclasses import dataclass
 from typing import Any
 
 from rag_engine.embeddings import build_embedding_client
@@ -162,6 +164,242 @@ def _default_commit_label() -> str:
     return "backfill"
 
 
+@dataclass(frozen=True)
+class BackfillOptions:
+    dry_run: bool = False
+    max_files: int = 0
+    commit: str = ""
+    json_summary: bool = False
+    yes: bool = False
+    force: bool = False
+    prune_orphans: bool = False
+    prune_orphans_only: bool = False
+    prune_dry_run: bool = False
+
+
+def run_backfill(
+    opts: BackfillOptions,
+    *,
+    interactive: bool,
+) -> tuple[int, dict[str, Any]]:
+    """Run backfill; used by CLI and ``POST /v1/backfill``.
+
+    When ``interactive`` is False (HTTP API), mutating operations require ``opts.yes``.
+    Returns ``(exit_code, payload)`` where ``payload`` is JSON-serializable.
+    """
+    _configure_logging()
+    log = logging.getLogger("rag_engine.backfill")
+
+    if opts.prune_orphans_only and opts.prune_orphans:
+        log.warning("backfill: --prune-orphans-only wins over --prune-orphans")
+
+    prune_dry = bool(opts.prune_dry_run) or (bool(opts.dry_run) and bool(opts.prune_orphans_only))
+
+    def _reject_no_confirm(action: str) -> tuple[int, dict[str, Any]]:
+        return (
+            2,
+            {
+                "error": "confirm_required",
+                "message": f"Pass confirm=true (--yes) for {action} when non-interactive.",
+            },
+        )
+
+    def _prompt_orphans() -> tuple[bool, int]:
+        if prune_dry or opts.yes:
+            return True, 0
+        if not interactive:
+            return False, 2
+        line = input("Proceed with orphan prune? [Y/n]: ").strip().lower()
+        if line in ("n", "no"):
+            print("backfill: cancelled.", file=sys.stderr)
+            return False, 0
+        return True, 0
+
+    if opts.prune_orphans_only:
+        _print_prune_plan()
+        ok, code = _prompt_orphans()
+        if code == 2:
+            return _reject_no_confirm("orphan prune")
+        if not ok:
+            return (0, {"cancelled": True})
+        collection = _collection()
+        pr = prune_orphan_paths(collection, dry_run=prune_dry)
+        if opts.json_summary:
+            print(json.dumps({"prune": pr}))
+        else:
+            log.info("orphan prune: %s", json.dumps(pr, indent=2))
+        return (0, {"prune": pr, "prune_dry_run": prune_dry})
+
+    paths = collect_backfill_relative_paths()
+    if opts.max_files > 0:
+        paths = paths[: opts.max_files]
+
+    log.info(
+        "backfill: %s files to consider (max_bytes=%s)",
+        len(paths),
+        os.getenv("RAG_BACKFILL_MAX_FILE_BYTES", "5242880"),
+    )
+
+    if opts.dry_run:
+        _print_index_plan(len(paths))
+        print(len(paths))
+        return (0, {"dry_run": True, "files_matched": len(paths)})
+
+    if not paths:
+        log.warning("backfill: no paths matched; check RAG_ALLOWED_PATH_PREFIXES and mounts")
+        if not opts.prune_orphans:
+            return (0, {"files_seen": 0, "note": "no_paths_matched"})
+        log.info("backfill: continuing with --prune-orphans only (no files to index)")
+        _print_index_plan(0)
+        _print_prune_plan()
+        if not opts.prune_dry_run and not opts.yes:
+            if not interactive:
+                return _reject_no_confirm("orphan prune (no indexable files)")
+            line = input("Proceed with orphan prune? [Y/n]: ").strip().lower()
+            if line in ("n", "no"):
+                print("backfill: cancelled.", file=sys.stderr)
+                return (0, {"cancelled": True})
+        collection = _collection()
+        pr = prune_orphan_paths(collection, dry_run=bool(opts.prune_dry_run))
+        summary = {
+            "commit": (opts.commit or "").strip() or _default_commit_label(),
+            "files_seen": 0,
+            "files_completed": 0,
+            "indexed": 0,
+            "chunks": 0,
+            "skipped": 0,
+            "unchanged": 0,
+            "errors": [],
+            "user_stopped": False,
+            "prune": pr,
+        }
+        if opts.json_summary:
+            print(json.dumps(summary))
+        else:
+            log.info("orphan prune: %s", json.dumps(pr, indent=2))
+            log.info("backfill done: %s", json.dumps(summary, indent=2))
+        return (0, summary)
+
+    _print_index_plan(len(paths))
+    if not opts.yes:
+        if not interactive:
+            return _reject_no_confirm("full index")
+        if not _prompt_proceed_default_yes():
+            print("backfill: cancelled.", file=sys.stderr)
+            return (0, {"cancelled": True})
+
+    commit = (opts.commit or "").strip() or _default_commit_label()
+    collection = _collection()
+    genai_client = build_embedding_client()
+
+    from tqdm import tqdm
+
+    skip_unchanged = not opts.force
+    totals: dict[str, Any] = {"indexed": 0, "chunks": 0, "skipped": 0, "unchanged": 0, "errors": []}
+    user_stopped = False
+    with tqdm(total=len(paths), unit="file", desc="RAG backfill", file=sys.stderr) as bar:
+        i = 0
+        while i < len(paths):
+            rel = paths[i]
+            bar.set_postfix(last=(rel[-48:] if len(rel) > 48 else rel), refresh=False)
+            try:
+                one = upsert_paths(
+                    collection,
+                    genai_client,
+                    [rel],
+                    commit,
+                    skip_unchanged=skip_unchanged,
+                )
+                totals["indexed"] += int(one["indexed"])
+                totals["chunks"] += int(one["chunks"])
+                totals["skipped"] += int(one["skipped"])
+                totals["unchanged"] += int(one.get("unchanged", 0))
+                totals["errors"].extend(one["errors"])
+                i += 1
+                bar.update(1)
+            except KeyboardInterrupt:
+                bar.clear()
+                if not interactive:
+                    user_stopped = True
+                    break
+                choice = _prompt_after_backfill_interrupt(i, len(paths), rel)
+                if choice == "stop":
+                    user_stopped = True
+                    break
+                if choice == "pause" and not _wait_pause_resume():
+                    user_stopped = True
+                    break
+                continue
+
+    summary: dict[str, Any] = {
+        "commit": commit,
+        "files_seen": len(paths),
+        "files_completed": i,
+        "indexed": totals["indexed"],
+        "chunks": totals["chunks"],
+        "skipped": totals["skipped"],
+        "unchanged": totals["unchanged"],
+        "errors": totals["errors"],
+        "user_stopped": user_stopped,
+    }
+    if opts.prune_orphans and not user_stopped:
+        _print_prune_plan()
+        pr = prune_orphan_paths(collection, dry_run=bool(opts.prune_dry_run))
+        summary["prune"] = pr
+        if not opts.json_summary:
+            log.info("orphan prune: %s", json.dumps(pr, indent=2))
+    elif opts.prune_orphans and user_stopped:
+        log.warning("backfill: skipping --prune-orphans because indexing was stopped early")
+
+    if opts.json_summary:
+        print(json.dumps(summary))
+    else:
+        log.info("backfill done: %s", json.dumps(summary, indent=2))
+
+    if user_stopped:
+        return (130, summary)
+    if totals["errors"]:
+        return (1, summary)
+    return (0, summary)
+
+
+def options_from_api_body(body: dict[str, Any]) -> tuple[BackfillOptions | None, str | None]:
+    """Build options from JSON; return ``(opts, error_message)``."""
+
+    def _bool(key: str, default: bool = False) -> bool:
+        v = body.get(key, default)
+        if isinstance(v, bool):
+            return v
+        if v in (0, 1, "0", "1", "true", "false", "yes", "no"):
+            return str(v).lower() in ("1", "true", "yes")
+        return default
+
+    def _int(key: str, default: int = 0) -> int:
+        v = body.get(key, default)
+        try:
+            return int(v)
+        except (TypeError, ValueError):
+            return default
+
+    commit = body.get("commit")
+    if commit is not None and not isinstance(commit, str):
+        return None, "commit must be a string"
+    return (
+        BackfillOptions(
+            dry_run=_bool("dry_run"),
+            max_files=_int("max_files", 0),
+            commit=(commit or "").strip(),
+            json_summary=_bool("json_summary"),
+            yes=_bool("confirm") or _bool("yes"),
+            force=_bool("force"),
+            prune_orphans=_bool("prune_orphans"),
+            prune_orphans_only=_bool("prune_orphans_only"),
+            prune_dry_run=_bool("prune_dry_run"),
+        ),
+        None,
+    )
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Backfill RAG index from workspace tree.")
     parser.add_argument(
@@ -213,167 +451,20 @@ def main(argv: list[str] | None = None) -> int:
         help="With orphan prune: list counts and sample paths only; no deletes.",
     )
     args = parser.parse_args(argv)
-    _configure_logging()
-    log = logging.getLogger("rag_engine.backfill")
-
-    if args.prune_orphans_only and args.prune_orphans:
-        log.warning("backfill: --prune-orphans-only wins over --prune-orphans")
-
-    prune_dry = bool(args.prune_dry_run) or (bool(args.dry_run) and bool(args.prune_orphans_only))
-
-    if args.prune_orphans_only:
-        _print_prune_plan()
-        if not prune_dry and not args.yes:
-            if not sys.stdin.isatty():
-                print(
-                    "backfill: stdin is not a TTY; use --yes to confirm orphan prune without a prompt.",
-                    file=sys.stderr,
-                )
-                return 2
-            line = input("Proceed with orphan prune? [Y/n]: ").strip().lower()
-            if line in ("n", "no"):
-                print("backfill: cancelled.", file=sys.stderr)
-                return 0
-        collection = _collection()
-        pr = prune_orphan_paths(collection, dry_run=prune_dry)
-        if args.json_summary:
-            print(json.dumps({"prune": pr}))
-        else:
-            log.info("orphan prune: %s", json.dumps(pr, indent=2))
-        return 0
-
-    paths = collect_backfill_relative_paths()
-    if args.max_files > 0:
-        paths = paths[: args.max_files]
-
-    log.info("backfill: %s files to consider (max_bytes=%s)", len(paths), os.getenv("RAG_BACKFILL_MAX_FILE_BYTES", "5242880"))
-
-    if args.dry_run:
-        _print_index_plan(len(paths))
-        print(len(paths))
-        return 0
-
-    if not paths:
-        log.warning("backfill: no paths matched; check RAG_ALLOWED_PATH_PREFIXES and mounts")
-        if not args.prune_orphans:
-            return 0
-        log.info("backfill: continuing with --prune-orphans only (no files to index)")
-        _print_index_plan(0)
-        _print_prune_plan()
-        if not args.prune_dry_run and not args.yes:
-            if not sys.stdin.isatty():
-                print(
-                    "backfill: stdin is not a TTY; use --yes to confirm orphan prune without a prompt.",
-                    file=sys.stderr,
-                )
-                return 2
-            line = input("Proceed with orphan prune? [Y/n]: ").strip().lower()
-            if line in ("n", "no"):
-                print("backfill: cancelled.", file=sys.stderr)
-                return 0
-        collection = _collection()
-        pr = prune_orphan_paths(collection, dry_run=bool(args.prune_dry_run))
-        summary = {
-            "commit": (args.commit or "").strip() or _default_commit_label(),
-            "files_seen": 0,
-            "files_completed": 0,
-            "indexed": 0,
-            "chunks": 0,
-            "skipped": 0,
-            "unchanged": 0,
-            "errors": [],
-            "user_stopped": False,
-            "prune": pr,
-        }
-        if args.json_summary:
-            print(json.dumps(summary))
-        else:
-            log.info("orphan prune: %s", json.dumps(pr, indent=2))
-            log.info("backfill done: %s", json.dumps(summary, indent=2))
-        return 0
-
-    _print_index_plan(len(paths))
-    if not args.yes:
-        if not sys.stdin.isatty():
-            print(
-                "backfill: stdin is not a TTY; use --yes to confirm indexing without a prompt.",
-                file=sys.stderr,
-            )
-            return 2
-        if not _prompt_proceed_default_yes():
-            print("backfill: cancelled.", file=sys.stderr)
-            return 0
-
-    commit = (args.commit or "").strip() or _default_commit_label()
-    collection = _collection()
-    genai_client = build_embedding_client()
-
-    from tqdm import tqdm
-
-    skip_unchanged = not args.force
-    totals: dict[str, Any] = {"indexed": 0, "chunks": 0, "skipped": 0, "unchanged": 0, "errors": []}
-    user_stopped = False
-    with tqdm(total=len(paths), unit="file", desc="RAG backfill", file=sys.stderr) as bar:
-        i = 0
-        while i < len(paths):
-            rel = paths[i]
-            bar.set_postfix(last=(rel[-48:] if len(rel) > 48 else rel), refresh=False)
-            try:
-                one = upsert_paths(
-                    collection,
-                    genai_client,
-                    [rel],
-                    commit,
-                    skip_unchanged=skip_unchanged,
-                )
-                totals["indexed"] += int(one["indexed"])
-                totals["chunks"] += int(one["chunks"])
-                totals["skipped"] += int(one["skipped"])
-                totals["unchanged"] += int(one.get("unchanged", 0))
-                totals["errors"].extend(one["errors"])
-                i += 1
-                bar.update(1)
-            except KeyboardInterrupt:
-                bar.clear()
-                choice = _prompt_after_backfill_interrupt(i, len(paths), rel)
-                if choice == "stop":
-                    user_stopped = True
-                    break
-                if choice == "pause" and not _wait_pause_resume():
-                    user_stopped = True
-                    break
-                # resume: retry the same file (safe if interrupt happened mid-upsert)
-                continue
-
-    summary: dict[str, Any] = {
-        "commit": commit,
-        "files_seen": len(paths),
-        "files_completed": i,
-        "indexed": totals["indexed"],
-        "chunks": totals["chunks"],
-        "skipped": totals["skipped"],
-        "unchanged": totals["unchanged"],
-        "errors": totals["errors"],
-        "user_stopped": user_stopped,
-    }
-    if args.prune_orphans and not user_stopped:
-        _print_prune_plan()
-        pr = prune_orphan_paths(collection, dry_run=bool(args.prune_dry_run))
-        summary["prune"] = pr
-        if not args.json_summary:
-            log.info("orphan prune: %s", json.dumps(pr, indent=2))
-    elif args.prune_orphans and user_stopped:
-        log.warning("backfill: skipping --prune-orphans because indexing was stopped early")
-
-    if args.json_summary:
-        print(json.dumps(summary))
-    else:
-        log.info("backfill done: %s", json.dumps(summary, indent=2))
-    if user_stopped:
-        return 130
-    if totals["errors"]:
-        return 1
-    return 0
+    opts = BackfillOptions(
+        dry_run=args.dry_run,
+        max_files=args.max_files,
+        commit=args.commit,
+        json_summary=args.json_summary,
+        yes=args.yes,
+        force=args.force,
+        prune_orphans=args.prune_orphans,
+        prune_orphans_only=args.prune_orphans_only,
+        prune_dry_run=args.prune_dry_run,
+    )
+    interactive = sys.stdin.isatty()
+    code, _payload = run_backfill(opts, interactive=interactive)
+    return code
 
 
 if __name__ == "__main__":

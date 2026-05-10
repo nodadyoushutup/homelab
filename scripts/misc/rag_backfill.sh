@@ -1,23 +1,15 @@
 #!/usr/bin/env bash
-# Run `python -m rag_engine.backfill` inside the deployed rag-engine container.
+# Trigger rag-engine backfill via POST /v1/backfill (default), or optionally run
+# ``python -m rag_engine.backfill`` inside a container over SSH (legacy).
 #
-# Defaults target the Swarm rag-engine on swarm-cp-0 (SSH to 192.168.1.120) and
-# pass any unrecognized flags straight through to the backfill module so you can
-# use --dry-run / --max-files / --prune-orphans / --force / --yes / etc.
-#
-# Path prefixes the backfill walks come from RAG_ALLOWED_PATH_PREFIXES on the
-# rag-engine container. To change them:
-#   * Local source of truth: <repo>/.secrets/.env (RAG_ALLOWED_PATH_PREFIXES=...)
-#   * Code default fallback: applications/rag-engine/src/rag_engine/pipeline.py
-#     (`_allowed_prefixes()` -> "docs/,addons/cfs_addons/,applications/,AGENTS.md")
-#   * Excluded directory names: RAG_EXCLUDE_PATH_SEGMENTS
-#     (defaults in applications/rag-engine/src/rag_engine/path_rules.py)
-#   * Excluded file suffixes:   RAG_EXCLUDE_FILE_SUFFIXES (same file)
-#   * Max file size in bytes:   RAG_BACKFILL_MAX_FILE_BYTES (default 5 MiB)
-# After editing .secrets/.env you must redeploy / restart the rag-engine service
-# so the new env is picked up before re-running this script.
+# Default loads <repo>/.secrets/.env for RAG_ENGINE_BASE_URL and RAG_ENGINE_API_KEY.
+# Long runs: set RAG_BACKFILL_HTTP_TIMEOUT_SEC (seconds) for the client; raise nginx
+# proxy read timeouts for the rag-engine route so the connection is not cut mid-run.
 
 set -euo pipefail
+
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+REMOTE_CLIENT="${REPO_ROOT}/scripts/misc/rag_backfill_remote.py"
 
 DEFAULT_HOST="nodadyoushutup@192.168.1.120"
 DEFAULT_SSH_KEY="/mnt/eapp/config/.ssh/id_ed25519"
@@ -28,63 +20,64 @@ REMOTE_HOST="${RAG_BACKFILL_HOST:-${DEFAULT_HOST}}"
 SSH_KEY="${RAG_BACKFILL_SSH_KEY:-${DEFAULT_SSH_KEY}}"
 KNOWN_HOSTS="${RAG_BACKFILL_KNOWN_HOSTS:-${DEFAULT_KNOWN_HOSTS}}"
 CONTAINER_FILTER="${RAG_BACKFILL_CONTAINER_FILTER:-${DEFAULT_CONTAINER_FILTER}}"
-USE_LOCAL=0
+USE_SSH_EXEC=0
+USE_SSH_LOCAL=0
 PASS_ARGS=()
 
 usage() {
-  cat <<'EOF'
+  cat <<EOF
 Usage: scripts/misc/rag_backfill.sh [options] [-- <backfill args>]
 
-Runs `python -m rag_engine.backfill` inside the rag-engine container. Any flags
-not consumed below (or anything after a literal `--`) are forwarded verbatim to
-the backfill CLI, so common invocations are:
+Default: POST \$RAG_ENGINE_BASE_URL/v1/backfill (see .secrets/.env). Same flags as
+  python -m rag_engine.backfill  (e.g. --dry-run, --yes, --prune-orphans).
 
   scripts/misc/rag_backfill.sh --dry-run
   scripts/misc/rag_backfill.sh --yes --prune-orphans
   scripts/misc/rag_backfill.sh --yes --prune-orphans-only --prune-dry-run
-  scripts/misc/rag_backfill.sh --yes --force --max-files 50
 
-Where to edit which directories the backfill walks
---------------------------------------------------
-* Allowed prefixes (positive list) come from RAG_ALLOWED_PATH_PREFIXES on the
-  rag-engine container. Set it in <repo>/.secrets/.env, e.g.:
-      RAG_ALLOWED_PATH_PREFIXES=docs/,applications/,AGENTS.md
-  Default when unset (see applications/rag-engine/src/rag_engine/pipeline.py
-  `_allowed_prefixes()`):
-      docs/,addons/cfs_addons/,applications/,AGENTS.md
-* Excluded directory segments and file suffixes are defined in
-  applications/rag-engine/src/rag_engine/path_rules.py and overridable via
-  RAG_EXCLUDE_PATH_SEGMENTS / RAG_EXCLUDE_FILE_SUFFIXES.
-* Max file size: RAG_BACKFILL_MAX_FILE_BYTES (default 5242880).
-After changing .secrets/.env, redeploy the Swarm rag-engine service (or restart
-the local Compose container) so the new env is loaded before backfilling.
+Legacy (docker exec on Swarm host over SSH):
 
-Targeting options
------------------
-  --local                    Use the local Docker daemon (Compose) instead of
-                             SSHing to the Swarm host.
-  --host <user@host>         Override SSH target (default: ${RAG_BACKFILL_HOST:-nodadyoushutup@192.168.1.120}).
-  --ssh-key <path>           SSH private key (default: $DEFAULT_SSH_KEY).
-  --known-hosts <path>       SSH known_hosts file (default: $DEFAULT_KNOWN_HOSTS).
-  --container-filter <expr>  `docker ps --filter` expression that picks the
-                             rag-engine container (default: name=rag-engine).
-  -h, --help                 Show this help and exit.
+  scripts/misc/rag_backfill.sh --ssh-exec --yes --prune-orphans
+
+Options
+-------
+  --ssh-exec                 Run backfill inside the rag-engine container (SSH + docker exec).
+  --local                    Only with --ssh-exec: use this machine's Docker daemon.
+  --host <user@host>         SSH target (default: ${DEFAULT_HOST}).
+  --ssh-key, --known-hosts, --container-filter
+                             SSH / docker ps filter (only with --ssh-exec).
+  -h, --help
+
+Path allowlists / excludes are defined on the rag-engine service (e.g. RAG_ALLOWED_PATH_PREFIXES
+in .secrets/.env after redeploy). This script does not need the repo mounted locally for the
+HTTP default.
 EOF
 }
 
 log_info() { echo "[INFO] $*"; }
-log_warn() { echo "[WARN] $*" >&2; }
 fail()     { echo "[ERR] $*" >&2; exit 1; }
 
 need_cmd() {
   command -v "$1" >/dev/null 2>&1 || fail "Missing required command: $1"
 }
 
+load_repo_env() {
+  local envf="${REPO_ROOT}/.secrets/.env"
+  if [[ -f "$envf" ]]; then
+    set -a
+    # shellcheck disable=SC1090
+    source "$envf"
+    set +a
+  fi
+}
+
 parse_args() {
   while [[ $# -gt 0 ]]; do
     case "$1" in
+      --ssh-exec)
+        USE_SSH_EXEC=1; shift ;;
       --local)
-        USE_LOCAL=1; shift ;;
+        USE_SSH_LOCAL=1; shift ;;
       --host)
         [[ $# -ge 2 ]] || fail "--host requires a value"
         REMOTE_HOST="$2"; shift 2 ;;
@@ -112,7 +105,6 @@ parse_args() {
 build_local_docker_cmd() {
   need_cmd docker
   DOCKER_RUNNER=(docker)
-  SUDO_PREFIX=()
 }
 
 build_remote_docker_cmd() {
@@ -129,12 +121,11 @@ build_remote_docker_cmd() {
   fi
   SSH_CMD+=("$REMOTE_HOST")
   DOCKER_RUNNER=("${SSH_CMD[@]}" sudo docker)
-  SUDO_PREFIX=(sudo)
 }
 
 resolve_container_id() {
   local id
-  if [[ "$USE_LOCAL" == "1" ]]; then
+  if [[ "$USE_SSH_LOCAL" == "1" ]]; then
     id="$(docker ps --filter "$CONTAINER_FILTER" --format '{{.ID}}' | head -n1 || true)"
   else
     id="$("${SSH_CMD[@]}" "sudo docker ps --filter '$CONTAINER_FILTER' --format '{{.ID}}' | head -n1" || true)"
@@ -145,7 +136,7 @@ resolve_container_id() {
   printf '%s\n' "$id"
 }
 
-run_backfill() {
+run_backfill_exec() {
   local container_id="$1"; shift
   local exec_flags=(exec)
   if [[ -t 0 && -t 1 ]]; then
@@ -159,22 +150,37 @@ run_backfill() {
   "${cmd[@]}"
 }
 
+run_http() {
+  need_cmd python3
+  [[ -f "$REMOTE_CLIENT" ]] || fail "Missing $REMOTE_CLIENT"
+  log_info "POST ${RAG_ENGINE_BASE_URL:-}/v1/backfill"
+  exec python3 "$REMOTE_CLIENT" "${PASS_ARGS[@]}"
+}
+
 main() {
   parse_args "$@"
 
-  if [[ "$USE_LOCAL" == "1" ]]; then
-    build_local_docker_cmd
-    log_info "Target: local Docker daemon, container filter '$CONTAINER_FILTER'"
-  else
-    build_remote_docker_cmd
-    log_info "Target: ssh $REMOTE_HOST, container filter '$CONTAINER_FILTER'"
+  if [[ "$USE_SSH_LOCAL" == "1" && "$USE_SSH_EXEC" != "1" ]]; then
+    fail "--local is only valid with --ssh-exec"
   fi
 
-  local container_id
-  container_id="$(resolve_container_id)"
-  log_info "rag-engine container id: $container_id"
+  if [[ "$USE_SSH_EXEC" == "1" ]]; then
+    if [[ "$USE_SSH_LOCAL" == "1" ]]; then
+      build_local_docker_cmd
+      log_info "Target: local Docker, filter '$CONTAINER_FILTER'"
+    else
+      build_remote_docker_cmd
+      log_info "Target: ssh $REMOTE_HOST, filter '$CONTAINER_FILTER'"
+    fi
+    local container_id
+    container_id="$(resolve_container_id)"
+    log_info "rag-engine container id: $container_id"
+    run_backfill_exec "$container_id" "${PASS_ARGS[@]}"
+    return
+  fi
 
-  run_backfill "$container_id" "${PASS_ARGS[@]}"
+  load_repo_env
+  run_http
 }
 
 main "$@"
