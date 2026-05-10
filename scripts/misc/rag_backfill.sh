@@ -5,6 +5,11 @@
 # Default loads <repo>/.secrets/.env for RAG_ENGINE_BASE_URL and RAG_ENGINE_API_KEY.
 # Long runs: set RAG_BACKFILL_HTTP_TIMEOUT_SEC (seconds) for the client; raise nginx
 # proxy read timeouts for the rag-engine route so the connection is not cut mid-run.
+#
+# By default this script also tails the rag-engine swarm service logs over SSH
+# while the POST is in flight, so you can watch tqdm progress and per-file logs
+# (chunking, embedding, chroma upserts). Pass --no-logs to disable, or
+# --service-name / --logs-host overrides if your topology differs.
 
 set -euo pipefail
 
@@ -15,11 +20,16 @@ DEFAULT_HOST="nodadyoushutup@192.168.1.120"
 DEFAULT_SSH_KEY="/mnt/eapp/config/.ssh/id_ed25519"
 DEFAULT_KNOWN_HOSTS="/mnt/eapp/config/.ssh/known_hosts"
 DEFAULT_CONTAINER_FILTER="name=rag-engine"
+DEFAULT_SERVICE_NAME="rag-engine"
 
 REMOTE_HOST="${RAG_BACKFILL_HOST:-${DEFAULT_HOST}}"
 SSH_KEY="${RAG_BACKFILL_SSH_KEY:-${DEFAULT_SSH_KEY}}"
 KNOWN_HOSTS="${RAG_BACKFILL_KNOWN_HOSTS:-${DEFAULT_KNOWN_HOSTS}}"
 CONTAINER_FILTER="${RAG_BACKFILL_CONTAINER_FILTER:-${DEFAULT_CONTAINER_FILTER}}"
+LOGS_HOST="${RAG_BACKFILL_LOGS_HOST:-${REMOTE_HOST}}"
+SERVICE_NAME="${RAG_BACKFILL_SERVICE_NAME:-${DEFAULT_SERVICE_NAME}}"
+STREAM_LOGS=1
+LOG_PID=""
 USE_SSH_EXEC=0
 USE_SSH_LOCAL=0
 PASS_ARGS=()
@@ -43,7 +53,10 @@ Options
 -------
   --ssh-exec                 Run backfill inside the rag-engine container (SSH + docker exec).
   --local                    Only with --ssh-exec: use this machine's Docker daemon.
-  --host <user@host>         SSH target (default: ${DEFAULT_HOST}).
+  --host <user@host>         SSH target for --ssh-exec (default: ${DEFAULT_HOST}).
+  --logs-host <user@host>    SSH target for live log tail (default: --host or ${DEFAULT_HOST}).
+  --service-name <name>      Swarm service name to follow (default: ${DEFAULT_SERVICE_NAME}).
+  --no-logs                  Do not stream rag-engine docker logs while POSTing /v1/backfill.
   --ssh-key, --known-hosts, --container-filter
                              SSH / docker ps filter (only with --ssh-exec).
   -h, --help
@@ -72,6 +85,7 @@ load_repo_env() {
 }
 
 parse_args() {
+  local logs_host_explicit=0
   while [[ $# -gt 0 ]]; do
     case "$1" in
       --ssh-exec)
@@ -80,7 +94,21 @@ parse_args() {
         USE_SSH_LOCAL=1; shift ;;
       --host)
         [[ $# -ge 2 ]] || fail "--host requires a value"
-        REMOTE_HOST="$2"; shift 2 ;;
+        REMOTE_HOST="$2"
+        if [[ "$logs_host_explicit" == "0" ]]; then LOGS_HOST="$2"; fi
+        shift 2 ;;
+      --logs-host)
+        [[ $# -ge 2 ]] || fail "--logs-host requires a value"
+        LOGS_HOST="$2"
+        logs_host_explicit=1
+        shift 2 ;;
+      --service-name)
+        [[ $# -ge 2 ]] || fail "--service-name requires a value"
+        SERVICE_NAME="$2"; shift 2 ;;
+      --no-logs)
+        STREAM_LOGS=0; shift ;;
+      --logs)
+        STREAM_LOGS=1; shift ;;
       --ssh-key)
         [[ $# -ge 2 ]] || fail "--ssh-key requires a value"
         SSH_KEY="$2"; shift 2 ;;
@@ -150,11 +178,61 @@ run_backfill_exec() {
   "${cmd[@]}"
 }
 
+start_log_tail() {
+  if [[ "$STREAM_LOGS" != "1" ]]; then
+    return 0
+  fi
+  if ! command -v ssh >/dev/null 2>&1; then
+    log_info "ssh not found; not streaming docker logs (use --no-logs to silence)."
+    return 0
+  fi
+  if [[ ! -r "$SSH_KEY" ]]; then
+    log_info "SSH key '$SSH_KEY' not readable; not streaming docker logs."
+    return 0
+  fi
+
+  local ssh_args=(
+    -o StrictHostKeyChecking=no
+    -o "UserKnownHostsFile=$KNOWN_HOSTS"
+    -o ServerAliveInterval=30
+    -o ServerAliveCountMax=4
+    -i "$SSH_KEY"
+    "$LOGS_HOST"
+    "sudo docker service logs --raw --tail 0 -f '${SERVICE_NAME}'"
+  )
+
+  log_info "Streaming logs from ${LOGS_HOST}:${SERVICE_NAME} (--no-logs to disable)."
+  (
+    ssh "${ssh_args[@]}" 2>&1 | sed -u "s/^/[${SERVICE_NAME}] /"
+  ) &
+  LOG_PID=$!
+}
+
+stop_log_tail() {
+  if [[ -z "${LOG_PID}" ]]; then
+    return 0
+  fi
+  kill "${LOG_PID}" 2>/dev/null || true
+  wait "${LOG_PID}" 2>/dev/null || true
+  LOG_PID=""
+}
+
 run_http() {
   need_cmd python3
   [[ -f "$REMOTE_CLIENT" ]] || fail "Missing $REMOTE_CLIENT"
   log_info "POST ${RAG_ENGINE_BASE_URL:-}/v1/backfill"
-  exec python3 "$REMOTE_CLIENT" "${PASS_ARGS[@]}"
+
+  start_log_tail
+  trap 'stop_log_tail' EXIT INT TERM
+
+  set +e
+  python3 "$REMOTE_CLIENT" "${PASS_ARGS[@]}"
+  local rc=$?
+  set -e
+
+  stop_log_tail
+  trap - EXIT INT TERM
+  return "$rc"
 }
 
 main() {
@@ -184,3 +262,4 @@ main() {
 }
 
 main "$@"
+
