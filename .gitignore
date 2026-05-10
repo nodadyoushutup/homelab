@@ -62,7 +62,6 @@ planning/**
 
 # Exports
 data/exports/**
-data/chromadb/
 
 # Packer generated artifacts/logs
 packer/output/**

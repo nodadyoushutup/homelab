@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# After merge / pull (including fast-forward). Uses ORIG_HEAD..HEAD.
+set -euo pipefail
+[[ -n "${RAG_GIT_HOOKS_DISABLED:-}" ]] && exit 0
+ROOT="$(git rev-parse --show-toplevel)"
+cd "$ROOT"
+exec python3 "$ROOT/.githooks/rag_embed_event.py" merge

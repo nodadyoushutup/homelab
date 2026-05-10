@@ -1,10 +1,9 @@
-"""Path allow/exclude rules for RAG indexing (virtualenvs, package trees, caches)."""
+"""Path exclude defaults for RAG git hooks — keep in sync with ``path_rules.py``."""
 from __future__ import annotations
 
 import os
 from pathlib import Path
 
-# Keep in sync with `.githooks/rag_path_excludes.py` defaults.
 DEFAULT_RAG_EXCLUDE_PATH_SEGMENTS = (
     "node_modules,.venv,venv,virtualenv,pipenv,__pycache__,.pytest_cache,.mypy_cache,"
     ".ruff_cache,.tox,.nox,site-packages,.adk,dist,build,.next,.nuxt,target,vendor,"
@@ -12,8 +11,6 @@ DEFAULT_RAG_EXCLUDE_PATH_SEGMENTS = (
     "odoo-base,.tx,i18n,.terraform,output,keys"
 )
 
-# Minified/vendor/binary, raster image, video, and audio suffixes (comma-separated, leading dot).
-# Sync `.githooks/rag_path_excludes.py`.
 DEFAULT_RAG_EXCLUDE_FILE_SUFFIXES = (
     ".min.js,.map,.deb,.woff,.woff2,.ttf,.eot,.ico,.dll,.so,.dylib,"
     ".png,.jpg,.jpeg,.gif,.webp,.bmp,.tif,.tiff,.heic,.heif,.avif,.jxl,.jfif,.apng,"
@@ -31,7 +28,6 @@ def load_exclude_segments() -> frozenset[str]:
 
 
 def path_has_excluded_segment(rel_norm: str, segments: frozenset[str] | None = None) -> bool:
-    """True if any path component matches an excluded directory name (case-insensitive)."""
     segs = segments if segments is not None else load_exclude_segments()
     lowered = {s.lower() for s in segs}
     for part in Path(rel_norm).parts:

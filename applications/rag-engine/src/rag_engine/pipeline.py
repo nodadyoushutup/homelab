@@ -145,7 +145,7 @@ def _workspace_root() -> Path:
 def _allowed_prefixes() -> list[str]:
     raw = (
         os.getenv("RAG_ALLOWED_PATH_PREFIXES")
-        or "docs/,applications/,kubernetes/,terraform/,AGENTS.md"
+        or "docs/,applications/,kubernetes/,terraform/,scripts/,pipelines/,packer/,AGENTS.md"
     ).strip()
     out: list[str] = []
     for p in raw.split(","):

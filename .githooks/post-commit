@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# After each commit (including merge commits, cherry-pick, revert). Skips during
+# rebase replay — post-rewrite runs once when the rebase finishes.
+set -euo pipefail
+[[ -n "${RAG_GIT_HOOKS_DISABLED:-}" ]] && exit 0
+ROOT="$(git rev-parse --show-toplevel)"
+cd "$ROOT"
+GDIR="$(git rev-parse --git-dir)"
+if [[ -d "$GDIR/rebase-merge" || -d "$GDIR/rebase-apply" ]]; then
+  exit 0
+fi
+exec python3 "$ROOT/.githooks/rag_embed_event.py" commit
