@@ -69,8 +69,15 @@ def main(argv: list[str]) -> int:
             print(raw or str(exc), file=sys.stderr)
             return 1
     except urllib.error.URLError as exc:
+        # KeyboardInterrupt during a blocking socket read surfaces as URLError
+        # wrapping the original KeyboardInterrupt; exit quietly with 130 so the
+        # caller sees a clean detach instead of a stack trace.
+        if isinstance(getattr(exc, "reason", None), KeyboardInterrupt):
+            return 130
         print(f"[ERR] {exc.reason}", file=sys.stderr)
         return 1
+    except KeyboardInterrupt:
+        return 130
 
     try:
         out = json.loads(raw)
@@ -84,4 +91,7 @@ def main(argv: list[str]) -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main(sys.argv[1:]))
+    try:
+        raise SystemExit(main(sys.argv[1:]))
+    except KeyboardInterrupt:
+        raise SystemExit(130)

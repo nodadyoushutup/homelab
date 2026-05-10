@@ -68,6 +68,7 @@ EOF
 }
 
 log_info() { echo "[INFO] $*"; }
+log_warn() { echo "[WARN] $*" >&2; }
 fail()     { echo "[ERR] $*" >&2; exit 1; }
 
 need_cmd() {
@@ -178,6 +179,9 @@ run_backfill_exec() {
   "${cmd[@]}"
 }
 
+INTERRUPT_COUNT=0
+HTTP_CHILD_PID=""
+
 start_log_tail() {
   if [[ "$STREAM_LOGS" != "1" ]]; then
     return 0
@@ -202,9 +206,18 @@ start_log_tail() {
   )
 
   log_info "Streaming logs from ${LOGS_HOST}:${SERVICE_NAME} (--no-logs to disable)."
-  (
-    ssh "${ssh_args[@]}" 2>&1 | sed -u "s/^/[${SERVICE_NAME}] /"
-  ) &
+
+  # Run the ssh|sed pipeline in its own process group so stop_log_tail can
+  # clean up both ssh and sed reliably even on Ctrl+C.
+  local launcher=()
+  if command -v setsid >/dev/null 2>&1; then
+    launcher=(setsid -w bash -c)
+  else
+    launcher=(bash -c)
+  fi
+
+  "${launcher[@]}" 'exec ssh "$@" 2>&1 | sed -u "s/^/['"${SERVICE_NAME}"'] /"' \
+    rag_log_tail "${ssh_args[@]}" &
   LOG_PID=$!
 }
 
@@ -212,9 +225,49 @@ stop_log_tail() {
   if [[ -z "${LOG_PID}" ]]; then
     return 0
   fi
-  kill "${LOG_PID}" 2>/dev/null || true
+  # Kill the whole process group of the launcher (covers ssh + sed).
+  kill -TERM -- "-${LOG_PID}" 2>/dev/null || true
+  kill -TERM "${LOG_PID}" 2>/dev/null || true
+
+  local i
+  for i in 1 2 3 4 5; do
+    if ! kill -0 "${LOG_PID}" 2>/dev/null; then
+      break
+    fi
+    sleep 0.2
+  done
+
+  if kill -0 "${LOG_PID}" 2>/dev/null; then
+    kill -KILL -- "-${LOG_PID}" 2>/dev/null || true
+    kill -KILL "${LOG_PID}" 2>/dev/null || true
+  fi
   wait "${LOG_PID}" 2>/dev/null || true
   LOG_PID=""
+}
+
+on_sigint_http() {
+  INTERRUPT_COUNT=$((INTERRUPT_COUNT + 1))
+  if [[ "${INTERRUPT_COUNT}" -ge 2 ]]; then
+    echo >&2
+    log_warn "Second Ctrl+C — forcing exit; rag-engine server keeps running."
+    stop_log_tail
+    if [[ -n "${HTTP_CHILD_PID}" ]]; then
+      kill -KILL "${HTTP_CHILD_PID}" 2>/dev/null || true
+    fi
+    exit 130
+  fi
+  echo >&2
+  log_warn "Ctrl+C received. Detaching local viewer."
+  log_warn "The rag-engine backfill continues running on the server."
+  log_warn "Press Ctrl+C again to force-exit this client immediately."
+  # Stop noisy log stream first so the user sees the friendly message.
+  stop_log_tail
+  # Forward SIGINT to the python client so urlopen unwinds even if the signal
+  # didn't reach it directly (e.g. when this script is itself signalled with
+  # `kill -INT` rather than via the terminal).
+  if [[ -n "${HTTP_CHILD_PID}" ]]; then
+    kill -INT "${HTTP_CHILD_PID}" 2>/dev/null || true
+  fi
 }
 
 run_http() {
@@ -223,11 +276,32 @@ run_http() {
   log_info "POST ${RAG_ENGINE_BASE_URL:-}/v1/backfill"
 
   start_log_tail
-  trap 'stop_log_tail' EXIT INT TERM
+
+  INTERRUPT_COUNT=0
+  trap 'stop_log_tail' EXIT TERM
+  trap 'on_sigint_http' INT
 
   set +e
-  python3 "$REMOTE_CLIENT" "${PASS_ARGS[@]}"
-  local rc=$?
+  python3 "$REMOTE_CLIENT" "${PASS_ARGS[@]}" &
+  HTTP_CHILD_PID=$!
+  # `wait` is interruptible by traps; on SIGINT the trap fires and forwards
+  # the signal to the python child, which then exits and unblocks wait.
+  local rc=0
+  while :; do
+    if wait "${HTTP_CHILD_PID}"; then
+      rc=0
+      break
+    else
+      rc=$?
+      # 127/128+ exit codes indicate the wait was interrupted; loop and re-wait
+      # so we always reap the child cleanly. Once the child has actually exited
+      # `wait` returns its real exit code on the next call.
+      if ! kill -0 "${HTTP_CHILD_PID}" 2>/dev/null; then
+        break
+      fi
+    fi
+  done
+  HTTP_CHILD_PID=""
   set -e
 
   stop_log_tail
