@@ -28,6 +28,16 @@ the concrete agent docs and skills, not here.
 - If required information is missing and cannot be discovered from the repo or
   provided context, ask the smallest follow-up question that unblocks the task.
 
+## Enforced workflow (runtime)
+
+- The Code specialist **cannot** call **`write_file`**, **`edit_file`**, or
+  **`execute`** until at least one read/search tool has returned a result in this
+  thread (for example `read_file`, `grep`, `glob`, `find_code`,
+  `list_directory`). Inspect code before mutating it.
+- The supervisor is responsible for **`rag_search`** before delegating here;
+  use **`rag_search` yourself** only when you still need narrowing inside the
+  repo index.
+
 ## Tool Use
 
 - Use the filesystem MCP tools for repo inspection and repo edits when they are

@@ -38,8 +38,6 @@ For OpenAI embeddings, set `RAG_EMBEDDING_PROVIDER=openai`, `OPENAI_API_KEY`, an
 
 **MCP (`mcp-rag`):** `RAG_ENGINE_BASE_URL`, `RAG_ENGINE_API_KEY`, `MCP_RAG_API_KEY`, `MCP_RAG_LOG_LEVEL`, `MCP_RAG_ENGINE_TIMEOUT_SEC`.
 
-**Google ADK container** (when using the bundled agent): variables such as `MCP_RAG_URL`, `MCP_RAG_PROXY_API_KEY`, optional `MCP_RAG_TOOLS` — see Compose and `.secrets/.env.example`.
-
 ## Cursor and other MCP clients
 
 Step-by-step MCP config, authentication headers, and troubleshooting table:

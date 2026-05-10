@@ -9,7 +9,7 @@
 
 **Query path:** `run_query` in `query.py` embeds the user query with `embed_batch` using the configured provider/model/dimensions, then calls Chroma with `query_embeddings`. Mismatched providers, models, or dimensions between ingest and query produce unreliable retrieval or Chroma dimension errors; hence the “always go through `rag-engine`” rule.
 
-When switching provider/model/dimensions, use a new Chroma collection (for example `repo_rag_openai`) or rebuild the existing collection. OpenAI's current embedding docs list `text-embedding-3-small` and `text-embedding-3-large`, with default dimensions 1536 and 3072 respectively.
+When switching provider/model/dimensions, use a new Chroma collection (for example `homelab_openai`) or rebuild the existing collection. OpenAI's current embedding docs list `text-embedding-3-small` and `text-embedding-3-large`, with default dimensions 1536 and 3072 respectively.
 
 ## Chroma
 
@@ -20,7 +20,7 @@ When switching provider/model/dimensions, use a new Chroma collection (for examp
 
 | Collection env | Default name | Contents |
 | --- | --- | --- |
-| `RAG_CHROMA_COLLECTION` | `repo_rag` | Repo corpus chunks (code, docs, PDFs, etc.) |
+| `RAG_CHROMA_COLLECTION` | `homelab` | Repo corpus chunks (code, docs, PDFs, etc.) |
 | `RAG_MEMORY_EPISODIC_COLLECTION` | `memories_episodic` | Episodic memories (engine memory API) |
 | `RAG_MEMORY_DECLARATIVE_COLLECTION` | `memories_declarative` | Declarative memories (engine memory API) |
 

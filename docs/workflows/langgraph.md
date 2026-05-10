@@ -73,6 +73,10 @@ When a task changes the LangGraph implementation:
      target repo, add app-side wrappers or constraints so the model sees the
      intended repository root and default excludes instead of the full shared
      tree
+   - keep **`mcp-rag`** in the supervisor and every specialist `mcp.json`; gate
+     and memory policy live in
+     `docs/workflows/development/rag-agent-mcp-integration-roadmap.md` and
+     `applications/langgraph/framework/middleware/workflow_gates.py`
 7. if the task changes one app from a single graph to multiple sibling graphs:
    - keep those graph exports together in that app's `langgraph.json`
    - keep reusable graph builder code in

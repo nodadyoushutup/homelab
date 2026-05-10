@@ -14,6 +14,10 @@ repo.
 
 ## Runtime Defaults
 
+- This runtime loads **mcp-rag** alongside Atlassian tools. Use **`rag_search`**
+  for homelab docs and implementation context when an issue ties back to this
+  repo; use **memory** tools per the integration roadmap when failures or user
+  requests warrant it.
 - Default Jira project and board: `Homelab` with project key `HOME`.
 - Treat `Homelab` / `HOME` as the default and fallback Jira
   project/board for this runtime. If the user does not specify a project or

@@ -35,7 +35,7 @@ workspace_host_path = "/mnt/eapp/code/homelab"
 #
 # If switching provider/model/dimensions, use a new Chroma collection or rebuild
 # the existing collection because vector dimensions/model spaces are not compatible.
-# chroma_collection = "repo_rag_openai"
+# chroma_collection = "homelab_openai"
 
 env = {
   RAG_ENGINE_API_KEY = "replace-me"

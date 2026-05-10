@@ -45,3 +45,4 @@ docs to check before doing substantive work.
   `.cursor/mcp.json` includes the URL; set `x-api-key` matching `MCP_RAG_API_KEY`
   via User-level Cursor MCP/`~/.cursor/mcp.json` when the Swarm service enforces auth.
   LangGraph fills the header from `.secrets/.env`; Codex uses `env_http_headers` in `.codex/config.toml`.
+- LangGraph Homelab runtime enforces **`rag_search` before `code` delegation** and **read/search before writes** on the Code specialist; see `docs/workflows/development/rag-agent-mcp-integration-roadmap.md`. Break-glass: **`HOMELAB_DISABLE_WORKFLOW_GATES=1`** on the agent process only.

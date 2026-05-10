@@ -4,7 +4,7 @@
 
 The repo maintains a **semantic index** of allowed paths: files are chunked, embedded through the configured provider (Google by default, OpenAI optionally), and stored in **Chroma**. Queries embed the question text with the **same provider/model/dimensions** and run a vector search so results stay comparable to ingest.
 
-Downstream clients (**`mcp-rag`**, ADK, or direct HTTP) should treat **`rag-engine`** as the retrieval API, not a raw Chroma client with ad hoc settings—otherwise embeddings and collection choice can drift from what ingest used.
+Downstream clients (**`mcp-rag`**, LangGraph agents, Cursor, Codex, or direct HTTP) should treat **`rag-engine`** as the retrieval API, not a raw Chroma client with ad hoc settings—otherwise embeddings and collection choice can drift from what ingest used.
 
 ## Main components
 
@@ -17,11 +17,11 @@ Downstream clients (**`mcp-rag`**, ADK, or direct HTTP) should treat **`rag-engi
 
 ## Typical flows
 
-**Ingest (index update):** eligible file changes → `rag-engine` pipeline (`pipeline.py`) → chunk strategies (`structured_chunks.py`, type-specific modules) → provider dispatcher (`embeddings.py`) → vectors + metadata → Chroma collection (default name `repo_rag`).
+**Ingest (index update):** eligible file changes → `rag-engine` pipeline (`pipeline.py`) → chunk strategies (`structured_chunks.py`, type-specific modules) → provider dispatcher (`embeddings.py`) → vectors + metadata → Chroma collection (default name **`homelab`**, overridable via `RAG_CHROMA_COLLECTION`).
 
 **Query:** client → `POST /v1/query` on `rag-engine` (or `rag_search` via `mcp-rag`) → embed query text → Chroma query with optional `where` metadata filter → ranked chunks returned to the client.
 
-**Long-term memory (separate collections):** `mcp-rag` memory tools call `rag-engine` memory routes; vectors live in dedicated Chroma collections (`memories_episodic`, `memories_declarative` by default). Storage reuses the same embedding stack as repo RAG; **agent write rules** are not documented here—see the ADK RAG sub-agent and orchestrator instructions.
+**Long-term memory (separate collections):** `mcp-rag` memory tools call `rag-engine` memory routes; vectors live in dedicated Chroma collections (`memories_episodic`, `memories_declarative` by default). Storage reuses the same embedding stack as repo RAG. **Promotion gates and agent responsibilities** are documented in [rag-agent-mcp-integration-roadmap.md](../workflows/development/rag-agent-mcp-integration-roadmap.md).
 
 ## Related reading
 

@@ -3,8 +3,10 @@ from __future__ import annotations
 from typing import Sequence
 
 from deepagents import CompiledSubAgent
+from deepagents import create_deep_agent
 from langchain.tools import tool
 
+from framework.middleware import HomelabTaskDelegationMiddleware
 from framework.mcp_support import load_mcp_tools
 
 from .base import BaseAgent
@@ -25,7 +27,13 @@ class HomelabSupervisorAgent(BaseAgent):
     def prompt_variables(self) -> dict[str, str]:
         return {
             "specialist_topology": "specialist subagents that are co-deployed in this same Agent Server and callable only through this supervisor",
-            "code_delegate_instruction": "You must use the `task` tool to delegate every source code, repository, configuration, file path, filesystem, MCP workspace, or implementation request to the `code` specialist before answering directly.",
+            "code_delegate_instruction": (
+                "Before delegating repository work to `code`, run `rag_search` (iterate until "
+                "you know where relevant code and docs live). Then use the `task` tool to "
+                "delegate every source code, repository, configuration, file path, filesystem, "
+                "MCP workspace, or implementation request to the `code` specialist before "
+                "answering directly."
+            ),
             "jira_delegate_instruction": "You must use the `task` tool to delegate every explicit Jira request, including create-issue requests, to the `jira` specialist before asking your own follow-up question or answering directly.",
             "tech_lead_delegate_instruction": "You must use the `task` tool to delegate every technical soundness review, architecture review, code impact review, workflow impact review, or pre-development implementation guidance request to the `tech_lead` specialist before answering directly.",
             "handoff_contract": "Every specialist call must return to this supervisor. A specialist may recommend another specialist, but it must not directly hand off, transfer, or continue the task outside its own response. After each specialist response, decide at the supervisor layer whether to call another specialist, call a tool, ask the user, or produce the final answer.",
@@ -48,3 +56,8 @@ class HomelabSupervisorAgent(BaseAgent):
 
     def subagents(self) -> list[CompiledSubAgent]:
         return self.local_subagents
+
+    def build(self):
+        kwargs = self.build_kwargs()
+        kwargs["middleware"] = [HomelabTaskDelegationMiddleware(), *kwargs.get("middleware", [])]
+        return create_deep_agent(**kwargs)

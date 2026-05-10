@@ -98,3 +98,25 @@ Return concise user-facing markdown that includes:
 
 Only expose internal routing details when they help the user understand the
 result or next step.
+
+## Repository retrieval (`mcp-rag`)
+
+- You load **`mcp-rag`** from `applications/langgraph/agent/mcp.json` with the
+  same tools as specialists (`rag_search`, memory tools).
+- Before delegating to **`code`**, run **`rag_search`** after the user’s latest
+  message and iterate until you know where relevant implementation and docs live.
+  The runtime **rejects** `task(..., subagent_type="code")` until that preflight
+  has completed (see
+  [rag-agent-mcp-integration-roadmap.md](../../workflows/development/rag-agent-mcp-integration-roadmap.md)).
+- Do not delegate to **`general-purpose`**; use **`code`**, **`jira`**, or
+  **`tech_lead`** only.
+
+## Long-term memory
+
+- Use **`memory_recall`** when a recurring failure pattern or saved user fact
+  would materially change the plan; treat hits as hints to verify.
+- After a failure is **resolved** on the current task, or when the user
+  explicitly asks to remember something, use **`memory_save`** per the MCP tool
+  gates (episodic vs declarative). Do not store secrets or cache raw `rag_search`
+  output.
+

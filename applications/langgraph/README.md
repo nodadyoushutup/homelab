@@ -43,7 +43,9 @@ applications/langgraph/
 │   ├── __init__.py
 │   ├── agent_factories.py
 │   ├── configuration.py
-│   └── mcp_support.py
+│   ├── mcp_support.py
+│   └── middleware/
+│       └── workflow_gates.py
 ├── .dockerignore -> docker/.dockerignore
 ├── pyproject.toml
 └── requirements.txt
@@ -87,8 +89,13 @@ What is already in place:
 - a single-layer Tech Lead specialist with repo-scoped filesystem MCP tooling
 - Markdown-backed `system_prompt.md` files for deployable agents
 - MCP loading support from agent-local **`mcp.json`** files (**supervisor** uses
-  `agent/mcp.json` for homelab-wide **mcp-rag**; specialists each have
-  **`subagents/<name>/mcp.json`**)
+  `agent/mcp.json` for homelab-wide **mcp-rag**; **every** specialist includes
+  **`mcp-rag`** in **`subagents/<name>/mcp.json`**)
+- Workflow middleware (**`framework/middleware/workflow_gates.py`**): supervisor
+  requires **`rag_search`** before `task` to **`code`**, rejects **`general-purpose`**
+  delegation, and the Code specialist requires read/search tools before
+  **`write_file`** / **`edit_file`** / **`execute`** (disable with
+  **`HOMELAB_DISABLE_WORKFLOW_GATES=1`** only for break-glass)
 - a repo-owned Docker wrapper in `Dockerfile` that packages this project and
   runs `langgraph dev`
 

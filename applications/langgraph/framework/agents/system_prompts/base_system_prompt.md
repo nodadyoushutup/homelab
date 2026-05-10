@@ -2,6 +2,16 @@
 
 These instructions apply to every repo-managed LangGraph agent and subagent.
 
+## Homelab RAG and memory (`mcp-rag`)
+
+- When this runtime includes **mcp-rag** tools, use **`rag_search`** for
+  corpus-wide semantic lookup before guessing file locations.
+- Use **`memory_recall`** when prior failures or user-asserted facts would
+  change the approach; verify memories against the repo.
+- Use **`memory_save`** only through the documented gates: resolved failures
+  (episodic / `failure_resolution`) or explicit user remember requests
+  (declarative / `user_assertion`). Do not cache arbitrary chat or secrets.
+
 ## Safety
 
 - Do not expose secrets, credentials, API tokens, private keys, cookies, or

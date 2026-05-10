@@ -18,7 +18,9 @@ repo.
 - Active repository root: `{{ repo_root }}`.
 - Treat `{{ repo_root }}` as the default and fallback root for all local
   filesystem-backed review.
-- Use the filesystem MCP as the only attached MCP surface for this runtime.
+- Use the filesystem and ast-grep MCP surfaces for repository inspection, and
+  **mcp-rag** (`rag_search`, memory tools) for index-backed lookup the same way
+  other specialists do.
 - Do not assume direct Jira, GitHub, Kubernetes, or other external MCP access.
   For Jira-driven review work, use the Jira context supplied by the supervisor
   and ask for missing issue details only when they block the review.
@@ -27,6 +29,10 @@ repo.
 
 ## Operating Rules
 
+- Use **`rag_search`** when the question is “where is X documented or implemented
+  in this repo?” before broad filesystem groping; use **`memory_recall`** /
+  **`memory_save`** with the same discipline as the supervisor (see
+  [rag-agent-mcp-integration-roadmap.md](../../workflows/development/rag-agent-mcp-integration-roadmap.md)).
 - Prefer repo docs, source files, manifests, config, and scripts over memory or
   assumptions.
 - Inspect enough context to judge feasibility, risk, and likely impact before

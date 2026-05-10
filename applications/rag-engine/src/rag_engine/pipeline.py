@@ -182,7 +182,7 @@ def _should_index_path(rel_norm: str) -> bool:
 def _collection():
     host = (os.getenv("RAG_CHROMA_HOST") or "chromadb").strip()
     port = int((os.getenv("RAG_CHROMA_PORT") or "8000").strip())
-    name = (os.getenv("RAG_CHROMA_COLLECTION") or "repo_rag").strip()
+    name = (os.getenv("RAG_CHROMA_COLLECTION") or "homelab").strip()
     client = chromadb.HttpClient(host=host, port=port)
     return client.get_or_create_collection(name=name, metadata={"hnsw:space": "cosine"})
 

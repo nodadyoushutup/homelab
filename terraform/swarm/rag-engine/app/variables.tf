@@ -98,7 +98,7 @@ variable "chroma_port" {
 variable "chroma_collection" {
   description = "Chroma collection used for repository RAG chunks."
   type        = string
-  default     = "repo_rag"
+  default     = "homelab"
 }
 
 variable "embedding_model" {

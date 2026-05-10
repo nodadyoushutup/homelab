@@ -1,6 +1,6 @@
 # mcp-rag
 
-Thin MCP server: **one tool** (`rag_search`) that POSTs to `rag-engine` `/v1/query` so agents use the same embedding provider/model as ingest.
+Thin MCP server: forwards **`rag_search`** (corpus query) and **memory** tools to `rag-engine` over HTTP so clients use the same embedding provider/model as ingest.
 
 ## Environment
 

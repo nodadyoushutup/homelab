@@ -5,6 +5,9 @@ repo structure works.
 
 ## Discovery Order
 
+- The **supervisor** runs **`rag_search`** before delegating repository work to
+  you; use the paths and doc anchors from the task description as your starting
+  map. Run **`rag_search` again** only when you still need index-level narrowing.
 - Start from the caller's named files, directories, symbols, services, issue
   keys, or observed behavior.
 - Check `AGENTS.md` and relevant docs when they are likely to define ownership,

@@ -6,9 +6,9 @@ Two collections, written through strict promotion gates:
 - ``memories_declarative`` (kind=``declarative``) — user-asserted facts, source=``user_assertion``.
 
 Storage, embedder, and auth are deliberately shared with the repo RAG path (no parallel stack).
-Agent-facing rules live in ``applications/google-adk/agent/sub_agents/rag/instructions.md`` and
-the orchestrator ``applications/google-adk/agent/instructions.md``; RAG + MCP overview in
-``docs/workflows/development/rag-agent-mcp-integration-roadmap.md``.
+Agent-facing rules and memory gates for LangGraph, Cursor, and Codex live in
+``docs/workflows/development/rag-agent-mcp-integration-roadmap.md`` and the Homelab runtime
+prompts under ``applications/langgraph/`` and ``docs/agents/``.
 """
 from __future__ import annotations
 

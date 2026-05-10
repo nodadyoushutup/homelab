@@ -8,7 +8,7 @@ Run inside the rag-engine image (same env as the HTTP server), e.g.:
   ./scripts/rag/clear.sh --yes              # skip the interactive confirm
 
 Targets the Chroma server defined by ``RAG_CHROMA_HOST`` / ``RAG_CHROMA_PORT``
-and the collection named ``RAG_CHROMA_COLLECTION`` (default ``repo_rag``).
+and the collection named ``RAG_CHROMA_COLLECTION`` (default ``homelab``).
 """
 from __future__ import annotations
 
@@ -38,7 +38,7 @@ def _client() -> chromadb.api.client.Client:
 
 
 def _collection_name() -> str:
-    return (os.getenv("RAG_CHROMA_COLLECTION") or "repo_rag").strip()
+    return (os.getenv("RAG_CHROMA_COLLECTION") or "homelab").strip()
 
 
 def _list_collection_names(client: chromadb.api.client.Client) -> list[str]:

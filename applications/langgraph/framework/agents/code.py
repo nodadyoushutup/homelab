@@ -2,9 +2,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from deepagents import create_deep_agent
 from langchain.tools import tool
 
 from framework.configuration import resolve_repo_root
+from framework.middleware import CodeReadBeforeWriteMiddleware
 from framework.mcp_support import DEFAULT_REPO_SEARCH_EXCLUDES
 from framework.mcp_support import load_mcp_tools
 from framework.mcp_support import wrap_ast_grep_tools
@@ -50,3 +52,8 @@ class CodeAgent(BaseAgent):
             self.repo_root,
         )
         return [describe_code_contract, *mcp_tools]
+
+    def build(self):
+        kwargs = self.build_kwargs()
+        kwargs["middleware"] = [CodeReadBeforeWriteMiddleware(), *kwargs.get("middleware", [])]
+        return create_deep_agent(**kwargs)

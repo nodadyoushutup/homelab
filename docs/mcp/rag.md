@@ -6,7 +6,9 @@ When **`MCP_RAG_API_KEY`** is set on the **`mcp-rag`** container, clients must s
 
 ## LangGraph agents (this repo)
 
-`applications/langgraph/agent/subagents/*/mcp.json` includes an **`mcp-rag`** server with **`x_api_key_from_env": "MCP_RAG_API_KEY"`**. **`framework.agents`** call **`merged_settings()`** before building tools, so add **`MCP_RAG_API_KEY=…`** next to **`OPENAI_API_KEY`** in repo **`.secrets/.env`** (see **`.secrets/.env.example`**).
+`applications/langgraph/agent/mcp.json` and **`applications/langgraph/agent/subagents/*/mcp.json`** each include **`mcp-rag`** with **`x_api_key_from_env": "MCP_RAG_API_KEY"`**. **`framework.agents`** call **`merged_settings()`** before building tools, so add **`MCP_RAG_API_KEY=…`** next to **`OPENAI_API_KEY`** in repo **`.secrets/.env`** (see **`.secrets/.env.example`**).
+
+Retrieval-first and read-before-write rules are enforced in code for the supervisor and Code specialist; see [rag-agent-mcp-integration-roadmap.md](../workflows/development/rag-agent-mcp-integration-roadmap.md).
 
 ## OpenAI Codex (`.codex/config.toml`)
 
