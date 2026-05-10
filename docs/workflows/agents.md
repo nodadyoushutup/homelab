@@ -71,6 +71,8 @@ unless a concrete app or subagent directory exports it.
 - In the `Homelab` runtime, route source code, config, repository structure,
   file paths, filesystem state, MCP workspace visibility, and implementation
   work to the `Code` specialist when it is wired into the runtime.
+- In the `Homelab` runtime, route local git workflows and GitHub pull request /
+  check / review work to the `Git` specialist when it is wired into the runtime.
 - In the `Homelab` runtime, route technical soundness review, architecture
   review, code impact review, workflow impact review, and pre-development
   implementation guidance to the `Tech Lead` specialist when it is wired into

@@ -10,6 +10,13 @@ Use this guidance for filesystem-backed inspection and edits.
 - Do not treat `/`, `/mnt/eapp/code`, or any parent directory as the workspace
   root for this runtime.
 
+## Host vs container paths
+
+- `{{ repo_root }}` is the root **for this runtime** (often `/app` in Docker).
+  Operators may see `/mnt/eapp/code/homelab` on the host; MCP introspection may
+  show `/app`. Those refer to the same checkout; treat differing absolute
+  prefixes as normal, not as missing repo or broken MCP.
+
 ## Searching
 
 - Do not run broad recursive searches from `{{ repo_root }}`.

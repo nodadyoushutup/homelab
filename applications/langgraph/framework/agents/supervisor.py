@@ -36,6 +36,7 @@ class HomelabSupervisorAgent(BaseAgent):
             ),
             "jira_delegate_instruction": "You must use the `task` tool to delegate every explicit Jira request, including create-issue requests, to the `jira` specialist before asking your own follow-up question or answering directly.",
             "tech_lead_delegate_instruction": "You must use the `task` tool to delegate every technical soundness review, architecture review, code impact review, workflow impact review, or pre-development implementation guidance request to the `tech_lead` specialist before answering directly.",
+            "git_delegate_instruction": "You must use the `task` tool to delegate every explicit local git workflow request (branch, sync, commit, push) and every explicit GitHub request (pull request, PR review, checks, merge readiness) to the `git` specialist before answering directly.",
             "handoff_contract": "Every specialist call must return to this supervisor. A specialist may recommend another specialist, but it must not directly hand off, transfer, or continue the task outside its own response. After each specialist response, decide at the supervisor layer whether to call another specialist, call a tool, ask the user, or produce the final answer.",
         }
 

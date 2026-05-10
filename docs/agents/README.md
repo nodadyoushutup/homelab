@@ -30,6 +30,7 @@ input/output schemas. They are not a repo-wide contributor startup checklist.
 
 - Parent agent: `Homelab`
 - Subagent: `Code`
+- Subagent: `Git`
 - Subagent: `Jira`
 - Subagent: `Tech Lead`
 
@@ -39,6 +40,8 @@ input/output schemas. They are not a repo-wide contributor startup checklist.
   for the Homelab agent, including its native input/output schema
 - `../subagents/code/*.md`: runtime Code repository analysis and implementation
   prompt docs, including its native input/output schema
+- `../subagents/git/*.md`: runtime Git + GitHub workflow prompt docs, including
+  its native input/output schema
 - `../subagents/jira/*.md`: runtime Jira discovery and operations prompt docs,
   including its native input/output schema
 - `../subagents/tech-lead/*.md`: runtime Tech Lead technical review prompt docs,
@@ -101,6 +104,8 @@ Current intent:
   parent `Homelab` agent
 - keep `../subagents/code/*.md` as the instruction contract for the single-layer
   `Code` subagent
+- keep `../subagents/git/*.md` as the instruction contract for the single-layer
+  `Git` subagent
 - keep `../subagents/jira/*.md` as the instruction contract for the single-layer
   `Jira` subagent
 - keep `../subagents/tech-lead/*.md` as the instruction contract for the
@@ -146,7 +151,7 @@ Current expectations:
 - The default Homelab app exposes `agent` as the supported graph. Specialist
   runnables are private implementation details of that supervisor unless a
   future task explicitly creates a separate deployment boundary.
-- `Code`, `Jira`, and `Tech Lead` remain reusable specialist capabilities for
+- `Code`, `Git`, `Jira`, and `Tech Lead` remain reusable specialist capabilities for
   their respective domains.
 - If runtime routing changes materially, update both the Python wiring under
   `applications/langgraph/` and the matching contract docs in this directory.

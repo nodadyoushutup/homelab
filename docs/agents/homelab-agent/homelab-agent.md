@@ -33,6 +33,8 @@ off directly to one another.
   when the `Jira` specialist is available
 - first-pass technical soundness, architecture, code impact, workflow impact, or
   pre-development guidance work when the `Tech Lead` specialist is available
+- first-pass local git workflows (branch, sync, commit, push) or GitHub pull
+  request / check / review work when the `Git` specialist is available
 - direct peer-to-peer specialist chaining
 - broad domain work that belongs inside a named specialist
 
@@ -55,13 +57,18 @@ transfer directly to that specialist.
 
 - Route explicit source code, repository, configuration, file path, filesystem,
   MCP workspace, and implementation work to `code`.
+- Route explicit local git operations (fetch, pull, branch, checkout, commit,
+  push) and explicit GitHub operations (pull requests, checks, reviews, merge
+  readiness) to `git`.
 - Route explicit Jira work, including issue discovery, creation, updates,
   comments, and transitions, to `jira`.
 - Route explicit technical soundness review, architecture review, code impact
   review, workflow impact review, and pre-development implementation guidance to
   `tech_lead`.
 - For implementation requests tied to a Jira issue key, call `jira` first when
-  issue context is missing, then pass the returned Jira context to `code`.
+  issue context is missing. When the workflow requires an isolated branch, call
+  `git` to create/sync/publish the issue branch, then pass implementation work to
+  `code` with Jira + branch context.
 - For technical review requests tied to a Jira issue key, call `jira` first when
   issue context is missing, then pass the returned Jira context to `tech_lead`.
 - If Jira work produces implementation follow-up, capture the Jira result and
@@ -108,7 +115,7 @@ result or next step.
   The runtime **rejects** `task(..., subagent_type="code")` until that preflight
   has completed (see
   [rag-agent-mcp-integration-roadmap.md](../../workflows/development/rag-agent-mcp-integration-roadmap.md)).
-- Do not delegate to **`general-purpose`**; use **`code`**, **`jira`**, or
+- Do not delegate to **`general-purpose`**; use **`code`**, **`git`**, **`jira`**, or
   **`tech_lead`** only.
 
 ## Long-term memory

@@ -2,7 +2,7 @@
 
 Supervisor: block `task` to `code` until `rag_search` completed after the latest
 user message; block `general-purpose` delegation (Deep Agents default) so work
-routes through `code`, `jira`, or `tech_lead`.
+routes through `code`, `git`, `jira`, or `tech_lead`.
 
 Code specialist: block mutating filesystem / shell tools until at least one
 read/search style tool produced a tool result in the current subagent thread.
@@ -159,7 +159,7 @@ def _task_delegation_denial(request: ToolCallRequest) -> ToolMessage | None:
                 gate="forbidden_subagent",
                 detail=(
                     "Homelab does not delegate to `general-purpose`. "
-                    "Use `code` for repository work, `jira` for Jira, or `tech_lead` for review."
+                    "Use `code` for repository file work, `git` for git/GitHub, `jira` for Jira, or `tech_lead` for review."
                 ),
             ),
             tool_call_id=call["id"],

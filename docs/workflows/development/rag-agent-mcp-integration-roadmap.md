@@ -11,7 +11,7 @@ OpenAI Codex use the same HTTPS MCP endpoint and tools.
   agent’s `mcp.json`. Prompts under `applications/langgraph/` and
   `docs/agents/` define routing and tool discipline.
 - **Every agent gets RAG:** The Homelab supervisor and every specialist
-  (`code`, `jira`, `tech_lead`) include **`mcp-rag`** so any agent can run
+  (`code`, `git`, `jira`, `tech_lead`) include **`mcp-rag`** so any agent can run
   `rag_search` and memory tools without inheriting filesystem MCP access from
   another layer.
 - **Thin MCP, fat engine:** `mcp-rag` forwards to **`rag-engine`** so query
@@ -65,7 +65,7 @@ Runtime middleware under `applications/langgraph/framework/middleware/` enforces
    read/analysis-style tool has produced a tool result in that subagent thread
    (e.g. `read_file`, `grep`, `glob`, `find_code`, `list_directory`).
 3. **No `general-purpose` subagent:** Delegating to Deep Agents’ default
-   **`general-purpose`** subagent is rejected; use **`code`**, **`jira`**, or
+   **`general-purpose`** subagent is rejected; use **`code`**, **`git`**, **`jira`**, or
    **`tech_lead`**.
 
 **Break-glass:** set **`HOMELAB_DISABLE_WORKFLOW_GATES=1`** on the agent process

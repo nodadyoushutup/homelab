@@ -14,6 +14,13 @@ docs to check before doing substantive work.
 
 ## Repo Notes
 
+- **Repository path namespaces:** On the host, this workspace is
+  `/mnt/eapp/code/homelab`. In Docker dev (`docker/docker-compose.yml`),
+  LangGraph sets `HOMELAB_REPO_ROOT=/app` and bind-mounts the same tree under
+  `/app/...`. Remote filesystem MCP and `list_allowed_directories` may report
+  `/app` (or children) while Cursor and local shell use the host path. That is
+  expected: same repo, different mount namespace—do not spend cycles
+  reconciling it as a misconfiguration.
 - Treat `docs/` as the source of truth for repeatable repo guidance and
   workflows.
 - LangGraph plus LangChain Agent Chat have two separate runtime pairs. For all

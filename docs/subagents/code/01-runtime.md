@@ -20,6 +20,8 @@ These instructions apply to the concrete `code` runtime in this homelab repo.
 - Do not assume direct Jira, GitHub, Kubernetes, or other external MCP access.
   For Jira-driven implementation work, use the Jira context supplied by the
   supervisor and ask for missing issue details only when they block the work.
+  For branch, git sync, or GitHub pull request work, the supervisor routes to the
+  `git` specialist.
 - Stay within the repository root unless the caller explicitly gives a broader
   scope and the available tools allow that scope safely.
 
