@@ -22,7 +22,7 @@ provider_config = {
   # registry_auth = { username = "…", password = "…" }
 }
 
-image_reference     = "ghcr.io/nodadyoushutup/rag-engine:0.0.2"
+image_reference     = "ghcr.io/nodadyoushutup/rag-engine:0.0.4"
 published_port      = 9015
 endpoint_host       = "192.168.1.120"
 env_file_path       = "/mnt/eapp/code/homelab/.secrets/.env"

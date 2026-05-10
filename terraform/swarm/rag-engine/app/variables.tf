@@ -9,7 +9,7 @@ variable "provider_config" {
 variable "image_reference" {
   description = "RAG engine image to run."
   type        = string
-  default     = "ghcr.io/nodadyoushutup/rag-engine:0.0.2"
+  default     = "ghcr.io/nodadyoushutup/rag-engine:0.0.4"
 }
 
 variable "env_file_path" {
