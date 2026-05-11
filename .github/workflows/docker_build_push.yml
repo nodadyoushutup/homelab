@@ -296,6 +296,10 @@ jobs:
             echo "::notice::Preparing Harbor runtime set:${version} from ${docker_context} for target_registry=${target_registry}."
           fi
 
+      - name: Post-job Docker cleanup (self-hosted disk)
+        if: always()
+        uses: ./.github/actions/docker-selfhosted-cleanup
+
   build_direct_amd64:
     needs: prepare
     if: needs.prepare.outputs.build_strategy == 'direct' && needs.prepare.outputs.build_amd64 == 'true'
@@ -374,6 +378,10 @@ jobs:
           for image_ref in "${image_refs[@]}"; do
             docker push "${image_ref}"
           done
+
+      - name: Post-job Docker cleanup (self-hosted disk)
+        if: always()
+        uses: ./.github/actions/docker-selfhosted-cleanup
 
   build_direct_arm64:
     needs: prepare
@@ -545,6 +553,17 @@ jobs:
             publish_manifest_tags "${{ needs.prepare.outputs.harbor_image_base }}"
           fi
 
+      - name: Post-job Docker cleanup (self-hosted disk)
+        if: always()
+        run: |
+          set +e
+          echo "=== Docker cleanup (post-job, self-hosted) ==="
+          docker container prune -f
+          docker builder prune -af
+          docker image prune -af
+          docker system df || true
+          df -h / || true
+
   build_harbor_runtime_amd64:
     needs: prepare
     if: needs.prepare.outputs.build_strategy == 'harbor-runtime-set' && needs.prepare.outputs.build_amd64 == 'true'
@@ -614,6 +633,10 @@ jobs:
           if [ "${{ needs.prepare.outputs.publish_harbor }}" = "true" ]; then
             publish_arch_tags "${HARBOR_REGISTRY}" "project-per-image"
           fi
+
+      - name: Post-job Docker cleanup (self-hosted disk)
+        if: always()
+        uses: ./.github/actions/docker-selfhosted-cleanup
 
   build_harbor_runtime_arm64:
     needs: prepare
@@ -757,3 +780,7 @@ jobs:
           if [ "${{ needs.prepare.outputs.publish_harbor }}" = "true" ]; then
             publish_manifests "${HARBOR_REGISTRY}" "project-per-image"
           fi
+
+      - name: Post-job Docker cleanup (self-hosted disk)
+        if: always()
+        uses: ./.github/actions/docker-selfhosted-cleanup

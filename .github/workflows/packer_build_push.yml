@@ -131,6 +131,10 @@ jobs:
 
           echo "::notice::Resolved packer target '${target}' -> ${upload_base_url}"
 
+      - name: Post-job Docker cleanup (self-hosted disk)
+        if: always()
+        uses: ./.github/actions/docker-selfhosted-cleanup
+
   # Same shape as Docker "direct" path: prepare → parallel per-arch jobs → publish.
   # GitHub does not allow `matrix.*` in job-level `if`, so we use two jobs (like build_direct_amd64 / build_direct_arm64).
   build_packer_direct_amd64:
@@ -212,6 +216,10 @@ jobs:
           path: ${{ env.PACKER_OUTPUT_DIR }}/**/*.qcow2
           if-no-files-found: error
           retention-days: 1
+
+      - name: Post-job Docker cleanup (self-hosted disk)
+        if: always()
+        uses: ./.github/actions/docker-selfhosted-cleanup
 
   build_packer_direct_arm64:
     name: build_packer_direct_arm64
@@ -381,3 +389,7 @@ jobs:
                 ;;
             esac
           done
+
+      - name: Post-job Docker cleanup (self-hosted disk)
+        if: always()
+        uses: ./.github/actions/docker-selfhosted-cleanup

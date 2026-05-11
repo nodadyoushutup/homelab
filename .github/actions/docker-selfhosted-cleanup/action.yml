@@ -1,0 +1,19 @@
+name: Docker self-hosted cleanup
+description: >
+  Prune exited containers (they pin image IDs), BuildKit cache, then all unused
+  images including tagged digests not referenced by any running container. Use
+  with if always() after self-hosted jobs.
+
+runs:
+  using: composite
+  steps:
+    - name: Prune exited containers, build cache, and unused images (incl. tagged)
+      shell: bash
+      run: |
+        set +e
+        echo "=== Docker cleanup (post-job, self-hosted) ==="
+        docker container prune -f
+        docker builder prune -af
+        docker image prune -af
+        docker system df || true
+        df -h / || true
