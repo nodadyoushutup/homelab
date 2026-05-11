@@ -50,7 +50,8 @@ discipline for this repo lives in
   `applications/langgraph/framework/agents/system_prompts/code_system_prompt.md`
   (loaded by `CodeAgent`). Numbered `01`–`06` are contracts and filesystem rules;
   `07`–`14` include per-language or per-format **homelab** shelves (including local
-  git) that point at the framework prompt for shared guidance.
+  git) that point at the framework prompt for shared guidance; **`15-jira-led-implementation.md`**
+  covers fresh Jira reads on the Code specialist (Atlassian MCP + branch/PR flow).
 - `docs/subagents/github/*.md`: **homelab** overlays for the GitHub specialist (PR
   policy, Actions dispatch, responsibility split vs `code`). Generic GitHub MCP
   behavior lives in

@@ -10,7 +10,7 @@ from framework.agents import TechLeadAgent
 
 
 APP_DIR = Path(__file__).resolve().parent
-SUBAGENTS_DIR = APP_DIR / "subagents"
+SUBAGENTS_DIR = APP_DIR.parent / "subagents"
 CODE_APP_DIR = SUBAGENTS_DIR / "code"
 GITHUB_APP_DIR = SUBAGENTS_DIR / "github"
 JIRA_APP_DIR = SUBAGENTS_DIR / "jira"

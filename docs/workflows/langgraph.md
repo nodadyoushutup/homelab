@@ -9,7 +9,7 @@ Use this workflow for:
 
 - changes under `applications/langgraph/framework/`
 - changes to deployable agent configs under `applications/langgraph/agent/`
-  and `applications/langgraph/agent/subagents/*/`
+  and `applications/langgraph/subagents/*/`
 - changes to agent-local or subagent-local skills
 - changes to agent-local or subagent-local MCP wiring
 - changes to the top-level `docker/` LangGraph dev stack
@@ -26,7 +26,7 @@ When a task changes the LangGraph implementation:
    - MCP wiring
 2. keep shared code in `applications/langgraph/framework/` and the
    default Homelab agent boundary under `applications/langgraph/agent/`,
-   with specialist directories under `applications/langgraph/agent/subagents/`
+   with specialist directories under `applications/langgraph/subagents/`
    - put reusable class-based agent builders under
      `applications/langgraph/framework/agents/`
    - put concrete runtime instantiation, MCP config, skills, and
@@ -124,7 +124,7 @@ When a task changes the LangGraph implementation:
 After changing the LangGraph scaffold:
 
 1. run a syntax check such as
-   `python3 -m compileall applications/langgraph/agent applications/langgraph/framework`
+   `python3 -m compileall applications/langgraph/agent applications/langgraph/subagents applications/langgraph/framework`
 2. validate any `langgraph.json` files you changed
 3. if dependencies are installed, start the target app locally from its app
    directory with `langgraph dev`, or use `applications/langgraph/docker/agent_server.sh`
@@ -160,7 +160,7 @@ Use this rough pattern:
   `HomelabSupervisorAgent`
 - `applications/langgraph/agent/`: default Homelab deployable agent
   boundary, which may expose one graph or multiple sibling graphs
-- `applications/langgraph/agent/subagents/<specialist>/`: specialist skills,
+- `applications/langgraph/subagents/<specialist>/`: specialist skills,
   MCP wiring, and optional standalone `langgraph dev` configs for co-deployed
   specialist graphs such as Code, Jira, and Tech Lead
 - `docs/subagents/<runtime-name>/`: concrete runtime prompt docs loaded into

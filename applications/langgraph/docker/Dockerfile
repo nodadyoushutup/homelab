@@ -19,6 +19,8 @@ RUN --mount=type=cache,target=/root/.cache/pip \
 
 COPY agent /app/langgraph/agent
 
+COPY subagents /app/langgraph/subagents
+
 COPY docker/langgraph_compose_healthcheck.py /usr/local/bin/langgraph_compose_healthcheck.py
 
 WORKDIR /app/langgraph/agent

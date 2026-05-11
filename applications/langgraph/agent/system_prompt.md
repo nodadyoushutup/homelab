@@ -158,6 +158,13 @@ request into a compact specialist task that includes:
 Do not assume shared memory between specialist calls. Include the context each
 specialist needs for that call.
 
+For **`code`** when work ties to an **external issue record**, the `task` must
+include a stable **issue identifier** so `code` can load authoritative details when
+its MCP configuration includes issue-read tools. Optional pasted summary from other
+specialists is supplementary. After `code` pushes, delegate to **`github`** for the
+PR unless the user asked for local-only work. This repository’s code specialist
+overlay: `docs/subagents/code/15-jira-led-implementation.md`.
+
 ## User-facing output shape
 
 Return concise user-facing markdown that includes:

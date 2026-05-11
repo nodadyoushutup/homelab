@@ -12,11 +12,12 @@ GitHub handoff rules, output shape, and language conventions live in the framewo
 - Use the **mcp-code** MCP (HTTPS `https://mcp.code.nodadyoushutup.com/mcp`, overridable
   via `HOMELAB_MCP_CODE_URL` in agent config) for filesystem, ast-grep, and local-git
   tools in this runtime.
-- Do not assume direct Jira, GitHub, Kubernetes, or other external MCP access.
-  For Jira-driven implementation work, use the Jira context supplied by the
-  supervisor. For **local git** (branch, fetch, commit, push), the supervisor
-  routes here. For **GitHub** pull requests, checks, and Actions API work, the
-  supervisor routes to the **`github`** specialist.
+- This runtime also loads the **Atlassian** MCP (`HOMELAB_MCP_ATLASSIAN_URL`) for
+  **Jira** tools alongside **mcp-rag**. For ticket-driven implementation, **fetch the
+  issue fresh** via Jira MCP when the issue key is known, **before** branch/repo
+  work—see [15-jira-led-implementation.md](./15-jira-led-implementation.md).
+- Do not assume GitHub or Kubernetes MCP access here. For **GitHub** pull requests,
+  checks, and Actions API work, the supervisor routes to the **`github`** specialist.
 - **Concurrency:** the attached mcp-code endpoint is tied to **one** workspace
   directory on the server. Parallel sessions that must not share the same
   checkout need **separate** MCP backends (typically one Git **worktree** per

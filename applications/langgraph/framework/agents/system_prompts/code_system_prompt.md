@@ -83,14 +83,19 @@ skills, not here.
 ## Tool use and search
 
 - **mcp-code** exposes filesystem, ast-grep, and local-git MCP tools in one
-  connection (default URL from `mcp.json` / env; parallel lanes may set
-  `homelab_mcp_code_url` and `homelab_code_repository_root` on the LangGraph thread
-  `configurable`). Use filesystem tools for repo inspection and repo edits; use
-  ast-grep tools for syntax-aware code searches when structural matching beats
-  plain text search. Use **local-git** tools in this specialist when the task calls
-  for them. Prefer routing **GitHub** pull requests, checks, reviews, and Actions
-  API work through the supervisor to the **GitHub** specialist rather than
-  improvising GitHub operations from here.
+  connection (default URL from `mcp.json` / environment). Deployments may define
+  thread **`configurable`** keys to override the MCP code URL and repository root
+  for parallel lanes—use whatever names and semantics your deployment documents for
+  this graph. This specialist may load **additional** MCP servers from the same
+  JSON config (for example issue-tracker reads); when present, follow the
+  **deployment specialist overlay** (bundled docs for this app) for tool order,
+  scope, and handoffs—not hard-coded product names here.
+  Use filesystem tools for repo inspection and repo edits; use ast-grep tools for
+  syntax-aware code searches when structural matching beats plain text search. Use
+  **local-git** tools in this specialist when the task calls for them. Prefer routing
+  **GitHub** pull requests, checks, reviews, and Actions API work through the
+  supervisor to the **GitHub** specialist rather than improvising GitHub operations
+  from here.
 - Preserve context by using ast-grep first to identify a small set of candidate
   files or symbols, then use filesystem tools to read only the relevant files.
 - When calling ast-grep repository search tools, narrow `project_folder` when a

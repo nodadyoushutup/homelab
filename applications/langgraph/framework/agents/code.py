@@ -8,7 +8,7 @@ from langchain.tools import tool
 from framework.configuration import resolve_repo_root
 from framework.middleware import CodeReadBeforeWriteMiddleware
 from framework.middleware import McpWorkspaceBindingMiddleware
-from framework.mcp_support import CODE_TECH_LEAD_MCP_SERVERS_PATH
+from framework.mcp_support import CODE_MCP_SERVERS_PATH
 from framework.mcp_support import DEFAULT_REPO_SEARCH_EXCLUDES
 from framework.mcp_support import load_workspace_routed_mcp_tools
 
@@ -38,7 +38,9 @@ class CodeAgent(BaseAgent):
             return (
                 "The Code agent owns repository-backed analysis and implementation "
                 "support for source code, configuration, paths, filesystem state, "
-                "local git operations exposed by mcp-code when requested, and "
+                "local git operations exposed by mcp-code when requested, plus any "
+                "additional MCP tools configured for this runtime (for example "
+                "issue-tracker reads when the deployment enables them), and "
                 "behavior. It should stay scoped to the repository root "
                 f"`{self.repo_root}`, inspect source-of-truth files before acting, "
                 "make explicit code changes only when requested, and return concise "
@@ -47,7 +49,7 @@ class CodeAgent(BaseAgent):
             )
 
         mcp_tools = load_workspace_routed_mcp_tools(
-            CODE_TECH_LEAD_MCP_SERVERS_PATH,
+            CODE_MCP_SERVERS_PATH,
             wrap_profile="code",
             static_repo=self.repo_root,
         )

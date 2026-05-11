@@ -58,8 +58,10 @@ AST_GREP_SEARCH_TOOL_NAMES = {
 DEFAULT_AST_GREP_MAX_RESULTS = 25
 MAX_AST_GREP_MAX_RESULTS = 50
 
-# Shared MCP servers for Code and Tech Lead (mcp-code workspace + mcp-rag); single file avoids drift.
+# Tech Lead MCP server list (mcp-code + mcp-rag).
 CODE_TECH_LEAD_MCP_SERVERS_PATH = Path(__file__).resolve().parent / "code_tech_lead_mcp_servers.json"
+# Code MCP server list: same baseline plus optional extra HTTP MCP entries from JSON.
+CODE_MCP_SERVERS_PATH = Path(__file__).resolve().parent / "code_mcp_servers.json"
 
 JIRA_JSON_STRING_FIELDS_BY_TOOL = {
     "jira_create_issue": {"additional_fields"},
@@ -189,8 +191,8 @@ def _recoverable_tool_error(tool_name: str, exc: Exception) -> list[dict[str, st
     return _text_blocks(json.dumps(payload, indent=2, default=str))
 
 
-# Same MCP server set (``code_tech_lead_mcp_servers.json``: mcp-code + mcp-rag) loads for
-# both code and tech_lead; caching avoids a second expensive MultiServer bootstrap during agent.py import.
+# Bootstrap cache key is the normalized server dict; Code uses ``code_mcp_servers.json``,
+# Tech Lead uses ``code_tech_lead_mcp_servers.json``.
 _mcp_tools_bootstrap_cache: dict[str, list[Any]] = {}
 _mcp_tools_bootstrap_lock = threading.Lock()
 
@@ -282,10 +284,30 @@ async def _cached_wrapped_toolset(
             wrapped: list[Any] = list(
                 wrap_ast_grep_tools(wrap_filesystem_tools(raw, repo), repo)
             )
+            if wrap_profile == "code":
+                wrapped = _apply_jira_arg_sanitizers(wrapped)
         else:
             wrapped = list(raw)
         _mcp_toolset_cache[key] = wrapped
         return wrapped
+
+
+def _apply_jira_arg_sanitizers(tools: list[Any]) -> list[Any]:
+    """Apply shared optional-arg sanitization to tools whose names start with ``jira_``."""
+    out: list[Any] = []
+    for t in tools:
+        name = getattr(t, "name", "") or ""
+        if not name.startswith("jira_"):
+            out.append(t)
+            continue
+        sanitized = wrap_blank_optional_args(
+            [t],
+            json_string_fields_by_tool=JIRA_JSON_STRING_FIELDS_BY_TOOL,
+            omit_args_by_tool=JIRA_OMIT_ARGS_BY_TOOL,
+            omit_false_bool_args_by_tool=JIRA_OMIT_FALSE_BOOL_ARGS_BY_TOOL,
+        )
+        out.extend(sanitized)
+    return out
 
 
 def load_workspace_routed_mcp_tools(

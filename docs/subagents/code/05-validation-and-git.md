@@ -6,7 +6,7 @@ Agent** system prompt. This file lists **homelab** commands and release routing.
 ## Validation
 
 - For narrow Python LangGraph changes, a syntax check such as
-  `python3 -m compileall applications/langgraph/agent applications/langgraph/framework`
+  `python3 -m compileall applications/langgraph/agent applications/langgraph/subagents applications/langgraph/framework`
   is a reasonable baseline.
 - For frontend, container, Kubernetes, Terraform, or CI changes, choose the
   narrowest meaningful validation from the relevant docs or local package

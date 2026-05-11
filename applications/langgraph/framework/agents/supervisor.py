@@ -35,7 +35,11 @@ class HomelabSupervisorAgent(BaseAgent):
                 "services, manifests, or configuration. Then use the `task` tool to "
                 "delegate every source code, repository, configuration, file path, filesystem, "
                 "MCP workspace, or implementation request to the `code` specialist before "
-                "answering directly, passing both RAG result sets as context."
+                "answering directly, passing both RAG result sets as context. "
+                "When implementation is driven by an **external issue record**, include "
+                "a stable **issue identifier** in the `task` so `code` can load "
+                "authoritative metadata if its configured MCPs provide issue-read "
+                "tools; do not rely only on a paraphrased summary."
             ),
             "jira_delegate_instruction": (
                 "Before delegating to `jira`, run a docs-oriented `rag_search` for "

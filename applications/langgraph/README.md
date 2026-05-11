@@ -22,15 +22,15 @@ workshopping:
 ```text
 applications/langgraph/
 ├── agent/
-│   ├── subagents/
-│   │   ├── code/
-│   │   ├── github/
-│   │   ├── jira/
-│   │   └── tech-lead/
 │   ├── mcp.json
 │   ├── agent.py
 │   ├── langgraph.json
 │   └── system_prompt.md
+├── subagents/
+│   ├── code/
+│   ├── github/
+│   ├── jira/
+│   └── tech-lead/
 ├── docker/
 │   ├── Dockerfile
 │   ├── agent_server.sh

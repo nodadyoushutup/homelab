@@ -1,6 +1,6 @@
 {
   "dependencies": [
-    "../../../"
+    "../../"
   ],
   "graphs": {
     "jira": "./agent.py:agent"
