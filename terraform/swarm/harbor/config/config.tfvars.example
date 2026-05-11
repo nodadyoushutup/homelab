@@ -104,7 +104,7 @@ projects = [
     vulnerability_scanning = true
   },
   {
-    name                   = "webserver-image"
+    name                   = "cloud-image-repository"
     public                 = false
     vulnerability_scanning = true
   },

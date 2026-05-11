@@ -26,7 +26,7 @@ Usage: ./packer/build.sh --version <version> [options] [packer-build-args...]
 
 Options:
   --version <X.Y.Z>                       Required image version (semantic version)
-  --target <webserver>                     Publish target (default: webserver)
+  --target <cloud-image-repository>       Publish target (default: cloud-image-repository)
   --build_arch <amd64|arm64|both>         Build architecture selector (default: amd64)
   --amd64_accelerator <kvm|tcg|none>      Accelerator for amd64 source (default: kvm)
   --arm64_accelerator <kvm|tcg|none>      Accelerator for arm64 source (default: kvm)
@@ -72,7 +72,7 @@ fi
 VERSION=""
 VERSION_SET=0
 
-TARGET="webserver"
+TARGET="cloud-image-repository"
 BUILD_ARCH="amd64"
 AMD64_ACCELERATOR="kvm"
 ARM64_ACCELERATOR="kvm"
@@ -100,7 +100,7 @@ while [[ $# -gt 0 ]]; do
       shift
       ;;
     --target)
-      [[ $# -ge 2 ]] || die "--target requires a value: webserver"
+      [[ $# -ge 2 ]] || die "--target requires a value: cloud-image-repository"
       TARGET="$2"
       shift 2
       ;;
@@ -190,12 +190,12 @@ else
 fi
 
 case "${TARGET}" in
-  webserver)
-    DEFAULT_UPLOAD_BASE_URL="https://webserver.image.nodadyoushutup.com"
+  cloud-image-repository)
+    DEFAULT_UPLOAD_BASE_URL="https://cloud-image-repository.image.nodadyoushutup.com"
     DEFAULT_UPLOAD_FALLBACK_BASE_URL="http://192.168.1.120:18088"
     ;;
   *)
-    die "Unsupported --target '${TARGET}'. Expected: webserver"
+    die "Unsupported --target '${TARGET}'. Expected: cloud-image-repository"
     ;;
 esac
 
@@ -391,7 +391,7 @@ for ARTIFACT_PATH in "${ARTIFACT_PATHS[@]}"; do
   log "Artifact allocated size: $(human_size "${ALLOCATED_BYTES}")"
 
   if [ "${APPARENT_BYTES}" -gt "${MAX_UPLOAD_BYTES}" ]; then
-    die "Artifact apparent size exceeds 25GiB webserver limit (client_max_body_size 25g): ${ARTIFACT_BASENAME}"
+    die "Artifact apparent size exceeds 25GiB upload host limit (client_max_body_size 25g): ${ARTIFACT_BASENAME}"
   fi
 
   UPLOAD_URL="${UPLOAD_BASE_URL}/${ARTIFACT_BASENAME}"

@@ -29,7 +29,7 @@ Required:
   --version <X.Y.Z>                Image version to build
 
 Options:
-  --target <webserver>             Publish target (default: webserver)
+  --target <cloud-image-repository> Publish target (default: cloud-image-repository)
   --amd64_accelerator <value>      kvm, tcg, or none (default: kvm)
   --arm64_accelerator <value>      kvm, tcg, or none (default: kvm)
   --build_arch <value>             amd64, arm64, or both (default: amd64)
@@ -38,7 +38,7 @@ EOF_USAGE
 }
 
 VERSION=""
-TARGET="webserver"
+TARGET="cloud-image-repository"
 AMD64_ACCELERATOR="kvm"
 ARM64_ACCELERATOR="kvm"
 BUILD_ARCH="amd64"
@@ -79,7 +79,7 @@ done
 [[ "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || die "Invalid version '${VERSION}'. Expected semantic version like 0.0.1"
 
 case "${TARGET}" in
-  webserver) ;;
+  cloud-image-repository) ;;
   *) die "Unsupported target '${TARGET}'" ;;
 esac
 

@@ -10,9 +10,9 @@ on:
         description: "Publish target"
         required: true
         type: choice
-        default: webserver
+        default: cloud-image-repository
         options:
-          - webserver
+          - cloud-image-repository
       amd64_accelerator:
         description: "AMD64 QEMU accelerator"
         required: true
@@ -116,8 +116,8 @@ jobs:
 
           target="${{ github.event.inputs.target }}"
           case "$target" in
-            webserver)
-              upload_base_url="https://webserver.image.nodadyoushutup.com"
+            cloud-image-repository)
+              upload_base_url="https://cloud-image-repository.image.nodadyoushutup.com"
               upload_fallback_base_url="http://192.168.1.120:18088"
               ;;
             *)
@@ -327,7 +327,7 @@ jobs:
           command -v curl >/dev/null 2>&1
           command -v stat >/dev/null 2>&1
 
-      - name: Publish qcow2 artifacts to webserver image host
+      - name: Publish qcow2 artifacts to cloud image repository host
         env:
           UPLOAD_BASE_URL: ${{ needs.prepare.outputs.upload_base_url }}
           UPLOAD_FALLBACK_BASE_URL: ${{ needs.prepare.outputs.upload_fallback_base_url }}

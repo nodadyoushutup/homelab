@@ -12,9 +12,9 @@ import urllib.parse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 
-DATA_ROOT = os.path.realpath(os.environ.get("WEBSERVER_IMAGE_DATA_ROOT", "/srv/webserver-image/data"))
-UI_ROOT = os.path.realpath(os.environ.get("WEBSERVER_IMAGE_UI_ROOT", "/srv/webserver-image/ui"))
-LISTEN_PORT = int(os.environ.get("WEBSERVER_IMAGE_PORT", "8080"))
+DATA_ROOT = os.path.realpath(os.environ.get("CLOUD_IMAGE_REPOSITORY_DATA_ROOT", "/srv/cloud-image-repository/data"))
+UI_ROOT = os.path.realpath(os.environ.get("CLOUD_IMAGE_REPOSITORY_UI_ROOT", "/srv/cloud-image-repository/ui"))
+LISTEN_PORT = int(os.environ.get("CLOUD_IMAGE_REPOSITORY_PORT", "8080"))
 READ_CHUNK_SIZE = 1024 * 1024
 WRITE_CHUNK_SIZE = 1024 * 1024
 API_PREFIX = "/api/files/"
@@ -54,7 +54,7 @@ def _iso_utc_timestamp(epoch_seconds: float) -> str:
 
 
 class FileServerHandler(BaseHTTPRequestHandler):
-    server_version = "WebserverImage/1.0"
+    server_version = "CloudImageRepository/1.0"
 
     def do_OPTIONS(self) -> None:
         self._send_status(204)

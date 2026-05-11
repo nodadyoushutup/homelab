@@ -12,6 +12,6 @@ if ! declare -f purge_main >/dev/null 2>&1; then
   source "${SCRIPT_DIR}/base.sh"
 fi
 
-APP_NAME="webserver-image"
+APP_NAME="cloud-image-repository"
 
 purge_main "$@"

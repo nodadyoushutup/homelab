@@ -33,7 +33,7 @@ Run the repo-native build-and-upload pipeline equivalent of the GHA workflow:
 ./pipelines/packer/build_push.sh --version 0.0.1
 ```
 
-The **Packer - Build and Push Image** workflow (`.github/workflows/packer_build_push.yml`) follows the same **prepare → parallel per-arch jobs → publish** shape as Docker **direct** builds: **`prepare`** on `homelab,amd64,build`, then **`build_packer_direct_amd64`** and **`build_packer_direct_arm64`** (each `needs: prepare` only, so they run concurrently when **`build_arch: both`**), then **`publish_packer_artifacts`** downloads all produced artifacts and uploads every `.qcow2` to the webserver image host. Job-level `if` cannot use the `matrix` context, so Packer mirrors Docker with **two jobs** rather than a filtered matrix.
+The **Packer - Build and Push Image** workflow (`.github/workflows/packer_build_push.yml`) follows the same **prepare → parallel per-arch jobs → publish** shape as Docker **direct** builds: **`prepare`** on `homelab,amd64,build`, then **`build_packer_direct_amd64`** and **`build_packer_direct_arm64`** (each `needs: prepare` only, so they run concurrently when **`build_arch: both`**), then **`publish_packer_artifacts`** downloads all produced artifacts and uploads every `.qcow2` to the cloud image repository host. Job-level `if` cannot use the `matrix` context, so Packer mirrors Docker with **two jobs** rather than a filtered matrix.
 
 If the workflow requests **`kvm`** but the runner has no usable **`/dev/kvm`** (common for Docker-in-Docker self-hosted runners), each build job **falls back to `tcg`** automatically so QEMU can start (slower). Prefer exposing KVM to the runner, or dispatch with **`tcg`** when you accept software emulation.
 
@@ -47,7 +47,7 @@ Build with GHA-equivalent selectors:
 
 ```bash
 ./packer/build.sh --version 0.0.3 \
-  --target webserver \
+  --target cloud-image-repository \
   --build_arch both \
   --amd64_accelerator kvm \
   --arm64_accelerator kvm
@@ -69,7 +69,7 @@ Enable verbose Packer debug logs for troubleshooting:
 Upload-only (existing built artifacts for a version):
 
 ```bash
-./packer/upload.sh 0.0.1 --target webserver --build_arch both
+./packer/upload.sh 0.0.1 --target cloud-image-repository --build_arch both
 ./packer/upload.sh 0.0.1 --build_arch amd64
 ```
 
@@ -97,8 +97,8 @@ packer/logs/build-<utc-timestamp>-v0.0.1.log
 Artifact upload destinations:
 
 ```text
-https://webserver.image.nodadyoushutup.com/ubuntu-24.04-ndysu-0.0.1-amd64.qcow2
-https://webserver.image.nodadyoushutup.com/ubuntu-24.04-ndysu-0.0.1-arm64.qcow2
+https://cloud-image-repository.image.nodadyoushutup.com/ubuntu-24.04-ndysu-0.0.1-amd64.qcow2
+https://cloud-image-repository.image.nodadyoushutup.com/ubuntu-24.04-ndysu-0.0.1-arm64.qcow2
 ```
 
 If the HTTPS proxy returns `413`, `build.sh` retries each artifact upload directly to:
@@ -135,10 +135,10 @@ packer/keys/packer-nodadyoushutup.pub
 - `packer/scripts/cleanup-image.sh` removes the temporary `packer` user and any temporary keys/files.
 - `packer/build.sh` requires `--version <X.Y.Z>`.
 - `packer/build.sh` passes version to Packer via `-var image_version=<version>`.
-- `packer/build.sh` accepts `--target webserver`, `--build_arch amd64|arm64|both`, `--amd64_accelerator kvm|tcg|none`, and `--arm64_accelerator kvm|tcg|none`.
+- `packer/build.sh` accepts `--target cloud-image-repository`, `--build_arch amd64|arm64|both`, `--amd64_accelerator kvm|tcg|none`, and `--arm64_accelerator kvm|tcg|none`.
 - `packer/build.sh` reserves architecture filtering; pass `--build_arch` instead of raw Packer `-only`/`-except`.
 - `packer/build.sh` enables Packer debug logs by default (`PACKER_LOG=1`); disable with `--no_packer_log`.
-- `packer/upload.sh` accepts `--target webserver` and `--build_arch amd64|arm64|both`.
+- `packer/upload.sh` accepts `--target cloud-image-repository` and `--build_arch amd64|arm64|both`.
 - `pipelines/packer/build_push.sh` mirrors the GitHub Actions
   `packer_build_push` inputs and runs `packer/build.sh` followed by
   `packer/upload.sh`.

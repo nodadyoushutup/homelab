@@ -24,7 +24,7 @@ KNOWN_SERVICES=(
   prometheus
   telegraf_docker_metrics
   vault
-  webserver-image
+  cloud-image-repository
 )
 declare -A SERVICE_MAP=(
   [alloy]="alloy"
@@ -70,12 +70,14 @@ declare -A SERVICE_MAP=(
   [docker-metrics]="telegraf_docker_metrics"
   [docker_metrics]="telegraf_docker_metrics"
   [vault]="vault"
-  [webserver-image]="webserver-image"
-  [webserver_image]="webserver-image"
-  [image-webserver]="webserver-image"
-  [image_webserver]="webserver-image"
-  [image-server]="webserver-image"
-  [images-webserver]="webserver-image"
+  [cloud-image-repository]="cloud-image-repository"
+  [cloud_image_repository]="cloud-image-repository"
+  [webserver-image]="cloud-image-repository"
+  [webserver_image]="cloud-image-repository"
+  [image-webserver]="cloud-image-repository"
+  [image_webserver]="cloud-image-repository"
+  [image-server]="cloud-image-repository"
+  [images-webserver]="cloud-image-repository"
 )
 
 usage() {

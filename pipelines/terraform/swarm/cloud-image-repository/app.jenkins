@@ -17,11 +17,11 @@ pipeline {
     stage('Run Terraform Stage') {
       steps {
         sh(
-          label: 'swarm/webserver-image/app',
+          label: 'swarm/cloud-image-repository/app',
           script: '''#!/usr/bin/env bash
 set -euo pipefail
 
-./scripts/terraform/jenkins_stage_runner.sh ./pipelines/terraform/swarm/webserver-image/app.sh
+./scripts/terraform/jenkins_stage_runner.sh ./pipelines/terraform/swarm/cloud-image-repository/app.sh
 '''
         )
       }

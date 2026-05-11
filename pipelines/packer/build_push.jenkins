@@ -11,7 +11,7 @@ pipeline {
   parameters {
     string(name: 'AGENT_LABEL', defaultValue: 'swarm && amd64 && kvm', description: 'Jenkins agent label to run this pipeline on')
     string(name: 'VERSION', defaultValue: '', description: 'Image version to build, for example 0.0.3')
-    choice(name: 'TARGET', choices: ['webserver'], description: 'Publish target')
+    choice(name: 'TARGET', choices: ['cloud-image-repository'], description: 'Publish target')
     choice(name: 'AMD64_ACCELERATOR', choices: ['kvm', 'tcg', 'none'], description: 'AMD64 QEMU accelerator')
     choice(name: 'ARM64_ACCELERATOR', choices: ['kvm', 'tcg', 'none'], description: 'ARM64 QEMU accelerator')
     choice(name: 'BUILD_ARCH', choices: ['amd64', 'arm64', 'both'], description: 'Architecture to build')

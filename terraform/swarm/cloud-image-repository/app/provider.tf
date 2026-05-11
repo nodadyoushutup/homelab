@@ -1,5 +1,6 @@
 terraform {
   backend "s3" {
+    # Unchanged object key so existing remote state keeps tracking this stack after the rename.
     key = "webserver-image.tfstate"
   }
 
