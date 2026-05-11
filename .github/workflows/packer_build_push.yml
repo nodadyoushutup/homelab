@@ -32,7 +32,7 @@ on:
           - tcg
           - none
       build_arch:
-        description: "Architecture to build (native runner per arch; both matches Docker split-build pattern)"
+        description: "Architectures to build (native runner per arch; both = parallel matrix like Docker direct)"
         required: true
         type: choice
         default: both
@@ -46,7 +46,7 @@ permissions:
 
 jobs:
   prepare:
-    runs-on: [self-hosted, linux, homelab, amd64, kvm]
+    runs-on: [self-hosted, linux, homelab, amd64, build]
     outputs:
       version: ${{ steps.meta.outputs.version }}
       upload_base_url: ${{ steps.target.outputs.upload_base_url }}
@@ -107,7 +107,7 @@ jobs:
           echo "amd64_accelerator=${AMD64_ACCELERATOR}" >> "$GITHUB_OUTPUT"
           echo "arm64_accelerator=${ARM64_ACCELERATOR}" >> "$GITHUB_OUTPUT"
 
-          echo "::notice::Packer build matrix: amd64=${build_amd64} arm64=${build_arm64} (dispatch build_arch=${BUILD_ARCH})"
+          echo "::notice::Packer direct builds: amd64=${build_amd64} arm64=${build_arm64} (dispatch build_arch=${BUILD_ARCH})"
 
       - name: Resolve publish target
         id: target
@@ -131,10 +131,28 @@ jobs:
 
           echo "::notice::Resolved packer target '${target}' -> ${upload_base_url}"
 
-  build_packer_amd64:
+  # Same shape as Docker "direct" path: prepare → parallel per-arch builds → publish.
+  # Matrix legs run concurrently; skipped legs when build_arch is single-arch.
+  build_packer_direct:
+    name: build_packer_direct (${{ matrix.arch }})
     needs: prepare
-    if: needs.prepare.outputs.build_amd64 == 'true'
-    runs-on: [self-hosted, linux, homelab, amd64, kvm]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            packer_only: ubuntu-24.04-ndysu.qemu.ubuntu_24_04_amd64
+            qemu_bin: qemu-system-x86_64
+            runner: [self-hosted, linux, homelab, amd64, build]
+          - arch: arm64
+            packer_only: ubuntu-24.04-ndysu.qemu.ubuntu_24_04_arm64
+            qemu_bin: qemu-system-aarch64
+            runner: [self-hosted, linux, homelab, arm64]
+    runs-on: ${{ matrix.runner }}
+    if: >
+      needs.prepare.result == 'success' &&
+      ((matrix.arch == 'amd64' && needs.prepare.outputs.build_amd64 == 'true') ||
+       (matrix.arch == 'arm64' && needs.prepare.outputs.build_arm64 == 'true'))
     env:
       VERSION: ${{ needs.prepare.outputs.version }}
       AMD64_ACCELERATOR: ${{ needs.prepare.outputs.amd64_accelerator }}
@@ -155,14 +173,14 @@ jobs:
           command -v packer >/dev/null 2>&1
           command -v xorriso >/dev/null 2>&1
           command -v qemu-img >/dev/null 2>&1
-          command -v qemu-system-x86_64 >/dev/null 2>&1
+          command -v "${{ matrix.qemu_bin }}" >/dev/null 2>&1
           command -v curl >/dev/null 2>&1
           command -v jq >/dev/null 2>&1
 
-      - name: Build stage - Packer AMD64 image
+      - name: Build Packer image (${{ matrix.arch }})
         run: |
           set -euo pipefail
-          PACKER_ONLY_ARGS=(-only=ubuntu-24.04-ndysu.qemu.ubuntu_24_04_amd64)
+          PACKER_ONLY_ARGS=(-only=${{ matrix.packer_only }})
 
           cd "${PACKER_DIR}"
           rm -rf "output/ubuntu-24.04-ndysu/${VERSION}"
@@ -189,93 +207,25 @@ jobs:
             exit 1
           }
 
-      - name: Upload qcow2 artifacts for push job
+      - name: Upload qcow2 for publish job
         uses: actions/upload-artifact@v4
         with:
-          name: packer-qcow2-${{ needs.prepare.outputs.version }}-amd64
+          name: packer-qcow2-${{ needs.prepare.outputs.version }}-${{ matrix.arch }}
           path: ${{ env.PACKER_OUTPUT_DIR }}/**/*.qcow2
           if-no-files-found: error
           retention-days: 1
 
-  build_packer_arm64:
-    needs: prepare
-    if: needs.prepare.outputs.build_arm64 == 'true'
-    runs-on: [self-hosted, linux, homelab, arm64]
-    env:
-      VERSION: ${{ needs.prepare.outputs.version }}
-      AMD64_ACCELERATOR: ${{ needs.prepare.outputs.amd64_accelerator }}
-      ARM64_ACCELERATOR: ${{ needs.prepare.outputs.arm64_accelerator }}
-      PACKER_DIR: packer
-      PACKER_OUTPUT_DIR: packer/output/ubuntu-24.04-ndysu/${{ needs.prepare.outputs.version }}
-    defaults:
-      run:
-        shell: bash
-
-    steps:
-      - name: Check out the code
-        uses: actions/checkout@v6
-
-      - name: Validate toolchain
-        run: |
-          set -euo pipefail
-          command -v packer >/dev/null 2>&1
-          command -v xorriso >/dev/null 2>&1
-          command -v qemu-img >/dev/null 2>&1
-          command -v qemu-system-aarch64 >/dev/null 2>&1
-          command -v curl >/dev/null 2>&1
-          command -v jq >/dev/null 2>&1
-
-      - name: Build stage - Packer ARM64 image
-        run: |
-          set -euo pipefail
-          PACKER_ONLY_ARGS=(-only=ubuntu-24.04-ndysu.qemu.ubuntu_24_04_arm64)
-
-          cd "${PACKER_DIR}"
-          rm -rf "output/ubuntu-24.04-ndysu/${VERSION}"
-
-          packer init "ubuntu-24.04-ndysu.pkr.hcl"
-          packer fmt "ubuntu-24.04-ndysu.pkr.hcl"
-          packer validate "${PACKER_ONLY_ARGS[@]}" \
-            -var "image_version=${VERSION}" \
-            -var "amd64_accelerator=${AMD64_ACCELERATOR}" \
-            -var "arm64_accelerator=${ARM64_ACCELERATOR}" \
-            "ubuntu-24.04-ndysu.pkr.hcl"
-          packer build -force "${PACKER_ONLY_ARGS[@]}" \
-            -var "image_version=${VERSION}" \
-            -var "amd64_accelerator=${AMD64_ACCELERATOR}" \
-            -var "arm64_accelerator=${ARM64_ACCELERATOR}" \
-            "ubuntu-24.04-ndysu.pkr.hcl"
-
-      - name: Verify qcow2 artifact is present
-        run: |
-          set -euo pipefail
-          mapfile -t artifacts < <(find "${PACKER_OUTPUT_DIR}" -type f -name '*.qcow2' | sort)
-          [[ "${#artifacts[@]}" -gt 0 ]] || {
-            echo "No qcow2 artifacts found under ${PACKER_OUTPUT_DIR}" >&2
-            exit 1
-          }
-
-      - name: Upload qcow2 artifacts for push job
-        uses: actions/upload-artifact@v4
-        with:
-          name: packer-qcow2-${{ needs.prepare.outputs.version }}-arm64
-          path: ${{ env.PACKER_OUTPUT_DIR }}/**/*.qcow2
-          if-no-files-found: error
-          retention-days: 1
-
-  push:
+  publish_packer_artifacts:
+    name: publish_packer_artifacts
     needs:
       - prepare
-      - build_packer_amd64
-      - build_packer_arm64
+      - build_packer_direct
     if: >
       always() &&
       needs.prepare.result == 'success' &&
-      needs.build_packer_amd64.result != 'failure' &&
-      needs.build_packer_amd64.result != 'cancelled' &&
-      needs.build_packer_arm64.result != 'failure' &&
-      needs.build_packer_arm64.result != 'cancelled'
-    runs-on: [self-hosted, linux, homelab, amd64, kvm]
+      needs.build_packer_direct.result != 'failure' &&
+      needs.build_packer_direct.result != 'cancelled'
+    runs-on: [self-hosted, linux, homelab, amd64, build]
     env:
       VERSION: ${{ needs.prepare.outputs.version }}
       MAX_UPLOAD_BYTES: "26843545600" # 25 GiB
@@ -297,7 +247,7 @@ jobs:
           command -v curl >/dev/null 2>&1
           command -v stat >/dev/null 2>&1
 
-      - name: Push stage - Upload qcow2 artifacts
+      - name: Publish qcow2 artifacts to webserver image host
         env:
           UPLOAD_BASE_URL: ${{ needs.prepare.outputs.upload_base_url }}
           UPLOAD_FALLBACK_BASE_URL: ${{ needs.prepare.outputs.upload_fallback_base_url }}

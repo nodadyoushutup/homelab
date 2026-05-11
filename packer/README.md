@@ -33,7 +33,7 @@ Run the repo-native build-and-upload pipeline equivalent of the GHA workflow:
 ./pipelines/packer/build_push.sh --version 0.0.1
 ```
 
-The **Packer - Build and Push Image** workflow (`.github/workflows/packer_build_push.yml`) mirrors the Docker split-build pattern: a **prepare** job, **parallel native builds** (`build_packer_amd64` on `homelab,amd64,kvm` and `build_packer_arm64` on `homelab,arm64`), then a **push** job that downloads all per-arch artifacts and uploads every `.qcow2` to the webserver image host. Dispatch **`build_arch: both`** (default) to publish AMD64 and ARM64 in one run.
+The **Packer - Build and Push Image** workflow (`.github/workflows/packer_build_push.yml`) follows the same **prepare → parallel per-arch builds → publish** shape as Docker **direct** builds: **`prepare`** on `homelab,amd64,build`, then **`build_packer_direct`** as a **matrix** (one concurrent leg per architecture: AMD64 on `homelab,amd64,build`, ARM64 on `homelab,arm64`), then **`publish_packer_artifacts`** downloads all legs’ artifacts and uploads every `.qcow2` to the webserver image host. Dispatch **`build_arch: both`** (default) to run both matrix legs at the same time.
 
 By default, KDE is not installed (headless image). To enable KDE:
 
