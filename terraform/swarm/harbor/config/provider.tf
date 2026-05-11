@@ -8,6 +8,10 @@ terraform {
       source  = "goharbor/harbor"
       version = "~> 3.10"
     }
+    null = {
+      source  = "hashicorp/null"
+      version = "~> 3.2"
+    }
   }
 }
 

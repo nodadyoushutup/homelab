@@ -85,6 +85,68 @@ resource "harbor_project_member_user" "members" {
   ]
 }
 
+resource "null_resource" "delete_default_library_project" {
+  count = var.delete_default_library ? 1 : 0
+
+  triggers = {
+    url        = var.provider_config.harbor.url
+    always_run = timestamp()
+  }
+
+  provisioner "local-exec" {
+    interpreter = ["/usr/bin/env", "bash", "-c"]
+    environment = {
+      HARBOR_URL      = var.provider_config.harbor.url
+      HARBOR_USER     = var.provider_config.harbor.username
+      HARBOR_PASS     = try(var.provider_config.harbor.password, "")
+      HARBOR_INSECURE = try(var.provider_config.harbor.insecure, false) ? "1" : "0"
+    }
+    command = <<-EOT
+      set -euo pipefail
+
+      curl_args=(--silent --show-error --user "$HARBOR_USER:$HARBOR_PASS" --header "Accept: application/json")
+      if [[ "$${HARBOR_INSECURE:-0}" == "1" ]]; then
+        curl_args+=(--insecure)
+      fi
+
+      lookup_url="$HARBOR_URL/api/v2.0/projects?name=library&exact=true"
+      list_resp="$(curl "$${curl_args[@]}" --fail "$lookup_url")"
+      proj_id="$(printf '%s' "$list_resp" | python3 -c "import json,sys; data=json.loads(sys.stdin.read() or '[]'); print(data[0]['project_id'] if data else '')")"
+
+      if [[ -z "$proj_id" ]]; then
+        echo "Harbor 'library' project not present; nothing to delete."
+        exit 0
+      fi
+
+      echo "Deleting Harbor default 'library' project (id=$proj_id)..."
+      delete_url="$HARBOR_URL/api/v2.0/projects/$proj_id"
+      tmp_out="$(mktemp -t harbor-delete-library-XXXXXX)"
+      trap 'rm -f "$tmp_out"' EXIT
+
+      http_code="$(curl "$${curl_args[@]}" --output "$tmp_out" --write-out '%%{http_code}' --request DELETE "$delete_url" || true)"
+
+      case "$http_code" in
+        200|204)
+          echo "Library project deleted (http=$http_code)."
+          ;;
+        404)
+          echo "Library project already gone (http=$http_code)."
+          ;;
+        412)
+          echo "[ERR] Harbor refused to delete 'library' (http=412): project still has repositories. Empty it or relocate its contents, then re-run." >&2
+          cat "$tmp_out" >&2 || true
+          exit 1
+          ;;
+        *)
+          echo "[ERR] Unexpected response deleting 'library' (http=$http_code)." >&2
+          cat "$tmp_out" >&2 || true
+          exit 1
+          ;;
+      esac
+    EOT
+  }
+}
+
 resource "harbor_robot_account" "accounts" {
   for_each = local.robot_account_specs
 

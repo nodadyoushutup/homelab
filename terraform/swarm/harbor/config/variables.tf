@@ -72,3 +72,15 @@ variable "robot_accounts" {
   type        = list(any)
   default     = []
 }
+
+variable "delete_default_library" {
+  description = <<-EOT
+    When true (default), idempotently delete Harbor's seeded `library` project via the
+    REST API on every apply. The project is created by Harbor core during initial DB
+    bootstrap and cannot be declaratively managed by the harbor provider without an
+    import dance. This null_resource-based cleanup also self-heals if the DB is ever
+    re-bootstrapped. Deletion fails if the project still contains repositories (HTTP 412).
+  EOT
+  type        = bool
+  default     = true
+}

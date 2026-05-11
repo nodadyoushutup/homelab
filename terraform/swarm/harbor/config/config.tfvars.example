@@ -199,3 +199,11 @@ projects = [
 #   robot_name_prefix      = "robot$"
 #   robot_token_expiration = 30
 # }
+
+# Set to false to leave Harbor's default-seeded `library` project alone.
+# Defaults to true: the stack idempotently deletes `library` on every apply
+# via the REST API (a null_resource + local-exec; `library` is created by
+# Harbor core during initial DB bootstrap and the harbor provider can't
+# manage it without an import dance). Deletion fails with HTTP 412 if the
+# project still contains repositories.
+# delete_default_library = true
