@@ -7,7 +7,9 @@ USER root
 COPY scripts/install/ /tmp/install-scripts/
 
 # Install build/runtime tooling used by pipeline jobs.
-RUN chmod 0755 /tmp/install-scripts/*.sh \
+RUN apt-get update -y \
+    && apt-get install -y --no-install-recommends make \
+    && chmod 0755 /tmp/install-scripts/*.sh \
     && AUTOMATION_TARGET_USER=jenkins \
        AUTOMATION_DOCKER_PROFILE=cli \
        AUTOMATION_DOCKER_ENABLE_SERVICE=0 \
@@ -15,6 +17,9 @@ RUN chmod 0755 /tmp/install-scripts/*.sh \
        /tmp/install-scripts/automation_tooling.sh \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/install-scripts
+
+# Packer/QEMU use /dev/kvm from the host (Swarm bind). Group exists after qemu-kvm install; image build has no /dev/kvm, so packer.sh may skip usermod.
+RUN if getent group kvm >/dev/null 2>&1; then usermod -aG kvm jenkins; fi
 
 # Add the custom Jenkins agent entrypoint.
 COPY applications/jenkins-agent/entrypoint.sh /usr/local/bin/entrypoint.sh

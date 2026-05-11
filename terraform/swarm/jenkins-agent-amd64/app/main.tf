@@ -105,6 +105,12 @@ resource "docker_service" "jenkins_agent" {
         target = each.value.remote_fs
       }
 
+      mounts {
+        target = "/dev/kvm"
+        source = "/dev/kvm"
+        type   = "bind"
+      }
+
       dynamic "mounts" {
         for_each = var.enable_shared_tfvars_mount ? [var.shared_tfvars_volume_name] : []
 

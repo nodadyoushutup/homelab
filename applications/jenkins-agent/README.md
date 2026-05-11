@@ -31,3 +31,11 @@ using:
 
 The workflow publishes a multi-arch image for both `linux/amd64` and
 `linux/arm64`, which is required by the split Swarm Jenkins agent stages.
+
+## KVM and Packer on Swarm
+
+Swarm stacks **`terraform/swarm/jenkins-agent-amd64`** and **`terraform/swarm/jenkins-agent-arm64`** bind-mount **`/dev/kvm`** from each scheduled node into the agent container (same idea as the GHA runner services). The image installs QEMU/Packer via `automation_tooling.sh`; the **`jenkins`** user is added to the **`kvm`** group in the Dockerfile so jobs can open the device when it is `root:kvm` on the host.
+
+Requirements on the **node**: a working **`/dev/kvm`** and loaded **`kvm`** kernel support (see `applications/gha-runner/README.md` host checks). If a node has no KVM device, the bind mount can prevent the service from starting—fix the host or temporarily remove the mount in Terraform.
+
+Give Packer (or other) jobs an agent label that matches **KVM-capable** nodes only, for example the Packer Jenkinsfile default uses `swarm && amd64 && kvm`; ensure JCasC agent **`labelString`** includes **`kvm`** where appropriate.
