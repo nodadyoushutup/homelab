@@ -45,13 +45,51 @@ services:
         condition: service_healthy
     ports:
       - "9016:8080"
+    # Bind-mount for fast iteration (restart container to pick up code; no image rebuild).
     volumes:
-      - ../applications/mcp-rag/src:/app/src:ro
+      - ../applications/mcp-rag/src:/app/src
     healthcheck:
       test: ["CMD", "mcp-rag", "healthcheck"]
       interval: 5s
       timeout: 5s
       retries: 6
+      start_period: 15s
+
+  # mcp-code: HTTP aggregate on :8100; server.py merges three stdio MCP children (opt-in native: MCP_CODE_USE_NATIVE=1; opt-in http+mcp-proxy: MCP_CODE_UPSTREAM_TRANSPORT=http).
+  # Mount the homelab tree at the same path as Swarm/NFS (/mnt/eapp/code/homelab) so filesystem, git, and ast-grep agree on roots.
+  # Set HOMELAB_MCP_CODE_HOST_MOUNT in repo-root .env (see .env.example) if your checkout is not at that path.
+  mcp-code-dev:
+    image: homelab/mcp-code:latest
+    pull_policy: never
+    build:
+      context: ..
+      dockerfile: applications/mcp-code/Dockerfile
+    environment:
+      PYTHONDONTWRITEBYTECODE: "1"
+      PYTHONUNBUFFERED: "1"
+      MCP_CODE_WORKSPACE_ROOT: /mnt/eapp/code/homelab
+      MCP_CODE_HOST: 0.0.0.0
+      MCP_CODE_PORT: "8100"
+      MCP_HTTP_PATH: /mcp
+      AST_GREP_CONFIG: /opt/ast-grep-config/sgconfig.yml
+      AST_GREP_DEFAULT_PROJECT_ROOT: /mnt/eapp/code/homelab
+      AST_GREP_ALLOWED_ROOTS: /mnt/eapp/code/homelab
+    user: "1000:1000"
+    ports:
+      - "${MCP_CODE_DEV_PUBLISH_PORT:-9017}:8100"
+    volumes:
+      - ${HOMELAB_MCP_CODE_HOST_MOUNT:-/mnt/eapp/code/homelab}:/mnt/eapp/code/homelab:rw
+      - ../applications/mcp-code/src/mcp_code:/opt/mcp-code/mcp_code:ro
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "/opt/mcp-code-venv/bin/python -c \"import socket; s=socket.create_connection(('127.0.0.1',8100),2); s.close()\"",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 8
+      # Outer listener binds immediately; upstream merge warms in background.
       start_period: 15s
 
   langgraph-postgres:
@@ -82,19 +120,29 @@ services:
         condition: service_healthy
       mcp-rag-dev:
         condition: service_healthy
+      mcp-code-dev:
+        condition: service_healthy
     environment:
       HOMELAB_REPO_ROOT: /app
       PYTHONDONTWRITEBYTECODE: "1"
       PYTHONUNBUFFERED: "1"
       PIP_NO_CACHE_DIR: "1"
+      # Same homelab tree as mcp-code-dev (NFS path inside the container) for MCP path normalization.
+      CODE_REPOSITORY_ROOT: /mnt/eapp/code/homelab
+      TECH_LEAD_REPOSITORY_ROOT: /mnt/eapp/code/homelab
       # Route MCP RAG to the compose stack (see mcp.json url_from_env on mcp-rag).
       HOMELAB_MCP_RAG_URL: http://mcp-rag-dev:8080/mcp
+      HOMELAB_MCP_CODE_URL: ${HOMELAB_MCP_CODE_URL:-http://mcp-code-dev:8100/mcp}
+      # Other MCP services: default to Swarm published ports on the LAN (see terraform/swarm/*/app).
+      HOMELAB_MCP_GITHUB_URL: ${HOMELAB_MCP_GITHUB_URL:-http://192.168.1.120:18208/mcp}
+      HOMELAB_MCP_ATLASSIAN_URL: ${HOMELAB_MCP_ATLASSIAN_URL:-http://192.168.1.120:18200/mcp}
     ports:
       - "2124:2024"
     volumes:
       - ../applications/langgraph:/app/langgraph
       - ../docs:/app/docs:ro
       - langgraph_state:/app/langgraph/agent/.langgraph_api
+      - ${HOMELAB_MCP_CODE_HOST_MOUNT:-/mnt/eapp/code/homelab}:/mnt/eapp/code/homelab:rw
     healthcheck:
       test:
         [
@@ -102,10 +150,10 @@ services:
           "python",
           "/usr/local/bin/langgraph_compose_healthcheck.py",
         ]
-      interval: 10s
-      timeout: 35s
-      retries: 18
-      start_period: 120s
+      interval: 15s
+      timeout: 60s
+      retries: 24
+      start_period: 360s
 
   langchain-agent-chat-dev:
     image: homelab/langchain-agent-chat:latest

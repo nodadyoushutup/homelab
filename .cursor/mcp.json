@@ -8,6 +8,9 @@
     },
     "mcp_rag": {
       "url": "https://mcp.rag.nodadyoushutup.com/mcp"
+    },
+    "mcp_code": {
+      "url": "http://127.0.0.1:9017/mcp"
     }
   }
 }

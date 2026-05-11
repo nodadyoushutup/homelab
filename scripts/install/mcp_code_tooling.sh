@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# NOTE: applications/mcp-code/Dockerfile may skip this script for fast rebuilds; restore the
+# COPY/RUN there when you need ast-grep CLI, tree-sitter Dockerfile parser, and pinned Node 22.
 # Installs Node.js, @modelcontextprotocol/server-filesystem, ast-grep CLI,
 # tree-sitter + Dockerfile parser, and Python packages used by mcp-code
 # (aggregate MCP) and its stdio children. Intended for the mcp-code image;

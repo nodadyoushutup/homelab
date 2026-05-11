@@ -54,6 +54,8 @@ spec:
               value: "1"
             - name: LANGGRAPH_N_JOBS_PER_WORKER
               value: "8"
+            - name: HOMELAB_MCP_CODE_URL
+              value: https://mcp.code.nodadyoushutup.com/mcp
           ports:
             - name: http
               containerPort: 2024

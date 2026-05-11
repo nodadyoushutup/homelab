@@ -13,7 +13,7 @@ variable "registry_auth" {
 variable "image_reference" {
   description = "mcp-code aggregate image to run."
   type        = string
-  default     = "ghcr.io/nodadyoushutup/mcp-code:0.0.1"
+  default     = "ghcr.io/nodadyoushutup/mcp-code:latest"
 }
 
 variable "env" {

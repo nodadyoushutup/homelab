@@ -1,0 +1,29 @@
+# Copy to /mnt/eapp/config/mcp-code/app.tfvars (or pass via --tfvars).
+# Build/push: `.github/workflows/docker_build_push.yml` → `mcp-code` → GHCR.
+#
+# Private GHCR: PAT with `read:packages` (classic) or fine-grained packages read.
+# `username` = GitHub username; `password` = the token. Omit `address` to default `ghcr.io`.
+
+provider_config = {
+  docker = {
+    host = "ssh://nodadyoushutup@192.168.1.120"
+    ssh_opts = [
+      "-o", "StrictHostKeyChecking=no",
+      "-o", "UserKnownHostsFile=/mnt/eapp/config/.ssh/known_hosts",
+      "-i", "/mnt/eapp/config/.ssh/id_ed25519",
+    ]
+  }
+}
+
+registry_auth = {
+  # address  = "ghcr.io"
+  username = "replace-github-username"
+  password = "replace-ghcr-read-token"
+}
+
+image_reference    = "ghcr.io/nodadyoushutup/mcp-code:latest"
+published_port     = 18212
+endpoint_host      = "192.168.1.120"
+# placement_constraints = ["node.labels.role==swarm-cp-0"]
+# platform_architecture = "aarch64" # or "amd64" per node
+# nfs_server / nfs_code_device — see variables.tf for NFS homelab export

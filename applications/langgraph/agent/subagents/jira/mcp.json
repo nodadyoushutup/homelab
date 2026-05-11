@@ -2,7 +2,8 @@
   "mcpServers": {
     "atlassian": {
       "transport": "http",
-      "url": "https://mcp.atlassian.nodadyoushutup.com/mcp"
+      "url": "https://mcp.atlassian.nodadyoushutup.com/mcp",
+      "url_from_env": "HOMELAB_MCP_ATLASSIAN_URL"
     },
     "mcp-rag": {
       "transport": "http",

@@ -186,6 +186,12 @@ def _recoverable_tool_error(tool_name: str, exc: Exception) -> list[dict[str, st
     return _text_blocks(json.dumps(payload, indent=2, default=str))
 
 
+# Same MCP server set (e.g. mcp-code + mcp-rag) is loaded for both code and tech_lead;
+# caching avoids a second expensive MultiServer bootstrap during agent.py import.
+_mcp_tools_bootstrap_cache: dict[str, list[Any]] = {}
+_mcp_tools_bootstrap_lock = threading.Lock()
+
+
 def load_mcp_tools(config_path: Path) -> list[Any]:
     """Load MCP tools from a local JSON config if one is present."""
     if not config_path.exists():
@@ -196,6 +202,12 @@ def load_mcp_tools(config_path: Path) -> list[Any]:
     normalized_servers = _normalize_server_config(raw_servers)
     if not normalized_servers:
         return []
+
+    cache_key = json.dumps(normalized_servers, sort_keys=True, default=str)
+    with _mcp_tools_bootstrap_lock:
+        hit = _mcp_tools_bootstrap_cache.get(cache_key)
+        if hit is not None:
+            return list(hit)
 
     from langchain_mcp_adapters.client import MultiServerMCPClient
 
@@ -216,7 +228,11 @@ def load_mcp_tools(config_path: Path) -> list[Any]:
         assert last_exc is not None
         raise last_exc
 
-    return _run_coro(_load_tools())
+    tools = _run_coro(_load_tools())
+    with _mcp_tools_bootstrap_lock:
+        if cache_key not in _mcp_tools_bootstrap_cache:
+            _mcp_tools_bootstrap_cache[cache_key] = list(tools)
+        return list(_mcp_tools_bootstrap_cache[cache_key])
 
 
 _mcp_toolset_lock = asyncio.Lock()

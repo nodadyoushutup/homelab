@@ -1,0 +1,149 @@
+{
+  "description": "Canonical list of MCP tools exposed by the three upstreams we aggregate. Use this checklist when implementing native handlers.",
+  "generated": "2026-05-11",
+  "sources": {
+    "filesystem": {
+      "package": "@modelcontextprotocol/server-filesystem@2026.1.14",
+      "reference": "https://github.com/modelcontextprotocol/servers/blob/main/src/filesystem/index.ts",
+      "note": "Tool names/descriptions match GitHub main; confirm npm bundle on upgrades."
+    },
+    "git": {
+      "package": "mcp-server-git==2026.1.14",
+      "module": "mcp_server_git.server"
+    },
+    "ast_grep": {
+      "path": "applications/mcp-code/ast-grep-bundled/server.py"
+    }
+  },
+  "counts": {
+    "filesystem": 14,
+    "git": 12,
+    "ast_grep": 5,
+    "total": 31
+  },
+  "all_tool_names_sorted": [
+    "create_directory",
+    "directory_tree",
+    "dump_syntax_tree",
+    "edit_file",
+    "find_code",
+    "find_code_by_rule",
+    "get_file_info",
+    "git_add",
+    "git_branch",
+    "git_checkout",
+    "git_commit",
+    "git_create_branch",
+    "git_diff",
+    "git_diff_staged",
+    "git_diff_unstaged",
+    "git_log",
+    "git_reset",
+    "git_show",
+    "git_status",
+    "list_allowed_directories",
+    "list_directory",
+    "list_directory_with_sizes",
+    "move_file",
+    "read_file",
+    "read_media_file",
+    "read_multiple_files",
+    "read_text_file",
+    "search_files",
+    "server_info",
+    "test_match_code_rule",
+    "write_file"
+  ],
+  "nativeImplementation": {
+    "entry": "Default: python -m mcp_code runs server.py with three stdio MCP child processes (official filesystem + git + ast-grep). Set MCP_CODE_USE_NATIVE=1 for native_server.py. Set MCP_CODE_UPSTREAM_TRANSPORT=http for loopback mcp-proxy (experimental).",
+    "modules": [
+      "mcp_code.native_fs",
+      "mcp_code.native_git",
+      "mcp_code.native_astgrep",
+      "mcp_code.native_server"
+    ]
+  },
+  "tools": {
+    "filesystem": [
+      {
+        "name": "read_file",
+        "deprecated": true,
+        "replacement": "read_text_file",
+        "description": "Read file as text (deprecated; use read_text_file)."
+      },
+      {
+        "name": "read_text_file",
+        "description": "Read file as text; optional head/tail line limits."
+      },
+      {
+        "name": "read_media_file",
+        "description": "Read image/audio as base64 + MIME (png, jpeg, gif, webp, bmp, svg, mp3, wav, ogg, flac)."
+      },
+      {
+        "name": "read_multiple_files",
+        "description": "Read many files; failures per file do not abort batch."
+      },
+      {
+        "name": "write_file",
+        "description": "Create or overwrite file with text content."
+      },
+      {
+        "name": "edit_file",
+        "description": "Exact text replacements; optional dry-run git-style diff."
+      },
+      {
+        "name": "create_directory",
+        "description": "mkdir -p under allowed roots."
+      },
+      {
+        "name": "list_directory",
+        "description": "List entries with [FILE]/[DIR] prefixes."
+      },
+      {
+        "name": "list_directory_with_sizes",
+        "description": "List with sizes; sortBy name|size."
+      },
+      {
+        "name": "directory_tree",
+        "description": "Recursive JSON tree; optional excludePatterns (glob/minimatch-style)."
+      },
+      {
+        "name": "move_file",
+        "description": "Rename/move within allowed directories."
+      },
+      {
+        "name": "search_files",
+        "description": "Recursive glob search under path with pattern and optional excludePatterns."
+      },
+      {
+        "name": "get_file_info",
+        "description": "Stat metadata for file or directory."
+      },
+      {
+        "name": "list_allowed_directories",
+        "description": "Lists configured allowed directory roots (here: workspace root)."
+      }
+    ],
+    "git": [
+      { "name": "git_status", "description": "Working tree status" },
+      { "name": "git_diff_unstaged", "description": "Unstaged diff" },
+      { "name": "git_diff_staged", "description": "Staged diff" },
+      { "name": "git_diff", "description": "Diff vs ref/target" },
+      { "name": "git_commit", "description": "Commit staged changes" },
+      { "name": "git_add", "description": "Stage files (or [\".\"] for all)" },
+      { "name": "git_reset", "description": "Unstage all" },
+      { "name": "git_log", "description": "Commit log with optional date filters" },
+      { "name": "git_create_branch", "description": "Create branch from optional base" },
+      { "name": "git_checkout", "description": "Checkout branch/ref" },
+      { "name": "git_show", "description": "Show commit patch" },
+      { "name": "git_branch", "description": "List branches (local|remote|all) with optional contains filters" }
+    ],
+    "ast_grep": [
+      { "name": "server_info", "description": "Server defaults, allowed roots, languages" },
+      { "name": "dump_syntax_tree", "description": "Debug CST/AST for snippet" },
+      { "name": "test_match_code_rule", "description": "Scan stdin with inline YAML rule" },
+      { "name": "find_code", "description": "Pattern search under project_folder" },
+      { "name": "find_code_by_rule", "description": "YAML rule search under project_folder" }
+    ]
+  }
+}
