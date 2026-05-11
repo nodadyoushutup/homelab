@@ -199,11 +199,128 @@ def load_mcp_tools(config_path: Path) -> list[Any]:
 
     from langchain_mcp_adapters.client import MultiServerMCPClient
 
+    attempts = max(1, int(os.getenv("HOMELAB_MCP_BOOTSTRAP_RETRIES", "3")))
+    delay_sec = float(os.getenv("HOMELAB_MCP_BOOTSTRAP_RETRY_DELAY_SEC", "2"))
+
     async def _load_tools():
-        client = MultiServerMCPClient(normalized_servers)
-        return await client.get_tools()
+        last_exc: BaseException | None = None
+        for attempt in range(attempts):
+            try:
+                client = MultiServerMCPClient(normalized_servers)
+                return await client.get_tools()
+            except BaseException as exc:
+                last_exc = exc
+                if attempt + 1 >= attempts:
+                    break
+                await asyncio.sleep(delay_sec)
+        assert last_exc is not None
+        raise last_exc
 
     return _run_coro(_load_tools())
+
+
+_mcp_toolset_lock = asyncio.Lock()
+_mcp_toolset_cache: dict[tuple[str, str, str], list[Any]] = {}
+
+
+def build_normalized_servers_for_session(config_path: Path) -> dict[str, Any]:
+    """Resolve MCP server dict from ``mcp.json``, applying optional mcp-code URL override."""
+    if not config_path.exists():
+        return {}
+    config = json.loads(config_path.read_text())
+    raw_servers = config.get("mcpServers", {})
+    normalized = _normalize_server_config(raw_servers)
+    if not normalized:
+        return {}
+
+    from framework.mcp_workspace_context import effective_mcp_code_url
+
+    override = effective_mcp_code_url()
+    if override and "mcp-code" in normalized:
+        normalized = deepcopy(normalized)
+        normalized["mcp-code"] = {**normalized["mcp-code"], "url": override}
+    return normalized
+
+
+async def _cached_wrapped_toolset(
+    *,
+    servers: dict[str, Any],
+    repo: Path,
+    wrap_profile: str,
+) -> list[Any]:
+    key_servers = json.dumps(servers, sort_keys=True, default=str)
+    key = (key_servers, str(repo.resolve()), wrap_profile)
+    async with _mcp_toolset_lock:
+        hit = _mcp_toolset_cache.get(key)
+        if hit is not None:
+            return hit
+
+        from langchain_mcp_adapters.client import MultiServerMCPClient
+
+        client = MultiServerMCPClient(servers)
+        raw = await client.get_tools()
+        if wrap_profile in {"code", "tech_lead"}:
+            wrapped: list[Any] = list(
+                wrap_ast_grep_tools(wrap_filesystem_tools(raw, repo), repo)
+            )
+        else:
+            wrapped = list(raw)
+        _mcp_toolset_cache[key] = wrapped
+        return wrapped
+
+
+def load_workspace_routed_mcp_tools(
+    config_path: Path,
+    *,
+    wrap_profile: str,
+    static_repo: Path,
+) -> list[Any]:
+    """Load MCP tools; resolve mcp-code URL and repo root on each invocation (parallel lanes)."""
+    if not config_path.exists():
+        return []
+
+    templates = load_mcp_tools(config_path)
+    if not templates:
+        return []
+
+    def _make_proxy(template_tool: Any) -> Any:
+        async def _route(**kwargs: Any) -> Any:
+            try:
+                from framework.mcp_workspace_context import effective_code_repository_root
+
+                servers = build_normalized_servers_for_session(config_path)
+                if not servers:
+                    return _recoverable_tool_error(
+                        template_tool.name,
+                        RuntimeError("No MCP servers resolved from mcp.json."),
+                    )
+                repo = effective_code_repository_root(static_repo)
+                toolset = await _cached_wrapped_toolset(
+                    servers=servers,
+                    repo=repo,
+                    wrap_profile=wrap_profile,
+                )
+                inner = next((t for t in toolset if t.name == template_tool.name), None)
+                if inner is None:
+                    return _recoverable_tool_error(
+                        template_tool.name,
+                        RuntimeError(
+                            f"MCP tool {template_tool.name!r} missing for this session URL or profile."
+                        ),
+                    )
+                return await inner.ainvoke(kwargs)
+            except Exception as exc:
+                return _recoverable_tool_error(template_tool.name, exc)
+
+        return StructuredTool(
+            name=template_tool.name,
+            description=template_tool.description or "",
+            args_schema=template_tool.args_schema,
+            coroutine=_route,
+            response_format="content",
+        )
+
+    return [_make_proxy(t) for t in templates]
 
 
 def wrap_blank_optional_args(

@@ -6,7 +6,7 @@ from typing import Sequence
 from deepagents import CompiledSubAgent
 
 from .agents import CodeAgent
-from .agents import GitAgent
+from .agents import GithubAgent
 from .agents import HomelabSupervisorAgent
 from .agents import JiraAgent
 from .agents import TechLeadAgent
@@ -27,8 +27,8 @@ def create_code_agent(app_dir: Path):
     return CodeAgent(app_dir).build()
 
 
-def create_git_agent(app_dir: Path):
-    return GitAgent(app_dir).build()
+def create_github_agent(app_dir: Path):
+    return GithubAgent(app_dir).build()
 
 
 def create_jira_agent(app_dir: Path):

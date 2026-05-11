@@ -64,7 +64,7 @@ projects = [
     vulnerability_scanning = true
   },
   {
-    name                   = "mcp-filesystem"
+    name                   = "mcp-code"
     public                 = false
     vulnerability_scanning = true
   },
@@ -163,7 +163,7 @@ projects = [
 #       },
 #       {
 #         kind      = "project"
-#         namespace = "mcp-filesystem"
+#         namespace = "mcp-code"
 #         access = [
 #           {
 #             action   = "push"

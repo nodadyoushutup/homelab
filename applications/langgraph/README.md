@@ -14,8 +14,8 @@ workshopping:
   work
 - `tech_lead`: single-layer Tech Lead specialist for technical review, code
   impact, workflow impact, and implementation guidance
-- `git`: single-layer Git + GitHub specialist for branch/PR workflow (Git MCP +
-  GitHub MCP)
+- `github`: single-layer GitHub specialist for PRs, checks, reviews, and GitHub
+  Actions API work (GitHub MCP + shared `mcp-rag`)
 
 ## Layout
 
@@ -24,7 +24,7 @@ applications/langgraph/
 ├── agent/
 │   ├── subagents/
 │   │   ├── code/
-│   │   ├── git/
+│   │   ├── github/
 │   │   ├── jira/
 │   │   └── tech-lead/
 │   ├── mcp.json

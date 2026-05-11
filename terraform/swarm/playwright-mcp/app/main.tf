@@ -6,7 +6,7 @@ locals {
 }
 
 module "code_nfs" {
-  source = "../../modules/homelab-nfs-mount"
+  source = "../../../modules/homelab-nfs-mount"
 
   volume_name = "${local.service_name}-mnt-eapp-code"
   target      = "/mnt/eapp/code"

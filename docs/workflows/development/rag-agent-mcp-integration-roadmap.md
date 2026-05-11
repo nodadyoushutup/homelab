@@ -11,7 +11,7 @@ OpenAI Codex use the same HTTPS MCP endpoint and tools.
   agent’s `mcp.json`. Prompts under `applications/langgraph/` and
   `docs/agents/` define routing and tool discipline.
 - **Every agent gets RAG:** The Homelab supervisor and every specialist
-  (`code`, `git`, `jira`, `tech_lead`) include **`mcp-rag`** so any agent can run
+  (`code`, `github`, `jira`, `tech_lead`) include **`mcp-rag`** so any agent can run
   `rag_search` and memory tools without inheriting filesystem MCP access from
   another layer.
 - **Thin MCP, fat engine:** `mcp-rag` forwards to **`rag-engine`** so query
@@ -56,16 +56,23 @@ management**:
 
 Runtime middleware under `applications/langgraph/framework/middleware/` enforces:
 
-1. **RAG before `code` delegation:** On the supervisor, a `task` to
-   **`code`** is rejected until **`rag_search`** has completed at least once
-   **after** the user’s latest `HumanMessage`. Iterate on queries until
-   locations are clear; pass that context into the `task` description.
-2. **Read/search before mutating:** On the **Code** specialist, **`write_file`**,
+1. **Docs RAG before every specialist delegation:** On the supervisor, a `task`
+   to **`code`**, **`github`**, **`jira`**, or **`tech_lead`** is rejected until
+   **`rag_search`** has completed after the user’s latest `HumanMessage`.
+   This first query should target the specialist’s docs overlay under
+   **`docs/subagents/<specialist>/`** plus relevant **`docs/workflows/`** guidance.
+   Pass the doc anchors into the `task` description.
+2. **Code-location RAG before code-impact specialists:** A `task` to **`code`**
+   or **`tech_lead`** is rejected until a second **`rag_search`** has completed
+   after the user’s latest `HumanMessage`. This second query should identify
+   likely code, configuration, manifests, scripts, or workflow files. Pass those
+   locations into the `task` description.
+3. **Read/search before mutating:** On the **Code** specialist, **`write_file`**,
    **`edit_file`**, and **`execute`** are rejected until at least one
    read/analysis-style tool has produced a tool result in that subagent thread
    (e.g. `read_file`, `grep`, `glob`, `find_code`, `list_directory`).
-3. **No `general-purpose` subagent:** Delegating to Deep Agents’ default
-   **`general-purpose`** subagent is rejected; use **`code`**, **`git`**, **`jira`**, or
+4. **No `general-purpose` subagent:** Delegating to Deep Agents’ default
+   **`general-purpose`** subagent is rejected; use **`code`**, **`github`**, **`jira`**, or
    **`tech_lead`**.
 
 **Break-glass:** set **`HOMELAB_DISABLE_WORKFLOW_GATES=1`** on the agent process

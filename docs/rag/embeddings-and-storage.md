@@ -32,7 +32,7 @@ Each stored chunk carries metadata used for filtering (`where` in query) and deb
 
 The authoritative table of keys for Chroma filters is maintained in the integration roadmap (agent tooling doc) because it doubles as the contract for `where` filters:
 
-- [rag-agent-mcp-integration-roadmap.md § Indexed metadata keys](../workflows/development/rag-agent-mcp-integration-roadmap.md#indexed-metadata-keys-for-chroma-where-filters)
+- [rag-agent-mcp-integration-roadmap.md § Indexed metadata keys](../workflows/rag-agent-mcp-integration-roadmap.md#indexed-metadata-keys-for-chroma-where-filters)
 
 **Naming pitfall:** metadata key **`model`** is the **embedding model id**, not an Odoo `ir.model`. For Odoo XML, prefer **`xml_model`** when filtering.
 

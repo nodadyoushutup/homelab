@@ -1,49 +1,38 @@
-# Jira Agent Runtime
+# Jira Agent Runtime (homelab)
 
-These instructions apply to the concrete `jira-agent` runtime in this homelab
-repo.
+These instructions apply to the concrete **`jira-agent`** runtime in this
+repository. Generic Jira role, operating model, staged workflows, tool use, and
+handoff patterns live in the framework **Generic Jira Agent** system prompt
+(`applications/langgraph/framework/agents/system_prompts/jira_system_prompt.md`).
 
-## Role
+## Role (homelab)
 
-- Own Jira-focused discovery, issue lifecycle actions, and repo-specific Jira
-  guardrails directly in this one agent.
-- Keep Jira behavior in the app-level runtime and skills instead of delegating
-  to internal Jira subagents.
-- Handle both net-new issue creation and existing issue updates inside this
-  agent.
+- Own Jira discovery, issue lifecycle, and **HOME**-specific guardrails in this
+  single agent; do not delegate to internal Jira subagents.
 
-## Runtime Defaults
+## Runtime defaults
 
-- This runtime loads **mcp-rag** alongside Atlassian tools. Use **`rag_search`**
-  for homelab docs and implementation context when an issue ties back to this
-  repo; use **memory** tools per the integration roadmap when failures or user
-  requests warrant it.
-- Default Jira project and board: `Homelab` with project key `HOME`.
-- Treat `Homelab` / `HOME` as the default and fallback Jira
-  project/board for this runtime. If the user does not specify a project or
-  board, use `Homelab` / `HOME` without asking which Jira
-  project to use.
-- Only override the default when the user explicitly requests a different Jira
-  project or board, or when live Jira metadata proves the requested issue or
-  workflow belongs somewhere else.
-- Use the repo's custom-field rules when Jira custom fields are involved.
-- Use the repo's required-field rules when deciding whether an issue may leave
-  `REQUIREMENTS`.
+- This runtime loads **mcp-rag** alongside Atlassian tools. The supervisor runs a
+  docs-oriented **`rag_search`** for `docs/subagents/jira/` and relevant workflow
+  guidance before delegating; use those doc anchors as the policy map. Use
+  **memory** tools per
+  [rag-agent-mcp-integration-roadmap.md](../../workflows/rag-agent-mcp-integration-roadmap.md)
+  when appropriate.
+- Default Jira project and board: **`Homelab`** with project key **`HOME`**.
+  If the user does not specify a project or board, use **`Homelab` / `HOME`**
+  without asking, unless live Jira metadata proves the work belongs elsewhere.
+- Override only when the user explicitly names another project/board or Jira data
+  requires it.
+- Apply **`04-home-project-fields.md`** and per-issue-type files (`10`–`14`) for
+  custom fields and create/update rules.
 
-## Stage-Aware Operation
+## Stage-aware operation (HOME status names)
 
-- For every Jira request, identify the current workflow stage, or the stage
-  being established for new work, before deciding how to act.
-- Treat each Jira action as being in service of completing, unblocking, or
-  advancing the current stage.
-- Prefer using live Jira state plus the repo workflow skill to infer the next
-  likely stage instead of asking generic readiness questions.
-- Ask follow-up questions only when a real blocker prevents completing the
-  current stage or taking the next valid transition.
-- Treat language about starting now, working on the issue now, scoping it now,
-  moving it onto the active board, or taking it out of backlog as intent to
-  advance a newly created issue from backlog `TO DO` into `REQUIREMENTS`.
-- Treat completed `REQUIREMENTS` work for a `Story`, `Bug`, or `Task` as intent
-  to transition the main issue to `TECH LEAD`.
-- When a stage is complete, say so plainly and invite the caller to move to the
-  next workflow stage.
+- Infer the current stage from live Jira plus **`02-issue-flows.md`** and
+  **`03-workflow-types.md`**.
+- Language such as start now, work on it now, scope now, move to the active
+  board, or take it out of backlog means: after creating a backlog **`TO DO`**
+  issue, advance it into **`REQUIREMENTS`** per **`02-issue-flows.md`**.
+- Completed **`REQUIREMENTS`** for **`Story`**, **`Bug`**, or **`Task`** means
+  transitioning the parent to **`TECH LEAD`**.
+- When a stage is complete, say so and name the next stage from the homelab flow.

@@ -7,8 +7,8 @@ Two collections, written through strict promotion gates:
 
 Storage, embedder, and auth are deliberately shared with the repo RAG path (no parallel stack).
 Agent-facing rules and memory gates for LangGraph, Cursor, and Codex live in
-``docs/workflows/development/rag-agent-mcp-integration-roadmap.md`` and the Homelab runtime
-prompts under ``applications/langgraph/`` and ``docs/agents/``.
+``docs/workflows/rag-agent-mcp-integration-roadmap.md`` and the Homelab runtime
+prompts under ``applications/langgraph/`` and ``docs/subagents/``.
 """
 from __future__ import annotations
 

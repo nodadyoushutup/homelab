@@ -39,8 +39,8 @@ When a project does not maintain a standalone docs site, this file links to the 
 
 | Technology | Repo evidence | Official docs |
 | --- | --- | --- |
-| Cloudflare | `terraform/remote/cloudflare/config` | [Cloudflare docs](https://developers.cloudflare.com/) |
-| Nginx Proxy Manager | `terraform/swarm/nginx_proxy_manager/{app,config,database}` | [Nginx Proxy Manager guide](https://nginxproxymanager.com/guide/) |
+| Cloudflare | `terraform/remote/cloudflare/config`, `docs/workflows/edge-dns-and-nginx-proxy.md` | [Cloudflare docs](https://developers.cloudflare.com/) |
+| Nginx Proxy Manager | `terraform/swarm/nginx_proxy_manager/{app,config,database}`, `docs/workflows/edge-dns-and-nginx-proxy.md` | [Nginx Proxy Manager guide](https://nginxproxymanager.com/guide/) |
 | FortiGate / FortiOS | `terraform/network/fortigate/config`, torrent ingress policy in `AGENTS.md` | [FortiGate docs](https://docs.fortinet.com/product/fortigate) |
 | MinIO | `applications/minio/docker-compose.yaml`, S3 backends in Terraform provider files | [MinIO docs](https://docs.min.io/) |
 | HashiCorp Vault | `terraform/swarm/vault/{app,config}`, `scripts/vault/` | [Vault docs](https://developer.hashicorp.com/vault/docs) |

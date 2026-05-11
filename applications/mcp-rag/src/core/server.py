@@ -232,7 +232,7 @@ def create_mcp() -> FastMCP:
             "(where code or docs likely live, workflow context) before narrowing with filesystem "
             "or ast-grep. Concrete anchors win: path fragments, class/method names, exact error "
             "text, Odoo technical model names (e.g. purchase.order). `where` uses Chroma metadata "
-            "keys documented in docs/workflows/development/rag-agent-mcp-integration-roadmap.md "
+            "keys documented in docs/workflows/rag-agent-mcp-integration-roadmap.md "
             "(path, xml_model, language, chunk_strategy). The metadata key `model` is the "
             "EMBEDDING model id — do not confuse with Odoo `ir.model`; use `xml_model` to filter "
             "Odoo XML records.\n"
@@ -247,7 +247,7 @@ def create_mcp() -> FastMCP:
             "rag_search answers, summarize conversation, or store secrets.\n"
             "- memory_forget: delete by id; only when the user asks to forget. Recall first to "
             "confirm.\n\n"
-            "See docs/workflows/development/rag-agent-mcp-integration-roadmap.md (memory rows) "
+            "See docs/workflows/rag-agent-mcp-integration-roadmap.md (memory rows) "
             "and the MCP tool descriptions above for the write gates."
         ),
         host=os.getenv("HOST", "0.0.0.0"),

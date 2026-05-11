@@ -1,30 +1,19 @@
-# Epic Issue Type
+# Epic Issue Type (homelab)
 
-Use these instructions for `Epic` issues in the `Homelab` / `HOME` Jira
-project.
+Use for **`Epic`** on **`HOME`**. Generic epic guidance is in **`jira_system_prompt.md`**.
 
-## Field Metadata
+## Field metadata
 
-- No existing `Epic` issues were returned by the available `HOME` Jira sample
-  queries.
-- The available MCP tools did not expose create-screen metadata for `Epic`.
-- No `Epic`-specific custom fields are confirmed for `HOME` from the current
-  metadata.
+- No sample **`Epic`** issues returned in **`HOME`** queries at last doc refresh.
+- MCP did not expose create-screen metadata for **`Epic`**; no epic-specific custom
+  fields confirmed.
 
-## Required Fields
+## Required / create
 
-- Required by the Jira MCP create contract: `project_key`, `summary`,
-  `issue_type`.
-- Use `project_key: "HOME"` and `issue_type: "Epic"` unless the user explicitly
+- MCP create contract: **`project_key`**, **`summary`**, **`issue_type`**.
+- Use **`project_key: "HOME"`** and **`issue_type: "Epic"`** unless the user
   overrides the project.
-- No additional required `Epic` custom fields are currently documented for
-  `HOME`.
-
-## Operating Instructions
-
-- Create an `Epic` only when the user explicitly asks for an epic or the work is
-  clearly a large parent initiative.
-- Do not ask for custom field values before creating an `Epic` unless Jira
-  rejects the create call with a specific required-field error.
-- If Jira reports a required field during creation, capture the field id, field
-  name, expected value shape, and update this instruction file.
+- Create only when the user asks for an epic or scope is clearly a large parent
+  initiative.
+- If Jira rejects create with a required field, capture id, name, shape, and
+  update this file.

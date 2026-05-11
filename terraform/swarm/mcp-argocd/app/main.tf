@@ -14,7 +14,7 @@ locals {
 }
 
 module "mcp_argocd" {
-  source = "../../modules/mcp-service"
+  source = "../../../modules/mcp-service"
 
   service_name          = local.service_name
   image_reference       = var.image_reference

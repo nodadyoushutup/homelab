@@ -16,7 +16,7 @@ locals {
 }
 
 module "mcp_github" {
-  source = "../../modules/mcp-service"
+  source = "../../../modules/mcp-service"
 
   service_name          = local.service_name
   image_reference       = var.image_reference

@@ -1,12 +1,9 @@
 {
   "mcpServers": {
-    "filesystem": {
+    "mcp-code": {
       "transport": "http",
-      "url": "https://mcp.filesystem.nodadyoushutup.com/mcp/"
-    },
-    "ast-grep": {
-      "transport": "http",
-      "url": "https://mcp.ast-grep.nodadyoushutup.com/mcp"
+      "url": "https://mcp.code.nodadyoushutup.com/mcp",
+      "url_from_env": "HOMELAB_MCP_CODE_URL"
     },
     "mcp-rag": {
       "transport": "http",

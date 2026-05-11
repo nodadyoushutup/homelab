@@ -1,8 +1,10 @@
 """Enforce Homelab retrieval-first and read-before-write workflows.
 
-Supervisor: block `task` to `code` until `rag_search` completed after the latest
-user message; block `general-purpose` delegation (Deep Agents default) so work
-routes through `code`, `git`, `jira`, or `tech_lead`.
+Supervisor: block `task` to specialists until the required `rag_search` preflight
+completed after the latest user message. GitHub and Jira require one docs-oriented
+RAG search; Code and Tech Lead require docs-oriented RAG plus code-location RAG.
+Also block `general-purpose` delegation (Deep Agents default) so work routes
+through `code`, `github`, `jira`, or `tech_lead`.
 
 Code specialist: block mutating filesystem / shell tools until at least one
 read/search style tool produced a tool result in the current subagent thread.
@@ -22,7 +24,18 @@ from langchain.tools.tool_node import ToolCallRequest
 from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 
 FORBIDDEN_TASK_SUBAGENTS = frozenset({"general-purpose"})
-CODE_SUBAGENT = "code"
+SPECIALIST_RAG_REQUIREMENTS = {
+    "code": 2,
+    "github": 1,
+    "jira": 1,
+    "tech_lead": 2,
+}
+SPECIALIST_DOC_PATHS = {
+    "code": "docs/subagents/code",
+    "github": "docs/subagents/github",
+    "jira": "docs/subagents/jira",
+    "tech_lead": "docs/subagents/tech-lead",
+}
 RAG_TOOL = "rag_search"
 MUTATING_TOOLS = frozenset({"write_file", "edit_file", "execute"})
 READ_OR_ANALYSIS_TOOLS = frozenset(
@@ -72,39 +85,56 @@ def _tool_call_id(tc: Any) -> str:
     return str(getattr(tc, "id", "") or "")
 
 
+def _tool_call_args_text(tc: Any) -> str:
+    args = tc.get("args") if isinstance(tc, dict) else getattr(tc, "args", None)
+    try:
+        return json.dumps(args or {}, sort_keys=True).lower()
+    except TypeError:
+        return str(args or "").lower()
+
+
 def _messages_from_state(state: Any) -> list[Any]:
     if state is None:
         return []
-    messages = state.get("messages") if isinstance(state, dict) else getattr(state, "messages", None)
+    messages = (
+        state.get("messages")
+        if isinstance(state, dict)
+        else getattr(state, "messages", None)
+    )
     return list(messages or [])
 
 
-def _rag_preflight_done_since_last_human(messages: list[Any]) -> bool:
-    """True if an ``rag_search`` tool call completed after the last HumanMessage."""
+def _completed_rag_searches_since_last_human(messages: list[Any]) -> list[str]:
+    """Return argument text for completed ``rag_search`` calls after last human."""
     last_human_idx = -1
     for i, m in enumerate(messages):
         if isinstance(m, HumanMessage):
             last_human_idx = i
     if last_human_idx < 0:
-        return False
+        return []
 
     segment = messages[last_human_idx + 1 :]
-    rag_ids: set[str] = set()
+    rag_calls_by_id: dict[str, str] = {}
     for m in segment:
         if isinstance(m, AIMessage) and m.tool_calls:
             for tc in m.tool_calls:
                 if _tool_call_name(tc) == RAG_TOOL:
                     tid = _tool_call_id(tc)
                     if tid:
-                        rag_ids.add(tid)
-    if not rag_ids:
-        return False
+                        rag_calls_by_id[tid] = _tool_call_args_text(tc)
+    if not rag_calls_by_id:
+        return []
 
-    finished: set[str] = set()
+    finished: list[str] = []
     for m in segment:
-        if isinstance(m, ToolMessage) and m.tool_call_id in rag_ids:
-            finished.add(m.tool_call_id)
-    return bool(finished & rag_ids)
+        if isinstance(m, ToolMessage) and m.tool_call_id in rag_calls_by_id:
+            finished.append(rag_calls_by_id[m.tool_call_id])
+    return finished
+
+
+def _docs_rag_completed(rag_searches: list[str], docs_path: str) -> bool:
+    docs_path = docs_path.lower().rstrip("/")
+    return any(docs_path in search for search in rag_searches)
 
 
 def _read_analysis_completed(messages: list[Any]) -> bool:
@@ -159,7 +189,9 @@ def _task_delegation_denial(request: ToolCallRequest) -> ToolMessage | None:
                 gate="forbidden_subagent",
                 detail=(
                     "Homelab does not delegate to `general-purpose`. "
-                    "Use `code` for repository file work, `git` for git/GitHub, `jira` for Jira, or `tech_lead` for review."
+                    "Use `code` for repository file work and local git, "
+                    "`github` for GitHub platform APIs, `jira` for Jira, "
+                    "or `tech_lead` for review."
                 ),
             ),
             tool_call_id=call["id"],
@@ -167,17 +199,43 @@ def _task_delegation_denial(request: ToolCallRequest) -> ToolMessage | None:
             status="error",
         )
 
-    if sub == CODE_SUBAGENT and not _rag_preflight_done_since_last_human(
+    required_rag_searches = SPECIALIST_RAG_REQUIREMENTS.get(sub)
+    if required_rag_searches is None:
+        return None
+
+    completed_rag_searches = _completed_rag_searches_since_last_human(
         _messages_from_state(request.state)
-    ):
+    )
+    completed_count = len(completed_rag_searches)
+    docs_path = SPECIALIST_DOC_PATHS[sub]
+    has_docs_rag = _docs_rag_completed(completed_rag_searches, docs_path)
+
+    if completed_count < required_rag_searches or not has_docs_rag:
+        missing = max(required_rag_searches - completed_count, 0)
+        missing_phrase = (
+            f"Call `rag_search` {missing} more time(s)"
+            if missing
+            else "Call `rag_search` again with the required docs scope"
+        )
+        detail = (
+            f"{missing_phrase} after the user's latest "
+            "message before delegating. First run a docs-oriented query scoped to "
+            f"`{docs_path}/` and relevant workflow docs, then "
+            "pass those doc anchors into the task description."
+        )
+        if required_rag_searches > 1:
+            detail = (
+                f"{missing_phrase} after the user's latest "
+                "message before delegating. First run a docs-oriented query scoped "
+                f"to `{docs_path}/` and relevant workflow docs; then run a "
+                "code-location query to identify likely repository files, services, "
+                "manifests, or configuration. Pass both result sets into the task "
+                "description."
+            )
         return ToolMessage(
             content=_gate_error_payload(
-                gate="rag_before_code",
-                detail=(
-                    "Call `rag_search` at least once after the user's latest message "
-                    "(iterate with narrower queries until you know where relevant code "
-                    "and docs live). Then delegate to `code` with that context."
-                ),
+                gate="rag_before_specialist",
+                detail=detail,
             ),
             tool_call_id=call["id"],
             name="task",

@@ -1,52 +1,24 @@
-# Work Execution
+# Work Execution (homelab)
 
-These instructions apply when the user asks to perform work for a Jira issue,
-continue an in-progress Jira issue, or complete a specific requirement.
+Generic subtask discipline and “complete one requirement at a time” behavior are
+in **`jira_system_prompt.md`**. This file is **`HOME`** checklist wiring.
 
-## Subtasks As The Work Checklist
+## Subtasks as checklist
 
-- Treat requirement-generated subtasks as the working todo list for the parent
-  `Story`, `Bug`, or `Task`.
-- Use the parent issue fields, especially `Requirements` (`customfield_10103`)
-  and `Acceptance Criteria` (`customfield_10104`), plus the child subtasks to
-  understand what work needs to be performed.
-- Each `REQ-###` requirement should have a matching child `Subtask` with the
-  same `REQ-###` prefix. Use that subtask as the unit of work for that
-  requirement.
-- When a subtask's work is completed, transition that subtask to `Done`.
-- Do not treat parent issue transitions as part of this checklist rule. Parent
-  issue status movement is a separate workflow decision.
+- Requirement-generated subtasks are the working todo list for parent **`Story`**,
+  **`Bug`**, or **`Task`**.
+- Read parent **`customfield_10103`** / **`customfield_10104`** and child subtasks
+  before starting; use **`REQ-###`** alignment between parent list and subtasks.
+- When a subtask’s work is done, transition **that subtask** to **`Done`** only.
+- Parent status moves follow **`02-issue-flows.md`**, not this checklist rule.
 
-## Starting Or Resuming Work
+## Completing one requirement
 
-- When pulling a Jira issue for work, read the parent issue and its subtasks
-  before starting.
-- Identify which subtasks are already `Done` and which remain open.
-- If the issue is partially complete, quickly review prior work, comments,
-  status, and relevant repository state, then continue from the remaining open
-  subtasks.
-- Do not redo completed subtasks unless the user explicitly asks for rework or
-  the current evidence shows the previous work is invalid.
-- Work through open subtasks in a sensible order based on their `REQ-###`
-  sequence and dependencies.
+- Locate **`REQ-###`** and matching subtask; scope work to that unit unless the
+  user widens it.
+- After completion, transition only the matching subtask; summarize what changed.
 
-## Completing A Requirement
+## Blockers
 
-- If the user asks to complete a specific requirement, locate the matching
-  `REQ-###` entry and child subtask.
-- Perform only the work needed for that requirement unless the user authorizes a
-  broader pass or the requirement cannot be completed without adjacent changes.
-- After completing the specific requirement, transition only the matching
-  subtask to `Done`.
-- Summarize what changed and which requirement/subtask was completed.
-
-## Execution Behavior
-
-- Use subtasks to keep progress visible while work is happening.
-- Mark a subtask `Done` only after the necessary implementation, documentation,
-  validation, or operational work for that requirement has actually been
-  completed.
-- If a subtask cannot be completed, leave it open and explain the blocker.
-- If completing a subtask reveals missing or incorrect requirements, report that
-  and update the parent issue only when the user asks or the workflow requires
-  the correction before continuing.
+- Leave subtasks open and explain blockers; surface bad requirements to the user
+  or workflow before silently “fixing” parent scope.

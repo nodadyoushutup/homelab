@@ -2,13 +2,13 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from deepagents import create_deep_agent
 from langchain.tools import tool
 
 from framework.configuration import resolve_repo_root
+from framework.middleware import McpWorkspaceBindingMiddleware
 from framework.mcp_support import DEFAULT_REPO_SEARCH_EXCLUDES
-from framework.mcp_support import load_mcp_tools
-from framework.mcp_support import wrap_ast_grep_tools
-from framework.mcp_support import wrap_filesystem_tools
+from framework.mcp_support import load_workspace_routed_mcp_tools
 
 from .base import BaseAgent
 
@@ -42,11 +42,17 @@ class TechLeadAgent(BaseAgent):
                 "the caller."
             )
 
-        mcp_tools = wrap_ast_grep_tools(
-            wrap_filesystem_tools(
-                load_mcp_tools(self.app_dir / "mcp.json"),
-                self.repo_root,
-            ),
-            self.repo_root,
+        mcp_tools = load_workspace_routed_mcp_tools(
+            self.app_dir / "mcp.json",
+            wrap_profile="tech_lead",
+            static_repo=self.repo_root,
         )
         return [describe_tech_lead_contract, *mcp_tools]
+
+    def build(self):
+        kwargs = self.build_kwargs()
+        kwargs["middleware"] = [
+            McpWorkspaceBindingMiddleware(),
+            *kwargs.get("middleware", []),
+        ]
+        return create_deep_agent(**kwargs)

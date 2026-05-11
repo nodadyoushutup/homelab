@@ -6,6 +6,7 @@ from deepagents import CompiledSubAgent
 from deepagents import create_deep_agent
 from langchain.tools import tool
 
+from framework.configuration import load_system_prompt
 from framework.middleware import HomelabTaskDelegationMiddleware
 from framework.mcp_support import load_mcp_tools
 
@@ -28,15 +29,47 @@ class HomelabSupervisorAgent(BaseAgent):
         return {
             "specialist_topology": "specialist subagents that are co-deployed in this same Agent Server and callable only through this supervisor",
             "code_delegate_instruction": (
-                "Before delegating repository work to `code`, run `rag_search` (iterate until "
-                "you know where relevant code and docs live). Then use the `task` tool to "
+                "Before delegating repository work to `code`, run two `rag_search` calls: "
+                "first a docs-oriented query for relevant `docs/subagents/code/` and "
+                "`docs/workflows/` guidance, then a code-location query for likely files, "
+                "services, manifests, or configuration. Then use the `task` tool to "
                 "delegate every source code, repository, configuration, file path, filesystem, "
                 "MCP workspace, or implementation request to the `code` specialist before "
-                "answering directly."
+                "answering directly, passing both RAG result sets as context."
             ),
-            "jira_delegate_instruction": "You must use the `task` tool to delegate every explicit Jira request, including create-issue requests, to the `jira` specialist before asking your own follow-up question or answering directly.",
-            "tech_lead_delegate_instruction": "You must use the `task` tool to delegate every technical soundness review, architecture review, code impact review, workflow impact review, or pre-development implementation guidance request to the `tech_lead` specialist before answering directly.",
-            "git_delegate_instruction": "You must use the `task` tool to delegate every explicit local git workflow request (branch, sync, commit, push) and every explicit GitHub request (pull request, PR review, checks, merge readiness) to the `git` specialist before answering directly.",
+            "jira_delegate_instruction": (
+                "Before delegating to `jira`, run a docs-oriented `rag_search` for "
+                "relevant `docs/subagents/jira/` and workflow guidance. Then use "
+                "the `task` tool to delegate every explicit Jira request, including "
+                "create-issue requests, to the `jira` specialist before asking your "
+                "own follow-up question or answering directly, passing the RAG doc "
+                "anchors as context."
+            ),
+            "tech_lead_delegate_instruction": (
+                "Before delegating to `tech_lead`, run two `rag_search` calls: "
+                "first a docs-oriented query for relevant `docs/subagents/tech-lead/` "
+                "and `docs/workflows/` guidance, then a code-location query for likely "
+                "files, services, manifests, or configuration. Then use the `task` tool "
+                "to delegate every technical soundness review, architecture review, "
+                "code impact review, workflow impact review, or pre-development "
+                "implementation guidance request to the `tech_lead` specialist before "
+                "answering directly, passing both RAG result sets as context."
+            ),
+            "github_delegate_instruction": (
+                "Before delegating to `github`, run a docs-oriented `rag_search` for "
+                "relevant `docs/subagents/github/` and workflow guidance. Then use the "
+                "`task` tool to delegate every explicit GitHub platform "
+                "request (pull requests, PR review, checks, merge readiness, GitHub Actions "
+                "workflow dispatch and run monitoring, repository queries via the GitHub MCP) "
+                "to the `github` specialist before answering directly, passing the RAG doc "
+                "anchors as context."
+            ),
+            "code_git_delegate_instruction": (
+                "You must use the `task` tool to delegate every explicit **local repository git** "
+                "request (status, fetch, pull, branch, checkout, commit, push) to the `code` "
+                "specialist before answering directly, because git tools are exposed on mcp-code "
+                "with filesystem work."
+            ),
             "handoff_contract": "Every specialist call must return to this supervisor. A specialist may recommend another specialist, but it must not directly hand off, transfer, or continue the task outside its own response. After each specialist response, decide at the supervisor layer whether to call another specialist, call a tool, ask the user, or produce the final answer.",
         }
 
@@ -57,6 +90,10 @@ class HomelabSupervisorAgent(BaseAgent):
 
     def subagents(self) -> list[CompiledSubAgent]:
         return self.local_subagents
+
+    def object_system_prompts(self) -> list[str]:
+        """Supervisor instructions live only under the app directory, not docs/subagents/."""
+        return [load_system_prompt(self.prompt_path, self.prompt_variables())]
 
     def build(self):
         kwargs = self.build_kwargs()

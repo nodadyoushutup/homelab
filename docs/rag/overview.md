@@ -21,7 +21,7 @@ Downstream clients (**`mcp-rag`**, LangGraph agents, Cursor, Codex, or direct HT
 
 **Query:** client → `POST /v1/query` on `rag-engine` (or `rag_search` via `mcp-rag`) → embed query text → Chroma query with optional `where` metadata filter → ranked chunks returned to the client.
 
-**Long-term memory (separate collections):** `mcp-rag` memory tools call `rag-engine` memory routes; vectors live in dedicated Chroma collections (`memories_episodic`, `memories_declarative` by default). Storage reuses the same embedding stack as repo RAG. **Promotion gates and agent responsibilities** are documented in [rag-agent-mcp-integration-roadmap.md](../workflows/development/rag-agent-mcp-integration-roadmap.md).
+**Long-term memory (separate collections):** `mcp-rag` memory tools call `rag-engine` memory routes; vectors live in dedicated Chroma collections (`memories_episodic`, `memories_declarative` by default). Storage reuses the same embedding stack as repo RAG. **Promotion gates and agent responsibilities** are documented in [rag-agent-mcp-integration-roadmap.md](../workflows/rag-agent-mcp-integration-roadmap.md).
 
 ## Related reading
 

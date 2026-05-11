@@ -7,10 +7,9 @@ from langchain.tools import tool
 
 from framework.configuration import resolve_repo_root
 from framework.middleware import CodeReadBeforeWriteMiddleware
+from framework.middleware import McpWorkspaceBindingMiddleware
 from framework.mcp_support import DEFAULT_REPO_SEARCH_EXCLUDES
-from framework.mcp_support import load_mcp_tools
-from framework.mcp_support import wrap_ast_grep_tools
-from framework.mcp_support import wrap_filesystem_tools
+from framework.mcp_support import load_workspace_routed_mcp_tools
 
 from .base import BaseAgent
 
@@ -38,22 +37,26 @@ class CodeAgent(BaseAgent):
             return (
                 "The Code agent owns repository-backed analysis and implementation "
                 "support for source code, configuration, paths, filesystem state, "
-                "and behavior. It should stay scoped to the repository root "
+                "local git operations exposed by mcp-code when requested, and "
+                "behavior. It should stay scoped to the repository root "
                 f"`{self.repo_root}`, inspect source-of-truth files before acting, "
                 "make explicit code changes only when requested, and return concise "
-                "findings, artifacts, risks, and next actions to the caller."
+                "findings, artifacts, risks, and next actions to the caller. GitHub "
+                "PR/check/Actions API work is normally routed to the github specialist."
             )
 
-        mcp_tools = wrap_ast_grep_tools(
-            wrap_filesystem_tools(
-                load_mcp_tools(self.app_dir / "mcp.json"),
-                self.repo_root,
-            ),
-            self.repo_root,
+        mcp_tools = load_workspace_routed_mcp_tools(
+            self.app_dir / "mcp.json",
+            wrap_profile="code",
+            static_repo=self.repo_root,
         )
         return [describe_code_contract, *mcp_tools]
 
     def build(self):
         kwargs = self.build_kwargs()
-        kwargs["middleware"] = [CodeReadBeforeWriteMiddleware(), *kwargs.get("middleware", [])]
+        kwargs["middleware"] = [
+            McpWorkspaceBindingMiddleware(),
+            CodeReadBeforeWriteMiddleware(),
+            *kwargs.get("middleware", []),
+        ]
         return create_deep_agent(**kwargs)

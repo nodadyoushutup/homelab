@@ -1,7 +1,8 @@
-# HOME Project Fields
+# HOME Project Fields (homelab)
 
-These instructions are based on live Jira metadata gathered through the
-Atlassian MCP tools for the `HOME` project.
+Generic Jira field hygiene (omit empty optionals, JSON shapes, integration-managed
+fields) is in **`jira_system_prompt.md`**. This file is **live metadata and
+mutation guidance** for project **`HOME`** from Atlassian MCP.
 
 ## Default Project And Board
 

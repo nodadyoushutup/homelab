@@ -75,7 +75,7 @@ When a task changes the LangGraph implementation:
      tree
    - keep **`mcp-rag`** in the supervisor and every specialist `mcp.json`; gate
      and memory policy live in
-     `docs/workflows/development/rag-agent-mcp-integration-roadmap.md` and
+     `docs/workflows/rag-agent-mcp-integration-roadmap.md` and
      `applications/langgraph/framework/middleware/workflow_gates.py`
 7. if the task changes one app from a single graph to multiple sibling graphs:
    - keep those graph exports together in that app's `langgraph.json`
@@ -100,7 +100,7 @@ When a task changes the LangGraph implementation:
      `framework/agents/system_prompts/base_system_prompt.md`, reusable
      class-level guidance in framework agent prompt files, and concrete runtime
      docs under `docs/subagents/<runtime-name>/`
-   - keep the relevant contract docs under `docs/agents/` in sync
+   - keep `docs/workflows/agents.md` and the layered prompt sources in sync
 9. validate the Python structure after the change
 10. update docs if the stable pattern changed
 11. if the task adds a repo helper script, keep it boundary-scoped and make

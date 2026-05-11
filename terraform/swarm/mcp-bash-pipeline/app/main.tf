@@ -17,7 +17,7 @@ locals {
 }
 
 module "code_nfs" {
-  source = "../../modules/homelab-nfs-mount"
+  source = "../../../modules/homelab-nfs-mount"
 
   volume_name = "${local.service_name}-mnt-eapp-code"
   target      = "/mnt/eapp/code"
@@ -27,7 +27,7 @@ module "code_nfs" {
 }
 
 module "config_nfs" {
-  source = "../../modules/homelab-nfs-mount"
+  source = "../../../modules/homelab-nfs-mount"
 
   volume_name = "${local.service_name}-mnt-eapp-config"
   target      = "/mnt/eapp/config"
@@ -37,7 +37,7 @@ module "config_nfs" {
 }
 
 module "mcp_bash_pipeline" {
-  source = "../../modules/mcp-service"
+  source = "../../../modules/mcp-service"
 
   service_name          = local.service_name
   image_reference       = var.image_reference

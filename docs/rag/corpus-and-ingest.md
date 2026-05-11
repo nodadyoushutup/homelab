@@ -27,11 +27,11 @@ Binary glob rules, sensitive paths, and other skips are centralized in engine pa
 
 Structured chunking (Python, XML/Odoo, Markdown, PDF hybrid, tabular, many other languages) is tracked in the ingest roadmap. That document is the checklist when adding or changing strategies:
 
-- [rag-structured-file-ingest-roadmap.md](../workflows/development/rag-structured-file-ingest-roadmap.md)
+- [rag-structured-file-ingest-roadmap.md](../workflows/rag-structured-file-ingest-roadmap.md)
 
 Hook smoke / operator checks:
 
-- [rag-hook-smoke-test.md](../workflows/development/rag-hook-smoke-test.md)
+- [rag-hook-smoke-test.md](../workflows/rag-hook-smoke-test.md)
 
 ## Freshness
 

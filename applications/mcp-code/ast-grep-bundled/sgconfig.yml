@@ -1,0 +1,80 @@
+ruleDirs: []
+
+languageGlobs:
+  bash:
+    - "*.sh"
+  c:
+    - "*.c"
+  cpp:
+    - "*.cpp"
+    - "*.cc"
+    - "*.cxx"
+    - "*.hpp"
+    - "*.hxx"
+    - "*.hh"
+  csharp:
+    - "*.cs"
+  css:
+    - "*.css"
+  dockerfile:
+    - "Dockerfile"
+    - "Dockerfile.*"
+  elixir:
+    - "*.ex"
+    - "*.exs"
+  go:
+    - "*.go"
+  haskell:
+    - "*.hs"
+    - "*.lhs"
+  hcl:
+    - "*.tf"
+    - "*.tfvars"
+    - "*.tfvars.example"
+  html:
+    - "*.html"
+    - "*.htm"
+  java:
+    - "*.java"
+  javascript:
+    - "*.js"
+    - "*.cjs"
+    - "*.mjs"
+  json:
+    - "*.json"
+  kotlin:
+    - "*.kt"
+    - "*.kts"
+  lua:
+    - "*.lua"
+  nix:
+    - "*.nix"
+  php:
+    - "*.php"
+  python:
+    - "*.py"
+    - "*.pyi"
+  ruby:
+    - "*.rb"
+  rust:
+    - "*.rs"
+  scala:
+    - "*.scala"
+    - "*.sc"
+  solidity:
+    - "*.sol"
+  swift:
+    - "*.swift"
+  tsx:
+    - "*.tsx"
+  typescript:
+    - "*.ts"
+  yaml:
+    - "*.yml"
+    - "*.yaml"
+
+customLanguages:
+  dockerfile:
+    libraryPath: /opt/ast-grep-parsers/dockerfile.so
+    extensions:
+      - dockerfile

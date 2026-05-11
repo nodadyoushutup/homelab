@@ -1,32 +1,23 @@
-# Code Repo Discovery
+# Code Repo Discovery (homelab)
 
-Use this guidance when the task asks how code, config, deployment wiring, or
-repo structure works.
+Generic discovery order and analysis discipline are in the framework **Generic Code
+Agent** system prompt. Use this file for **this repository’s** orientation.
 
-## Discovery Order
+## Where to look first
 
-- The **supervisor** runs **`rag_search`** before delegating repository work to
-  you; use the paths and doc anchors from the task description as your starting
-  map. Run **`rag_search` again** only when you still need index-level narrowing.
-- Start from the caller's named files, directories, symbols, services, issue
-  keys, or observed behavior.
-- Check `AGENTS.md` and relevant docs when they are likely to define ownership,
-  workflow, deployment boundaries, or local conventions.
-- Identify entry points before internals: app exports, graph definitions,
-  compose services, Kubernetes manifests, scripts, package metadata, or module
-  imports.
-- Trace from source to runtime: configuration, dependency injection, startup
-  command, service wiring, and user-facing behavior.
-- Prefer narrow targeted searches. Avoid broad recursive searches from
-  `{{ repo_root }}`.
+- The **supervisor** runs two **`rag_search`** calls before delegating repository
+  work to you: first for `docs/subagents/code/` plus relevant workflow guidance,
+  then for likely code/configuration locations. Use paths and doc anchors from
+  the task as your starting map. Run **`rag_search` again** only when you still
+  need index-level narrowing.
+- **`AGENTS.md`** at the repo root indexes workflow and documentation sources of
+  truth; consult it when you need ownership, deployment boundaries, or local
+  conventions.
+- **`docs/workflows/`** holds repeatable execution workflows (Docker publish,
+  edge DNS, MCP worktrees, LangGraph, etc.).
 
-## Analysis Discipline
+## Search scope in this repo
 
-- Separate confirmed facts from assumptions.
-- Cite concrete paths, symbols, commands, or config keys when they matter.
-- Do not overfit to one file when the behavior depends on generated config,
-  deployment manifests, environment variables, or runtime wiring.
-- If multiple plausible owners exist, inspect enough of each to identify the
-  real owner before recommending changes.
-- If the repository does not contain the required evidence, say what is missing
-  and what external system would need to be checked.
+- Prefer narrow targeted searches. Example subtrees that often narrow the problem:
+  `applications/`, `docs/`, `kubernetes/`, `terraform/`, `scripts/`,
+  `pipelines/`, `docker/`.

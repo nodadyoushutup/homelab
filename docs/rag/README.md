@@ -4,11 +4,11 @@ Human-facing **system knowledge** for the semantic index: what it is, what gets 
 
 **Prompts, routing, memory gates, and tool-usage rules** for homelab agents live with the LangGraph runtime and agent contracts:
 
-- `applications/langgraph/agent/system_prompt.md` and `applications/langgraph/framework/agents/system_prompts/`
-- `docs/agents/homelab-agent/homelab-agent.md` and `docs/subagents/*/*.md`
-- [rag-agent-mcp-integration-roadmap.md](../workflows/development/rag-agent-mcp-integration-roadmap.md)
+- `applications/langgraph/agent/system_prompt.md` (supervisor / `agent` graph) and `applications/langgraph/framework/agents/system_prompts/`
+- `docs/subagents/*/*.md` (per-specialist deployment overlays)
+- [rag-agent-mcp-integration-roadmap.md](../workflows/rag-agent-mcp-integration-roadmap.md)
 
-**Implementation checklists** for structured ingest live in `docs/workflows/development/` (roadmaps), alongside the integration doc above.
+**Implementation checklists** for structured ingest (when present) live alongside other workflows under `docs/workflows/`.
 
 ## Contents
 
@@ -23,5 +23,5 @@ Human-facing **system knowledge** for the semantic index: what it is, what gets 
 
 - MCP usage (ports, headers, troubleshooting): [docs/mcp/rag.md](../mcp/rag.md)
 - Engine package summary: [docs/applications/rag-engine.md](../applications/rag-engine.md)
-- Structured chunking checklist: [rag-structured-file-ingest-roadmap.md](../workflows/development/rag-structured-file-ingest-roadmap.md)
-- Agent + MCP integration: [rag-agent-mcp-integration-roadmap.md](../workflows/development/rag-agent-mcp-integration-roadmap.md)
+- Structured chunking checklist: [rag-structured-file-ingest-roadmap.md](../workflows/rag-structured-file-ingest-roadmap.md) (add under `docs/workflows/` when authored)
+- Agent + MCP integration: [rag-agent-mcp-integration-roadmap.md](../workflows/rag-agent-mcp-integration-roadmap.md)
