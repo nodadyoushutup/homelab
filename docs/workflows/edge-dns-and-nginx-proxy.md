@@ -2,6 +2,15 @@
 
 When you add a **new externally reachable hostname** for a workload, treat **DNS** and **TLS termination / reverse proxy** as part of the same change as the Swarm service or Kubernetes ingress—not an optional follow-up.
 
+## Retired standalone code MCPs (filesystem / repo git / ast-grep only)
+
+The aggregate **`mcp-code`** service replaced three separate Swarm MCPs. Remove **only** the DNS and NPM objects that existed for those three—**do not** strip unrelated records or proxy hosts.
+
+1. **Cloudflare** — edit **`/mnt/eapp/config/cloudflare/config.tfvars`** (same file you always use). Delete **`records`** items whose **`name`** was dedicated to the old services, for example hostnames matching the pattern **`mcp.filesystem.<your-apex>`**, **`mcp.git.<your-apex>`**, **`mcp.ast-grep.<your-apex>`** (or **`mcp.astgrep.<your-apex>`**), including any **`-homelab`** / second-lane names you added for **`mcp-filesystem-homelab`** / **`mcp-git-homelab`**. Use the stable **`key`** field in your file to find the right rows.
+2. **Keep** records for **`mcp.code`**, **`mcp.rag`**, **`mcp.github`**, **`mcp.atlassian`**, and every other MCP or app that is still deployed.
+3. **NPM** — edit **`/mnt/eapp/config/nginx-proxy-manager/config.tfvars`**. Remove **`certificates`**, **`proxy_hosts`**, **`redirections`**, and **`streams`** entries that **only** served those retired hostnames (match **`domain_names`** / **`forward_port`** to what those three services used). If you are unsure, compare **`forward_port`** to the old Swarm published ports from your tfvars or state before deletion; do **not** delete rows that forward to **`mcp-code`** (**`18212`** in repo defaults) or any other live MCP.
+4. **Apply** — run your usual **Cloudflare** then **NPM config** Terraform pipelines (`plan` → `apply`) so Terraform drops the resources from state and from Cloudflare/NPM.
+
 ## Public WAN vs LAN `A` record targets
 
 Only these hostnames use the **public WAN** address in Cloudflare `records[].content` (so the name resolves to something reachable from the open internet, subject to firewall/port-forward rules):
