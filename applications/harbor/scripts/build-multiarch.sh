@@ -341,6 +341,15 @@ build_for_platform() {
     "PULL_BASE_FROM_DOCKERHUB=false"
   )
 
+  # Harbor Makefile builds tool images (spectral, swagger) with `docker build` then
+  # runs `docker run`. If the active buildx builder uses the docker-container driver,
+  # BuildKit keeps the image only in cache ("No output specified with docker-container
+  # driver"); the image never appears in the local engine and lint_apis/gen_apis fail.
+  if docker buildx version >/dev/null 2>&1 && docker buildx inspect default >/dev/null 2>&1; then
+    echo "[INFO] buildx use default (docker driver) for Harbor Makefile docker builds"
+    docker buildx use default
+  fi
+
   echo "[BUILD] make compile (${platform})"
   run_make_target "${repo_dir}" compile "${build_env[@]}"
 
