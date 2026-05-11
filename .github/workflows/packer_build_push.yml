@@ -137,7 +137,7 @@ jobs:
     name: build_packer_direct_amd64
     needs: prepare
     if: needs.prepare.outputs.build_amd64 == 'true'
-    runs-on: [self-hosted, linux, homelab, amd64, build]
+    runs-on: [self-hosted, linux, homelab, amd64, build, kvm]
     env:
       VERSION: ${{ needs.prepare.outputs.version }}
       AMD64_ACCELERATOR: ${{ needs.prepare.outputs.amd64_accelerator }}
@@ -161,6 +161,19 @@ jobs:
           command -v qemu-system-x86_64 >/dev/null 2>&1
           command -v curl >/dev/null 2>&1
           command -v jq >/dev/null 2>&1
+
+      # Docker-based self-hosted runners often omit /dev/kvm; QEMU then dies with "Error launching VM".
+      - name: Fallback AMD64 kvm to tcg when /dev/kvm is unusable
+        run: |
+          set -euo pipefail
+          if [[ "${AMD64_ACCELERATOR}" != "kvm" ]]; then
+            exit 0
+          fi
+          if [[ -e /dev/kvm && -r /dev/kvm && -w /dev/kvm ]]; then
+            exit 0
+          fi
+          echo "AMD64_ACCELERATOR=tcg" >> "${GITHUB_ENV}"
+          echo "::warning::AMD64 kvm was requested but /dev/kvm is missing or not readable/writable (typical in unprivileged runner containers). Using tcg; expect slower builds. For kvm, pass /dev/kvm into the runner or dispatch with amd64_accelerator tcg."
 
       - name: Build Packer image (amd64)
         run: |
@@ -204,7 +217,7 @@ jobs:
     name: build_packer_direct_arm64
     needs: prepare
     if: needs.prepare.outputs.build_arm64 == 'true'
-    runs-on: [self-hosted, linux, homelab, arm64]
+    runs-on: [self-hosted, linux, homelab, arm64, build, kvm]
     env:
       VERSION: ${{ needs.prepare.outputs.version }}
       AMD64_ACCELERATOR: ${{ needs.prepare.outputs.amd64_accelerator }}
@@ -228,6 +241,18 @@ jobs:
           command -v qemu-system-aarch64 >/dev/null 2>&1
           command -v curl >/dev/null 2>&1
           command -v jq >/dev/null 2>&1
+
+      - name: Fallback ARM64 kvm to tcg when /dev/kvm is unusable
+        run: |
+          set -euo pipefail
+          if [[ "${ARM64_ACCELERATOR}" != "kvm" ]]; then
+            exit 0
+          fi
+          if [[ -e /dev/kvm && -r /dev/kvm && -w /dev/kvm ]]; then
+            exit 0
+          fi
+          echo "ARM64_ACCELERATOR=tcg" >> "${GITHUB_ENV}"
+          echo "::warning::ARM64 kvm was requested but /dev/kvm is missing or not readable/writable. Using tcg; expect slower builds."
 
       - name: Build Packer image (arm64)
         run: |

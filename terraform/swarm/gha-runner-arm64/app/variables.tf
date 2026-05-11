@@ -38,13 +38,13 @@ variable "github_runner_name" {
 variable "github_runner_replicas" {
   description = "Number of runner replicas to run in Swarm."
   type        = number
-  default     = 4
+  default     = 2
 }
 
 variable "github_runner_labels" {
   description = "Comma-separated labels advertised by this runner pool."
   type        = string
-  default     = "self-hosted,linux,homelab,arm64"
+  default     = "self-hosted,linux,homelab,arm64,build,kvm"
 }
 
 variable "github_runner_constraints" {

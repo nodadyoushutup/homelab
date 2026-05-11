@@ -107,7 +107,8 @@ resolve_packages() {
       PACKAGES+=(cpu-checker qemu-kvm qemu-system-x86)
       ;;
     arm64|aarch64)
-      PACKAGES+=(qemu-system-arm)
+      # Match AMD64 baseline: system QEMU + KVM meta where apt provides it (host still supplies /dev/kvm).
+      PACKAGES+=(cpu-checker qemu-kvm qemu-system-arm)
       ;;
     *)
       die "Unsupported architecture: ${arch}"

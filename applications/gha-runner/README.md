@@ -71,6 +71,25 @@ If `GH_RUNNER_URL` is unset, or no usable runner registration token can be resol
 - `GH_RUNNER_TOKEN` is a single-use registration token; for replicated services use `GH_RUNNER_ACCESS_TOKEN` to mint fresh tokens per task startup.
 - If you set `GH_RUNNER_EPHEMERAL=true`, the runner accepts a single job and exits.
 - Local compose mounts `/var/run/docker.sock` and runs as root so Docker Buildx/QEMU actions can access the host daemon.
-- The Terraform Swarm stage can advertise different custom labels per runner
-  pool, such as `arm64` for the ARM workers and `amd64,build,kvm` for the
-  x86_64 `runner-amd64` node.
+- Terraform Swarm binds **`/dev/kvm`** from the **host** into both runner services (`terraform/swarm/gha-runner-amd64` and `terraform/swarm/gha-runner-arm64`). The image already installs QEMU/Packer via `scripts/install/packer.sh`; acceleration still requires a working KVM device on the **node** running the task.
+- Default runner labels include **`build,kvm`** on both pools (see each `variables.tf`). Workflows that need hardware acceleration (for example **Packer** in `.github/workflows/packer_build_push.yml`) should use `runs-on` labels that include **`kvm`** so jobs land on these pools only after you confirm nodes are KVM-capable.
+- Default **`github_runner_replicas`** is **2** per pool (override in tfvars if you want more). Apply both stacks so you get two AMD64 and two ARM64 runner tasks (subject to Swarm scheduling).
+
+### Verify KVM on a Swarm node (run on the host, not in the runner)
+
+Use this before relying on Packer with `accelerator=kvm`:
+
+- **Device:** `test -c /dev/kvm && ls -l /dev/kvm` — should show a character device (commonly `root:kvm` `660`).
+- **Kernel:** `lsmod | grep kvm` — expect `kvm` plus `kvm_intel` or `kvm_amd` on x86; on AArch64 servers often `kvm` alone when HW virtualization is available.
+- **CPUs:** on x86, `grep -E 'vmx|svm' /proc/cpuinfo` — should match if virtualization is enabled in firmware.
+
+If `/dev/kvm` is missing on the host, fix the host (BIOS/UEFI virtualization, nested virt for VMs, or correct kernel) before expecting KVM inside the runner container.
+
+**ARM64 worker mix:** `gha-runner-arm64` defaults to placement on any `aarch64` worker. If some ARM nodes lack KVM (common on small SBCs), add a **node label** and extend `github_runner_constraints` in tfvars so Packer jobs only schedule on KVM-capable machines.
+
+### After changing Terraform or the image
+
+1. Build and push a new **`gha-runner`** image if you changed `Dockerfile` or `scripts/install/*` (multi-arch workflow).
+2. Bump `github_runner_image` / registry reference for the ARM64 module if it pins an old tag.
+3. **`terraform apply`** for `gha-runner-amd64` and `gha-runner-arm64`.
+4. Confirm a running task: `docker service ps gha-runner-amd64` / `gha-runner-arm64`, then `docker exec` into a task container and run `test -r /dev/kvm && test -w /dev/kvm` (Swarm services use `user 0:0`, so root should open the device when the bind mount works).

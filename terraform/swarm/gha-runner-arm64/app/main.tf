@@ -47,6 +47,13 @@ resource "docker_service" "gha_runner" {
         type   = "bind"
       }
 
+      # Same as AMD64 pool: Packer/QEMU need the host KVM device inside the runner.
+      mounts {
+        target = "/dev/kvm"
+        source = "/dev/kvm"
+        type   = "bind"
+      }
+
       mounts {
         type   = "volume"
         source = "gha-runner-arm64-config"

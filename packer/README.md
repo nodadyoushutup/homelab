@@ -35,6 +35,8 @@ Run the repo-native build-and-upload pipeline equivalent of the GHA workflow:
 
 The **Packer - Build and Push Image** workflow (`.github/workflows/packer_build_push.yml`) follows the same **prepare → parallel per-arch jobs → publish** shape as Docker **direct** builds: **`prepare`** on `homelab,amd64,build`, then **`build_packer_direct_amd64`** and **`build_packer_direct_arm64`** (each `needs: prepare` only, so they run concurrently when **`build_arch: both`**), then **`publish_packer_artifacts`** downloads all produced artifacts and uploads every `.qcow2` to the webserver image host. Job-level `if` cannot use the `matrix` context, so Packer mirrors Docker with **two jobs** rather than a filtered matrix.
 
+If the workflow requests **`kvm`** but the runner has no usable **`/dev/kvm`** (common for Docker-in-Docker self-hosted runners), each build job **falls back to `tcg`** automatically so QEMU can start (slower). Prefer exposing KVM to the runner, or dispatch with **`tcg`** when you accept software emulation.
+
 By default, KDE is not installed (headless image). To enable KDE:
 
 ```bash
