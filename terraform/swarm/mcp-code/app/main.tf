@@ -12,7 +12,7 @@ locals {
 }
 
 module "code_nfs" {
-  source = "../../modules/homelab-nfs-mount"
+  source = "../../../modules/homelab-nfs-mount"
 
   volume_name = "${local.service_name}-mnt-eapp-code"
   target      = "/mnt/eapp/code"
@@ -22,11 +22,11 @@ module "code_nfs" {
 }
 
 module "mcp_code" {
-  source = "../../modules/mcp-service"
+  source = "../../../modules/mcp-service"
 
   service_name          = local.service_name
   image_reference       = var.image_reference
-  registry_address      = "harbor.nodadyoushutup.com"
+  registry_address      = "ghcr.io"
   registry_auth         = var.registry_auth
   internal_port         = 8100
   published_port        = var.published_port
