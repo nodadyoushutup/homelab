@@ -22,6 +22,8 @@ PLATFORMS_CSV="linux/amd64,linux/arm64"
 PUSH_IMAGES="0"
 INSTALL_BINFMT="0"
 PATH_MODE="namespace-component"
+MANIFEST_ONLY="0"
+NO_MANIFEST_PUBLISH="0"
 MAKE_HELPER_IMAGE="${MAKE_HELPER_IMAGE:-docker:27-cli}"
 HAS_HOST_MAKE="0"
 MAKE_HELPER_ANNOUNCED="0"
@@ -42,7 +44,9 @@ Options:
   --path-mode <value>      Publish path layout:
                            namespace-component => <namespace>/<component>:<tag>
                            project-per-image   => <namespace>/<component>/<component>:<tag>
-  --push                   Push arch tags and publish manifest tags
+  --push                   Push arch tags and publish manifest tags (unless --no-manifest-publish)
+  --no-manifest-publish    With --push: push per-arch tags only (for split CI jobs; manifests separately)
+  --manifest-only          Skip builds; create and push multi-arch manifests for existing per-arch tags
   --install-binfmt         Install qemu/binfmt via tonistiigi/binfmt before build
   -h, --help               Show this help
 USAGE
@@ -72,6 +76,14 @@ while [[ $# -gt 0 ]]; do
       ;;
     --push)
       PUSH_IMAGES="1"
+      shift
+      ;;
+    --no-manifest-publish)
+      NO_MANIFEST_PUBLISH="1"
+      shift
+      ;;
+    --manifest-only)
+      MANIFEST_ONLY="1"
       shift
       ;;
     --install-binfmt)
@@ -106,31 +118,36 @@ case "${PATH_MODE}" in
     ;;
 esac
 
-if [[ -z "${HARBOR_VERSION}" || -z "${HARBOR_SOURCE_REPO}" || -z "${HARBOR_IMAGE_TAG}" ]]; then
-  echo "[ERR] HARBOR_VERSION, HARBOR_SOURCE_REPO, and HARBOR_IMAGE_TAG must be set." >&2
-  exit 1
-fi
-
-for cmd in docker git curl; do
-  if ! command -v "${cmd}" >/dev/null 2>&1; then
-    echo "[ERR] Required command not found: ${cmd}" >&2
+if [[ "${MANIFEST_ONLY}" == "1" ]]; then
+  if [[ -z "${HARBOR_IMAGE_TAG}" ]]; then
+    echo "[ERR] --tag is required with --manifest-only." >&2
     exit 1
   fi
-done
+else
+  if [[ -z "${HARBOR_VERSION}" || -z "${HARBOR_SOURCE_REPO}" || -z "${HARBOR_IMAGE_TAG}" ]]; then
+    echo "[ERR] HARBOR_VERSION, HARBOR_SOURCE_REPO, and HARBOR_IMAGE_TAG must be set." >&2
+    exit 1
+  fi
+fi
+
+if [[ "${MANIFEST_ONLY}" == "1" ]]; then
+  for cmd in docker; do
+    if ! command -v "${cmd}" >/dev/null 2>&1; then
+      echo "[ERR] Required command not found: ${cmd}" >&2
+      exit 1
+    fi
+  done
+else
+  for cmd in docker git curl; do
+    if ! command -v "${cmd}" >/dev/null 2>&1; then
+      echo "[ERR] Required command not found: ${cmd}" >&2
+      exit 1
+    fi
+  done
+fi
 
 if command -v make >/dev/null 2>&1; then
   HAS_HOST_MAKE="1"
-fi
-
-if [[ "${INSTALL_BINFMT}" == "1" ]]; then
-  echo "[INFO] Installing binfmt emulation"
-  docker run --privileged --rm tonistiigi/binfmt --install all >/dev/null
-fi
-
-IFS=',' read -r -a PLATFORMS <<<"${PLATFORMS_CSV}"
-if [[ ${#PLATFORMS[@]} -eq 0 ]]; then
-  echo "[ERR] No target platforms provided." >&2
-  exit 1
 fi
 
 runtime_images=(
@@ -160,6 +177,36 @@ publish_image_ref() {
       printf '%s/%s/%s:%s\n' "${IMAGE_NAMESPACE}" "${image}" "${image}" "${tag}"
       ;;
   esac
+}
+
+publish_multiarch_manifests() {
+  echo "[INFO] Publishing manifest tags for ${HARBOR_IMAGE_TAG}"
+
+  for image in "${runtime_images[@]}"; do
+    local manifest_ref ref os arch variant
+    manifest_ref="$(publish_image_ref "${image}" "${HARBOR_IMAGE_TAG}")"
+
+    local -a refs=()
+    for platform in "${PLATFORMS[@]}"; do
+      IFS='/' read -r os arch variant <<<"${platform}"
+      refs+=("$(publish_image_ref "${image}" "${HARBOR_IMAGE_TAG}-${arch}")")
+    done
+
+    docker manifest rm "${manifest_ref}" >/dev/null 2>&1 || true
+    docker manifest create "${manifest_ref}" "${refs[@]}"
+
+    for platform in "${PLATFORMS[@]}"; do
+      IFS='/' read -r os arch variant <<<"${platform}"
+      ref="$(publish_image_ref "${image}" "${HARBOR_IMAGE_TAG}-${arch}")"
+      if [[ -n "${variant:-}" ]]; then
+        docker manifest annotate "${manifest_ref}" "${ref}" --os "${os}" --arch "${arch}" --variant "${variant}"
+      else
+        docker manifest annotate "${manifest_ref}" "${ref}" --os "${os}" --arch "${arch}"
+      fi
+    done
+
+    docker manifest push --purge "${manifest_ref}"
+  done
 }
 
 run_make_target() {
@@ -320,6 +367,31 @@ build_for_platform() {
   trap - RETURN
 }
 
+IFS=',' read -r -a PLATFORMS <<<"${PLATFORMS_CSV}"
+if [[ ${#PLATFORMS[@]} -eq 0 ]]; then
+  echo "[ERR] No target platforms provided." >&2
+  exit 1
+fi
+
+if [[ "${MANIFEST_ONLY}" == "1" ]]; then
+  publish_multiarch_manifests
+  echo "[DONE] Harbor manifest publish finished."
+  case "${PATH_MODE}" in
+    namespace-component)
+      echo "[INFO] Image prefix: ${IMAGE_NAMESPACE}/<component>:${HARBOR_IMAGE_TAG}"
+      ;;
+    project-per-image)
+      echo "[INFO] Image prefix: ${IMAGE_NAMESPACE}/<component>/<component>:${HARBOR_IMAGE_TAG}"
+      ;;
+  esac
+  exit 0
+fi
+
+if [[ "${INSTALL_BINFMT}" == "1" ]]; then
+  echo "[INFO] Installing binfmt emulation"
+  docker run --privileged --rm tonistiigi/binfmt --install all >/dev/null
+fi
+
 declare -A arch_to_platform
 for platform in "${PLATFORMS[@]}"; do
   IFS='/' read -r os arch variant <<<"${platform}"
@@ -334,33 +406,8 @@ for platform in "${PLATFORMS[@]}"; do
   build_for_platform "${platform}"
 done
 
-if [[ "${PUSH_IMAGES}" == "1" ]]; then
-  echo "[INFO] Publishing manifest tags for ${HARBOR_IMAGE_TAG}"
-
-  for image in "${runtime_images[@]}"; do
-    manifest_ref="$(publish_image_ref "${image}" "${HARBOR_IMAGE_TAG}")"
-
-    refs=()
-    for platform in "${PLATFORMS[@]}"; do
-      IFS='/' read -r os arch variant <<<"${platform}"
-      refs+=("$(publish_image_ref "${image}" "${HARBOR_IMAGE_TAG}-${arch}")")
-    done
-
-    docker manifest rm "${manifest_ref}" >/dev/null 2>&1 || true
-    docker manifest create "${manifest_ref}" "${refs[@]}"
-
-    for platform in "${PLATFORMS[@]}"; do
-      IFS='/' read -r os arch variant <<<"${platform}"
-      ref="$(publish_image_ref "${image}" "${HARBOR_IMAGE_TAG}-${arch}")"
-      if [[ -n "${variant:-}" ]]; then
-        docker manifest annotate "${manifest_ref}" "${ref}" --os "${os}" --arch "${arch}" --variant "${variant}"
-      else
-        docker manifest annotate "${manifest_ref}" "${ref}" --os "${os}" --arch "${arch}"
-      fi
-    done
-
-    docker manifest push --purge "${manifest_ref}"
-  done
+if [[ "${PUSH_IMAGES}" == "1" && "${NO_MANIFEST_PUBLISH}" == "0" ]]; then
+  publish_multiarch_manifests
 fi
 
 echo "[DONE] Harbor build workflow finished."

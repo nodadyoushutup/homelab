@@ -545,17 +545,14 @@ jobs:
             publish_manifest_tags "${{ needs.prepare.outputs.harbor_image_base }}"
           fi
 
-  build_harbor_runtime_set:
+  build_harbor_runtime_amd64:
     needs: prepare
-    if: needs.prepare.outputs.build_strategy == 'harbor-runtime-set'
+    if: needs.prepare.outputs.build_strategy == 'harbor-runtime-set' && needs.prepare.outputs.build_amd64 == 'true'
     runs-on: [self-hosted, linux, homelab, amd64, build]
 
     steps:
       - name: Check out the code
         uses: actions/checkout@v6
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -589,7 +586,7 @@ jobs:
           username: ${{ secrets.HARBOR_ROBOT_USERNAME }}
           password: ${{ secrets.HARBOR_ROBOT_SECRET }}
 
-      - name: Build and publish Harbor runtime set
+      - name: Build and push Harbor runtime (AMD64)
         env:
           DOCKER_CLI_EXPERIMENTAL: enabled
         run: |
@@ -597,7 +594,7 @@ jobs:
 
           chmod 0755 applications/harbor/scripts/build-multiarch.sh
 
-          publish_runtime_set() {
+          publish_arch_tags() {
             local namespace="$1"
             local path_mode="$2"
 
@@ -605,14 +602,158 @@ jobs:
               --namespace "${namespace}" \
               --tag "${{ needs.prepare.outputs.version }}" \
               --path-mode "${path_mode}" \
-              --platforms "${{ needs.prepare.outputs.platforms }}" \
-              --push
+              --platforms linux/amd64 \
+              --push \
+              --no-manifest-publish
           }
 
           if [ "${{ needs.prepare.outputs.publish_github }}" = "true" ]; then
-            publish_runtime_set "${GHCR_NAMESPACE}" "namespace-component"
+            publish_arch_tags "${GHCR_NAMESPACE}" "namespace-component"
           fi
 
           if [ "${{ needs.prepare.outputs.publish_harbor }}" = "true" ]; then
-            publish_runtime_set "${HARBOR_REGISTRY}" "project-per-image"
+            publish_arch_tags "${HARBOR_REGISTRY}" "project-per-image"
+          fi
+
+  build_harbor_runtime_arm64:
+    needs: prepare
+    if: needs.prepare.outputs.build_strategy == 'harbor-runtime-set' && needs.prepare.outputs.build_arm64 == 'true'
+    runs-on: [self-hosted, linux, homelab, arm64]
+
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v6
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          install: true
+
+      - name: Log in to GitHub Container Registry
+        if: needs.prepare.outputs.publish_github == 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Validate Harbor credentials
+        if: needs.prepare.outputs.publish_harbor == 'true'
+        env:
+          HARBOR_USERNAME: ${{ secrets.HARBOR_ROBOT_USERNAME }}
+          HARBOR_PASSWORD: ${{ secrets.HARBOR_ROBOT_SECRET }}
+        run: |
+          if [ -z "$HARBOR_USERNAME" ] || [ -z "$HARBOR_PASSWORD" ]; then
+            echo "HARBOR_ROBOT_USERNAME and HARBOR_ROBOT_SECRET are required for Harbor publishes." >&2
+            exit 1
+          fi
+
+      - name: Log in to Harbor Registry
+        if: needs.prepare.outputs.publish_harbor == 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.HARBOR_REGISTRY }}
+          username: ${{ secrets.HARBOR_ROBOT_USERNAME }}
+          password: ${{ secrets.HARBOR_ROBOT_SECRET }}
+
+      - name: Build and push Harbor runtime (ARM64)
+        env:
+          DOCKER_CLI_EXPERIMENTAL: enabled
+        run: |
+          set -euo pipefail
+
+          chmod 0755 applications/harbor/scripts/build-multiarch.sh
+
+          publish_arch_tags() {
+            local namespace="$1"
+            local path_mode="$2"
+
+            applications/harbor/scripts/build-multiarch.sh \
+              --namespace "${namespace}" \
+              --tag "${{ needs.prepare.outputs.version }}" \
+              --path-mode "${path_mode}" \
+              --platforms linux/arm64 \
+              --push \
+              --no-manifest-publish
+          }
+
+          if [ "${{ needs.prepare.outputs.publish_github }}" = "true" ]; then
+            publish_arch_tags "${GHCR_NAMESPACE}" "namespace-component"
+          fi
+
+          if [ "${{ needs.prepare.outputs.publish_harbor }}" = "true" ]; then
+            publish_arch_tags "${HARBOR_REGISTRY}" "project-per-image"
+          fi
+
+  publish_harbor_runtime_manifest:
+    needs:
+      - prepare
+      - build_harbor_runtime_amd64
+      - build_harbor_runtime_arm64
+    if: >
+      always() &&
+      needs.prepare.outputs.build_strategy == 'harbor-runtime-set' &&
+      needs.build_harbor_runtime_amd64.result != 'failure' &&
+      needs.build_harbor_runtime_amd64.result != 'cancelled' &&
+      needs.build_harbor_runtime_arm64.result != 'failure' &&
+      needs.build_harbor_runtime_arm64.result != 'cancelled'
+    runs-on: [self-hosted, linux, homelab, amd64, build]
+
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v6
+
+      - name: Log in to GitHub Container Registry
+        if: needs.prepare.outputs.publish_github == 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Validate Harbor credentials
+        if: needs.prepare.outputs.publish_harbor == 'true'
+        env:
+          HARBOR_USERNAME: ${{ secrets.HARBOR_ROBOT_USERNAME }}
+          HARBOR_PASSWORD: ${{ secrets.HARBOR_ROBOT_SECRET }}
+        run: |
+          if [ -z "$HARBOR_USERNAME" ] || [ -z "$HARBOR_PASSWORD" ]; then
+            echo "HARBOR_ROBOT_USERNAME and HARBOR_ROBOT_SECRET are required for Harbor publishes." >&2
+            exit 1
+          fi
+
+      - name: Log in to Harbor Registry
+        if: needs.prepare.outputs.publish_harbor == 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.HARBOR_REGISTRY }}
+          username: ${{ secrets.HARBOR_ROBOT_USERNAME }}
+          password: ${{ secrets.HARBOR_ROBOT_SECRET }}
+
+      - name: Publish Harbor runtime multi-arch manifests
+        env:
+          DOCKER_CLI_EXPERIMENTAL: enabled
+        run: |
+          set -euo pipefail
+
+          chmod 0755 applications/harbor/scripts/build-multiarch.sh
+
+          publish_manifests() {
+            local namespace="$1"
+            local path_mode="$2"
+
+            applications/harbor/scripts/build-multiarch.sh \
+              --manifest-only \
+              --namespace "${namespace}" \
+              --tag "${{ needs.prepare.outputs.version }}" \
+              --path-mode "${path_mode}" \
+              --platforms "${{ needs.prepare.outputs.platforms }}"
+          }
+
+          if [ "${{ needs.prepare.outputs.publish_github }}" = "true" ]; then
+            publish_manifests "${GHCR_NAMESPACE}" "namespace-component"
+          fi
+
+          if [ "${{ needs.prepare.outputs.publish_harbor }}" = "true" ]; then
+            publish_manifests "${HARBOR_REGISTRY}" "project-per-image"
           fi
