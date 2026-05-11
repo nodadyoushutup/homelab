@@ -49,6 +49,11 @@ Options:
   --manifest-only          Skip builds; create and push multi-arch manifests for existing per-arch tags
   --install-binfmt         Install qemu/binfmt via tonistiigi/binfmt before build
   -h, --help               Show this help
+
+Environment:
+  HARBOR_BUILD_TMP_PARENT  Existing directory for Harbor clones (default: GITHUB_WORKSPACE,
+                           else RUNNER_TEMP, TMPDIR, /tmp). Use when Docker bind mounts must
+                           resolve on the engine host (CI / nested Docker).
 USAGE
 }
 
@@ -153,6 +158,29 @@ fi
 if command -v make >/dev/null 2>&1 && command -v go >/dev/null 2>&1; then
   HAS_HOST_MAKE="1"
 fi
+
+# Docker bind-mounts source paths from the engine host. Clones under job-local /tmp do not
+# exist on that host, so `docker run -v "$repo:$repo"` sees an empty directory (no Makefile).
+# GitHub Actions bind-mounts GITHUB_WORKSPACE (and usually RUNNER_TEMP) from the host.
+harbor_temp_parent_dir() {
+  if [[ -n "${HARBOR_BUILD_TMP_PARENT:-}" && -d "${HARBOR_BUILD_TMP_PARENT}" ]]; then
+    printf '%s\n' "${HARBOR_BUILD_TMP_PARENT}"
+    return 0
+  fi
+  if [[ -n "${GITHUB_WORKSPACE:-}" && -d "${GITHUB_WORKSPACE}" ]]; then
+    printf '%s\n' "${GITHUB_WORKSPACE}"
+    return 0
+  fi
+  if [[ -n "${RUNNER_TEMP:-}" && -d "${RUNNER_TEMP}" ]]; then
+    printf '%s\n' "${RUNNER_TEMP}"
+    return 0
+  fi
+  if [[ -n "${TMPDIR:-}" && -d "${TMPDIR}" ]]; then
+    printf '%s\n' "${TMPDIR}"
+    return 0
+  fi
+  printf '%s\n' "/tmp"
+}
 
 runtime_images=(
   harbor-core
@@ -291,12 +319,14 @@ build_for_platform() {
   fi
 
   local arch_tag="${HARBOR_IMAGE_TAG}-${arch}"
-  local workdir repo_dir
-  workdir="$(mktemp -d)"
+  local workdir repo_dir temp_parent
+  temp_parent="$(harbor_temp_parent_dir)"
+  workdir="$(mktemp -d "${temp_parent}/harbor-build.XXXXXX")"
   repo_dir="${workdir}/harbor"
 
   trap 'rm -rf "${workdir}"' RETURN
 
+  echo "[INFO] Harbor build dir: ${workdir} (temp parent: ${temp_parent})"
   echo "[INFO] Cloning ${HARBOR_SOURCE_REPO} @ ${HARBOR_VERSION} for ${platform}"
   git clone --depth 1 --branch "${HARBOR_VERSION}" "${HARBOR_SOURCE_REPO}" "${repo_dir}" >/dev/null
 
