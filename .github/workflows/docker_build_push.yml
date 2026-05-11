@@ -34,10 +34,8 @@ on:
           - harbor-runtime-set
           - mcp-bash-pipeline
           - mcp-cloudflare
-          - mcp-ast-grep
-          - mcp-filesystem
+          - mcp-code
           - mcp-fortigate
-          - mcp-git
           - mcp-github
           - mcp-google-workspace
           - mcp-atlassian
@@ -126,24 +124,15 @@ jobs:
               docker_context="applications/mcp-cloudflare"
               build_strategy="direct"
               ;;
-            mcp-ast-grep)
-              image_name="mcp-ast-grep"
-              docker_context="applications/mcp-ast-grep"
-              build_strategy="direct"
-              ;;
-            mcp-filesystem)
-              image_name="mcp-filesystem"
-              docker_context="applications/mcp-filesystem"
+            mcp-code)
+              image_name="mcp-code"
+              docker_context="."
+              dockerfile="applications/mcp-code/Dockerfile"
               build_strategy="direct"
               ;;
             mcp-fortigate)
               image_name="mcp-fortigate"
               docker_context="applications/mcp-fortigate"
-              build_strategy="direct"
-              ;;
-            mcp-git)
-              image_name="mcp-git"
-              docker_context="applications/mcp-git"
               build_strategy="direct"
               ;;
             mcp-github)
