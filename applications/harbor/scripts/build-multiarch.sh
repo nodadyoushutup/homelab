@@ -146,7 +146,11 @@ else
   done
 fi
 
-if command -v make >/dev/null 2>&1; then
+# Harbor's Makefile parses `$(shell go env GOPATH)` even for targets that compile inside
+# golang Docker images. Prefer host make only when both make and go exist; otherwise
+# keep using the docker CLI helper (apk installs make there). Installing only `make`
+# on a runner would skip the helper but still lack Go — noisy and unlike the intended path.
+if command -v make >/dev/null 2>&1 && command -v go >/dev/null 2>&1; then
   HAS_HOST_MAKE="1"
 fi
 
@@ -218,7 +222,7 @@ run_make_target() {
   if [[ "${HAS_HOST_MAKE}" == "1" ]]; then
     (
       cd "${repo_dir}"
-      env "${env_pairs[@]}" make -e "${target}"
+      env "TERM=${TERM:-xterm}" "${env_pairs[@]}" make -e "${target}"
     )
     return
   fi
@@ -249,7 +253,7 @@ run_make_target() {
   env_args+=(-e "DOCKER_HOST=unix:///var/run/docker.sock")
 
   if [[ "${MAKE_HELPER_ANNOUNCED}" == "0" ]]; then
-    echo "[WARN] Host make not found; using ${MAKE_HELPER_IMAGE} helper container." >&2
+    echo "[WARN] Host make+go not both available; using ${MAKE_HELPER_IMAGE} helper container." >&2
     MAKE_HELPER_ANNOUNCED="1"
   fi
 
@@ -262,6 +266,7 @@ run_make_target() {
     -c '
       set -eu
       apk add --no-cache bash coreutils curl git make >/dev/null
+      export TERM="${TERM:-xterm}"
       git config --global --add safe.directory "$PWD"
       test -f Makefile || {
         echo "[ERR] No Makefile in $(pwd) (repo mount or working dir wrong)." >&2
@@ -294,6 +299,22 @@ build_for_platform() {
 
   echo "[INFO] Cloning ${HARBOR_SOURCE_REPO} @ ${HARBOR_VERSION} for ${platform}"
   git clone --depth 1 --branch "${HARBOR_VERSION}" "${HARBOR_SOURCE_REPO}" "${repo_dir}" >/dev/null
+
+  # Spectral v6 may not pick up .spectral.yaml in some docker/CI runs; upstream invokes
+  # `spectral lint ./api/v2.0/swagger.yaml` without -r. Pin the ruleset path like the CLI docs recommend.
+  makefile="${repo_dir}/Makefile"
+  if [[ -f "${makefile}" ]] && grep -Fq '$(SPECTRAL) lint ./api/v2.0/swagger.yaml' "${makefile}" &&
+    ! grep -Fq '$(SPECTRAL) lint -r .spectral.yaml ./api/v2.0/swagger.yaml' "${makefile}"; then
+    python3 -c '
+import pathlib, sys
+p = pathlib.Path(sys.argv[1])
+text = p.read_text()
+old = "$(SPECTRAL) lint ./api/v2.0/swagger.yaml"
+new = "$(SPECTRAL) lint -r .spectral.yaml ./api/v2.0/swagger.yaml"
+if old in text and new not in text:
+    p.write_text(text.replace(old, new, 1))
+' "${makefile}"
+  fi
 
   pushd "${repo_dir}" >/dev/null
 
