@@ -1,6 +1,8 @@
 variable "provider_config" {
   description = "Provider configuration map for Docker (host + optional ssh opts)."
   type        = any
+
+  default     = {}
 }
 
 variable "github_runner_url" {
@@ -26,7 +28,7 @@ variable "github_runner_access_token" {
 variable "github_runner_image" {
   description = "Container image reference for the runner service (prefer published multi-arch tags)."
   type        = string
-  default     = "ghcr.io/nodadyoushutup/gha-runner:0.0.1"
+  default     = "ghcr.io/nodadyoushutup/gha-runner:0.0.2"
 }
 
 variable "github_runner_name" {
@@ -77,3 +79,37 @@ variable "github_runner_remove_token" {
   sensitive   = true
   default     = ""
 }
+
+variable "swarm_docker_provider_config" {
+  description = <<-EOT
+    Shared Docker SSH host and registry credentials (GHCR, Harbor, etc.).
+    Set in /mnt/eapp/config/providers/docker.tfvars; Swarm app pipelines source
+    scripts/terraform/swarm_docker_provider_tfvars_env.sh so terraform receives this file.
+    Merged with provider_config; per-stack tfvars override on key collision.
+  EOT
+  type        = any
+  default     = {}
+}
+
+locals {
+  provider_config = merge(var.swarm_docker_provider_config, var.provider_config)
+  docker_registry_auths = (
+    try(local.provider_config.registry_auths, null) != null
+    ? local.provider_config.registry_auths
+    : (
+      try(local.provider_config.registry_auth, null) != null
+      ? [local.provider_config.registry_auth]
+      : []
+    )
+  )
+  # docker_service allows only one auth block; pick the entry for this image's registry.
+  github_runner_registry_host = split("/", var.github_runner_image)[0]
+  runner_registry_matching_auths = [
+    for a in local.docker_registry_auths : a
+    if coalesce(try(a.address, null), "ghcr.io") == local.github_runner_registry_host
+  ]
+  docker_registry_auth_for_runner_image = (
+    length(local.runner_registry_matching_auths) > 0 ? local.runner_registry_matching_auths[0] : null
+  )
+}
+

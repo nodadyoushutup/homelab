@@ -2,7 +2,7 @@ resource "docker_service" "gha_runner" {
   name = "gha-runner-arm64"
 
   dynamic "auth" {
-    for_each = try(var.provider_config.registry_auth, null) == null ? [] : [var.provider_config.registry_auth]
+    for_each = local.docker_registry_auth_for_runner_image != null ? [local.docker_registry_auth_for_runner_image] : []
 
     content {
       server_address = try(auth.value.address, "ghcr.io")

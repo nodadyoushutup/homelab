@@ -20,7 +20,7 @@ module "mcp_terraform" {
   service_name          = local.service_name
   image_reference       = var.image_reference
   registry_address      = "harbor.nodadyoushutup.com"
-  registry_auth         = var.registry_auth
+  registry_auths        = local.docker_registry_auths
   internal_port         = 8080
   published_port        = var.published_port
   endpoint_host         = var.endpoint_host

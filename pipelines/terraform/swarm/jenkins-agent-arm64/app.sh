@@ -41,11 +41,17 @@ terraform_console_string() {
   local expression="$1"
   local console_output
   local python_cmd="${PYTHON_CMD:-python3}"
+  local -a var_args=()
 
   ensure_terraform_console_ready
 
+  if [[ -n "${DOCKER_PROVIDER_TFVARS_PATH:-}" && -f "${DOCKER_PROVIDER_TFVARS_PATH}" ]]; then
+    var_args+=(-var-file "${DOCKER_PROVIDER_TFVARS_PATH}")
+  fi
+  var_args+=(-var-file "${TFVARS_PATH}")
+
   if ! console_output="$(
-    printf '%s\n' "${expression}" | terraform -chdir="${TERRAFORM_DIR}" console -var-file="${TFVARS_PATH}" 2>/dev/null
+    printf '%s\n' "${expression}" | terraform -chdir="${TERRAFORM_DIR}" console "${var_args[@]}" 2>/dev/null
   )"; then
     echo "[ERR] Unable to evaluate Terraform expression for Jenkins agent validation: ${expression}" >&2
     exit 1
@@ -76,9 +82,58 @@ load_registry_auth_from_terraform() {
     return 0
   fi
 
-  REGISTRY_AUTH_ADDRESS="$(terraform_console_string 'try(var.provider_config.registry_auth.address, "")')"
-  REGISTRY_AUTH_USERNAME="$(terraform_console_string 'try(var.provider_config.registry_auth.username, "")')"
-  REGISTRY_AUTH_PASSWORD="$(terraform_console_string 'try(var.provider_config.registry_auth.password, "")')"
+  local agent_image reg_host auths_json python_cmd
+  python_cmd="${PYTHON_CMD:-python3}"
+  agent_image="$(resolve_agent_image_from_terraform)"
+  reg_host="$(registry_address_from_image "${agent_image}")"
+  if [[ -z "${reg_host}" ]]; then
+    reg_host="docker.io"
+  fi
+
+  local -a var_args=()
+  if [[ -n "${DOCKER_PROVIDER_TFVARS_PATH:-}" && -f "${DOCKER_PROVIDER_TFVARS_PATH}" ]]; then
+    var_args+=(-var-file "${DOCKER_PROVIDER_TFVARS_PATH}")
+  fi
+  var_args+=(-var-file "${TFVARS_PATH}")
+
+  auths_json="$(printf '%s\n' 'jsonencode(local.docker_registry_auths)' | terraform -chdir="${TERRAFORM_DIR}" console "${var_args[@]}" 2>/dev/null || true)"
+  if [[ -z "${auths_json}" ]]; then
+    return 0
+  fi
+
+  local -a _creds=()
+  mapfile -t _creds < <(
+    REG_HOST="${reg_host}" "${python_cmd}" <<'PY' <<<"${auths_json}"
+import json, os, sys
+raw = sys.stdin.read().strip()
+if not raw:
+    sys.exit(0)
+try:
+    auths = json.loads(raw)
+except json.JSONDecodeError:
+    sys.exit(0)
+if not isinstance(auths, list) or not auths:
+    sys.exit(0)
+reg = os.environ.get("REG_HOST", "").lower().strip()
+pick = None
+for a in auths:
+    addr = (a.get("address") or "ghcr.io").lower()
+    if addr == reg:
+        pick = a
+        break
+if pick is None:
+    pick = auths[0]
+print(pick.get("address") or "")
+print(pick.get("username") or "")
+print(pick.get("password") or "")
+PY
+  ) || true
+  if [[ ${#_creds[@]} -lt 3 ]]; then
+    return 0
+  fi
+  REGISTRY_AUTH_ADDRESS="${_creds[0]}"
+  REGISTRY_AUTH_USERNAME="${_creds[1]}"
+  REGISTRY_AUTH_PASSWORD="${_creds[2]}"
 }
 
 registry_address_from_image() {
@@ -193,4 +248,7 @@ pipeline_pre_terraform() {
 
 PIPELINE_ARGS=("$@")
 
+
+# shellcheck source=/dev/null
+source "${PIPELINE_SCRIPT_ROOT}/swarm_docker_provider_tfvars_env.sh"
 source "${PIPELINE_SCRIPT_ROOT}/swarm_pipeline.sh"

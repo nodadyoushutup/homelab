@@ -120,6 +120,9 @@ PIPELINE_ARGS=()
 
 vault_preflight_port_check
 
+
+# shellcheck source=/dev/null
+source "${PIPELINE_SCRIPT_ROOT}/swarm_docker_provider_tfvars_env.sh"
 source "${PIPELINE_SCRIPT_ROOT}/swarm_pipeline.sh"
 
 if [[ ! -x "${VAULT_BOOTSTRAP_SCRIPT}" ]]; then

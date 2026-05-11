@@ -9,6 +9,13 @@ terraform {
 
 locals {
   network_name = coalesce(var.network_name, var.service_name)
+  service_registry_auths = (
+    try(var.registry_auths, null) != null
+    ? var.registry_auths
+    : (
+      try(var.registry_auth, null) != null ? [var.registry_auth] : []
+    )
+  )
 }
 
 resource "docker_network" "this" {
@@ -20,7 +27,7 @@ resource "docker_service" "this" {
   name = var.service_name
 
   dynamic "auth" {
-    for_each = var.registry_auth == null ? [] : [var.registry_auth]
+    for_each = local.service_registry_auths
 
     content {
       server_address = try(auth.value.address, var.registry_address)

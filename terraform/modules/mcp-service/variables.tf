@@ -20,8 +20,15 @@ variable "registry_address" {
   default     = null
 }
 
+variable "registry_auths" {
+  description = "Optional list of registry auth objects { address?, username, password } for multi-registry pulls (e.g. GHCR + Harbor)."
+  type        = list(any)
+  default     = null
+  sensitive   = true
+}
+
 variable "registry_auth" {
-  description = "Optional service-level registry auth object with address, username, and password."
+  description = "Deprecated: single registry auth; prefer registry_auths. When registry_auths is null, this is wrapped as a one-element list."
   type        = any
   default     = null
   sensitive   = true

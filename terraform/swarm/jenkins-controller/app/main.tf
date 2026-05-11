@@ -34,7 +34,7 @@ resource "docker_service" "jenkins_controller" {
   name = var.service_name
 
   dynamic "auth" {
-    for_each = try(var.provider_config.registry_auth, null) == null ? [] : [var.provider_config.registry_auth]
+    for_each = local.docker_registry_auths
 
     content {
       server_address = try(auth.value.address, "ghcr.io")

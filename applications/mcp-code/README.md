@@ -24,7 +24,7 @@ Arm64 Swarm nodes (from repo root, after `HARBOR_USERNAME` / `HARBOR_PASSWORD` a
 ./scripts/agents/publish_mcp_code_harbor.sh
 ```
 
-Then `terraform apply` in `terraform/swarm/mcp-code/app/` with your `provider_config` / `registry_auth` (see `docs/workflows/docker-build-github-actions.md` for the full publish discipline).
+Then run `pipelines/terraform/swarm/mcp-code/app.sh` (uses `/mnt/eapp/config/providers/docker.tfvars` for `swarm_docker_provider_config`; see `docs/workflows/docker-build-github-actions.md` for publish discipline).
 
 ## Runtime
 

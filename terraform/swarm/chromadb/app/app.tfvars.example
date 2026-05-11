@@ -1,15 +1,8 @@
-provider_config = {
-  docker = {
-    host = "ssh://nodadyoushutup@192.168.1.120"
-    ssh_opts = [
-      "-o", "StrictHostKeyChecking=no",
-      "-o", "UserKnownHostsFile=/mnt/eapp/config/.ssh/known_hosts",
-      "-i", "/mnt/eapp/config/.ssh/id_ed25519",
-    ]
-  }
-}
+# Copy to /mnt/eapp/config/chromadb/app.tfvars (or pass via --tfvars).
+#
+# Docker SSH + registry credentials: /mnt/eapp/config/providers/docker.tfvars
+# (`swarm_docker_provider_config`). Override via `provider_config` in this file if needed.
 
-image_reference  = "chromadb/chroma:latest@sha256:bd21353aee6ccdf4a57bd91e6001626826700f3838e1f230d4aae75bfd4889a1"
-published_port   = 8000
-endpoint_host     = "192.168.1.120"
-data_volume_name = "chromadb-data"
+image_reference = "chromadb/chroma:latest@sha256:bd21353aee6ccdf4a57bd91e6001626826700f3838e1f230d4aae75bfd4889a1"
+published_port  = 8000
+endpoint_host   = "192.168.1.120"

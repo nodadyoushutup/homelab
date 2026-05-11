@@ -43,7 +43,7 @@ resource "docker_service" "mcp_rag" {
   name = local.service_name
 
   dynamic "auth" {
-    for_each = try(var.provider_config.registry_auth, null) == null ? [] : [var.provider_config.registry_auth]
+    for_each = local.docker_registry_auths
 
     content {
       server_address = try(auth.value.address, "harbor.nodadyoushutup.com")

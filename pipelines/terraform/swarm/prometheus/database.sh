@@ -27,4 +27,7 @@ APPLY_ARGS_EXTRA=()
 
 PIPELINE_ARGS=("$@")
 
+
+# shellcheck source=/dev/null
+source "${PIPELINE_SCRIPT_ROOT}/swarm_docker_provider_tfvars_env.sh"
 source "${PIPELINE_SCRIPT_ROOT}/swarm_pipeline.sh"

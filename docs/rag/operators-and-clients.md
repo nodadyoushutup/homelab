@@ -14,7 +14,7 @@ Tfvars typically live under **`/mnt/eapp/config/<name>/app.tfvars`** (same patte
 
 **Published ports (Terraform defaults on the Swarm host):** ChromaDB HTTP **`published_port`** default **8000** (see **`terraform/swarm/chromadb/app/variables.tf`**), **`rag-engine` → 9015**, **`mcp-rag` → 9016**. Adjust in tfvars if your host uses different ingress ports.
 
-**Images:** publish with **`.github/workflows/docker_build_push.yml`** (`build_target` **`rag-engine`** or **`mcp-rag`**; **`target_registry`** **`github`** or **`both`** for GHCR under your GitHub username; **`arm64`** when possible). Point **`image_reference`** in tfvars at the tag you pushed (for example **`ghcr.io/nodadyoushutup/rag-engine:latest`**). Private GHCR pulls: add **`provider_config.registry_auth`** `{ address?, username, password }` (same nesting as **`terraform/swarm/gha-runner-arm64`** / **`chromadb`**).
+**Images:** publish with **`.github/workflows/docker_build_push.yml`** (`build_target` **`rag-engine`** or **`mcp-rag`**; **`target_registry`** **`github`** or **`both`** for GHCR under your GitHub username; **`arm64`** when possible). Point **`image_reference`** in tfvars at the tag you pushed (for example **`ghcr.io/nodadyoushutup/rag-engine:latest`**). Private registry pulls: set **`registry_auths`** (or legacy **`registry_auth`**) under **`swarm_docker_provider_config`** in **`/mnt/eapp/config/providers/docker.tfvars`** (GHCR + Harbor supported together).
 
 Operational note: `tree-sitter-dockerfile` is not installed as a runtime dependency because it does not publish usable wheels on **linux/arm64**; Dockerfile ingestion falls back to other chunking strategies when the grammar is unavailable.
 

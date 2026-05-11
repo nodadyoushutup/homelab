@@ -12,11 +12,11 @@ terraform {
 }
 
 provider "docker" {
-  host     = var.provider_config.docker.host
-  ssh_opts = var.provider_config.docker.ssh_opts
+  host     = local.provider_config.docker.host
+  ssh_opts = local.provider_config.docker.ssh_opts
 
   dynamic "registry_auth" {
-    for_each = var.registry_auth == null ? [] : [var.registry_auth]
+    for_each = local.docker_registry_auths
 
     content {
       address  = try(registry_auth.value.address, "ghcr.io")

@@ -145,6 +145,16 @@ fi
 echo "TFVARS file: ${TFVARS_PATH}"
 echo "Backend config: ${BACKEND_CONFIG_PATH}"
 
+SWARM_DOCKER_TFVARS_PREFIX=()
+if [[ -n "${SWARM_DOCKER_PROVIDER_TFVARS:-}" && -f "${SWARM_DOCKER_PROVIDER_TFVARS}" ]]; then
+  SWARM_DOCKER_TFVARS_PREFIX=(-var-file "${SWARM_DOCKER_PROVIDER_TFVARS}")
+  echo "Swarm Docker provider tfvars: ${SWARM_DOCKER_PROVIDER_TFVARS}"
+  export DOCKER_PROVIDER_TFVARS_PATH="${SWARM_DOCKER_PROVIDER_TFVARS}"
+else
+  DOCKER_PROVIDER_TFVARS_PATH=""
+  export DOCKER_PROVIDER_TFVARS_PATH
+fi
+
 if declare -F pipeline_pre_terraform > /dev/null; then
   pipeline_pre_terraform
 fi
@@ -202,10 +212,10 @@ if ! declare -p APPLY_ARGS_EXTRA >/dev/null 2>&1; then
   APPLY_ARGS_EXTRA=()
 fi
 
-PLAN_ARGS=(-input=false -var-file "${TFVARS_PATH}")
+PLAN_ARGS=(-input=false "${SWARM_DOCKER_TFVARS_PREFIX[@]}" -var-file "${TFVARS_PATH}")
 PLAN_ARGS+=("${PLAN_ARGS_EXTRA[@]}")
 
-APPLY_ARGS=(-input=false -auto-approve -var-file "${TFVARS_PATH}")
+APPLY_ARGS=(-input=false -auto-approve "${SWARM_DOCKER_TFVARS_PREFIX[@]}" -var-file "${TFVARS_PATH}")
 APPLY_ARGS+=("${APPLY_ARGS_EXTRA[@]}")
 
 echo "[STAGE] ${STAGE_NAME} plan"

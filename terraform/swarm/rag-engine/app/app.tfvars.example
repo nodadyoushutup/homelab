@@ -4,23 +4,9 @@
 # `arm64` or `both`. Typical GHCR refs: `ghcr.io/<owner>/rag-engine:latest` or
 # `:<version>` / `:<version>-arm64`. Harbor (if mirrored): mirror path in Harbor.
 #
-# Private GHCR: add `registry_auth` inside `provider_config` below (same shape as
-# chromadb / gha-runner-arm64). Omit `address` to default `ghcr.io`.
-#
-#   provider_config = { docker = {…}, registry_auth = { username = "…", password = "…" } }
-
-provider_config = {
-  docker = {
-    host = "ssh://nodadyoushutup@192.168.1.120"
-    ssh_opts = [
-      "-o", "StrictHostKeyChecking=no",
-      "-o", "UserKnownHostsFile=/mnt/eapp/config/.ssh/known_hosts",
-      "-i", "/mnt/eapp/config/.ssh/id_ed25519",
-    ]
-  }
-
-  # registry_auth = { username = "…", password = "…" }
-}
+# Docker SSH host + registry auth (GHCR, Harbor, …) live in
+# `/mnt/eapp/config/providers/docker.tfvars` as `swarm_docker_provider_config`.
+# Optional: set `provider_config` here to override keys from that file.
 
 image_reference     = "ghcr.io/nodadyoushutup/rag-engine:0.0.6"
 published_port      = 9015

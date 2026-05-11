@@ -1,13 +1,5 @@
-provider_config = {
-  docker = {
-    host     = "ssh://nodadyoushutup@192.168.1.120"
-    ssh_opts = [
-      "-o", "StrictHostKeyChecking=accept-new",
-      "-o", "UserKnownHostsFile=/mnt/eapp/config/.ssh/known_hosts",
-      "-i", "/mnt/eapp/config/.ssh/id_ed25519",
-    ]
-  }
-}
+# Docker SSH + optional registry auth for Harbor component images:
+# /mnt/eapp/config/providers/docker.tfvars (`swarm_docker_provider_config`).
 
 # Keep these aligned with the host where Harbor data/config currently live.
 harbor_install_path = "/mnt/eapp/harbor-manual/harbor"

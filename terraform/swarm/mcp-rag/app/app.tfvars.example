@@ -1,28 +1,8 @@
-# See `rag-engine/app/app.tfvars.example` for the GitHub Actions build/push flow.
-# Deploy `rag-engine` before or with `mcp-rag` so the `rag-engine` overlay exists.
+# Copy to /mnt/eapp/config/mcp-rag/app.tfvars (or pass via --tfvars).
 #
-# Optional private registry: nest `registry_auth` under `provider_config` (same as
-# chromadb / gha-runner). Default `address` when omitted is Harbor for this image.
+# Docker SSH + registry credentials: /mnt/eapp/config/providers/docker.tfvars
+# (`swarm_docker_provider_config`), including Harbor and/or GHCR entries.
 
-provider_config = {
-  docker = {
-    host = "ssh://nodadyoushutup@192.168.1.120"
-    ssh_opts = [
-      "-o", "StrictHostKeyChecking=no",
-      "-o", "UserKnownHostsFile=/mnt/eapp/config/.ssh/known_hosts",
-      "-i", "/mnt/eapp/config/.ssh/id_ed25519",
-    ]
-  }
-
-  # registry_auth = { username = "robot$harbor", password = "…" }
-}
-
-image_reference = "harbor.nodadyoushutup.com/mcp-rag/mcp-rag:latest"
+image_reference = "harbor.nodadyoushutup.com/nodadyoushutup/mcp-rag:latest"
 published_port  = 9016
 endpoint_host   = "192.168.1.120"
-env_file_path   = "/mnt/eapp/code/homelab/.secrets/.env"
-
-env = {
-  RAG_ENGINE_API_KEY = "replace-me"
-  MCP_RAG_API_KEY    = "replace-me"
-}

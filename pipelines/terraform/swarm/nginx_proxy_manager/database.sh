@@ -155,4 +155,7 @@ pipeline_pre_terraform() {
   ensure_app_state_exists
 }
 
+
+# shellcheck source=/dev/null
+source "${PIPELINE_SCRIPT_ROOT}/swarm_docker_provider_tfvars_env.sh"
 source "${PIPELINE_SCRIPT_ROOT}/swarm_pipeline.sh"

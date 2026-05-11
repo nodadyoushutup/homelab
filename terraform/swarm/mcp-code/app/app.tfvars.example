@@ -1,25 +1,8 @@
 # Copy to /mnt/eapp/config/mcp-code/app.tfvars (or pass via --tfvars).
 # Build/push: `.github/workflows/docker_build_push.yml` → `mcp-code` → GHCR.
 #
-# Private GHCR: PAT with `read:packages` (classic) or fine-grained packages read.
-# `username` = GitHub username; `password` = the token. Omit `address` to default `ghcr.io`.
-
-provider_config = {
-  docker = {
-    host = "ssh://nodadyoushutup@192.168.1.120"
-    ssh_opts = [
-      "-o", "StrictHostKeyChecking=no",
-      "-o", "UserKnownHostsFile=/mnt/eapp/config/.ssh/known_hosts",
-      "-i", "/mnt/eapp/config/.ssh/id_ed25519",
-    ]
-  }
-}
-
-registry_auth = {
-  # address  = "ghcr.io"
-  username = "replace-github-username"
-  password = "replace-ghcr-read-token"
-}
+# Docker SSH + registry auth: /mnt/eapp/config/providers/docker.tfvars
+# Private GHCR: PAT with `read:packages`; Harbor: add a second entry under registry_auths there.
 
 image_reference    = "ghcr.io/nodadyoushutup/mcp-code:0.0.2"
 published_port     = 18212
