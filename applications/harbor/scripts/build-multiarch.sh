@@ -226,6 +226,8 @@ run_make_target() {
   local -a docker_args env_args
   docker_args=(
     --rm
+    # Official docker:*-cli entrypoint rewrites argv (docker help "$1"); run plain sh.
+    --entrypoint sh
     -v /var/run/docker.sock:/var/run/docker.sock
     # Harbor's make targets launch nested docker builds through the host daemon.
     # Mount the repo at the same absolute host path so those nested bind mounts
@@ -243,19 +245,33 @@ run_make_target() {
     env_args+=(-e "${pair}")
   done
 
+  # Entrypoint bypass skips auto DOCKER_HOST; socket is mounted at the default path.
+  env_args+=(-e "DOCKER_HOST=unix:///var/run/docker.sock")
+
   if [[ "${MAKE_HELPER_ANNOUNCED}" == "0" ]]; then
     echo "[WARN] Host make not found; using ${MAKE_HELPER_IMAGE} helper container." >&2
     MAKE_HELPER_ANNOUNCED="1"
   fi
 
+  # Pass the make goal via sh -c positional args (POSIX: sh -c '...' name arg1 → $1=arg1).
+  # Avoid -l (login) and env-only passing; both broke compile vs build on some runners.
   docker run \
     "${docker_args[@]}" \
     "${env_args[@]}" \
     "${MAKE_HELPER_IMAGE}" \
-    sh -lc '
+    -c '
+      set -eu
       apk add --no-cache bash coreutils curl git make >/dev/null
       git config --global --add safe.directory "$PWD"
-      make -e "$1"
+      test -f Makefile || {
+        echo "[ERR] No Makefile in $(pwd) (repo mount or working dir wrong)." >&2
+        exit 1
+      }
+      if [ -z "${1:-}" ]; then
+        echo "[ERR] make goal missing (helper argv bug)." >&2
+        exit 1
+      fi
+      exec make -e "$1"
     ' _ "${target}"
 }
 
