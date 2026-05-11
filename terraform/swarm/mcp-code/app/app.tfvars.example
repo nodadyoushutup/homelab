@@ -21,7 +21,7 @@ registry_auth = {
   password = "replace-ghcr-read-token"
 }
 
-image_reference    = "ghcr.io/nodadyoushutup/mcp-code:latest"
+image_reference    = "ghcr.io/nodadyoushutup/mcp-code:0.0.2"
 published_port     = 18212
 endpoint_host      = "192.168.1.120"
 # placement_constraints = ["node.labels.role==swarm-cp-0"]
