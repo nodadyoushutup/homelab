@@ -32,10 +32,10 @@ on:
           - tcg
           - none
       build_arch:
-        description: "Architecture to build"
+        description: "Architecture to build (native runner per arch; both matches Docker split-build pattern)"
         required: true
         type: choice
-        default: amd64
+        default: both
         options:
           - amd64
           - arm64
@@ -45,22 +45,22 @@ permissions:
   contents: read
 
 jobs:
-  build:
+  prepare:
     runs-on: [self-hosted, linux, homelab, amd64, kvm]
     outputs:
       version: ${{ steps.meta.outputs.version }}
-      artifact_name: ${{ steps.meta.outputs.artifact_name }}
       upload_base_url: ${{ steps.target.outputs.upload_base_url }}
       upload_fallback_base_url: ${{ steps.target.outputs.upload_fallback_base_url }}
+      build_amd64: ${{ steps.meta.outputs.build_amd64 }}
+      build_arm64: ${{ steps.meta.outputs.build_arm64 }}
+      amd64_accelerator: ${{ steps.meta.outputs.amd64_accelerator }}
+      arm64_accelerator: ${{ steps.meta.outputs.arm64_accelerator }}
+
     env:
       VERSION: ${{ github.event.inputs.version }}
       AMD64_ACCELERATOR: ${{ github.event.inputs.amd64_accelerator }}
       ARM64_ACCELERATOR: ${{ github.event.inputs.arm64_accelerator }}
       BUILD_ARCH: ${{ github.event.inputs.build_arch }}
-      PACKER_DIR: packer
-      PACKER_TEMPLATE: packer/ubuntu-24.04-ndysu.pkr.hcl
-      PACKER_OUTPUT_DIR: packer/output/ubuntu-24.04-ndysu/${{ github.event.inputs.version }}
-      MAX_UPLOAD_BYTES: "26843545600" # 25 GiB
     defaults:
       run:
         shell: bash
@@ -73,8 +73,41 @@ jobs:
         id: meta
         run: |
           set -euo pipefail
+          [[ "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
+            echo "Invalid version '${VERSION}'. Expected semantic version like 0.0.1." >&2
+            exit 1
+          }
+          [[ "${AMD64_ACCELERATOR}" == "kvm" || "${AMD64_ACCELERATOR}" == "tcg" || "${AMD64_ACCELERATOR}" == "none" ]] || {
+            echo "Invalid accelerator '${AMD64_ACCELERATOR}'. Expected 'kvm', 'tcg', or 'none'." >&2
+            exit 1
+          }
+          [[ "${ARM64_ACCELERATOR}" == "kvm" || "${ARM64_ACCELERATOR}" == "tcg" || "${ARM64_ACCELERATOR}" == "none" ]] || {
+            echo "Invalid accelerator '${ARM64_ACCELERATOR}'. Expected 'kvm', 'tcg', or 'none'." >&2
+            exit 1
+          }
+          [[ "${BUILD_ARCH}" == "amd64" || "${BUILD_ARCH}" == "arm64" || "${BUILD_ARCH}" == "both" ]] || {
+            echo "Invalid build_arch '${BUILD_ARCH}'. Expected 'amd64', 'arm64', or 'both'." >&2
+            exit 1
+          }
+
+          build_amd64=false
+          build_arm64=false
+          case "${BUILD_ARCH}" in
+            amd64) build_amd64=true ;;
+            arm64) build_arm64=true ;;
+            both)
+              build_amd64=true
+              build_arm64=true
+              ;;
+          esac
+
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
-          echo "artifact_name=packer-qcow2-${VERSION}-${BUILD_ARCH}" >> "$GITHUB_OUTPUT"
+          echo "build_amd64=${build_amd64}" >> "$GITHUB_OUTPUT"
+          echo "build_arm64=${build_arm64}" >> "$GITHUB_OUTPUT"
+          echo "amd64_accelerator=${AMD64_ACCELERATOR}" >> "$GITHUB_OUTPUT"
+          echo "arm64_accelerator=${ARM64_ACCELERATOR}" >> "$GITHUB_OUTPUT"
+
+          echo "::notice::Packer build matrix: amd64=${build_amd64} arm64=${build_arm64} (dispatch build_arch=${BUILD_ARCH})"
 
       - name: Resolve publish target
         id: target
@@ -98,65 +131,58 @@ jobs:
 
           echo "::notice::Resolved packer target '${target}' -> ${upload_base_url}"
 
+  build_packer_amd64:
+    needs: prepare
+    if: needs.prepare.outputs.build_amd64 == 'true'
+    runs-on: [self-hosted, linux, homelab, amd64, kvm]
+    env:
+      VERSION: ${{ needs.prepare.outputs.version }}
+      AMD64_ACCELERATOR: ${{ needs.prepare.outputs.amd64_accelerator }}
+      ARM64_ACCELERATOR: ${{ needs.prepare.outputs.arm64_accelerator }}
+      PACKER_DIR: packer
+      PACKER_OUTPUT_DIR: packer/output/ubuntu-24.04-ndysu/${{ needs.prepare.outputs.version }}
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v6
+
       - name: Validate toolchain
         run: |
           set -euo pipefail
           command -v packer >/dev/null 2>&1
           command -v xorriso >/dev/null 2>&1
           command -v qemu-img >/dev/null 2>&1
-          if [[ "${BUILD_ARCH}" == "amd64" || "${BUILD_ARCH}" == "both" ]]; then
-            command -v qemu-system-x86_64 >/dev/null 2>&1
-          fi
-          if [[ "${BUILD_ARCH}" == "arm64" || "${BUILD_ARCH}" == "both" ]]; then
-            command -v qemu-system-aarch64 >/dev/null 2>&1
-          fi
+          command -v qemu-system-x86_64 >/dev/null 2>&1
           command -v curl >/dev/null 2>&1
           command -v jq >/dev/null 2>&1
 
-      - name: Build stage - Packer image artifacts
+      - name: Build stage - Packer AMD64 image
         run: |
           set -euo pipefail
-          [[ "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
-            echo "Invalid version '${VERSION}'. Expected semantic version like 0.0.1." >&2
-            exit 1
-          }
-          [[ "${AMD64_ACCELERATOR}" == "kvm" || "${AMD64_ACCELERATOR}" == "tcg" || "${AMD64_ACCELERATOR}" == "none" ]] || {
-            echo "Invalid accelerator '${AMD64_ACCELERATOR}'. Expected 'kvm', 'tcg', or 'none'." >&2
-            exit 1
-          }
-          [[ "${ARM64_ACCELERATOR}" == "kvm" || "${ARM64_ACCELERATOR}" == "tcg" || "${ARM64_ACCELERATOR}" == "none" ]] || {
-            echo "Invalid accelerator '${ARM64_ACCELERATOR}'. Expected 'kvm', 'tcg', or 'none'." >&2
-            exit 1
-          }
-          [[ "${BUILD_ARCH}" == "amd64" || "${BUILD_ARCH}" == "arm64" || "${BUILD_ARCH}" == "both" ]] || {
-            echo "Invalid build_arch '${BUILD_ARCH}'. Expected 'amd64', 'arm64', or 'both'." >&2
-            exit 1
-          }
-
-          PACKER_ONLY_ARGS=()
-          case "${BUILD_ARCH}" in
-            amd64)
-              PACKER_ONLY_ARGS=(-only=ubuntu-24.04-ndysu.qemu.ubuntu_24_04_amd64)
-              ;;
-            arm64)
-              PACKER_ONLY_ARGS=(-only=ubuntu-24.04-ndysu.qemu.ubuntu_24_04_arm64)
-              ;;
-            both)
-              ;;
-          esac
+          PACKER_ONLY_ARGS=(-only=ubuntu-24.04-ndysu.qemu.ubuntu_24_04_amd64)
 
           cd "${PACKER_DIR}"
           rm -rf "output/ubuntu-24.04-ndysu/${VERSION}"
 
           packer init "ubuntu-24.04-ndysu.pkr.hcl"
           packer fmt "ubuntu-24.04-ndysu.pkr.hcl"
-          packer validate "${PACKER_ONLY_ARGS[@]}" -var "image_version=${VERSION}" -var "amd64_accelerator=${AMD64_ACCELERATOR}" -var "arm64_accelerator=${ARM64_ACCELERATOR}" "ubuntu-24.04-ndysu.pkr.hcl"
-          packer build -force "${PACKER_ONLY_ARGS[@]}" -var "image_version=${VERSION}" -var "amd64_accelerator=${AMD64_ACCELERATOR}" -var "arm64_accelerator=${ARM64_ACCELERATOR}" "ubuntu-24.04-ndysu.pkr.hcl"
+          packer validate "${PACKER_ONLY_ARGS[@]}" \
+            -var "image_version=${VERSION}" \
+            -var "amd64_accelerator=${AMD64_ACCELERATOR}" \
+            -var "arm64_accelerator=${ARM64_ACCELERATOR}" \
+            "ubuntu-24.04-ndysu.pkr.hcl"
+          packer build -force "${PACKER_ONLY_ARGS[@]}" \
+            -var "image_version=${VERSION}" \
+            -var "amd64_accelerator=${AMD64_ACCELERATOR}" \
+            -var "arm64_accelerator=${ARM64_ACCELERATOR}" \
+            "ubuntu-24.04-ndysu.pkr.hcl"
 
-      - name: Verify qcow2 artifacts are present
+      - name: Verify qcow2 artifact is present
         run: |
           set -euo pipefail
-
           mapfile -t artifacts < <(find "${PACKER_OUTPUT_DIR}" -type f -name '*.qcow2' | sort)
           [[ "${#artifacts[@]}" -gt 0 ]] || {
             echo "No qcow2 artifacts found under ${PACKER_OUTPUT_DIR}" >&2
@@ -166,28 +192,104 @@ jobs:
       - name: Upload qcow2 artifacts for push job
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.meta.outputs.artifact_name }}
+          name: packer-qcow2-${{ needs.prepare.outputs.version }}-amd64
+          path: ${{ env.PACKER_OUTPUT_DIR }}/**/*.qcow2
+          if-no-files-found: error
+          retention-days: 1
+
+  build_packer_arm64:
+    needs: prepare
+    if: needs.prepare.outputs.build_arm64 == 'true'
+    runs-on: [self-hosted, linux, homelab, arm64]
+    env:
+      VERSION: ${{ needs.prepare.outputs.version }}
+      AMD64_ACCELERATOR: ${{ needs.prepare.outputs.amd64_accelerator }}
+      ARM64_ACCELERATOR: ${{ needs.prepare.outputs.arm64_accelerator }}
+      PACKER_DIR: packer
+      PACKER_OUTPUT_DIR: packer/output/ubuntu-24.04-ndysu/${{ needs.prepare.outputs.version }}
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v6
+
+      - name: Validate toolchain
+        run: |
+          set -euo pipefail
+          command -v packer >/dev/null 2>&1
+          command -v xorriso >/dev/null 2>&1
+          command -v qemu-img >/dev/null 2>&1
+          command -v qemu-system-aarch64 >/dev/null 2>&1
+          command -v curl >/dev/null 2>&1
+          command -v jq >/dev/null 2>&1
+
+      - name: Build stage - Packer ARM64 image
+        run: |
+          set -euo pipefail
+          PACKER_ONLY_ARGS=(-only=ubuntu-24.04-ndysu.qemu.ubuntu_24_04_arm64)
+
+          cd "${PACKER_DIR}"
+          rm -rf "output/ubuntu-24.04-ndysu/${VERSION}"
+
+          packer init "ubuntu-24.04-ndysu.pkr.hcl"
+          packer fmt "ubuntu-24.04-ndysu.pkr.hcl"
+          packer validate "${PACKER_ONLY_ARGS[@]}" \
+            -var "image_version=${VERSION}" \
+            -var "amd64_accelerator=${AMD64_ACCELERATOR}" \
+            -var "arm64_accelerator=${ARM64_ACCELERATOR}" \
+            "ubuntu-24.04-ndysu.pkr.hcl"
+          packer build -force "${PACKER_ONLY_ARGS[@]}" \
+            -var "image_version=${VERSION}" \
+            -var "amd64_accelerator=${AMD64_ACCELERATOR}" \
+            -var "arm64_accelerator=${ARM64_ACCELERATOR}" \
+            "ubuntu-24.04-ndysu.pkr.hcl"
+
+      - name: Verify qcow2 artifact is present
+        run: |
+          set -euo pipefail
+          mapfile -t artifacts < <(find "${PACKER_OUTPUT_DIR}" -type f -name '*.qcow2' | sort)
+          [[ "${#artifacts[@]}" -gt 0 ]] || {
+            echo "No qcow2 artifacts found under ${PACKER_OUTPUT_DIR}" >&2
+            exit 1
+          }
+
+      - name: Upload qcow2 artifacts for push job
+        uses: actions/upload-artifact@v4
+        with:
+          name: packer-qcow2-${{ needs.prepare.outputs.version }}-arm64
           path: ${{ env.PACKER_OUTPUT_DIR }}/**/*.qcow2
           if-no-files-found: error
           retention-days: 1
 
   push:
+    needs:
+      - prepare
+      - build_packer_amd64
+      - build_packer_arm64
+    if: >
+      always() &&
+      needs.prepare.result == 'success' &&
+      needs.build_packer_amd64.result != 'failure' &&
+      needs.build_packer_amd64.result != 'cancelled' &&
+      needs.build_packer_arm64.result != 'failure' &&
+      needs.build_packer_arm64.result != 'cancelled'
     runs-on: [self-hosted, linux, homelab, amd64, kvm]
-    needs: build
     env:
-      VERSION: ${{ needs.build.outputs.version }}
-      PACKER_OUTPUT_DIR: packer/output/ubuntu-24.04-ndysu/${{ needs.build.outputs.version }}
+      VERSION: ${{ needs.prepare.outputs.version }}
       MAX_UPLOAD_BYTES: "26843545600" # 25 GiB
     defaults:
       run:
         shell: bash
 
     steps:
-      - name: Download qcow2 artifacts from build job
+      - name: Download qcow2 artifacts from build jobs
         uses: actions/download-artifact@v4
         with:
-          name: ${{ needs.build.outputs.artifact_name }}
-          path: ${{ env.PACKER_OUTPUT_DIR }}
+          pattern: packer-qcow2-${{ needs.prepare.outputs.version }}-*
+          merge-multiple: true
+          path: packer-artifacts
 
       - name: Validate upload toolchain
         run: |
@@ -197,14 +299,14 @@ jobs:
 
       - name: Push stage - Upload qcow2 artifacts
         env:
-          UPLOAD_BASE_URL: ${{ needs.build.outputs.upload_base_url }}
-          UPLOAD_FALLBACK_BASE_URL: ${{ needs.build.outputs.upload_fallback_base_url }}
+          UPLOAD_BASE_URL: ${{ needs.prepare.outputs.upload_base_url }}
+          UPLOAD_FALLBACK_BASE_URL: ${{ needs.prepare.outputs.upload_fallback_base_url }}
         run: |
           set -euo pipefail
 
-          mapfile -t artifacts < <(find "${PACKER_OUTPUT_DIR}" -type f -name '*.qcow2' | sort)
+          mapfile -t artifacts < <(find packer-artifacts -type f -name '*.qcow2' | sort)
           [[ "${#artifacts[@]}" -gt 0 ]] || {
-            echo "No qcow2 artifacts found under ${PACKER_OUTPUT_DIR}" >&2
+            echo "No qcow2 artifacts found under packer-artifacts" >&2
             exit 1
           }
 
