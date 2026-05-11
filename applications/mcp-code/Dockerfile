@@ -11,35 +11,16 @@ ENV DEBIAN_FRONTEND=noninteractive \
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-# Fast iteration: skip scripts/install/mcp_code_tooling.sh (NodeSource 22.x,
-# tree-sitter Dockerfile parser at /opt/ast-grep-parsers/dockerfile.so, build-essential).
-# ast-grep CLI (`sg`) is installed below; Dockerfile custom language in sgconfig still needs
-# the full script unless you add that .so another way. Uncomment the block below to match
-# production Swarm image exactly.
-#
-# COPY scripts/install/mcp_code_tooling.sh /tmp/mcp_code_tooling.sh
-# RUN chmod 0755 /tmp/mcp_code_tooling.sh \
-#   && /tmp/mcp_code_tooling.sh \
-#   && rm -f /tmp/mcp_code_tooling.sh
-
-RUN apt-get update -y \
-  && apt-get install -y --no-install-recommends \
-    ca-certificates \
-    curl \
-    git \
-    python3 \
-    python3-pip \
-    python3-venv \
-    nodejs \
-    npm \
-  && rm -rf /var/lib/apt/lists/*
-
+# Node 22 (NodeSource), MCP filesystem server, ast-grep CLI, tree-sitter-cli, and
+# /opt/ast-grep-parsers/dockerfile.so (required by sgconfig customLanguages).
+COPY scripts/install/mcp_code_tooling.sh /tmp/mcp_code_tooling.sh
+ARG MCP_FILESYSTEM_VERSION=2026.1.14
 ARG AST_GREP_CLI_VERSION=0.40.5
-RUN mkdir -p /opt/npm-global \
-  && npm install --global --prefix /opt/npm-global --omit=dev \
-    "@modelcontextprotocol/server-filesystem@2026.1.14" \
-    "@ast-grep/cli@${AST_GREP_CLI_VERSION}" \
-  && npm cache clean --force
+ENV MCP_FILESYSTEM_VERSION=${MCP_FILESYSTEM_VERSION} \
+    AST_GREP_CLI_VERSION=${AST_GREP_CLI_VERSION}
+RUN chmod 0755 /tmp/mcp_code_tooling.sh \
+  && /tmp/mcp_code_tooling.sh \
+  && rm -f /tmp/mcp_code_tooling.sh
 
 RUN python3 -m venv /opt/mcp-code-venv \
   && /opt/mcp-code-venv/bin/pip install --upgrade pip setuptools wheel
@@ -65,7 +46,7 @@ COPY applications/mcp-code/entrypoint.sh /usr/local/bin/mcp-code-entrypoint
 
 RUN chmod 0755 /usr/local/bin/mcp-code-entrypoint /opt/mcp-code/ast-grep-server.py \
   && mkdir -p /home/mcpcode \
-  && chown -R 1000:1000 /opt/mcp-proxy-venv /opt/mcp-code-venv /opt/mcp-code /opt/ast-grep-config /opt/npm-global /home/mcpcode
+  && chown -R 1000:1000 /opt/mcp-proxy-venv /opt/mcp-code-venv /opt/mcp-code /opt/ast-grep-config /opt/ast-grep-parsers /opt/npm-global /home/mcpcode
 
 USER 1000:1000
 WORKDIR /home/mcpcode

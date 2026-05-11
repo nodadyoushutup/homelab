@@ -7,6 +7,7 @@ from langchain.tools import tool
 
 from framework.configuration import resolve_repo_root
 from framework.middleware import McpWorkspaceBindingMiddleware
+from framework.mcp_support import CODE_TECH_LEAD_MCP_SERVERS_PATH
 from framework.mcp_support import DEFAULT_REPO_SEARCH_EXCLUDES
 from framework.mcp_support import load_workspace_routed_mcp_tools
 
@@ -43,7 +44,7 @@ class TechLeadAgent(BaseAgent):
             )
 
         mcp_tools = load_workspace_routed_mcp_tools(
-            self.app_dir / "mcp.json",
+            CODE_TECH_LEAD_MCP_SERVERS_PATH,
             wrap_profile="tech_lead",
             static_repo=self.repo_root,
         )

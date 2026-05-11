@@ -1,15 +1,1 @@
-{
-  "mcpServers": {
-    "mcp-code": {
-      "transport": "http",
-      "url": "https://mcp.code.nodadyoushutup.com/mcp",
-      "url_from_env": "HOMELAB_MCP_CODE_URL"
-    },
-    "mcp-rag": {
-      "transport": "http",
-      "url": "https://mcp.rag.nodadyoushutup.com/mcp",
-      "url_from_env": "HOMELAB_MCP_RAG_URL",
-      "x_api_key_from_env": "MCP_RAG_API_KEY"
-    }
-  }
-}
+../../../framework/code_tech_lead_mcp_servers.json

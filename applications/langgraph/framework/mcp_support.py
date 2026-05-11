@@ -58,6 +58,9 @@ AST_GREP_SEARCH_TOOL_NAMES = {
 DEFAULT_AST_GREP_MAX_RESULTS = 25
 MAX_AST_GREP_MAX_RESULTS = 50
 
+# Shared MCP servers for Code and Tech Lead (mcp-code workspace + mcp-rag); single file avoids drift.
+CODE_TECH_LEAD_MCP_SERVERS_PATH = Path(__file__).resolve().parent / "code_tech_lead_mcp_servers.json"
+
 JIRA_JSON_STRING_FIELDS_BY_TOOL = {
     "jira_create_issue": {"additional_fields"},
     "jira_update_issue": {"fields", "additional_fields", "attachments"},
@@ -186,8 +189,8 @@ def _recoverable_tool_error(tool_name: str, exc: Exception) -> list[dict[str, st
     return _text_blocks(json.dumps(payload, indent=2, default=str))
 
 
-# Same MCP server set (e.g. mcp-code + mcp-rag) is loaded for both code and tech_lead;
-# caching avoids a second expensive MultiServer bootstrap during agent.py import.
+# Same MCP server set (``code_tech_lead_mcp_servers.json``: mcp-code + mcp-rag) loads for
+# both code and tech_lead; caching avoids a second expensive MultiServer bootstrap during agent.py import.
 _mcp_tools_bootstrap_cache: dict[str, list[Any]] = {}
 _mcp_tools_bootstrap_lock = threading.Lock()
 
