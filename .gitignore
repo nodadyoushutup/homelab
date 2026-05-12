@@ -32,6 +32,8 @@ Desktop.ini
 # =============================================================================
 
 data/exports/**
+data/playwright/**
+data/screenshots/**
 
 packer/output/**
 packer/logs/*.log
