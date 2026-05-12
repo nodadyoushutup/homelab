@@ -28,7 +28,7 @@ variable "github_runner_access_token" {
 variable "github_runner_image" {
   description = "Container image reference for the runner service (prefer published multi-arch tags)."
   type        = string
-  default     = "ghcr.io/nodadyoushutup/gha-runner:0.0.2"
+  default     = "ghcr.io/nodadyoushutup/gha-runner:0.0.3"
 }
 
 variable "github_runner_name" {

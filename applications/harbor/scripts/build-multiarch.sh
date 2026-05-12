@@ -162,6 +162,8 @@ fi
 # Docker bind-mounts source paths from the engine host. Clones under job-local /tmp do not
 # exist on that host, so `docker run -v "$repo:$repo"` sees an empty directory (no Makefile).
 # GitHub Actions bind-mounts GITHUB_WORKSPACE (and usually RUNNER_TEMP) from the host.
+# Runner-in-Docker with only docker.sock: workspace is not on the engine host; prefer host
+# make+go (HAS_HOST_MAKE) or HARBOR_BUILD_TMP_PARENT on a path shared with the daemon.
 harbor_temp_parent_dir() {
   if [[ -n "${HARBOR_BUILD_TMP_PARENT:-}" && -d "${HARBOR_BUILD_TMP_PARENT}" ]]; then
     printf '%s\n' "${HARBOR_BUILD_TMP_PARENT}"
