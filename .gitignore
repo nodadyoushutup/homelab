@@ -39,7 +39,6 @@ packer/output/**
 packer/logs/*.log
 
 **/.next/
-**/.pnpm-store
 
 # =============================================================================
 # React / Vite
@@ -49,6 +48,7 @@ packer/logs/*.log
 **/dist/
 **/dist-ssr/
 **/.vite/
+**/.pnpm-store
 
 # Vite / tooling env overrides (keep tracked examples; ignore local secrets)
 **/.env*.local

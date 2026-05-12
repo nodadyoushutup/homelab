@@ -300,6 +300,10 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
+      - name: Post-job Docker cleanup (self-hosted disk)
+        if: always()
+        uses: ./.github/actions/docker-selfhosted-cleanup
+
   publish_packer_artifacts:
     name: publish_packer_artifacts
     needs:

@@ -37,6 +37,8 @@ resource "docker_container" "gha_runner" {
     "GH_RUNNER_REMOVE_TOKEN=${var.github_runner_remove_token}",
     "RUNNER_ALLOW_RUNASROOT=1",
     "HARBOR_BUILD_TMP_PARENT=${var.github_runner_engine_visible_build_path}",
+    # Verbose Packer / plugin stderr (e.g. QEMU launch failures) in Actions job logs.
+    "PACKER_LOG=1",
   ])
 
   devices {
