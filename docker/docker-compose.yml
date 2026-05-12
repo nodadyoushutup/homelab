@@ -57,7 +57,7 @@ services:
 
   # mcp-code: HTTP aggregate on :8100; server.py merges three stdio MCP children (opt-in native: MCP_CODE_USE_NATIVE=1; opt-in http+mcp-proxy: MCP_CODE_UPSTREAM_TRANSPORT=http).
   # Mount the homelab tree at the same path as Swarm/NFS (/mnt/eapp/code/homelab) so filesystem, git, and ast-grep agree on roots.
-  # Set HOMELAB_MCP_CODE_HOST_MOUNT in repo-root .env (see .env.example) if your checkout is not at that path.
+  # Set HOMELAB_MCP_CODE_HOST_MOUNT in .secrets/.env (see .secrets/.env.example); pass --env-file .secrets/.env when running compose from repo root.
   mcp-code-dev:
     image: homelab/mcp-code:latest
     pull_policy: never

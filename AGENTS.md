@@ -42,10 +42,11 @@ docs to check before doing substantive work.
   Do not point Docker dev chat at Kubernetes/prod LangGraph, and do not point
   Kubernetes/prod chat at Docker dev LangGraph.
 - For LangGraph secrets and config, the single local dotenv source of truth is
-  `<repo>/.secrets/.env`. When asked to edit the LangGraph `.env`, literally
-  update that file. Do not create or use `.env` files inside
-  `applications/langgraph/agent/`, `applications/langgraph/subagents/`, or other
-  LangGraph app directories for now.
+  `<repo>/.secrets/.env` (same file holds `CONFIG_DIR`, Argo CD installer vars, MinIO
+  compose keys, and Compose interpolation keys documented in `.secrets/.env.example`). When asked to
+  edit the LangGraph `.env`, literally update that file. Do not create or use `.env`
+  files inside `applications/langgraph/agent/`, `applications/langgraph/subagents/`,
+  or other LangGraph app directories for now.
 - If a stable pattern changes, update the corresponding docs as part of the
   task.
 - Do not use a repo-wide workflow that requires choosing or locking a local

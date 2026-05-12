@@ -10,8 +10,16 @@ if [[ -z "${_pipeline_root_dir}" ]]; then
   _pipeline_root_dir="$(cd "${_pipeline_script_dir}/../.." && pwd)"
 fi
 
-_pipeline_env_file="${_pipeline_root_dir}/.env"
-if [[ -f "${_pipeline_env_file}" ]]; then
+_pipeline_secrets_env="${_pipeline_root_dir}/.secrets/.env"
+_pipeline_legacy_env="${_pipeline_root_dir}/.env"
+_pipeline_env_file=""
+if [[ -f "${_pipeline_secrets_env}" ]]; then
+  _pipeline_env_file="${_pipeline_secrets_env}"
+elif [[ -f "${_pipeline_legacy_env}" ]]; then
+  echo "[homelab] Prefer .secrets/.env over repo-root .env; copy variables from .env into .secrets/.env and remove .env (see .secrets/.env.example)." >&2
+  _pipeline_env_file="${_pipeline_legacy_env}"
+fi
+if [[ -n "${_pipeline_env_file}" && -f "${_pipeline_env_file}" ]]; then
   _pipeline_existing_config_dir_set=0
   _pipeline_existing_tfvars_home_dir_set=0
   _pipeline_existing_jenkins_agent_tfvars_dir_set=0

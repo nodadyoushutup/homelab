@@ -1,3 +1,7 @@
+# MINIO_* live in <repo>/.secrets/.env (see .secrets/.env.example).
+# From docker/: docker compose -f docker-compose.minio.yaml --env-file ../.secrets/.env up -d
+name: minio
+
 services:
   minio:
     image: minio/minio:RELEASE.2025-04-22T22-12-26Z # pinned for admin console

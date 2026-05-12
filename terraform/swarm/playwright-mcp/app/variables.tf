@@ -2,7 +2,7 @@ variable "provider_config" {
   description = "Provider configuration map for Docker (host + optional ssh opts)."
   type        = any
 
-  default     = {}
+  default = {}
 }
 
 variable "image_reference" {
@@ -57,12 +57,6 @@ variable "screenshot_dir" {
   description = "Container path used as the working directory so relative screenshot filenames are written here."
   type        = string
   default     = "/mnt/eapp/code/homelab/data/screenshots"
-}
-
-variable "config_dir" {
-  description = "Host and container directory containing the Playwright MCP JSON config and optional init scripts."
-  type        = string
-  default     = "/mnt/eapp/code/homelab/.secrets/playwright"
 }
 
 variable "nfs_server" {

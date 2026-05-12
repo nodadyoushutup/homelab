@@ -11,7 +11,7 @@ When a project does not maintain a standalone docs site, this file links to the 
 | Terraform | `terraform/`, `docs/workflows/terraform.md` | [Terraform docs](https://developer.hashicorp.com/terraform/docs) |
 | Packer | `packer/ubuntu-24.04-ndysu.pkr.hcl`, `.github/workflows/packer_build_push.yml` | [Packer docs](https://developer.hashicorp.com/packer/docs) |
 | Docker | `terraform/swarm/**`, `applications/**`, `.github/workflows/docker_build_push.yml` | [Docker docs](https://docs.docker.com/) |
-| Docker Compose | `applications/minio/docker-compose.yaml`, `applications/gha-runner/docker-compose.yaml` | [Docker Compose docs](https://docs.docker.com/compose/) |
+| Docker Compose | `docker/docker-compose.minio.yaml`, `applications/gha-runner/docker-compose.yaml` | [Docker Compose docs](https://docs.docker.com/compose/) |
 | Docker Swarm | `terraform/swarm/**`, `docs/workflows/terraform.md` | [Docker Swarm docs](https://docs.docker.com/engine/swarm/) |
 | GitHub Actions | `.github/workflows/docker_build_push.yml`, `.github/workflows/packer_build_push.yml` | [GitHub Actions docs](https://docs.github.com/en/actions) |
 | GitHub Actions self-hosted runners | `applications/gha-runner/`, `terraform/swarm/gha-runner-arm64/app`, `terraform/swarm/gha-runner-amd64/app` | [Self-hosted runner docs](https://docs.github.com/en/actions/concepts/runners/self-hosted-runners) |
@@ -42,7 +42,7 @@ When a project does not maintain a standalone docs site, this file links to the 
 | Cloudflare | `terraform/remote/cloudflare/config`, `docs/workflows/edge-dns-and-nginx-proxy.md` | [Cloudflare docs](https://developers.cloudflare.com/) |
 | Nginx Proxy Manager | `terraform/swarm/nginx_proxy_manager/{app,config,database}`, `docs/workflows/edge-dns-and-nginx-proxy.md` | [Nginx Proxy Manager guide](https://nginxproxymanager.com/guide/) |
 | FortiGate / FortiOS | `terraform/network/fortigate/config`, torrent ingress policy in `AGENTS.md` | [FortiGate docs](https://docs.fortinet.com/product/fortigate) |
-| MinIO | `applications/minio/docker-compose.yaml`, S3 backends in Terraform provider files | [MinIO docs](https://docs.min.io/) |
+| MinIO | `docker/docker-compose.minio.yaml`, S3 backends in Terraform provider files | [MinIO docs](https://docs.min.io/) |
 | HashiCorp Vault | `terraform/swarm/vault/{app,config}`, `scripts/vault/` | [Vault docs](https://developer.hashicorp.com/vault/docs) |
 | PostgreSQL | app-local `postgres-deployment.yaml` files under `kubernetes/` and service database stages | [PostgreSQL docs](https://www.postgresql.org/docs/) |
 

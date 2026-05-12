@@ -2,9 +2,8 @@
 set -euo pipefail
 
 # Defaults
-COMPOSE_FILE="${COMPOSE_FILE:-docker-compose.yaml}"
-PROJECT_DIR="${PROJECT_DIR:-$(pwd)}"
-PROJECT_NAME="${PROJECT_NAME:-$(basename "$PROJECT_DIR")}"
+COMPOSE_FILE="${COMPOSE_FILE:-docker-compose.minio.yaml}"
+PROJECT_NAME="${PROJECT_NAME:-minio}"
 RMI_MODE="all"       # options: none, local, all
 ASSUME_YES="yes"
 
@@ -42,11 +41,13 @@ Removes all Docker assets created by the MinIO compose stack:
 - Images (default); use --keep-images to skip
 
 Env overrides:
-  PROJECT_DIR, PROJECT_NAME, COMPOSE_FILE
+  PROJECT_NAME (default: minio), COMPOSE_FILE
+
+Run from repo docker/ (default COMPOSE_FILE: docker-compose.minio.yaml).
 
 Examples:
-  $(basename "$0")
-  $(basename "$0") --prompt --keep-images
+  cd docker && ../scripts/docker/purge/minio.sh
+  cd docker && ../scripts/docker/purge/minio.sh --prompt --keep-images
 EOF
       exit 0
       ;;

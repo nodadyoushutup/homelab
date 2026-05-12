@@ -43,7 +43,7 @@ Swarm/Terraform RAG (including **`chromadb-data`** on Swarm) remains the persist
 
 ## Environment variables
 
-Use **`.secrets/.env`** (and **`.secrets/.env.example`**) for the canonical key list. **Git hooks** and **local scripts** read that file. **Swarm** services take the same variables via Terraform (`env_file_path` / `env` on the **`rag-engine`** and **`mcp-rag`** modules — see their **`main.tf`**).
+Use **`.secrets/.env`** (and **`.secrets/.env.example`**) for the canonical key list. **Git hooks**, **`scripts/terraform/load_root_env.sh`** (Swarm/terraform pipelines), and other **local scripts** read that file. **Swarm** services take the same variables via Terraform (`env_file_path` / `env` on the **`rag-engine`** and **`mcp-rag`** modules — see their **`main.tf`**).
 
 **Engine / Chroma / embed:** `RAG_CHROMA_HOST`, `RAG_CHROMA_PORT`, `RAG_CHROMA_COLLECTION`, `RAG_EMBEDDING_PROVIDER`, `RAG_EMBEDDING_MODEL`, `RAG_ENGINE_API_KEY`, memory collection names, memory TTL and scoring tunables (`RAG_MEMORY_*` — see `.secrets/.env.example` and the engine’s `server.py` / `memory.py`).
 

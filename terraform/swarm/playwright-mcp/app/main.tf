@@ -2,7 +2,7 @@ locals {
   service_name  = "playwright-mcp"
   network_name  = "playwright-mcp"
   internal_port = 8931
-  config_file   = "${var.config_dir}/config.json"
+  config_file   = "${path.module}/config.json"
 }
 
 module "code_nfs" {
