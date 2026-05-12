@@ -13,7 +13,8 @@ if ! declare -f purge_main >/dev/null 2>&1; then
 fi
 
 APP_NAME="gha-runner-amd64"
-SERVICE_REGEX="^gha-runner-amd64$"
+# Swarm service name (legacy) + standalone container names from Terraform (`homelab-gha-runner-amd64-N`).
+SERVICE_REGEX="^(gha-runner-amd64|homelab-gha-runner-amd64-)"
 IMAGE_REGEX="^ghcr.io/nodadyoushutup/gha-runner:"
 
 purge_main "$@"

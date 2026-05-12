@@ -517,7 +517,13 @@ def upsert_paths(
                 elif v is not None and v != "":
                     row[k] = str(v)
             metadatas.append(row)
-        embeddings = embed_batch(genai_client, model, documents, provider=provider)
+        embeddings = embed_batch(
+            genai_client,
+            model,
+            documents,
+            provider=provider,
+            input_type="document",
+        )
         _chroma_add_batched(
             collection,
             ids=ids,

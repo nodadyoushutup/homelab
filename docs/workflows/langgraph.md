@@ -110,9 +110,9 @@ When a task changes the LangGraph implementation:
    - keep it explicitly development-only
    - mount source code from the working tree instead of replacing deployment
      sources of truth
-   - for LangChain Agent Chat dev, keep source bind-mounted and use
-     a Docker-managed volume for `node_modules` so source edits need only
-     service restarts, while dependency changes still require rebuilds
+   - for LangChain Agent Chat in Compose, prefer the baked **`runner`** image
+     (`target: runner`, no app bind mount): **`docker compose build langchain-agent-chat-dev`**
+     after UI or dependency changes, then **`up`**. Use host **`pnpm dev`** when actively iterating on chat UI
    - document the expected ports, env file, and restart workflow
 13. if the task also updates the default deployed Homelab runtime manifests:
    - keep the Kubernetes app family under `kubernetes/langgraph/`

@@ -32,7 +32,13 @@ def run_query(
     cap = max(1, _env_int("RAG_QUERY_MAX_N_RESULTS", 50))
     n = max(1, min(int(n_results), cap))
     provider = embedding_provider()
-    vec = embed_batch(genai_client, embedding_model.strip(), [text], provider=provider)
+    vec = embed_batch(
+        genai_client,
+        embedding_model.strip(),
+        [text],
+        provider=provider,
+        input_type="query",
+    )
     if not vec:
         return {"error": "embedding failed", "results": []}
     kwargs: dict[str, Any] = {

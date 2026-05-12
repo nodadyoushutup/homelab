@@ -13,7 +13,7 @@ if ! declare -f purge_main >/dev/null 2>&1; then
 fi
 
 APP_NAME="gha-runner"
-SERVICE_REGEX="^gha-runner-(amd64|arm64)$"
+SERVICE_REGEX="^(gha-runner-(amd64|arm64)|homelab-gha-runner-(amd64|arm64)-)"
 IMAGE_REGEX="^ghcr.io/nodadyoushutup/gha-runner:"
 
 purge_main "$@"

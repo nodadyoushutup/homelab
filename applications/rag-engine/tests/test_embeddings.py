@@ -22,6 +22,7 @@ class ProviderConfigTests(unittest.TestCase):
             "RAG_EMBEDDING_PROVIDER",
             "RAG_EMBEDDING_MODEL",
             "RAG_OPENAI_EMBEDDING_DIMENSIONS",
+            "RAG_ANTHROPIC_EMBEDDING_DIMENSIONS",
         ):
             os.environ.pop(key, None)
         self.addCleanup(self._patch.stop)
@@ -34,6 +35,11 @@ class ProviderConfigTests(unittest.TestCase):
         os.environ["RAG_EMBEDDING_PROVIDER"] = "openai"
         self.assertEqual(embeddings.embedding_provider(), "openai")
         self.assertEqual(embeddings.embedding_model(), "text-embedding-3-small")
+
+    def test_anthropic_provider_default_model(self) -> None:
+        os.environ["RAG_EMBEDDING_PROVIDER"] = "anthropic"
+        self.assertEqual(embeddings.embedding_provider(), "anthropic")
+        self.assertEqual(embeddings.embedding_model(), "voyage-3.5")
 
 
 class _FakeEmbeddingItem:
@@ -63,6 +69,39 @@ class _FakeEmbeddings:
 class _FakeOpenAIClient:
     def __init__(self) -> None:
         self.embeddings = _FakeEmbeddings()
+
+
+class AnthropicVoyageEmbedTests(unittest.TestCase):
+    def test_batch_preserves_input_order_from_indices(self) -> None:
+        from embeddings import anthropic_client as ac
+
+        class _Resp:
+            def raise_for_status(self) -> None:
+                return None
+
+            def json(self) -> dict:
+                return {
+                    "data": [
+                        {"index": 1, "embedding": [2.0, 2.1]},
+                        {"index": 0, "embedding": [1.0, 1.1]},
+                    ]
+                }
+
+        client = mock.MagicMock()
+        client.post.return_value = _Resp()
+        with mock.patch.dict(
+            os.environ,
+            {"RAG_ANTHROPIC_EMBEDDING_DIMENSIONS": "", "VOYAGE_API_KEY": "x"},
+            clear=False,
+        ):
+            vectors = ac.embed_batch(client, "voyage-3.5", ["a", "b"], input_type="document")
+        self.assertEqual(vectors, [[1.0, 1.1], [2.0, 2.1]])
+        assert client.post.call_count >= 1
+        _args, kwargs = client.post.call_args
+        self.assertEqual(_args[0], "/embeddings")
+        body = kwargs.get("json") or {}
+        self.assertEqual(body.get("input_type"), "document")
+        self.assertEqual(body.get("model"), "voyage-3.5")
 
 
 class OpenAIEmbedTests(unittest.TestCase):

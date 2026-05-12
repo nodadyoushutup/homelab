@@ -30,7 +30,8 @@ docs to check before doing substantive work.
   local debugging, code work, and quick compose up/down validation, use the
   Docker dev pair only: `docker/docker-compose.yml` runs `langgraph-dev` at
   `http://localhost:2124` and `langchain-agent-chat-dev` at
-  `http://localhost:3000`, with the chat proxy targeting
+  `http://localhost:3000` (baked **`runner`** image—rebuild that service after chat UI changes),
+  with the chat proxy targeting
   `http://langgraph-dev:2024` on the Compose network.   The same file can also run **`rag-engine-dev`** and **`mcp-rag-dev`**
   (bind-mounted source, host ports **9015** / **9016**) for fast RAG iteration;
   **`langgraph-dev`** sets **`HOMELAB_MCP_RAG_URL`** so in-container agents use

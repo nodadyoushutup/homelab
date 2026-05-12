@@ -110,13 +110,13 @@ variable "embedding_model" {
 }
 
 variable "embedding_provider" {
-  description = "Embedding provider used for ingest and query: google or openai."
+  description = "Embedding provider used for ingest and query: google, openai, or anthropic (Voyage via VOYAGE_API_KEY)."
   type        = string
   default     = "google"
 
   validation {
-    condition     = contains(["google", "openai"], lower(var.embedding_provider))
-    error_message = "embedding_provider must be google or openai."
+    condition     = contains(["google", "openai", "anthropic"], lower(var.embedding_provider))
+    error_message = "embedding_provider must be google, openai, or anthropic."
   }
 }
 
