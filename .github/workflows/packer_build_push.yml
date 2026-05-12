@@ -148,6 +148,8 @@ jobs:
       ARM64_ACCELERATOR: ${{ needs.prepare.outputs.arm64_accelerator }}
       PACKER_DIR: packer
       PACKER_OUTPUT_DIR: packer/output/ubuntu-24.04-ndysu/${{ needs.prepare.outputs.version }}
+      # Verbose Packer + plugin logs in the job log (also set on ARM runner containers).
+      PACKER_LOG: "1"
     defaults:
       run:
         shell: bash
@@ -232,6 +234,8 @@ jobs:
       ARM64_ACCELERATOR: ${{ needs.prepare.outputs.arm64_accelerator }}
       PACKER_DIR: packer
       PACKER_OUTPUT_DIR: packer/output/ubuntu-24.04-ndysu/${{ needs.prepare.outputs.version }}
+      # Verbose Packer + plugin logs in the job log (also set on ARM runner containers).
+      PACKER_LOG: "1"
     defaults:
       run:
         shell: bash

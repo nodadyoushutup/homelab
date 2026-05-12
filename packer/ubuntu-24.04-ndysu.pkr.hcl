@@ -42,6 +42,10 @@ variable "arm64_accelerator" {
 
 locals {
   kde_profile_effective = var.kde_profile != null ? var.kde_profile : ""
+  # Packer omits -cpu by default; QEMU's default guest CPU is not KVM-valid on some
+  # AArch64 hosts (e.g. Pi): "KVM is not supported for this guest CPU type". Use host
+  # under KVM; use a generic model for TCG.
+  arm64_qemu_cpu_model = var.arm64_accelerator == "kvm" ? "host" : "cortex-a57"
 }
 
 source "qemu" "ubuntu_24_04_amd64" {
@@ -81,6 +85,7 @@ source "qemu" "ubuntu_24_04_arm64" {
 
   communicator = "ssh"
   cpus         = 2
+  cpu_model    = local.arm64_qemu_cpu_model
   memory       = 2048
   headless     = true
   machine_type = "virt"
