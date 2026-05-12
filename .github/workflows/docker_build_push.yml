@@ -568,6 +568,10 @@ jobs:
     needs: prepare
     if: needs.prepare.outputs.build_strategy == 'harbor-runtime-set' && needs.prepare.outputs.build_amd64 == 'true'
     runs-on: [self-hosted, linux, homelab, amd64, build]
+    env:
+      # Swarm sets this on the runner container, but the Actions job often does not inherit it;
+      # must match bind mount + github_runner_engine_visible_build_path on the runner nodes.
+      HARBOR_BUILD_TMP_PARENT: /var/lib/gha-runner-engine-build
 
     steps:
       - name: Check out the code
@@ -642,6 +646,8 @@ jobs:
     needs: prepare
     if: needs.prepare.outputs.build_strategy == 'harbor-runtime-set' && needs.prepare.outputs.build_arm64 == 'true'
     runs-on: [self-hosted, linux, homelab, arm64]
+    env:
+      HARBOR_BUILD_TMP_PARENT: /var/lib/gha-runner-engine-build
 
     steps:
       - name: Check out the code

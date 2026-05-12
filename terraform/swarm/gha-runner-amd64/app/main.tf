@@ -31,6 +31,7 @@ resource "docker_service" "gha_runner" {
         GH_RUNNER_DISABLEUPDATE = tostring(var.github_runner_disableupdate)
         GH_RUNNER_REMOVE_TOKEN  = var.github_runner_remove_token
         RUNNER_ALLOW_RUNASROOT  = "1"
+        HARBOR_BUILD_TMP_PARENT = var.github_runner_engine_visible_build_path
       }
 
       dns_config {
@@ -45,6 +46,12 @@ resource "docker_service" "gha_runner" {
         target = "/var/run/docker.sock"
         source = "/var/run/docker.sock"
         type   = "bind"
+      }
+
+      mounts {
+        type   = "bind"
+        source = var.github_runner_engine_visible_build_path
+        target = var.github_runner_engine_visible_build_path
       }
 
       mounts {

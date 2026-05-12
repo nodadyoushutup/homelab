@@ -2,7 +2,7 @@ variable "provider_config" {
   description = "Provider configuration map for Docker (host + optional ssh opts)."
   type        = any
 
-  default     = {}
+  default = {}
 }
 
 variable "github_runner_url" {
@@ -28,7 +28,7 @@ variable "github_runner_access_token" {
 variable "github_runner_image" {
   description = "Container image reference for the runner service (prefer published multi-arch tags)."
   type        = string
-  default     = "ghcr.io/nodadyoushutup/gha-runner:0.0.3"
+  default     = "ghcr.io/nodadyoushutup/gha-runner:0.0.4"
 }
 
 variable "github_runner_name" {
@@ -59,6 +59,19 @@ variable "github_runner_workdir" {
   description = "Working directory inside the runner install."
   type        = string
   default     = "_work"
+}
+
+variable "github_runner_engine_visible_build_path" {
+  description = <<-EOT
+    Absolute path bind-mounted from each Swarm node into the runner at the identical path.
+    The container sets HARBOR_BUILD_TMP_PARENT to this value so Harbor clones (and any
+    Makefile nested `docker run -v $PWD:$PWD`) live on the host filesystem visible to the
+    Docker engine when the task only mounts /var/run/docker.sock.
+    The directory must already exist on every node that can run this service (Swarm rejects
+    bind mounts to missing host paths); bootstrap with sudo mkdir -p on each node.
+  EOT
+  type        = string
+  default     = "/var/lib/gha-runner-engine-build"
 }
 
 variable "github_runner_ephemeral" {

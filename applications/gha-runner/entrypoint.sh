@@ -62,6 +62,10 @@ request_runner_token() {
 cd "${RUNNER_HOME:-/home/runner/actions-runner}"
 touch /tmp/gha-runner-ready
 
+if [[ -n "${HARBOR_BUILD_TMP_PARENT:-}" ]]; then
+  mkdir -p "${HARBOR_BUILD_TMP_PARENT}"
+fi
+
 runner_url="${GH_RUNNER_URL:-}"
 runner_token="${GH_RUNNER_TOKEN:-}"
 runner_access_token="${GH_RUNNER_ACCESS_TOKEN:-}"

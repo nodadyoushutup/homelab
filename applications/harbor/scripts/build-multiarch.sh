@@ -165,7 +165,15 @@ fi
 # Runner-in-Docker with only docker.sock: workspace is not on the engine host; prefer host
 # make+go (HAS_HOST_MAKE) or HARBOR_BUILD_TMP_PARENT on a path shared with the daemon.
 harbor_temp_parent_dir() {
-  if [[ -n "${HARBOR_BUILD_TMP_PARENT:-}" && -d "${HARBOR_BUILD_TMP_PARENT}" ]]; then
+  if [[ -n "${HARBOR_BUILD_TMP_PARENT:-}" ]]; then
+    if ! mkdir -p "${HARBOR_BUILD_TMP_PARENT}"; then
+      echo "[ERR] HARBOR_BUILD_TMP_PARENT=${HARBOR_BUILD_TMP_PARENT} is set but mkdir -p failed." >&2
+      exit 1
+    fi
+    if [[ ! -d "${HARBOR_BUILD_TMP_PARENT}" ]]; then
+      echo "[ERR] HARBOR_BUILD_TMP_PARENT=${HARBOR_BUILD_TMP_PARENT} is not a directory." >&2
+      exit 1
+    fi
     printf '%s\n' "${HARBOR_BUILD_TMP_PARENT}"
     return 0
   fi
