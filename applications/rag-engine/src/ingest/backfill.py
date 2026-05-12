@@ -26,9 +26,9 @@ import sys
 from dataclasses import dataclass
 from typing import Any
 
-from rag_engine.embeddings import build_embedding_client
-from rag_engine.path_rules import load_exclude_segments
-from rag_engine.pipeline import (
+from embeddings import build_embedding_client
+from ingest.path_rules import load_exclude_segments
+from ingest.pipeline import (
     _allowed_prefixes,
     _collection,
     collect_backfill_relative_paths,
@@ -188,7 +188,7 @@ def run_backfill(
     Returns ``(exit_code, payload)`` where ``payload`` is JSON-serializable.
     """
     _configure_logging()
-    log = logging.getLogger("rag_engine.backfill")
+    log = logging.getLogger("ingest.backfill")
 
     if opts.prune_orphans_only and opts.prune_orphans:
         log.warning("backfill: --prune-orphans-only wins over --prune-orphans")

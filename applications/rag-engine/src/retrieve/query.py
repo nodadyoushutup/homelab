@@ -4,7 +4,7 @@ import logging
 import os
 from typing import Any
 
-from rag_engine.embeddings import embed_batch, embedding_provider
+from embeddings import embed_batch, embedding_provider
 
 log = logging.getLogger(__name__)
 

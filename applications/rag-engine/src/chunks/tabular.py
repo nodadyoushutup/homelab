@@ -8,8 +8,8 @@ import os
 import re
 from typing import Any
 
-from rag_engine.chunking import chunk_text
-from rag_engine.structured_chunks import StructuredChunk, _build_header
+from chunks.text import chunk_text
+from chunks.structured import StructuredChunk, _build_header
 
 log = logging.getLogger(__name__)
 

@@ -23,7 +23,7 @@ COPY src /app/src
 
 EXPOSE 8080
 
-RUN printf '%s\n' '#!/usr/bin/env bash' 'exec python -m rag_engine.healthcheck' > /usr/local/bin/rag-engine-healthcheck \
+RUN printf '%s\n' '#!/usr/bin/env bash' 'exec python -m api.healthcheck' > /usr/local/bin/rag-engine-healthcheck \
     && chmod +x /usr/local/bin/rag-engine-healthcheck
 
-CMD ["uvicorn", "rag_engine.server:app", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["uvicorn", "api.server:app", "--host", "0.0.0.0", "--port", "8080"]

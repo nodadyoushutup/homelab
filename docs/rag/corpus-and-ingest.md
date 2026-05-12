@@ -10,7 +10,7 @@ Repo workflow docs, code under allowed prefixes, and other text sources can also
 
 Ingest eligibility is driven by **repo-relative path prefixes**:
 
-- **`RAG_ALLOWED_PATH_PREFIXES`** — engine ingest allowlist (see `applications/rag-engine/src/rag_engine/pipeline.py`, `_allowed_prefixes`; defaults include **`docs/`** among others).
+- **`RAG_ALLOWED_PATH_PREFIXES`** — engine ingest allowlist (see `applications/rag-engine/src/ingest/pipeline.py`, `_allowed_prefixes`; defaults include **`docs/`** among others).
 - **`RAG_HOOK_INCLUDE_PREFIXES`** — git hook filtering should stay aligned (see `.githooks/rag_hook_common.py`).
 
 When you change either, update **`.secrets/.env`** and **`.secrets/.env.example`** together per repository rules.

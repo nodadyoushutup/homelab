@@ -11,17 +11,17 @@ from typing import Any, Callable, TypeVar
 import chromadb
 import httpx
 
-from rag_engine.chunking import chunk_text
-from rag_engine.embeddings import (
+from chunks.text import chunk_text
+from embeddings import (
     build_embedding_client,
     embed_batch,
     embedding_dimensions_label,
     embedding_model,
     embedding_provider,
 )
-from rag_engine.memory import mark_memories_stale_for_paths
-from rag_engine.path_rules import file_has_excluded_suffix, path_has_excluded_segment
-from rag_engine.office_chunks import (
+from memory import mark_memories_stale_for_paths
+from ingest.path_rules import file_has_excluded_suffix, path_has_excluded_segment
+from chunks.office import (
     build_docx_chunks,
     build_odt_chunks,
     build_pptx_chunks,
@@ -29,10 +29,10 @@ from rag_engine.office_chunks import (
     office_odt_profile,
     office_pptx_profile,
 )
-from rag_engine.pdf_hybrid import build_pdf_hybrid_chunks, pdf_ingest_profile
-from rag_engine.git_line_meta import GIT_LINE_META_VERSION, enrich_chunk_git_metadata
-from rag_engine.structured_chunks import build_structured_chunks, index_schema_version
-from rag_engine.tabular_chunks import build_xlsx_chunks, tabular_csv_profile, tabular_xlsx_profile
+from chunks.pdf_hybrid import build_pdf_hybrid_chunks, pdf_ingest_profile
+from vcs.git_line_meta import GIT_LINE_META_VERSION, enrich_chunk_git_metadata
+from chunks.structured import build_structured_chunks, index_schema_version
+from chunks.tabular import build_xlsx_chunks, tabular_csv_profile, tabular_xlsx_profile
 
 log = logging.getLogger(__name__)
 

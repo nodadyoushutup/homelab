@@ -4,7 +4,7 @@
 
 - Provider selector: **`RAG_EMBEDDING_PROVIDER`** supports **`google`** (default) and **`openai`**.
 - Default model id: **`RAG_EMBEDDING_MODEL`**. When unset/empty, Google uses **`gemini-embedding-001`** and OpenAI uses **`text-embedding-3-small`**.
-- Provider dispatch lives in **`applications/rag-engine/src/rag_engine/embeddings.py`**. Google-specific calls live in **`embed_google.py`**; OpenAI-specific calls live in **`embed_openai.py`**.
+- Provider dispatch lives in **`applications/rag-engine/src/embeddings/providers.py`**. Google-specific calls live in **`embeddings/google_genai.py`**; OpenAI-specific calls live in **`embeddings/openai_client.py`**.
 - OpenAI optional dimensions override: **`RAG_OPENAI_EMBEDDING_DIMENSIONS`**. This is only sent for `text-embedding-3*` models.
 
 **Query path:** `run_query` in `query.py` embeds the user query with `embed_batch` using the configured provider/model/dimensions, then calls Chroma with `query_embeddings`. Mismatched providers, models, or dimensions between ingest and query produce unreliable retrieval or Chroma dimension errors; hence the “always go through `rag-engine`” rule.
@@ -14,7 +14,7 @@ When switching provider/model/dimensions, use a new Chroma collection (for examp
 ## Chroma
 
 - Client: **HTTP** to Chroma (`RAG_CHROMA_HOST`, `RAG_CHROMA_PORT`). In the Swarm layout, point the engine at the Chroma service hostname/IP and the published HTTP port (Terraform default **8000** on the Swarm host; see **`terraform/swarm/chromadb/app`**).
-- **Distance:** collections are created with **`hnsw:space` = `cosine`** (see `pipeline.py` `_collection()` and `memory.py` `_open_collection`).
+- **Distance:** collections are created with **`hnsw:space` = `cosine`** (see `ingest/pipeline.py` `_collection()` and `memory/__init__.py` `_open_collection`).
 
 ## Collections (defaults)
 
@@ -40,8 +40,8 @@ The authoritative table of keys for Chroma filters is maintained in the integrat
 
 | Concern | Location |
 | --- | --- |
-| Collection handles | `pipeline.py` (`chroma_repo_collection`), `memory.py` |
-| Ingest / embed jobs | `pipeline.py` (`run_embed_job`, path allowlists) |
-| Provider dispatch | `embeddings.py` |
+| Collection handles | `ingest/pipeline.py` (`chroma_repo_collection`), `memory/__init__.py` |
+| Ingest / embed jobs | `ingest/pipeline.py` (`run_embed_job`, path allowlists) |
+| Provider dispatch | `embeddings/providers.py` |
 | Query embedding + Chroma | `query.py` |
 | HTTP API | `server.py` (`rag_query`, `embed_commit`, memory routes) |

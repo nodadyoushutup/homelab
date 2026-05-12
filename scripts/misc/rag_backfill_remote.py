@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""POST /v1/backfill on rag-engine (same flags as ``python -m rag_engine.backfill``)."""
+"""POST /v1/backfill on rag-engine (same flags as ``python -m ingest.backfill``)."""
 from __future__ import annotations
 
 import argparse
@@ -11,7 +11,7 @@ import urllib.request
 
 
 def _prune_dry_for_confirm(args: argparse.Namespace) -> bool:
-    """Match ``rag_engine.backfill`` prune_dry (safe preview; no server confirm required)."""
+    """Match ``ingest.backfill`` prune_dry (safe preview; no server confirm required)."""
     return bool(args.prune_dry_run) or (bool(args.dry_run) and bool(args.prune_orphans_only))
 
 

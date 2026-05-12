@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Trigger rag-engine backfill via POST /v1/backfill (default), or optionally run
-# ``python -m rag_engine.backfill`` inside a container over SSH (legacy).
+# ``python -m ingest.backfill`` inside a container over SSH (legacy).
 #
 # Default loads <repo>/.secrets/.env for RAG_ENGINE_BASE_URL and RAG_ENGINE_API_KEY.
 # Long runs: set RAG_BACKFILL_HTTP_TIMEOUT_SEC (seconds) for the client; raise nginx
@@ -39,7 +39,7 @@ usage() {
 Usage: scripts/misc/rag_backfill.sh [options] [-- <backfill args>]
 
 Default: POST \$RAG_ENGINE_BASE_URL/v1/backfill (see .secrets/.env). Same flags as
-  python -m rag_engine.backfill  (e.g. --dry-run, --yes, --prune-orphans).
+  python -m ingest.backfill  (e.g. --dry-run, --yes, --prune-orphans).
 
   scripts/misc/rag_backfill.sh --dry-run
   scripts/misc/rag_backfill.sh --yes --prune-orphans
@@ -173,7 +173,7 @@ run_backfill_exec() {
   fi
 
   local cmd=("${DOCKER_RUNNER[@]}" "${exec_flags[@]}" "$container_id"
-             python -m rag_engine.backfill "$@")
+             python -m ingest.backfill "$@")
 
   log_info "Running: ${cmd[*]}"
   "${cmd[@]}"

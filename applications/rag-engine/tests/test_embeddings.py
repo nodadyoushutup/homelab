@@ -10,7 +10,8 @@ ROOT = Path(__file__).resolve().parents[1] / "src"
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from rag_engine import embed_openai, embeddings  # noqa: E402
+from embeddings import openai_client as embed_openai  # noqa: E402
+from embeddings import providers as embeddings  # noqa: E402
 
 
 class ProviderConfigTests(unittest.TestCase):

@@ -1,0 +1,169 @@
+# =============================================================================
+# IDE & agent tooling
+# =============================================================================
+# This repo tracks a few shared defaults; ignore everything else under these dirs.
+# Tracked: .cursor/mcp.json, .codex/config.toml, .vscode/homelab.code-workspace
+
+.cursor/
+.codex/
+.vscode
+
+.idea/
+.fleet/
+.zed/
+.claude/
+.continue/
+.specstory/
+
+# =============================================================================
+# OS & cross-platform
+# =============================================================================
+
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+*~
+*.swp
+*.swo
+
+# =============================================================================
+# Build artifacts
+# =============================================================================
+
+data/exports/**
+data/playwright/**
+data/screenshots/**
+
+packer/output/**
+packer/logs/*.log
+
+**/.next/
+
+# =============================================================================
+# React / Vite
+# =============================================================================
+
+**/node_modules/
+**/dist/
+**/dist-ssr/
+**/.vite/
+
+# Vite / tooling env overrides (keep tracked examples; ignore local secrets)
+**/.env*.local
+
+# Vitest / Jest coverage output
+**/coverage/
+
+# =============================================================================
+# Node / package manager logs
+# =============================================================================
+
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+**/pnpm-debug.log*
+
+# =============================================================================
+# Playwright
+# =============================================================================
+
+**/test-results/
+**/playwright-report/
+**/blob-report/
+**/playwright/.cache/
+
+# =============================================================================
+# TypeScript & ESLint
+# =============================================================================
+
+**/*.tsbuildinfo
+**/.eslintcache
+
+# =============================================================================
+# Terraform
+# =============================================================================
+
+.terraform/
+**/.terraform.bak.*/
+
+*.tfstate
+*.tfstate.*
+
+crash.log
+crash.*.log
+
+# Sensitive / environment-specific variable files
+*.tfvars
+*.tfvars.json
+.tfvars
+
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+.terraform.tfstate.lock.info
+
+# !example_override.tf
+
+# *tfplan*
+
+.terraformrc
+terraform.rc
+
+# =============================================================================
+# Virtual environments
+# =============================================================================
+
+**/.venv/
+**/venv/
+**/.virtualenv/
+**/ENV/
+**/env/
+
+# =============================================================================
+# Python
+# =============================================================================
+
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+
+# =============================================================================
+# Cache
+# =============================================================================
+
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# =============================================================================
+# Kubernetes
+# =============================================================================
+# Tracked: kustomization trees, values, Argo CD Application manifests (yaml).
+# Ignore local exports and tooling artifacts, not cluster source.
+
+# Kubeconfig copies dropped in-repo by mistake (contain credentials)
+kubeconfig
+*.kubeconfig
+
+# Helm chart dependencies (helm dependency build → charts/*.tgz)
+**/charts/*.tgz
+
+# =============================================================================
+# direnv
+# =============================================================================
+
+.direnv/
+
+# =============================================================================
+# Environment & secrets
+# =============================================================================
+
+!**/.gitkeep
+*.env
+.secrets/**
+!.secrets/.env.example

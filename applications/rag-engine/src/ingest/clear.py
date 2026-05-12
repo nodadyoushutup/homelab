@@ -93,7 +93,7 @@ def _delete_collections(
     client: chromadb.api.client.Client,
     names: list[str],
 ) -> dict[str, Any]:
-    log = logging.getLogger("rag_engine.clear")
+    log = logging.getLogger("ingest.clear")
     deleted: list[str] = []
     errors: list[str] = []
     for name in names:
@@ -132,7 +132,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
     _configure_logging()
-    log = logging.getLogger("rag_engine.clear")
+    log = logging.getLogger("ingest.clear")
 
     host = (os.getenv("RAG_CHROMA_HOST") or "chromadb").strip()
     port = int((os.getenv("RAG_CHROMA_PORT") or "8000").strip())

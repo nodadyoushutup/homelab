@@ -1,4 +1,4 @@
-"""Logic-level smoke tests for ``rag_engine.memory``.
+"""Logic-level smoke tests for the ``memory`` package.
 
 Uses stdlib ``unittest`` (no new deps) and mocks the Chroma collection + Gemini client so
 tests run without external services. Real cross-stack integration is covered by Phase 6
@@ -21,7 +21,7 @@ ROOT = Path(__file__).resolve().parents[1] / "src"
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from rag_engine import memory  # noqa: E402
+import memory  # noqa: E402
 
 
 class _FakeGenAIClient:

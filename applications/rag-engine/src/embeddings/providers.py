@@ -41,11 +41,11 @@ def embedding_dimensions_label(provider: str | None = None) -> str:
 def build_embedding_client(provider: str | None = None) -> Any:
     selected = (provider or embedding_provider()).strip().lower()
     if selected == "google":
-        from rag_engine import embed_google
+        from embeddings import google_genai as embed_google
 
         return embed_google.build_genai_client()
     if selected == "openai":
-        from rag_engine import embed_openai
+        from embeddings import openai_client as embed_openai
 
         return embed_openai.build_openai_client()
     raise RuntimeError(f"unsupported embedding provider: {selected}")
@@ -60,11 +60,11 @@ def embed_batch(
 ) -> list[list[float]]:
     selected = (provider or embedding_provider()).strip().lower()
     if selected == "google":
-        from rag_engine import embed_google
+        from embeddings import google_genai as embed_google
 
         return embed_google.embed_batch(client, model, texts)
     if selected == "openai":
-        from rag_engine import embed_openai
+        from embeddings import openai_client as embed_openai
 
         return embed_openai.embed_batch(client, model, texts)
     raise RuntimeError(f"unsupported embedding provider: {selected}")

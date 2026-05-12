@@ -10,17 +10,17 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse
 from starlette.routing import Route
 
-from rag_engine.embeddings import build_embedding_client, embedding_model
-from rag_engine.memory import (
+from embeddings import build_embedding_client, embedding_model
+from memory import (
     forget_memory,
     list_stale_memories,
     recall_memory,
     save_memory,
     sweep_expired,
 )
-from rag_engine.backfill import options_from_api_body, run_backfill
-from rag_engine.pipeline import chroma_repo_collection, prune_orphan_paths, run_embed_job
-from rag_engine.query import run_query
+from ingest.backfill import options_from_api_body, run_backfill
+from ingest.pipeline import chroma_repo_collection, prune_orphan_paths, run_embed_job
+from retrieve.query import run_query
 
 log = logging.getLogger(__name__)
 
@@ -125,7 +125,7 @@ async def embed_commit(request: Request) -> JSONResponse:
 
 
 async def backfill_route(request: Request) -> JSONResponse:
-    """Run workspace backfill inside the service (same as ``python -m rag_engine.backfill``).
+    """Run workspace backfill inside the service (same as ``python -m ingest.backfill``).
 
     Long-running: ensure reverse-proxy/read timeouts are high enough. JSON body mirrors CLI flags;
     use ``"confirm": true`` instead of ``--yes`` for mutating runs.

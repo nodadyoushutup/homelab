@@ -21,7 +21,7 @@ from typing import Any, Iterable
 
 import chromadb
 
-from rag_engine.embeddings import (
+from embeddings import (
     build_embedding_client,
     embed_batch,
     embedding_dimensions_label,
