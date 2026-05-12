@@ -98,6 +98,13 @@ source "qemu" "ubuntu_24_04_arm64" {
   format           = "qcow2"
   disk_interface   = "virtio"
 
+  # Noble arm64 cloud images boot via UEFI on `virt`. Without AAVMF pflash, QEMU
+  # starts but the guest never reaches sshd; PACKER_LOG then shows TCP to the
+  # hostfwd port followed by "Timeout during SSH handshake" (no SSH banner).
+  # Paths are from the `qemu-efi-aarch64` package (installed by scripts/install/packer.sh).
+  efi_firmware_code = "/usr/share/AAVMF/AAVMF_CODE.no-secboot.fd"
+  efi_firmware_vars = "/usr/share/AAVMF/AAVMF_VARS.fd"
+
   cd_label = "cidata"
   cd_files = [
     "cloud-init/meta-data",
