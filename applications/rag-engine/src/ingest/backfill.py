@@ -11,7 +11,7 @@ Run inside the rag-engine image (same env as the HTTP server), e.g.:
   ./scripts/rag/backfill.sh --yes --prune-orphans-only --prune-dry-run
 
 Requires ``chromadb`` service up and ``RAG_WORKSPACE_MOUNT`` matching the repo mount.
-Operators may trigger the same logic via ``POST /v1/backfill`` on rag-engine (see ``server.py``).
+Operators may trigger the same logic via ``POST /v1/backfill`` on rag-engine (see ``api/server.py``).
 Interactive runs print index roots and file count, then ask ``Proceed? [Y/n]`` (default Y).
 During indexing, Ctrl+C prompts for pause, stop (summary), or continue; a second Ctrl+C stops immediately.
 """

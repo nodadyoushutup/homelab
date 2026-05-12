@@ -7,7 +7,7 @@
 - Provider dispatch lives in **`applications/rag-engine/src/embeddings/providers.py`**. Google-specific calls live in **`embeddings/google_genai.py`**; OpenAI-specific calls live in **`embeddings/openai_client.py`**.
 - OpenAI optional dimensions override: **`RAG_OPENAI_EMBEDDING_DIMENSIONS`**. This is only sent for `text-embedding-3*` models.
 
-**Query path:** `run_query` in `query.py` embeds the user query with `embed_batch` using the configured provider/model/dimensions, then calls Chroma with `query_embeddings`. Mismatched providers, models, or dimensions between ingest and query produce unreliable retrieval or Chroma dimension errors; hence the “always go through `rag-engine`” rule.
+**Query path:** `run_query` in `retrieve/query.py` embeds the user query with `embed_batch` using the configured provider/model/dimensions, then calls Chroma with `query_embeddings`. Mismatched providers, models, or dimensions between ingest and query produce unreliable retrieval or Chroma dimension errors; hence the “always go through `rag-engine`” rule.
 
 When switching provider/model/dimensions, use a new Chroma collection (for example `homelab_openai`) or rebuild the existing collection. OpenAI's current embedding docs list `text-embedding-3-small` and `text-embedding-3-large`, with default dimensions 1536 and 3072 respectively.
 
@@ -43,5 +43,5 @@ The authoritative table of keys for Chroma filters is maintained in the integrat
 | Collection handles | `ingest/pipeline.py` (`chroma_repo_collection`), `memory/__init__.py` |
 | Ingest / embed jobs | `ingest/pipeline.py` (`run_embed_job`, path allowlists) |
 | Provider dispatch | `embeddings/providers.py` |
-| Query embedding + Chroma | `query.py` |
-| HTTP API | `server.py` (`rag_query`, `embed_commit`, memory routes) |
+| Query embedding + Chroma | `retrieve/query.py` |
+| HTTP API | `api/server.py` (`rag_query`, `embed_commit`, memory routes) |
