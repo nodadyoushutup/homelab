@@ -224,30 +224,28 @@ publish_image_ref() {
 publish_multiarch_manifests() {
   echo "[INFO] Publishing manifest tags for ${HARBOR_IMAGE_TAG}"
 
+  # Per-arch tags are often pushed via Buildx as manifest lists (indexes). The classic
+  # `docker manifest create` path rejects list inputs ("X is a manifest list"). Buildx
+  # `imagetools create` merges registry-side and accepts list or single-platform sources.
+  if ! docker buildx imagetools create --help >/dev/null 2>&1; then
+    echo "[ERR] docker buildx imagetools create is required to publish Harbor multi-arch manifests." >&2
+    echo "[HINT] Install a current Docker Buildx plugin, or add docker/setup-buildx-action before this step." >&2
+    exit 1
+  fi
+
   for image in "${runtime_images[@]}"; do
-    local manifest_ref ref os arch variant
+    local manifest_ref
     manifest_ref="$(publish_image_ref "${image}" "${HARBOR_IMAGE_TAG}")"
 
     local -a refs=()
     for platform in "${PLATFORMS[@]}"; do
+      local os arch variant
       IFS='/' read -r os arch variant <<<"${platform}"
       refs+=("$(publish_image_ref "${image}" "${HARBOR_IMAGE_TAG}-${arch}")")
     done
 
-    docker manifest rm "${manifest_ref}" >/dev/null 2>&1 || true
-    docker manifest create "${manifest_ref}" "${refs[@]}"
-
-    for platform in "${PLATFORMS[@]}"; do
-      IFS='/' read -r os arch variant <<<"${platform}"
-      ref="$(publish_image_ref "${image}" "${HARBOR_IMAGE_TAG}-${arch}")"
-      if [[ -n "${variant:-}" ]]; then
-        docker manifest annotate "${manifest_ref}" "${ref}" --os "${os}" --arch "${arch}" --variant "${variant}"
-      else
-        docker manifest annotate "${manifest_ref}" "${ref}" --os "${os}" --arch "${arch}"
-      fi
-    done
-
-    docker manifest push --purge "${manifest_ref}"
+    echo "[INFO] buildx imagetools create ${manifest_ref} ← ${refs[*]}"
+    docker buildx imagetools create -t "${manifest_ref}" "${refs[@]}"
   done
 }
 
