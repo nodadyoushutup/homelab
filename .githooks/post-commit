@@ -9,4 +9,4 @@ GDIR="$(git rev-parse --git-dir)"
 if [[ -d "$GDIR/rebase-merge" || -d "$GDIR/rebase-apply" ]]; then
   exit 0
 fi
-exec python3 "$ROOT/.githooks/rag_embed_event.py" commit
+exec "$ROOT/.githooks/run_embed_hook.sh" commit

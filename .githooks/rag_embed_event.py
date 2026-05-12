@@ -6,7 +6,12 @@ Events:
   merge    — ``ORIG_HEAD..HEAD`` (fast-forward and merge pulls).
   rewrite  — after amend/rebase; prefers ``ORIG_HEAD..HEAD``, else stdin ``old new`` pairs.
 
+Git invokes ``.githooks/run_embed_hook.sh``, which starts this script in a detached
+session (``setsid`` for commit/merge when available) so the hook exits without waiting
+for HTTP; output is appended to ``.git/rag-hook.log``.
+
 Disable: ``export RAG_GIT_HOOKS_DISABLED=1``
+Blocking (wait for HTTP): ``export RAG_HOOK_SYNC=1``
 Strict (fail the hook on HTTP errors): ``export RAG_HOOK_STRICT=1``
 """
 from __future__ import annotations

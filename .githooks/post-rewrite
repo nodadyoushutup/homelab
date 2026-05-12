@@ -5,4 +5,4 @@ set -euo pipefail
 [[ -n "${RAG_GIT_HOOKS_DISABLED:-}" ]] && exit 0
 ROOT="$(git rev-parse --show-toplevel)"
 cd "$ROOT"
-exec python3 "$ROOT/.githooks/rag_embed_event.py" rewrite
+exec "$ROOT/.githooks/run_embed_hook.sh" rewrite
