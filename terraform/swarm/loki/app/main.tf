@@ -43,7 +43,7 @@ resource "docker_service" "loki" {
     }
 
     container_spec {
-      image = "grafana/loki:3.4.2@sha256:58a6c186ce78ba04d58bfe2a927eff296ba733a430df09645d56cdc158f3ba08"
+      image = "grafana/loki:3.7.2@sha256:191d4fdfb7264f16989f0a57f320872620a5a7c2ceeec6229212c4190ec49b86"
 
       args = [
         "-config.file=/etc/loki/config.yaml",
