@@ -11,7 +11,7 @@ variable "provider_config" {
 variable "image_reference" {
   description = "RAG engine image to run."
   type        = string
-  default     = "ghcr.io/nodadyoushutup/rag-engine:0.0.6"
+  default     = "harbor.nodadyoushutup.com/homelab/rag-engine:0.0.7"
 }
 
 variable "env_file_path" {

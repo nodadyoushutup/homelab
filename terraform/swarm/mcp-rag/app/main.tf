@@ -39,14 +39,21 @@ data "docker_network" "rag_engine" {
   name = var.rag_engine_network_name
 }
 
+module "image_pull_auth" {
+  source = "../../../modules/swarm-docker-service-pull-auth"
+
+  image_reference = var.image_reference
+  registry_auths  = local.docker_registry_auths
+}
+
 resource "docker_service" "mcp_rag" {
   name = local.service_name
 
   dynamic "auth" {
-    for_each = local.docker_registry_auths
+    for_each = module.image_pull_auth.docker_service_auth_map
 
     content {
-      server_address = try(auth.value.address, "harbor.nodadyoushutup.com")
+      server_address = auth.value.server_address
       username       = auth.value.username
       password       = auth.value.password
     }

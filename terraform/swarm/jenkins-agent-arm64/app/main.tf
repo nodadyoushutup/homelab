@@ -63,16 +63,23 @@ resource "docker_volume" "extra_mounts" {
   driver_opts = each.value.driver_opts
 }
 
+module "image_pull_auth" {
+  source = "../../../modules/swarm-docker-service-pull-auth"
+
+  image_reference = var.agent_image
+  registry_auths  = local.docker_registry_auths
+}
+
 resource "docker_service" "jenkins_agent" {
   for_each = local.agent_definitions
 
   name = startswith(each.value.safe_name, "${var.service_name_prefix}-") ? each.value.safe_name : "${var.service_name_prefix}-${each.value.safe_name}"
 
   dynamic "auth" {
-    for_each = local.docker_registry_auths
+    for_each = module.image_pull_auth.docker_service_auth_map
 
     content {
-      server_address = try(auth.value.address, "ghcr.io")
+      server_address = auth.value.server_address
       username       = auth.value.username
       password       = auth.value.password
     }
