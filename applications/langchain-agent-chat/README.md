@@ -19,8 +19,8 @@ when it builds client requests.
 
 The Docker image is built from this directory and published to Harbor as:
 
-- `harbor.nodadyoushutup.com/langchain-agent-chat/langchain-agent-chat:<tag>`
-- `harbor.nodadyoushutup.com/langchain-agent-chat/langchain-agent-chat:latest`
+- `harbor.nodadyoushutup.com/homelab/langchain-agent-chat:<tag>`
+- `harbor.nodadyoushutup.com/homelab/langchain-agent-chat:latest`
 
 LangChain Agent Chat is a Next.js application which enables chatting with any LangGraph server with a `messages` key through a chat interface.
 

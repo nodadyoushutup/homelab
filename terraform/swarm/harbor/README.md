@@ -15,6 +15,13 @@ The `app` stage is intentionally aligned with the existing manual Harbor layout:
 
 These are configurable via tfvars.
 
+## Harbor projects (`config/` stage)
+
+Harbor has flat projects (no nesting). This repo standardizes on a single **`homelab`** project so images are `harbor.example.com/homelab/<service>:<tag>` instead of duplicating the service name as both project and repository.
+
+- After changing `projects` in tfvars, run `scripts/misc/harbor_migrate_to_homelab_project.sh` if you need to copy existing tags out of older projects before Terraform deletes them.
+- Robot `project` permissions should use `namespace = "homelab"` for push/pull to those repositories.
+
 ## First Apply (Recommended Order)
 
 1. Prepare tfvars files from examples:

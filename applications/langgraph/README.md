@@ -214,7 +214,7 @@ Dockerfile path:
 
 Published image:
 
-- `harbor.nodadyoushutup.com/langgraph/langgraph:<tag>`
+- `harbor.nodadyoushutup.com/homelab/langgraph:<tag>`
 
 The published image name now matches the deployable agent boundary and the
 Kubernetes workload identity: `langgraph`.

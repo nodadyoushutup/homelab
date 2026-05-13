@@ -3,6 +3,6 @@
 # Docker SSH + registry credentials: /mnt/eapp/config/providers/docker.tfvars
 # (`swarm_docker_provider_config`), including Harbor and/or GHCR entries.
 
-image_reference = "harbor.nodadyoushutup.com/nodadyoushutup/mcp-rag:latest"
+image_reference = "harbor.nodadyoushutup.com/homelab/mcp-rag:latest"
 published_port  = 9016
 endpoint_host   = "192.168.1.120"

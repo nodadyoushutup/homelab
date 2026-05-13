@@ -34,7 +34,7 @@ docker compose up -d --build
 - Workflow publishes:
   - GHCR: `ghcr.io/<owner>/gha-runner:<version>` and `:latest`
   - Harbor:
-    `harbor.nodadyoushutup.com/gha-runner/gha-runner:<version>` and `:latest`
+    `harbor.nodadyoushutup.com/homelab/gha-runner:<version>` and `:latest`
 
 For Terraform deployment, set `github_runner_image` to the exact published tag (recommended), not `latest`.
 

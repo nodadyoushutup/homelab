@@ -7,117 +7,15 @@ provider_config = {
   }
 }
 
+# Images are published as harbor.example.com/homelab/<image>:<tag> (single Harbor project).
+# To migrate from older per-image Harbor projects, run:
+#   scripts/misc/harbor_migrate_to_homelab_project.sh --ensure-project
 projects = [
   {
-    name                   = "gha-runner"
-    public                 = false
-    vulnerability_scanning = true
+    name                     = "homelab"
+    public                   = false
+    vulnerability_scanning   = true
   },
-  {
-    name                   = "harbor"
-    public                 = false
-    vulnerability_scanning = true
-  },
-  {
-    name                   = "harbor-core"
-    public                 = false
-    vulnerability_scanning = true
-  },
-  {
-    name                   = "harbor-db"
-    public                 = false
-    vulnerability_scanning = true
-  },
-  {
-    name                   = "harbor-exporter"
-    public                 = false
-    vulnerability_scanning = true
-  },
-  {
-    name                   = "harbor-jobservice"
-    public                 = false
-    vulnerability_scanning = true
-  },
-  {
-    name                   = "harbor-log"
-    public                 = false
-    vulnerability_scanning = true
-  },
-  {
-    name                   = "harbor-portal"
-    public                 = false
-    vulnerability_scanning = true
-  },
-  {
-    name                   = "harbor-registryctl"
-    public                 = false
-    vulnerability_scanning = true
-  },
-  {
-    name                   = "mcp-atlassian"
-    public                 = false
-    vulnerability_scanning = true
-  },
-  {
-    name                   = "mcp-cloudflare"
-    public                 = false
-    vulnerability_scanning = true
-  },
-  {
-    name                   = "mcp-code"
-    public                 = false
-    vulnerability_scanning = true
-  },
-  {
-    name                   = "mcp-fortigate"
-    public                 = false
-    vulnerability_scanning = true
-  },
-  {
-    name                   = "mcp-google-workspace"
-    public                 = false
-    vulnerability_scanning = true
-  },
-  {
-    name                   = "nginx-photon"
-    public                 = false
-    vulnerability_scanning = true
-  },
-  {
-    name                   = "prepare"
-    public                 = false
-    vulnerability_scanning = true
-  },
-  {
-    name                   = "redis-photon"
-    public                 = false
-    vulnerability_scanning = true
-  },
-  {
-    name                   = "registry-photon"
-    public                 = false
-    vulnerability_scanning = true
-  },
-  {
-    name                   = "trivy-adapter-photon"
-    public                 = false
-    vulnerability_scanning = true
-  },
-  {
-    name                   = "cloud-image-repository"
-    public                 = false
-    vulnerability_scanning = true
-  },
-  {
-    name                   = "jenkins-agent"
-    public                 = false
-    vulnerability_scanning = true
-  },
-  {
-    name                   = "jenkins-controller"
-    public                 = false
-    vulnerability_scanning = true
-  }
 ]
 
 # Optional local users
@@ -140,7 +38,7 @@ projects = [
 #   }
 # ]
 
-# Optional robot account example
+# Optional robot account example (single Harbor project `homelab`)
 # robot_accounts = [
 #   {
 #     name        = "gha-publish"
@@ -149,46 +47,12 @@ projects = [
 #     permissions = [
 #       {
 #         kind      = "project"
-#         namespace = "gha-runner"
+#         namespace = "homelab"
 #         access = [
-#           {
-#             action   = "push"
-#             resource = "repository"
-#           },
-#           {
-#             action   = "pull"
-#             resource = "repository"
-#           }
+#           { action = "push", resource = "repository" },
+#           { action = "pull", resource = "repository" },
 #         ]
 #       },
-#       {
-#         kind      = "project"
-#         namespace = "mcp-code"
-#         access = [
-#           {
-#             action   = "push"
-#             resource = "repository"
-#           },
-#           {
-#             action   = "pull"
-#             resource = "repository"
-#           }
-#         ]
-#       },
-#       {
-#         kind      = "project"
-#         namespace = "harbor-core"
-#         access = [
-#           {
-#             action   = "push"
-#             resource = "repository"
-#           },
-#           {
-#             action   = "pull"
-#             resource = "repository"
-#           }
-#         ]
-#       }
 #     ]
 #   }
 # ]

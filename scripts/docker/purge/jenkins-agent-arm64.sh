@@ -15,6 +15,6 @@ fi
 APP_NAME="jenkins-agent-arm64"
 SERVICE_REGEX='^jenkins-agent-arm64($|-)'
 VOLUME_REGEX='^(jenkins-agent-arm64-config|jenkins-agent-arm64-home($|-).*)$'
-IMAGE_REGEX="^harbor.nodadyoushutup.com/jenkins-agent/jenkins-agent:"
+IMAGE_REGEX="^harbor.nodadyoushutup.com/homelab/jenkins-agent:"
 
 purge_main "$@"

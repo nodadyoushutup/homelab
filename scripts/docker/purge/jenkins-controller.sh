@@ -16,6 +16,6 @@ APP_NAME="jenkins-controller"
 SERVICE_REGEX="^jenkins-controller$"
 NETWORK_REGEX="^jenkins$"
 VOLUME_REGEX="^jenkins-controller-(home|config)$"
-IMAGE_REGEX="^harbor.nodadyoushutup.com/jenkins-controller/jenkins-controller:"
+IMAGE_REGEX="^harbor.nodadyoushutup.com/homelab/jenkins-controller:"
 
 purge_main "$@"

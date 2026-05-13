@@ -27,9 +27,9 @@ This creates/updates the local component directories from the pinned version in 
 
 Notes:
 - `--namespace` is required and should be the registry/repository prefix for output images.
-- `--path-mode namespace-component` keeps the default `<namespace>/<component>:<tag>` layout.
-- `--path-mode project-per-image` publishes Harbor-compatible paths like
-  `<registry>/<component>/<component>:<tag>`.
+- `--path-mode namespace-component` keeps the default `<namespace>/<component>:<tag>` layout (used for Harbor with `--namespace <registry>/homelab`).
+- `--path-mode project-per-image` publishes paths like
+  `<registry>/<component>/<component>:<tag>` (legacy one-Harbor-project-per-component layout).
 - If the build host does not have GNU Make installed, the script falls back to
   a disposable `docker:27-cli` helper container and installs build tools there.
 - If cross-architecture emulation is not installed, run once with `--install-binfmt`.
@@ -44,7 +44,7 @@ The shared publish workflow now includes a `harbor-runtime-set` target:
   - `build_target=harbor-runtime-set`
   - `target_registry=github` for `ghcr.io/<owner>/<component>:<tag>`
   - `target_registry=harbor` for
-    `harbor.nodadyoushutup.com/<component>/<component>:<tag>`
+    `harbor.nodadyoushutup.com/homelab/<component>:<tag>`
 
 ## Runtime image set
 

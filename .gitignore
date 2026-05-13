@@ -168,3 +168,12 @@ kubeconfig
 *.env
 .secrets/**
 !.secrets/.env.example
+
+# =============================================================================
+# Docs
+# =============================================================================
+
+docs/subagents/code/**
+docs/subagents/github/**
+docs/subagents/jira/**
+docs/subagents/tech-lead/**

@@ -13,7 +13,7 @@ Thin MCP server: forwards **`rag_search`** (corpus query) and **memory** tools t
 | `LOG_LEVEL` | Uvicorn / logging level. |
 | `MCP_RAG_ENGINE_TIMEOUT_SEC` | Engine POST timeout (default `120`). |
 
-See [docs/mcp/rag.md](../../../docs/mcp/rag.md) for Cursor wiring and troubleshooting.
+See [docs/mcp/mcp-rag.md](../../../docs/mcp/mcp-rag.md) for Cursor wiring and troubleshooting.
 
 ## Run locally
 

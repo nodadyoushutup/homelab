@@ -11,7 +11,7 @@ variable "provider_config" {
 variable "image_reference" {
   description = "RAG MCP image to run."
   type        = string
-  default     = "harbor.nodadyoushutup.com/mcp-rag/mcp-rag:latest"
+  default     = "harbor.nodadyoushutup.com/homelab/mcp-rag:latest"
 }
 
 variable "env_file_path" {

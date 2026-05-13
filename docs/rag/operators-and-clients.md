@@ -57,7 +57,7 @@ For OpenAI embeddings, set `RAG_EMBEDDING_PROVIDER=openai`, `OPENAI_API_KEY`, an
 
 Step-by-step MCP config, authentication headers, and troubleshooting table:
 
-- [docs/mcp/rag.md](../mcp/rag.md)
+- [docs/mcp/mcp-rag.md](../mcp/mcp-rag.md)
 
 ## Direct HTTP (debugging)
 

@@ -6,9 +6,11 @@ docs to check before doing substantive work.
 ## Where To Look
 
 - `docs/workflows/`: execution workflows
+- `docs/architecture/`: repository and Terraform layout (topic-per-file index in `README.md`)
 - `docs/workflows/edge-dns-and-nginx-proxy.md`: new public hostnames → Cloudflare tfvars + Nginx Proxy Manager tfvars (Swarm edge) vs cluster ingress
 - `docs/workflows/docker-build-github-actions.md`: Docker image publishes via GHA (dispatch, semver, Terraform/Argo CD/Swarm rollout, live health, CI)
 - `docs/workflows/mcp-code-worktrees-and-multi-agent.md`: mcp-code single-root model, Git worktrees, and isolating concurrent agents (one MCP backend per worktree)
+- `docs/mcp/README.md`: MCP servers in this repo—naming, URL shape, client wiring (`mcp-*.md`, including **`mcp-playwright.md`** for the **`playwright-mcp`** stack)
 - `docs/resources/README.md`: curated technology reference shelf
 - `docs/workflows/langgraph.md`: LangGraph implementation workflow
 - `docs/workflows/agents.md`: LangGraph runtime index (prompt map, routing, update workflow)

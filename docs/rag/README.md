@@ -21,7 +21,7 @@ Human-facing **system knowledge** for the semantic index: what it is, what gets 
 
 ## Quick links
 
-- MCP usage (ports, headers, troubleshooting): [docs/mcp/rag.md](../mcp/rag.md)
+- MCP usage (ports, headers, troubleshooting): [docs/mcp/mcp-rag.md](../mcp/mcp-rag.md)
 - Engine package summary: [docs/applications/rag-engine.md](../applications/rag-engine.md)
 - Structured chunking checklist: [rag-structured-file-ingest-roadmap.md](../workflows/rag-structured-file-ingest-roadmap.md) (add under `docs/workflows/` when authored)
 - Agent + MCP integration: [rag-agent-mcp-integration-roadmap.md](../workflows/rag-agent-mcp-integration-roadmap.md)

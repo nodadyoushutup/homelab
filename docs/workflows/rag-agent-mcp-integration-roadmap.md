@@ -97,7 +97,7 @@ embedding provider/model/dimensions, use a **new** collection or full rebuild.
 
 ## Related docs
 
-- MCP client wiring: [docs/mcp/rag.md](../mcp/rag.md)
+- MCP client wiring: [docs/mcp/mcp-rag.md](../mcp/mcp-rag.md)
 - RAG stack overview: [docs/rag/overview.md](../rag/overview.md)
 - Embeddings and collections: [docs/rag/embeddings-and-storage.md](../rag/embeddings-and-storage.md)
 - LangGraph app: [applications/langgraph/README.md](../../applications/langgraph/README.md)

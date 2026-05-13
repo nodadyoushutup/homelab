@@ -5,7 +5,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 VERSION="${MCP_CODE_VERSION:-2026.05.11.1}"
-TAG="harbor.nodadyoushutup.com/mcp-code/mcp-code:${VERSION}-arm64"
+TAG="harbor.nodadyoushutup.com/homelab/mcp-code:${VERSION}-arm64"
 SECRETS="${HOMELAB_SECRETS_ENV:-${ROOT}/.secrets/.env}"
 
 if [[ -f "${SECRETS}" ]]; then

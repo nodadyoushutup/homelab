@@ -397,7 +397,7 @@ build_harbor_runtime_set() {
   fi
 
   if [[ "${PUBLISH_HARBOR}" == "1" ]]; then
-    publish_runtime_set "${HARBOR_REGISTRY}" "project-per-image"
+    publish_runtime_set "${HARBOR_REGISTRY}/homelab" "namespace-component"
   fi
 }
 

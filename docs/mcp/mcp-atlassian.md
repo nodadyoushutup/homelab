@@ -1,0 +1,24 @@
+# mcp-atlassian
+
+Streamable HTTP MCP for **Atlassian Cloud** operations (Jira issues, boards, Confluence where exposed by the server). The Swarm stack can mount your **code** volume so tools see the same tree as other agents.
+
+## URL and path
+
+Publish the service behind HTTPS; clients call the Streamable MCP URL your proxy forwards to the task (path **`/mcp`** on the upstream in **`terraform/swarm/mcp-atlassian/app/main.tf`**).
+
+## Usage
+
+- Use for **Jira discovery**, transitions, comments, and Confluence reads/writes that the tool surface supports.
+- Jira agent policy in this repo: [docs/subagents/jira/01-runtime.md](../subagents/jira/01-runtime.md) and framework prompts under **`applications/langgraph/framework/agents/system_prompts/`**.
+
+## LangGraph
+
+**`applications/langgraph/subagents/jira/mcp.json`** registers the Atlassian server (key **`atlassian`**) with optional override **`HOMELAB_MCP_ATLASSIAN_URL`**.
+
+## Secrets and Swarm
+
+- Swarm stack: **`terraform/swarm/mcp-atlassian/app/`** — credentials and site settings via **`env_file_path`** or **`env`** (see **`variables.tf`**). Keep tokens out of git.
+
+## Related
+
+- [mcp-rag.md](mcp-rag.md) (supervisor and Jira agent also use **mcp-rag**)

@@ -225,7 +225,7 @@ jobs:
             fi
 
             if [ "${publish_harbor}" = "true" ]; then
-              harbor_image_base="${HARBOR_REGISTRY}/${image_name}/${image_name}"
+              harbor_image_base="${HARBOR_REGISTRY}/homelab/${image_name}"
             fi
           fi
 
@@ -635,7 +635,7 @@ jobs:
           fi
 
           if [ "${{ needs.prepare.outputs.publish_harbor }}" = "true" ]; then
-            publish_arch_tags "${HARBOR_REGISTRY}" "project-per-image"
+            publish_arch_tags "${HARBOR_REGISTRY}/homelab" "namespace-component"
           fi
 
       - name: Post-job Docker cleanup (self-hosted disk)
@@ -711,7 +711,7 @@ jobs:
           fi
 
           if [ "${{ needs.prepare.outputs.publish_harbor }}" = "true" ]; then
-            publish_arch_tags "${HARBOR_REGISTRY}" "project-per-image"
+            publish_arch_tags "${HARBOR_REGISTRY}/homelab" "namespace-component"
           fi
 
   publish_harbor_runtime_manifest:
@@ -789,7 +789,7 @@ jobs:
           fi
 
           if [ "${{ needs.prepare.outputs.publish_harbor }}" = "true" ]; then
-            publish_manifests "${HARBOR_REGISTRY}" "project-per-image"
+            publish_manifests "${HARBOR_REGISTRY}/homelab" "namespace-component"
           fi
 
       - name: Post-job Docker cleanup (self-hosted disk)
