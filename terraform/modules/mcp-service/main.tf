@@ -18,6 +18,13 @@ locals {
   )
 }
 
+module "image_pull_auth" {
+  source = "../swarm-docker-service-pull-auth"
+
+  image_reference = var.image_reference
+  registry_auths  = local.service_registry_auths
+}
+
 resource "docker_network" "this" {
   name   = local.network_name
   driver = "overlay"
@@ -27,10 +34,10 @@ resource "docker_service" "this" {
   name = var.service_name
 
   dynamic "auth" {
-    for_each = local.service_registry_auths
+    for_each = module.image_pull_auth.docker_service_auth_map
 
     content {
-      server_address = try(auth.value.address, var.registry_address)
+      server_address = auth.value.server_address
       username       = auth.value.username
       password       = auth.value.password
     }
