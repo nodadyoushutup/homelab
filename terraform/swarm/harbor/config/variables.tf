@@ -27,7 +27,10 @@ variable "system_config" {
 }
 
 variable "projects" {
-  description = "Projects to create/manage in Harbor."
+  description = <<-EOT
+    Extra Harbor projects to create/manage, or overrides for the always-declared
+    core `homelab` project (same `name` merges on top of module defaults).
+  EOT
   type = list(object({
     name                        = string
     public                      = optional(bool)

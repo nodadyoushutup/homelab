@@ -22,6 +22,10 @@ Harbor has flat projects (no nesting). This repo standardizes on a single **`hom
 - After changing `projects` in tfvars, run `scripts/misc/harbor_migrate_to_homelab_project.sh` if you need to copy existing tags out of older projects before Terraform deletes them.
 - Robot `project` permissions should use `namespace = "homelab"` for push/pull to those repositories.
 
+### Optional two-phase wipe (config tfvars outside the repo)
+
+To let Terraform **destroy** all managed Harbor projects/robots before re-applying a clean layout: point `projects` and `robot_accounts` at **empty lists**, set `delete_default_library = false` for the wipe apply, run `apply`, then restore definitions from your backup tfvars (for example `config.tfvars.phase2-backup-*` under the same config directory) and apply again.
+
 ## First Apply (Recommended Order)
 
 1. Prepare tfvars files from examples:

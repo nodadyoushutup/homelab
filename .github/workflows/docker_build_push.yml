@@ -53,6 +53,8 @@ permissions:
 env:
   GHCR_NAMESPACE: ghcr.io/${{ github.repository_owner }}
   HARBOR_REGISTRY: harbor.nodadyoushutup.com
+  # Single Harbor project for all homelab images: <registry>/<HARBOR_PROJECT>/<repo>:<tag>
+  HARBOR_PROJECT: homelab
 
 jobs:
   prepare:
@@ -225,7 +227,7 @@ jobs:
             fi
 
             if [ "${publish_harbor}" = "true" ]; then
-              harbor_image_base="${HARBOR_REGISTRY}/homelab/${image_name}"
+              harbor_image_base="${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${image_name}"
             fi
           fi
 
@@ -635,7 +637,7 @@ jobs:
           fi
 
           if [ "${{ needs.prepare.outputs.publish_harbor }}" = "true" ]; then
-            publish_arch_tags "${HARBOR_REGISTRY}/homelab" "namespace-component"
+            publish_arch_tags "${HARBOR_REGISTRY}/${HARBOR_PROJECT}" "namespace-component"
           fi
 
       - name: Post-job Docker cleanup (self-hosted disk)
@@ -711,8 +713,12 @@ jobs:
           fi
 
           if [ "${{ needs.prepare.outputs.publish_harbor }}" = "true" ]; then
-            publish_arch_tags "${HARBOR_REGISTRY}/homelab" "namespace-component"
+            publish_arch_tags "${HARBOR_REGISTRY}/${HARBOR_PROJECT}" "namespace-component"
           fi
+
+      - name: Post-job Docker cleanup (self-hosted disk)
+        if: always()
+        uses: ./.github/actions/docker-selfhosted-cleanup
 
   publish_harbor_runtime_manifest:
     needs:
@@ -789,7 +795,7 @@ jobs:
           fi
 
           if [ "${{ needs.prepare.outputs.publish_harbor }}" = "true" ]; then
-            publish_manifests "${HARBOR_REGISTRY}/homelab" "namespace-component"
+            publish_manifests "${HARBOR_REGISTRY}/${HARBOR_PROJECT}" "namespace-component"
           fi
 
       - name: Post-job Docker cleanup (self-hosted disk)

@@ -76,6 +76,16 @@ For typical **direct** builds publishing to GitHub:
 Prefer **`docker pull ghcr.io/<owner>/<image_name>:<version>`** so the local
 engine selects the correct architecture from the manifest.
 
+## Harbor registry layout
+
+When **`target_registry`** is **`harbor`** or **`both`**, direct builds push to
+**`<HARBOR_REGISTRY>/<HARBOR_PROJECT>/<image_name>`**. The workflow sets
+**`HARBOR_PROJECT`** to **`homelab`** by default (see `.github/workflows/docker_build_push.yml`).
+The Jenkins/bash mirror **`pipelines/applications/build_push.sh`** uses the same
+layout via environment **`HARBOR_PROJECT`** (default **`homelab`**). Pins in
+Terraform/Kubernetes should use that path (for example
+**`harbor.nodadyoushutup.com/homelab/langgraph:<tag>`**).
+
 ## Deploy and health (mandatory end state)
 
 Publishing a tag is only half the job. **Finish** with whatever combination of

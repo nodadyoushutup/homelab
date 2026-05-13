@@ -8,13 +8,15 @@ provider_config = {
 }
 
 # Images are published as harbor.example.com/homelab/<image>:<tag> (single Harbor project).
+# Terraform always declares project `homelab`; omit `projects` entirely, or list only
+# extra projects, or repeat `homelab` here to override defaults (visibility, quotas, etc.).
 # To migrate from older per-image Harbor projects, run:
 #   scripts/misc/harbor_migrate_to_homelab_project.sh --ensure-project
 projects = [
   {
-    name                     = "homelab"
-    public                   = false
-    vulnerability_scanning   = true
+    name                   = "homelab"
+    public                 = false
+    vulnerability_scanning = true
   },
 ]
 

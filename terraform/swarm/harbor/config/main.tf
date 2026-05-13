@@ -1,8 +1,17 @@
 locals {
-  project_specs = {
-    for project in var.projects :
-    project.name => project
+  # Always manage a single core project `homelab` for all homelab images
+  # (`registry/homelab/<repo>:<tag>`). Entries in var.projects with the same name
+  # override these defaults; additional project names extend the map.
+  default_homelab_project = {
+    name                        = "homelab"
+    public                      = false
+    vulnerability_scanning      = true
   }
+
+  project_specs = merge(
+    { homelab = local.default_homelab_project },
+    { for project in var.projects : project.name => project },
+  )
 
   user_specs = {
     for user in var.users :
@@ -58,7 +67,8 @@ resource "harbor_project" "projects" {
   cve_allowlist               = try(each.value.cve_allowlist, null)
   proxy_speed_kb              = try(each.value.proxy_speed_kb, null)
   storage_quota               = try(each.value.storage_quota, null)
-  force_destroy               = try(each.value.force_destroy, null)
+  # Default true so removing a project from tfvars can destroy non-empty Harbor projects.
+  force_destroy               = try(each.value.force_destroy, true)
 }
 
 resource "harbor_user" "users" {

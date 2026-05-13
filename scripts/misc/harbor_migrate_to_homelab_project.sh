@@ -134,36 +134,41 @@ for proj in sorted(projects, key=lambda p: p["name"]):
     for repo in repos:
         repo_name = repo["name"]
         dest = dest_repo_name(pname, repo_name)
-        rep_enc = urllib.parse.quote(repo_name, safe="")
-        arts = http_get(f"/api/v2.0/projects/{enc}/repositories/{rep_enc}/artifacts?page_size=100")
-        tags: set[str] = set()
-        for art in arts:
-            for t in art.get("tags") or []:
-                n = t.get("name")
-                if n:
-                    tags.add(n)
-        if not tags:
-            print(f"[skip] {pname}/{repo_name}: no tags", file=sys.stderr)
-            continue
+        # Tags via skopeo (Harbor artifacts list is unreliable on some builds).
         reg = harbor_url.removeprefix("http://").removeprefix("https://")
         creds = f"{user}:{pw}"
-        tls = ["--src-tls-verify=false", "--dest-tls-verify=false"] if insecure else []
+        tls_verify = ["--tls-verify=false"] if insecure else []
+        tls_copy = (
+            ["--src-tls-verify=false", "--dest-tls-verify=false"] if insecure else []
+        )
+        out = subprocess.check_output(
+            ["skopeo", "list-tags", *tls_verify, f"--creds={creds}", f"docker://{reg}/{repo_name}"],
+            text=True,
+        )
+        data = json.loads(out)
+        tags = set(data.get("Tags") or [])
+        if not tags:
+            print(f"[skip] {pname}/{repo_name}: skopeo list-tags empty", file=sys.stderr)
+            continue
         for tag in sorted(tags):
             src = f"docker://{reg}/{repo_name}:{tag}"
             dst = f"docker://{reg}/homelab/{dest}:{tag}"
             print(f"[copy] {src} -> {dst}")
-            subprocess.check_call(
-                [
-                    "skopeo",
-                    "copy",
-                    "--all=false",
-                    *tls,
-                    f"--src-creds={creds}",
-                    f"--dest-creds={creds}",
-                    src,
-                    dst,
-                ]
-            )
+            try:
+                subprocess.check_call(
+                    [
+                        "skopeo",
+                        "copy",
+                        "--all",
+                        *tls_copy,
+                        f"--src-creds={creds}",
+                        f"--dest-creds={creds}",
+                        src,
+                        dst,
+                    ]
+                )
+            except subprocess.CalledProcessError as e:
+                print(f"[warn] copy failed (skip): {src} ({e.returncode})", file=sys.stderr)
 PY
 
 echo "[done] Finished tag copies into homelab/. Apply Harbor config Terraform after old projects are removable."

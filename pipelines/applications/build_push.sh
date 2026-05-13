@@ -11,6 +11,8 @@ ROOT_DIR="$(cd -- "${SCRIPT_DIR}/../.." && pwd)"
 
 GHCR_NAMESPACE_DEFAULT="ghcr.io/nodadyoushutup"
 HARBOR_REGISTRY_DEFAULT="harbor.nodadyoushutup.com"
+# Harbor project (flat namespace before repo name): registry/<project>/<repo>:<tag>
+HARBOR_PROJECT_DEFAULT="homelab"
 
 log() {
   printf '[docker-pipeline] %s\n' "$*"
@@ -48,6 +50,7 @@ Options:
 Environment fallbacks:
   GHCR_USERNAME / GITHUB_ACTOR
   GHCR_TOKEN / GITHUB_TOKEN
+  HARBOR_PROJECT (default: homelab; Harbor project segment before image name)
   HARBOR_USERNAME
   HARBOR_PASSWORD
 EOF_USAGE
@@ -245,7 +248,7 @@ resolve_registry_target() {
     fi
 
     if [[ "${PUBLISH_HARBOR}" == "1" ]]; then
-      HARBOR_IMAGE_BASE="${HARBOR_REGISTRY}/${IMAGE_NAME}/${IMAGE_NAME}"
+      HARBOR_IMAGE_BASE="${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${IMAGE_NAME}"
     fi
   fi
 }
@@ -397,7 +400,7 @@ build_harbor_runtime_set() {
   fi
 
   if [[ "${PUBLISH_HARBOR}" == "1" ]]; then
-    publish_runtime_set "${HARBOR_REGISTRY}/homelab" "namespace-component"
+    publish_runtime_set "${HARBOR_REGISTRY}/${HARBOR_PROJECT}" "namespace-component"
   fi
 }
 
@@ -492,6 +495,7 @@ esac
 
 GHCR_NAMESPACE="${GHCR_NAMESPACE:-${GHCR_NAMESPACE_DEFAULT}}"
 HARBOR_REGISTRY="${HARBOR_REGISTRY:-${HARBOR_REGISTRY_DEFAULT}}"
+HARBOR_PROJECT="${HARBOR_PROJECT:-${HARBOR_PROJECT_DEFAULT}}"
 
 resolve_build_target
 resolve_registry_target
