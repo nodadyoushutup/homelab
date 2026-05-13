@@ -164,7 +164,7 @@ kubeconfig
 # Environment & secrets
 # =============================================================================
 
-!**/.gitkeep
+
 *.env
 .secrets/**
 !.secrets/.env.example
@@ -177,3 +177,9 @@ docs/subagents/code/**
 docs/subagents/github/**
 docs/subagents/jira/**
 docs/subagents/tech-lead/**
+
+
+# =============================================================================
+# Git
+# =============================================================================
+!**/.gitkeep
