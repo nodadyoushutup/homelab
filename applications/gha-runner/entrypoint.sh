@@ -111,6 +111,23 @@ if bool_true "${GH_RUNNER_DISABLEUPDATE:-true}"; then
   config_args+=(--disableupdate)
 fi
 
+# Restarts of an ephemeral runner reuse the container's writable layer, so a
+# stale .runner from the prior registration is still on disk; config.sh then
+# refuses to re-register ("Cannot configure the runner because it is already
+# configured"). --replace only handles the GitHub-side conflict, not the local
+# file. Try a graceful deregister first, then force-remove the leftover state.
+if [[ -f .runner ]]; then
+  echo "[INFO] Stale runner registration found on disk; cleaning up before re-config."
+  remove_token=""
+  if [[ -n "${runner_access_token}" && "${runner_access_token}" != "__SET_ME__" ]]; then
+    remove_token="$(request_runner_token "${runner_url}" "remove-token" "${runner_access_token}" "${github_api_url}" || true)"
+  fi
+  if [[ -n "${remove_token}" ]]; then
+    ./config.sh remove --unattended --token "${remove_token}" || true
+  fi
+  rm -f .runner .credentials .credentials_rsaparams .path .env
+fi
+
 ./config.sh "${config_args[@]}"
 
 cleanup() {
