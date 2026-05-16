@@ -42,6 +42,7 @@ on:
           - mcp-terraform
           - mcp-rag
           - rag-engine
+          - qbittorrent-metrics-exporter
           - gha-runner
           - jenkins-agent
           - jenkins-controller
@@ -165,6 +166,11 @@ jobs:
             rag-engine)
               image_name="rag-engine"
               docker_context="applications/rag-engine"
+              build_strategy="direct"
+              ;;
+            qbittorrent-metrics-exporter)
+              image_name="qbittorrent-metrics-exporter"
+              docker_context="applications/qbittorrent-metrics-exporter"
               build_strategy="direct"
               ;;
             gha-runner)

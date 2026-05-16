@@ -4,7 +4,7 @@ services:
   # RAG dev pair: bind-mounted application code (like langgraph-dev). Agent Chat is the baked `runner`
   # image (no source bind mount); rebuild when UI changes.
   # Restart rag-engine-dev / mcp-rag-dev after edits; rebuild images only when Dockerfile or requirements change.
-  # Chroma stays on Swarm — `environment` overrides RAG_CHROMA_* from .secrets/.env so a Swarm hostname like
+  # Chroma stays on Swarm — `environment` overrides RAG_CHROMA_* from .config/.env so a Swarm hostname like
   # `chromadb` does not break Compose (see docs/rag/operators-and-clients.md).
   # Override: export HOMELAB_DEV_CHROMA_HOST=... HOMELAB_DEV_CHROMA_PORT=... before `docker compose up`.
   rag-engine-dev:
@@ -14,7 +14,7 @@ services:
       context: ../applications/rag-engine
       dockerfile: Dockerfile
     env_file:
-      - ../.secrets/.env
+      - ../.config/.env
     environment:
       PYTHONDONTWRITEBYTECODE: "1"
       PYTHONUNBUFFERED: "1"
@@ -49,7 +49,7 @@ services:
       context: ../applications/mcp-rag
       dockerfile: Dockerfile
     env_file:
-      - ../.secrets/.env
+      - ../.config/.env
     environment:
       PYTHONDONTWRITEBYTECODE: "1"
       PYTHONUNBUFFERED: "1"
@@ -70,7 +70,7 @@ services:
 
   # mcp-code: HTTP aggregate on :8100; server.py merges three stdio MCP children (opt-in native: MCP_CODE_USE_NATIVE=1; opt-in http+mcp-proxy: MCP_CODE_UPSTREAM_TRANSPORT=http).
   # Mount the homelab tree at the same path as Swarm/NFS (/mnt/eapp/code/homelab) so filesystem, git, and ast-grep agree on roots.
-  # Set HOMELAB_MCP_CODE_HOST_MOUNT in .secrets/.env (see .secrets/.env.example); pass --env-file .secrets/.env when running compose from repo root.
+  # Set HOMELAB_MCP_CODE_HOST_MOUNT in .config/.env (see .config/.env.example); pass --env-file .config/.env when running compose from repo root.
   mcp-code-dev:
     image: homelab/mcp-code:latest
     pull_policy: never
@@ -78,7 +78,7 @@ services:
       context: ..
       dockerfile: applications/mcp-code/Dockerfile
     env_file:
-      - ../.secrets/.env
+      - ../.config/.env
     environment:
       PYTHONDONTWRITEBYTECODE: "1"
       PYTHONUNBUFFERED: "1"
@@ -110,7 +110,7 @@ services:
   langgraph-postgres:
     image: postgres:17-alpine
     env_file:
-      - ../.secrets/.env
+      - ../.config/.env
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
       interval: 5s
@@ -130,7 +130,7 @@ services:
     # runtime mkdirs cwd on start; NFS root_squash makes that fail for root.
     working_dir: /app/langgraph/agent
     env_file:
-      - ../.secrets/.env
+      - ../.config/.env
     depends_on:
       langgraph-postgres:
         condition: service_healthy
@@ -146,10 +146,10 @@ services:
       # Same homelab tree as mcp-code-dev (NFS path inside the container) for MCP path normalization.
       CODE_REPOSITORY_ROOT: /mnt/eapp/code/homelab
       TECH_LEAD_REPOSITORY_ROOT: /mnt/eapp/code/homelab
-      # Centralized `.secrets/.env` for `framework.configuration.merged_settings` / assert paths.
-      # Default matches the standard bind mount; override with HOMELAB_SECRETS_ENV in .env if the repo root differs.
-      HOMELAB_SECRETS_ENV: ${HOMELAB_SECRETS_ENV:-/mnt/eapp/code/homelab/.secrets/.env}
-      # MCP HTTP URLs: set in `.secrets/.env` for LangGraph `mcp.json` `url_from_env` resolution; defaults are Compose service DNS + LAN Swarm MCP (see .secrets/.env.example).
+      # Centralized `.config/.env` for `framework.configuration.merged_settings` / assert paths.
+      # Default matches the standard bind mount; override with HOMELAB_CONFIG_ENV in .env if the repo root differs.
+      HOMELAB_CONFIG_ENV: ${HOMELAB_CONFIG_ENV:-${HOMELAB_SECRETS_ENV:-/mnt/eapp/code/homelab/.config/.env}}
+      # MCP HTTP URLs: set in `.config/.env` for LangGraph `mcp.json` `url_from_env` resolution; defaults are Compose service DNS + LAN Swarm MCP (see .config/.env.example).
       HOMELAB_MCP_RAG_URL: ${HOMELAB_MCP_RAG_URL:-http://mcp-rag-dev:8080/mcp}
       HOMELAB_MCP_CODE_URL: ${HOMELAB_MCP_CODE_URL:-http://mcp-code-dev:8100/mcp}
       HOMELAB_MCP_GITHUB_URL: ${HOMELAB_MCP_GITHUB_URL:-http://192.168.1.120:18208/mcp}

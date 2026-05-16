@@ -13,10 +13,10 @@ CLEAR_PORT="${AGENT_SERVER_CLEAR_PORT:-1}"
 PUBLIC_HOST="${AGENT_SERVER_PUBLIC_HOST:-${LANGGRAPH_DEBUG_PUBLIC_HOST:-}}"
 
 # Load homelab-wide secrets into the shell so ``langgraph`` sees the same keys as
-# ``framework.configuration.merged_settings`` (default: <repo>/.secrets/.env,
-# override with ``HOMELAB_SECRETS_ENV``).
+# ``framework.configuration.merged_settings`` (default: <repo>/.config/.env,
+# override with ``HOMELAB_CONFIG_ENV``).
 HOMELAB_ROOT="$(cd "${ROOT_DIR}/../.." && pwd)"
-SECRETS_ENV="${HOMELAB_SECRETS_ENV:-${HOMELAB_ROOT}/.secrets/.env}"
+SECRETS_ENV="${HOMELAB_CONFIG_ENV:-${HOMELAB_SECRETS_ENV:-${HOMELAB_ROOT}/.config/.env}}"
 if [[ -f "${SECRETS_ENV}" ]]; then
   _py=""
   if [[ -x "${ROOT_DIR}/.venv/bin/python" ]]; then

@@ -167,9 +167,7 @@ kubeconfig
 # (see scripts/terraform/load_root_env.sh and .config/README.md).
 .config/*
 !.config/README.md
-
-.secrets/**
-!.secrets/.env.example
+!.config/.env.example
 
 # =============================================================================
 # Docs

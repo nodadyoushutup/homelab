@@ -18,3 +18,13 @@ data:
   resource.customizations.ignoreResourceUpdates.all: |-
     jsonPointers:
       - /status
+  resource.customizations.health.external-secrets.io_SecretStore: |
+    hs = {}
+    hs.status = "Healthy"
+    hs.message = "Vault reachability is validated by ESO; ignore for app health"
+    return hs
+  resource.customizations.health.external-secrets.io_ExternalSecret: |
+    hs = {}
+    hs.status = "Healthy"
+    hs.message = "Secret sync is validated by ESO; ignore for app health"
+    return hs

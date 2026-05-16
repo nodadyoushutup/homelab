@@ -1,0 +1,70 @@
+resource "docker_network" "graylog_database" {
+  name   = "graylog-database"
+  driver = "overlay"
+}
+
+resource "docker_volume" "mongodb_data" {
+  name = "graylog-mongodb-data"
+}
+
+resource "docker_volume" "mongodb_config" {
+  name = "graylog-mongodb-config"
+}
+
+resource "docker_service" "graylog_mongodb" {
+  name = "graylog-mongodb"
+
+  task_spec {
+    placement {
+      constraints = ["node.labels.role==swarm-cp-0"]
+
+      platforms {
+        os           = "linux"
+        architecture = "aarch64"
+      }
+    }
+
+    networks_advanced {
+      name    = docker_network.graylog_database.id
+      aliases = ["mongodb"]
+    }
+
+    container_spec {
+      image = "mongo:7.0.21@sha256:3d715950d83061ff2fbc910d12d3703212538cacf6b3003e3736fa5c7f51a2e1"
+
+      dns_config {
+        nameservers = var.dns_nameservers
+      }
+
+      mounts {
+        target = "/data/db"
+        source = docker_volume.mongodb_data.name
+        type   = "volume"
+      }
+
+      mounts {
+        target = "/data/configdb"
+        source = docker_volume.mongodb_config.name
+        type   = "volume"
+      }
+
+      healthcheck {
+        test         = ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+        interval     = "15s"
+        timeout      = "5s"
+        retries      = 10
+        start_period = "30s"
+      }
+    }
+  }
+
+  mode {
+    replicated {
+      replicas = 1
+    }
+  }
+
+  update_config {
+    order = "stop-first"
+  }
+}

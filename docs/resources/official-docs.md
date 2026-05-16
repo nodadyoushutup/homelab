@@ -53,6 +53,7 @@ When a project does not maintain a standalone docs site, this file links to the 
 | Prometheus | `terraform/swarm/prometheus/{app,database}` | [Prometheus docs](https://prometheus.io/docs/introduction/overview/) |
 | Grafana Loki | `terraform/swarm/loki/app` | [Loki docs](https://grafana.com/docs/loki/latest/) |
 | Grafana Alloy | `terraform/swarm/alloy/app` | [Alloy docs](https://grafana.com/docs/alloy/latest/) |
+| Graylog | `terraform/swarm/graylog/{database,app}` | [Graylog docs](https://go2docs.graylog.org/current/) |
 | Graphite | `terraform/swarm/graphite/app` | [Graphite docs](https://graphite.readthedocs.io/en/latest/) |
 | Telegraf | `terraform/swarm/telegraf_docker_metrics/app` | [Telegraf docs](https://docs.influxdata.com/telegraf/v1/configuration/) |
 | Dozzle | `terraform/swarm/dozzle/app` | [Dozzle docs](https://dozzle.dev/guide/what-is-dozzle) |

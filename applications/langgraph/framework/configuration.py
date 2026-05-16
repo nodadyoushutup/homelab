@@ -18,12 +18,17 @@ def default_repo_root() -> Path:
     return LANGGRAPH_ROOT.parent.parent.resolve()
 
 
-def secrets_env_path() -> Path:
-    """Homelab-wide secrets file (not per-agent ``.env``)."""
-    override = os.environ.get("HOMELAB_SECRETS_ENV")
+def config_env_path() -> Path:
+    """Homelab-wide dotenv (API keys, compose, pipeline env) — not per-agent ``.env``."""
+    override = os.environ.get("HOMELAB_CONFIG_ENV") or os.environ.get("HOMELAB_SECRETS_ENV")
     if override:
         return Path(override).expanduser().resolve()
-    return (default_repo_root() / ".secrets" / ".env").resolve()
+    return (default_repo_root() / ".config" / ".env").resolve()
+
+
+def secrets_env_path() -> Path:
+    """Deprecated alias for :func:`config_env_path`."""
+    return config_env_path()
 
 
 def load_env_file(path: Path) -> dict[str, str]:
@@ -36,7 +41,7 @@ def load_env_file(path: Path) -> dict[str, str]:
 
 def assert_no_langgraph_local_env_files() -> None:
     """Fail fast if ignored app-local dotenv files reappear under LangGraph."""
-    allowed = secrets_env_path()
+    allowed = config_env_path()
     local_env_files = list(LANGGRAPH_ROOT.rglob(".env"))
     if local_env_files:
         formatted = ", ".join(str(path) for path in sorted(local_env_files))
@@ -50,13 +55,13 @@ def merged_settings(app_dir: Path, *extra_env_files: Path) -> dict[str, str]:
     """Merge homelab secrets, then the process environment.
 
     ``app_dir`` is retained for call-site compatibility; configuration is loaded from
-    ``secrets_env_path()`` (default ``<repo>/.secrets/.env``) instead of per-agent
+    ``config_env_path()`` (default ``<repo>/.config/.env``) instead of per-agent
     ``.env`` files. ``extra_env_files`` is also retained for compatibility, but
     intentionally ignored so LangGraph local config has a single dotenv source.
     """
     _ = (app_dir, extra_env_files)
     assert_no_langgraph_local_env_files()
-    secrets = load_env_file(secrets_env_path())
+    secrets = load_env_file(config_env_path())
     for key, value in secrets.items():
         os.environ.setdefault(key, value)
 

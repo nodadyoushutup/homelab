@@ -3,7 +3,7 @@
 This directory holds everything that wires the **homelab LangGraph** Python
 tree into containers and local dev helpers.
 
-Runtime secrets for all graphs live in the **homelab** file ``.secrets/.env``
+Runtime secrets for all graphs live in the **homelab** file ``.config/.env``
 (next to ``applications/``), not in per-agent ``.env`` files. ``agent_server.sh``
 exports those values into the shell before starting ``langgraph dev``. The
 Compose stack uses the same file via ``env_file`` on ``langgraph-dev``.

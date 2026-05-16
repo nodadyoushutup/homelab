@@ -10,13 +10,17 @@ if [[ -z "${_pipeline_root_dir}" ]]; then
   _pipeline_root_dir="$(cd "${_pipeline_script_dir}/../.." && pwd)"
 fi
 
-_pipeline_secrets_env="${_pipeline_root_dir}/.secrets/.env"
+_pipeline_config_env="${_pipeline_root_dir}/.config/.env"
+_pipeline_legacy_secrets_env="${_pipeline_root_dir}/.secrets/.env"
 _pipeline_legacy_env="${_pipeline_root_dir}/.env"
 _pipeline_env_file=""
-if [[ -f "${_pipeline_secrets_env}" ]]; then
-  _pipeline_env_file="${_pipeline_secrets_env}"
+if [[ -f "${_pipeline_config_env}" ]]; then
+  _pipeline_env_file="${_pipeline_config_env}"
+elif [[ -f "${_pipeline_legacy_secrets_env}" ]]; then
+  echo "[homelab] Prefer .config/.env over .secrets/.env; copy variables into .config/.env and remove .secrets/.env (see .config/.env.example)." >&2
+  _pipeline_env_file="${_pipeline_legacy_secrets_env}"
 elif [[ -f "${_pipeline_legacy_env}" ]]; then
-  echo "[homelab] Prefer .secrets/.env over repo-root .env; copy variables from .env into .secrets/.env and remove .env (see .secrets/.env.example)." >&2
+  echo "[homelab] Prefer .config/.env over repo-root .env; copy variables into .config/.env and remove .env (see .config/.env.example)." >&2
   _pipeline_env_file="${_pipeline_legacy_env}"
 fi
 if [[ -n "${_pipeline_env_file}" && -f "${_pipeline_env_file}" ]]; then
@@ -83,7 +87,7 @@ if [[ -n "${_pipeline_env_file}" && -f "${_pipeline_env_file}" ]]; then
 fi
 
 # Default site layout: Terraform/Kubernetes tfvars + minio.backend.hcl live under <repo>/.config/
-# (migrated from legacy /mnt/eapp/config). Override with CONFIG_DIR in .secrets/.env when needed.
+# (migrated from legacy /mnt/eapp/config). Override with CONFIG_DIR in .config/.env when needed.
 if [[ -z "${CONFIG_DIR:-}" ]]; then
   export CONFIG_DIR="${_pipeline_root_dir}/.config"
 fi

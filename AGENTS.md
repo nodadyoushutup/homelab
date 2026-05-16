@@ -39,15 +39,14 @@ docs to check before doing substantive work.
   **`langgraph-dev`** sets **`HOMELAB_MCP_RAG_URL`** so in-container agents use
   that MCP. **Chroma stays on Swarm**; **`rag-engine-dev`** defaults Chroma to
   **`192.168.1.120:8000`** via Compose (overriding **`chromadb`** in
-  **`.secrets/.env`**). Adjust with **`HOMELAB_DEV_CHROMA_HOST`** /
+  **`.config/.env`**). Adjust with **`HOMELAB_DEV_CHROMA_HOST`** /
   **`HOMELAB_DEV_CHROMA_PORT`** if needed. Swarm RAG deploys are unchanged. The Kubernetes pair is
   production only: `kubernetes/langgraph` and `kubernetes/langchain-agent-chat`.
   Do not point Docker dev chat at Kubernetes/prod LangGraph, and do not point
   Kubernetes/prod chat at Docker dev LangGraph.
 - For LangGraph secrets and config, the single local dotenv source of truth is
-  `<repo>/.secrets/.env` (same file holds optional `CONFIG_DIR` (when unset after load, Terraform tfvars default to `<repo>/.config`; see `scripts/terraform/load_root_env.sh`), Argo CD installer vars, MinIO
-  compose keys, and Compose interpolation keys documented in `.secrets/.env.example`). When asked to
-  edit the LangGraph `.env`, literally update that file. Do not create or use `.env`
+  `<repo>/.config/.env` (same tree holds tfvars under `<repo>/.config/terraform/**`; optional `CONFIG_DIR` in the dotenv when unset defaults to `<repo>/.config`; see `scripts/terraform/load_root_env.sh` and `.config/.env.example`). When asked to
+  edit the LangGraph `.env`, literally update `<repo>/.config/.env`. Do not create or use `.env`
   files inside `applications/langgraph/agent/`, `applications/langgraph/subagents/`,
   or other LangGraph app directories for now.
 - If a stable pattern changes, update the corresponding docs as part of the
@@ -65,5 +64,5 @@ docs to check before doing substantive work.
 - Repo RAG MCP URL is `https://mcp.rag.nodadyoushutup.com/mcp`. Cursor project
   `.cursor/mcp.json` includes the URL; set `x-api-key` matching `MCP_RAG_API_KEY`
   via User-level Cursor MCP/`~/.cursor/mcp.json` when the Swarm service enforces auth.
-  LangGraph fills the header from `.secrets/.env`; Codex uses `env_http_headers` in `.codex/config.toml`.
+  LangGraph fills the header from `.config/.env`; Codex uses `env_http_headers` in `.codex/config.toml`.
 - LangGraph Homelab runtime enforces **docs `rag_search` before every specialist delegation**, a second **code-location `rag_search` before `code` and `tech_lead` delegation**, and **read/search before writes** on the Code specialist; see `docs/workflows/rag-agent-mcp-integration-roadmap.md`. Break-glass: **`HOMELAB_DISABLE_WORKFLOW_GATES=1`** on the agent process only.

@@ -34,7 +34,7 @@ top-level directory.
 | `pipelines/` | Jenkins (or related) pipeline definitions organized by technology (`applications/`, `packer/`, `terraform/`). |
 | `data/` | Local or exported operational data (screenshots, exports, dev artifacts). Treat as **not** authoritative for infra state; Git usually ignores most of it. |
 | `.github/` | GitHub Actions workflows (image builds, Packer, validation). |
-| `.secrets/` | Local secrets and env interpolation (see `.secrets/.env.example`); never commit real secrets. |
+| `.config/` | Site-local tfvars, backends, keys, and dotenv (see `.config/.env.example`); never commit real secrets or live tfvars. |
 | `.cursor/`, `.vscode/`, `.githooks/` | Editor and hook configuration for contributors. |
 
 ## Swarm versus Kubernetes

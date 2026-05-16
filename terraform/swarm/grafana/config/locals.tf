@@ -102,4 +102,8 @@ locals {
   velero_overview_file_path = "${path.module}/dashboards/velero-overview.json"
   velero_overview_file_hash = filemd5(local.velero_overview_file_path)
   velero_overview_content   = file(local.velero_overview_file_path)
+
+  qbittorrent_overview_file_path = "${path.module}/dashboards/qbittorrent-overview.json"
+  qbittorrent_overview_file_hash = filemd5(local.qbittorrent_overview_file_path)
+  qbittorrent_overview_content   = file(local.qbittorrent_overview_file_path)
 }

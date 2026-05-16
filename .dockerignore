@@ -165,5 +165,3 @@ kubeconfig
 
 !**/.gitkeep
 *.env
-.secrets/**
-!.secrets/.env.example

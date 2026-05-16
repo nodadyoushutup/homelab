@@ -1,0 +1,21 @@
+# Copy to CONFIG_DIR/terraform/swarm/qbittorrent-metrics-exporter/app.tfvars
+# (default: /mnt/eapp/code/homelab/.config/terraform/swarm/qbittorrent-metrics-exporter/app.tfvars)
+#
+# Build/push: GitHub Actions workflow docker_build_push.yml → build_target
+# `qbittorrent-metrics-exporter`, target_registry `harbor` or `both`, build_platforms `arm64`.
+#
+# Docker SSH + registry: CONFIG_DIR/terraform/providers/docker_arm64.tfvars
+
+image_reference = "harbor.nodadyoushutup.com/homelab/qbittorrent-metrics-exporter:0.3.2"
+published_port  = 18080
+endpoint_host   = "192.168.1.120"
+
+# All instance URLs are defaulted in locals.tf; override or extend here if needed:
+# qbittorrent_hosts = {
+#   "movie-0" = "https://qbittorrent.movie.0.nodadyoushutup.com"
+# }
+
+env = {
+  QBITTORRENT_USERNAME = "admin"
+  QBITTORRENT_PASSWORD = "replace-me"
+}

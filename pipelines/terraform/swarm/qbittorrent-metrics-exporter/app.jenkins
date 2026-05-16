@@ -1,0 +1,18 @@
+pipeline {
+  agent none
+
+  options {
+    disableConcurrentBuilds()
+  }
+
+  stages {
+    stage('Terraform') {
+      agent {
+        label 'swarm/qbittorrent-metrics-exporter/app'
+      }
+      steps {
+        sh './scripts/terraform/jenkins_stage_runner.sh ./pipelines/terraform/swarm/qbittorrent-metrics-exporter/app.sh'
+      }
+    }
+  }
+}
