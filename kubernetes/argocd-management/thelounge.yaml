@@ -1,0 +1,48 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: thelounge
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "29"
+spec:
+  description: The Lounge platform addon
+  sourceRepos:
+    - git@github.com:nodadyoushutup/homelab.git
+    - https://github.com/nodadyoushutup/homelab.git
+  destinations:
+    - namespace: thelounge
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+  namespaceResourceWhitelist:
+    - group: "*"
+      kind: "*"
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: thelounge
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "30"
+spec:
+  project: thelounge
+  revisionHistoryLimit: 0
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: thelounge
+  source:
+    repoURL: git@github.com:nodadyoushutup/homelab.git
+    targetRevision: HEAD
+    path: kubernetes/thelounge
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - SkipDryRunOnMissingResource=true

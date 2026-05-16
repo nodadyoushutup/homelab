@@ -1,0 +1,59 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: ingress-nginx
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "19"
+spec:
+  description: ingress-nginx platform addon
+  sourceRepos:
+    - git@github.com:nodadyoushutup/homelab.git
+    - https://github.com/nodadyoushutup/homelab.git
+    - https://kubernetes.github.io/ingress-nginx
+  destinations:
+    - namespace: ingress-nginx
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+  namespaceResourceWhitelist:
+    - group: "*"
+      kind: "*"
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ingress-nginx
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "20"
+spec:
+  project: ingress-nginx
+  revisionHistoryLimit: 0
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: ingress-nginx
+  sources:
+    - repoURL: https://kubernetes.github.io/ingress-nginx
+      chart: ingress-nginx
+      targetRevision: "4.14.3"
+      helm:
+        releaseName: ingress-nginx
+        valueFiles:
+          - $values/kubernetes/ingress-nginx/values.yaml
+    - repoURL: git@github.com:nodadyoushutup/homelab.git
+      targetRevision: HEAD
+      ref: values
+    - repoURL: git@github.com:nodadyoushutup/homelab.git
+      targetRevision: HEAD
+      path: kubernetes/ingress-nginx
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - SkipDryRunOnMissingResource=true

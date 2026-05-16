@@ -1,0 +1,59 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: node-exporter-k8s
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "27"
+spec:
+  description: Prometheus node exporter platform addon
+  sourceRepos:
+    - git@github.com:nodadyoushutup/homelab.git
+    - https://github.com/nodadyoushutup/homelab.git
+    - https://prometheus-community.github.io/helm-charts
+  destinations:
+    - namespace: monitoring
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+  namespaceResourceWhitelist:
+    - group: "*"
+      kind: "*"
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: node-exporter-k8s
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "28"
+spec:
+  project: node-exporter-k8s
+  revisionHistoryLimit: 0
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  sources:
+    - repoURL: https://prometheus-community.github.io/helm-charts
+      chart: prometheus-node-exporter
+      targetRevision: "4.52.0"
+      helm:
+        releaseName: node-exporter
+        valueFiles:
+          - $values/kubernetes/node-exporter/values.yaml
+    - repoURL: git@github.com:nodadyoushutup/homelab.git
+      targetRevision: HEAD
+      ref: values
+    - repoURL: git@github.com:nodadyoushutup/homelab.git
+      targetRevision: HEAD
+      path: kubernetes/node-exporter
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - SkipDryRunOnMissingResource=true

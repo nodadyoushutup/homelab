@@ -1,0 +1,59 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: democratic-csi-iscsi
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "24"
+spec:
+  description: democratic-csi iSCSI platform addon
+  sourceRepos:
+    - git@github.com:nodadyoushutup/homelab.git
+    - https://github.com/nodadyoushutup/homelab.git
+    - https://democratic-csi.github.io/charts
+  destinations:
+    - namespace: democratic-csi
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+  namespaceResourceWhitelist:
+    - group: "*"
+      kind: "*"
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: democratic-csi-iscsi
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "25"
+spec:
+  project: democratic-csi-iscsi
+  revisionHistoryLimit: 0
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: democratic-csi
+  sources:
+    - repoURL: https://democratic-csi.github.io/charts
+      chart: democratic-csi
+      targetRevision: "0.15.1"
+      helm:
+        releaseName: democratic-csi
+        valueFiles:
+          - $values/kubernetes/democratic-csi-iscsi/values.yaml
+    - repoURL: git@github.com:nodadyoushutup/homelab.git
+      targetRevision: HEAD
+      ref: values
+    - repoURL: git@github.com:nodadyoushutup/homelab.git
+      targetRevision: HEAD
+      path: kubernetes/democratic-csi-iscsi
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - SkipDryRunOnMissingResource=true

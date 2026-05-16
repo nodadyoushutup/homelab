@@ -1,0 +1,59 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: metallb
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "9"
+spec:
+  description: MetalLB platform addon
+  sourceRepos:
+    - git@github.com:nodadyoushutup/homelab.git
+    - https://github.com/nodadyoushutup/homelab.git
+    - https://metallb.github.io/metallb
+  destinations:
+    - namespace: metallb-system
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+  namespaceResourceWhitelist:
+    - group: "*"
+      kind: "*"
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: metallb
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  project: metallb
+  revisionHistoryLimit: 0
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: metallb-system
+  sources:
+    - repoURL: https://metallb.github.io/metallb
+      chart: metallb
+      targetRevision: "0.15.3"
+      helm:
+        releaseName: metallb
+        valueFiles:
+          - $values/kubernetes/metallb/values.yaml
+    - repoURL: git@github.com:nodadyoushutup/homelab.git
+      targetRevision: HEAD
+      ref: values
+    - repoURL: git@github.com:nodadyoushutup/homelab.git
+      targetRevision: HEAD
+      path: kubernetes/metallb
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - SkipDryRunOnMissingResource=true
