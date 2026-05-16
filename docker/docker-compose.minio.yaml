@@ -1,5 +1,5 @@
 # MINIO_* live in <repo>/.secrets/.env (see .secrets/.env.example).
-# From docker/: docker compose -f docker-compose.minio.yaml --env-file ../.secrets/.env up -d
+# From docker/: docker compose -f docker-compose.minio.yaml up -d
 name: minio
 
 services:
@@ -7,15 +7,11 @@ services:
     image: minio/minio:RELEASE.2025-04-22T22-12-26Z # pinned for admin console
     container_name: minio
     restart: unless-stopped
+    env_file:
+      - ../.secrets/.env
     ports:
       - "9000:9000"
       - "9001:9001"
-    environment:
-      MINIO_ROOT_USER: "${MINIO_ROOT_USER}"
-      MINIO_ROOT_PASSWORD: "${MINIO_ROOT_PASSWORD}"
-      MINIO_REGION_NAME: "${MINIO_REGION_NAME}"
-      MINIO_PROMETHEUS_AUTH_TYPE: "${MINIO_PROMETHEUS_AUTH_TYPE}"
-      MINIO_LOG_LEVEL: "${MINIO_LOG_LEVEL}"
     volumes:
       - minio-data:/data
       - minio-config:/root/.minio

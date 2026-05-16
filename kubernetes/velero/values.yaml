@@ -18,6 +18,8 @@ configuration:
     - name: default
       provider: aws
       bucket: velero-backups
+      # Per-app BSLs use bucket root prefixes (radarr/, …); default needs its own prefix.
+      prefix: misc
       default: true
       config:
         region: us-east-1
