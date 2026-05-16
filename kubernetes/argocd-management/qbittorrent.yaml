@@ -1,0 +1,859 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: qbittorrent
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: qbittorrent
+    app.kubernetes.io/part-of: qbittorrent
+  annotations:
+    argocd.argoproj.io/sync-wave: "38"
+spec:
+  description: qBittorrent instances managed from homelab GitOps repo
+  sourceRepos:
+    - git@github.com:nodadyoushutup/homelab.git
+    - https://github.com/nodadyoushutup/homelab.git
+  destinations:
+    - namespace: qbittorrent-movie-0
+      server: https://kubernetes.default.svc
+    - namespace: qbittorrent-movie-1
+      server: https://kubernetes.default.svc
+    - namespace: qbittorrent-movie-2
+      server: https://kubernetes.default.svc
+    - namespace: qbittorrent-movie-3
+      server: https://kubernetes.default.svc
+    - namespace: qbittorrent-movie-4
+      server: https://kubernetes.default.svc
+    - namespace: qbittorrent-movie-5
+      server: https://kubernetes.default.svc
+    - namespace: qbittorrent-movie-6
+      server: https://kubernetes.default.svc
+    - namespace: qbittorrent-movie-7
+      server: https://kubernetes.default.svc
+    - namespace: qbittorrent-movie-8
+      server: https://kubernetes.default.svc
+    - namespace: qbittorrent-movie-9
+      server: https://kubernetes.default.svc
+    - namespace: qbittorrent-movie-10
+      server: https://kubernetes.default.svc
+    - namespace: qbittorrent-television-0
+      server: https://kubernetes.default.svc
+    - namespace: qbittorrent-television-1
+      server: https://kubernetes.default.svc
+    - namespace: qbittorrent-television-2
+      server: https://kubernetes.default.svc
+    - namespace: qbittorrent-cross-seed-ab
+      server: https://kubernetes.default.svc
+    - namespace: qbittorrent-cross-seed-ant
+      server: https://kubernetes.default.svc
+    - namespace: qbittorrent-cross-seed-ath
+      server: https://kubernetes.default.svc
+    - namespace: qbittorrent-cross-seed-bhd
+      server: https://kubernetes.default.svc
+    - namespace: qbittorrent-cross-seed-blu
+      server: https://kubernetes.default.svc
+    - namespace: qbittorrent-cross-seed-cg
+      server: https://kubernetes.default.svc
+    - namespace: qbittorrent-cross-seed-hdb
+      server: https://kubernetes.default.svc
+    - namespace: qbittorrent-cross-seed-kg
+      server: https://kubernetes.default.svc
+    - namespace: qbittorrent-cross-seed-sc
+      server: https://kubernetes.default.svc
+    - namespace: qbittorrent-upload
+      server: https://kubernetes.default.svc
+    - namespace: qbittorrent-books
+      server: https://kubernetes.default.svc
+    - namespace: qbittorrent-xxx
+      server: https://kubernetes.default.svc
+    - namespace: qbittorrent-freeleech
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+  namespaceResourceWhitelist:
+    - group: "*"
+      kind: "*"
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: qbittorrent-books
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: qbittorrent
+    app.kubernetes.io/part-of: qbittorrent
+    app.kubernetes.io/instance: books
+  annotations:
+    argocd.argoproj.io/sync-wave: "90"
+spec:
+  project: qbittorrent
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: qbittorrent-books
+  source:
+    repoURL: git@github.com:nodadyoushutup/homelab.git
+    targetRevision: HEAD
+    path: kubernetes/qbittorrent/overlays/books
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: qbittorrent-cross-seed-ab
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: qbittorrent
+    app.kubernetes.io/part-of: qbittorrent
+    app.kubernetes.io/instance: cross-seed-ab
+  annotations:
+    argocd.argoproj.io/sync-wave: "80"
+spec:
+  project: qbittorrent
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: qbittorrent-cross-seed-ab
+  source:
+    repoURL: git@github.com:nodadyoushutup/homelab.git
+    targetRevision: HEAD
+    path: kubernetes/qbittorrent/overlays/cross-seed-ab
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: qbittorrent-cross-seed-ant
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: qbittorrent
+    app.kubernetes.io/part-of: qbittorrent
+    app.kubernetes.io/instance: cross-seed-ant
+  annotations:
+    argocd.argoproj.io/sync-wave: "81"
+spec:
+  project: qbittorrent
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: qbittorrent-cross-seed-ant
+  source:
+    repoURL: git@github.com:nodadyoushutup/homelab.git
+    targetRevision: HEAD
+    path: kubernetes/qbittorrent/overlays/cross-seed-ant
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: qbittorrent-cross-seed-ath
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: qbittorrent
+    app.kubernetes.io/part-of: qbittorrent
+    app.kubernetes.io/instance: cross-seed-ath
+  annotations:
+    argocd.argoproj.io/sync-wave: "82"
+spec:
+  project: qbittorrent
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: qbittorrent-cross-seed-ath
+  source:
+    repoURL: git@github.com:nodadyoushutup/homelab.git
+    targetRevision: HEAD
+    path: kubernetes/qbittorrent/overlays/cross-seed-ath
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: qbittorrent-cross-seed-bhd
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: qbittorrent
+    app.kubernetes.io/part-of: qbittorrent
+    app.kubernetes.io/instance: cross-seed-bhd
+  annotations:
+    argocd.argoproj.io/sync-wave: "83"
+spec:
+  project: qbittorrent
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: qbittorrent-cross-seed-bhd
+  source:
+    repoURL: git@github.com:nodadyoushutup/homelab.git
+    targetRevision: HEAD
+    path: kubernetes/qbittorrent/overlays/cross-seed-bhd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: qbittorrent-cross-seed-blu
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: qbittorrent
+    app.kubernetes.io/part-of: qbittorrent
+    app.kubernetes.io/instance: cross-seed-blu
+  annotations:
+    argocd.argoproj.io/sync-wave: "84"
+spec:
+  project: qbittorrent
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: qbittorrent-cross-seed-blu
+  source:
+    repoURL: git@github.com:nodadyoushutup/homelab.git
+    targetRevision: HEAD
+    path: kubernetes/qbittorrent/overlays/cross-seed-blu
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: qbittorrent-cross-seed-cg
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: qbittorrent
+    app.kubernetes.io/part-of: qbittorrent
+    app.kubernetes.io/instance: cross-seed-cg
+  annotations:
+    argocd.argoproj.io/sync-wave: "85"
+spec:
+  project: qbittorrent
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: qbittorrent-cross-seed-cg
+  source:
+    repoURL: git@github.com:nodadyoushutup/homelab.git
+    targetRevision: HEAD
+    path: kubernetes/qbittorrent/overlays/cross-seed-cg
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: qbittorrent-cross-seed-hdb
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: qbittorrent
+    app.kubernetes.io/part-of: qbittorrent
+    app.kubernetes.io/instance: cross-seed-hdb
+  annotations:
+    argocd.argoproj.io/sync-wave: "86"
+spec:
+  project: qbittorrent
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: qbittorrent-cross-seed-hdb
+  source:
+    repoURL: git@github.com:nodadyoushutup/homelab.git
+    targetRevision: HEAD
+    path: kubernetes/qbittorrent/overlays/cross-seed-hdb
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: qbittorrent-cross-seed-kg
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: qbittorrent
+    app.kubernetes.io/part-of: qbittorrent
+    app.kubernetes.io/instance: cross-seed-kg
+  annotations:
+    argocd.argoproj.io/sync-wave: "87"
+spec:
+  project: qbittorrent
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: qbittorrent-cross-seed-kg
+  source:
+    repoURL: git@github.com:nodadyoushutup/homelab.git
+    targetRevision: HEAD
+    path: kubernetes/qbittorrent/overlays/cross-seed-kg
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: qbittorrent-cross-seed-sc
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: qbittorrent
+    app.kubernetes.io/part-of: qbittorrent
+    app.kubernetes.io/instance: cross-seed-sc
+  annotations:
+    argocd.argoproj.io/sync-wave: "88"
+spec:
+  project: qbittorrent
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: qbittorrent-cross-seed-sc
+  source:
+    repoURL: git@github.com:nodadyoushutup/homelab.git
+    targetRevision: HEAD
+    path: kubernetes/qbittorrent/overlays/cross-seed-sc
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: qbittorrent-freeleech
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: qbittorrent
+    app.kubernetes.io/part-of: qbittorrent
+    app.kubernetes.io/instance: freeleech
+  annotations:
+    argocd.argoproj.io/sync-wave: "91"
+spec:
+  project: qbittorrent
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: qbittorrent-freeleech
+  source:
+    repoURL: git@github.com:nodadyoushutup/homelab.git
+    targetRevision: HEAD
+    path: kubernetes/qbittorrent/overlays/freeleech
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: qbittorrent-movie-0
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: qbittorrent
+    app.kubernetes.io/part-of: qbittorrent
+    app.kubernetes.io/instance: movie-0
+  annotations:
+    argocd.argoproj.io/sync-wave: "50"
+spec:
+  project: qbittorrent
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: qbittorrent-movie-0
+  source:
+    repoURL: git@github.com:nodadyoushutup/homelab.git
+    targetRevision: HEAD
+    path: kubernetes/qbittorrent/overlays/movie-0
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: qbittorrent-movie-1
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: qbittorrent
+    app.kubernetes.io/part-of: qbittorrent
+    app.kubernetes.io/instance: movie-1
+  annotations:
+    argocd.argoproj.io/sync-wave: "51"
+spec:
+  project: qbittorrent
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: qbittorrent-movie-1
+  source:
+    repoURL: git@github.com:nodadyoushutup/homelab.git
+    targetRevision: HEAD
+    path: kubernetes/qbittorrent/overlays/movie-1
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: qbittorrent-movie-10
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: qbittorrent
+    app.kubernetes.io/part-of: qbittorrent
+    app.kubernetes.io/instance: movie-10
+  annotations:
+    argocd.argoproj.io/sync-wave: "60"
+spec:
+  project: qbittorrent
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: qbittorrent-movie-10
+  source:
+    repoURL: git@github.com:nodadyoushutup/homelab.git
+    targetRevision: HEAD
+    path: kubernetes/qbittorrent/overlays/movie-10
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: qbittorrent-movie-2
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: qbittorrent
+    app.kubernetes.io/part-of: qbittorrent
+    app.kubernetes.io/instance: movie-2
+  annotations:
+    argocd.argoproj.io/sync-wave: "52"
+spec:
+  project: qbittorrent
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: qbittorrent-movie-2
+  source:
+    repoURL: git@github.com:nodadyoushutup/homelab.git
+    targetRevision: HEAD
+    path: kubernetes/qbittorrent/overlays/movie-2
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: qbittorrent-movie-3
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: qbittorrent
+    app.kubernetes.io/part-of: qbittorrent
+    app.kubernetes.io/instance: movie-3
+  annotations:
+    argocd.argoproj.io/sync-wave: "53"
+spec:
+  project: qbittorrent
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: qbittorrent-movie-3
+  source:
+    repoURL: git@github.com:nodadyoushutup/homelab.git
+    targetRevision: HEAD
+    path: kubernetes/qbittorrent/overlays/movie-3
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: qbittorrent-movie-4
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: qbittorrent
+    app.kubernetes.io/part-of: qbittorrent
+    app.kubernetes.io/instance: movie-4
+  annotations:
+    argocd.argoproj.io/sync-wave: "54"
+spec:
+  project: qbittorrent
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: qbittorrent-movie-4
+  source:
+    repoURL: git@github.com:nodadyoushutup/homelab.git
+    targetRevision: HEAD
+    path: kubernetes/qbittorrent/overlays/movie-4
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: qbittorrent-movie-5
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: qbittorrent
+    app.kubernetes.io/part-of: qbittorrent
+    app.kubernetes.io/instance: movie-5
+  annotations:
+    argocd.argoproj.io/sync-wave: "55"
+spec:
+  project: qbittorrent
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: qbittorrent-movie-5
+  source:
+    repoURL: git@github.com:nodadyoushutup/homelab.git
+    targetRevision: HEAD
+    path: kubernetes/qbittorrent/overlays/movie-5
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: qbittorrent-movie-6
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: qbittorrent
+    app.kubernetes.io/part-of: qbittorrent
+    app.kubernetes.io/instance: movie-6
+  annotations:
+    argocd.argoproj.io/sync-wave: "56"
+spec:
+  project: qbittorrent
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: qbittorrent-movie-6
+  source:
+    repoURL: git@github.com:nodadyoushutup/homelab.git
+    targetRevision: HEAD
+    path: kubernetes/qbittorrent/overlays/movie-6
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: qbittorrent-movie-7
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: qbittorrent
+    app.kubernetes.io/part-of: qbittorrent
+    app.kubernetes.io/instance: movie-7
+  annotations:
+    argocd.argoproj.io/sync-wave: "57"
+spec:
+  project: qbittorrent
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: qbittorrent-movie-7
+  source:
+    repoURL: git@github.com:nodadyoushutup/homelab.git
+    targetRevision: HEAD
+    path: kubernetes/qbittorrent/overlays/movie-7
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: qbittorrent-movie-8
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: qbittorrent
+    app.kubernetes.io/part-of: qbittorrent
+    app.kubernetes.io/instance: movie-8
+  annotations:
+    argocd.argoproj.io/sync-wave: "58"
+spec:
+  project: qbittorrent
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: qbittorrent-movie-8
+  source:
+    repoURL: git@github.com:nodadyoushutup/homelab.git
+    targetRevision: HEAD
+    path: kubernetes/qbittorrent/overlays/movie-8
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: qbittorrent-movie-9
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: qbittorrent
+    app.kubernetes.io/part-of: qbittorrent
+    app.kubernetes.io/instance: movie-9
+  annotations:
+    argocd.argoproj.io/sync-wave: "59"
+spec:
+  project: qbittorrent
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: qbittorrent-movie-9
+  source:
+    repoURL: git@github.com:nodadyoushutup/homelab.git
+    targetRevision: HEAD
+    path: kubernetes/qbittorrent/overlays/movie-9
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: qbittorrent-television-0
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: qbittorrent
+    app.kubernetes.io/part-of: qbittorrent
+    app.kubernetes.io/instance: television-0
+  annotations:
+    argocd.argoproj.io/sync-wave: "70"
+spec:
+  project: qbittorrent
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: qbittorrent-television-0
+  source:
+    repoURL: git@github.com:nodadyoushutup/homelab.git
+    targetRevision: HEAD
+    path: kubernetes/qbittorrent/overlays/television-0
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: qbittorrent-television-1
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: qbittorrent
+    app.kubernetes.io/part-of: qbittorrent
+    app.kubernetes.io/instance: television-1
+  annotations:
+    argocd.argoproj.io/sync-wave: "71"
+spec:
+  project: qbittorrent
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: qbittorrent-television-1
+  source:
+    repoURL: git@github.com:nodadyoushutup/homelab.git
+    targetRevision: HEAD
+    path: kubernetes/qbittorrent/overlays/television-1
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: qbittorrent-television-2
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: qbittorrent
+    app.kubernetes.io/part-of: qbittorrent
+    app.kubernetes.io/instance: television-2
+  annotations:
+    argocd.argoproj.io/sync-wave: "72"
+spec:
+  project: qbittorrent
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: qbittorrent-television-2
+  source:
+    repoURL: git@github.com:nodadyoushutup/homelab.git
+    targetRevision: HEAD
+    path: kubernetes/qbittorrent/overlays/television-2
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: qbittorrent-upload
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: qbittorrent
+    app.kubernetes.io/part-of: qbittorrent
+    app.kubernetes.io/instance: upload
+  annotations:
+    argocd.argoproj.io/sync-wave: "89"
+spec:
+  project: qbittorrent
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: qbittorrent-upload
+  source:
+    repoURL: git@github.com:nodadyoushutup/homelab.git
+    targetRevision: HEAD
+    path: kubernetes/qbittorrent/overlays/upload
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: qbittorrent-xxx
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: qbittorrent
+    app.kubernetes.io/part-of: qbittorrent
+    app.kubernetes.io/instance: xxx
+  annotations:
+    argocd.argoproj.io/sync-wave: "90"
+spec:
+  project: qbittorrent
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: qbittorrent-xxx
+  source:
+    repoURL: git@github.com:nodadyoushutup/homelab.git
+    targetRevision: HEAD
+    path: kubernetes/qbittorrent/overlays/xxx
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
