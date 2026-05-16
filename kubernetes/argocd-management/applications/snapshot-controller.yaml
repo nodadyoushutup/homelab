@@ -24,7 +24,6 @@ spec:
           volumeSnapshotClasses:
             - name: truenas-iscsi-snapclass
               annotations:
-                k10.kasten.io/is-snapshot-class: "true"
                 snapshot.storage.kubernetes.io/is-default-class: "true"
               labels:
                 velero.io/csi-volumesnapshot-class: "true"
@@ -32,7 +31,6 @@ spec:
               deletionPolicy: Delete
             - name: truenas-nfs-snapclass
               annotations:
-                k10.kasten.io/is-snapshot-class: "true"
                 snapshot.storage.kubernetes.io/is-default-class: "true"
               labels:
                 velero.io/csi-volumesnapshot-class: "true"

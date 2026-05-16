@@ -26,14 +26,13 @@ When a project does not maintain a standalone docs site, this file links to the 
 | Talos Linux | `terraform/cluster/talos/app`, `docs/talos-packages.md` | [Talos docs](https://www.talos.dev/latest/) |
 | Kubernetes | `kubernetes/**`, `docs/workflows/kubernetes.md` | [Kubernetes docs](https://kubernetes.io/docs/home/) |
 | Argo CD | `kubernetes/bootstrap/argocd-management-app.yaml`, `kubernetes/argocd-management/**`, `terraform/cluster/argocd/config` | [Argo CD docs](https://argo-cd.readthedocs.io/en/stable/) |
-| Helm | `kubernetes/k10/values.yaml`, `kubernetes/snapshot-controller/values.yaml`, Argo CD chart apps under `kubernetes/argocd-management/` | [Helm docs](https://helm.sh/docs/) |
+| Helm | `kubernetes/snapshot-controller/values.yaml`, Argo CD chart apps under `kubernetes/argocd-management/` | [Helm docs](https://helm.sh/docs/) |
 | Kustomize | `kubernetes/qbittorrent/base/kustomization.yaml`, `kubernetes/cross-seed/base/kustomization.yaml` | [Kustomize docs](https://kustomize.io/) |
 | External Secrets Operator | `kubernetes/external-secrets/`, app-level `secretstore.yaml` and `externalsecret.yaml` manifests | [External Secrets docs](https://external-secrets.io/latest/) |
 | ingress-nginx | `kubernetes/ingress-nginx/`, ingress manifests across app directories | [ingress-nginx docs](https://kubernetes.github.io/ingress-nginx/) |
 | MetalLB | `kubernetes/metallb/`, `kubernetes/argocd-management/` addon wiring | [MetalLB docs](https://metallb.io/) |
 | democratic-csi | `kubernetes/democratic-csi-iscsi/`, `kubernetes/democratic-csi-nfs/` | [democratic-csi docs](https://democratic-csi.github.io/charts/) |
-| Veeam Kasten K10 | `kubernetes/k10/`, `kubernetes/argocd-management/applications/k10.yaml` | [K10 docs](https://docs.kasten.io/latest/) |
-| CSI snapshot controller / external-snapshotter | `kubernetes/snapshot-controller/`, `kubernetes/argocd-management/snapshot-controller-app.yaml` | [external-snapshotter docs](https://kubernetes-csi.github.io/docs/external-snapshotter.html) |
+| CSI snapshot controller / external-snapshotter | `kubernetes/snapshot-controller/`, `kubernetes/argocd-management/applications/snapshot-controller.yaml` | [external-snapshotter docs](https://kubernetes-csi.github.io/docs/external-snapshotter.html) |
 
 ## Edge, networking, storage, and secrets
 

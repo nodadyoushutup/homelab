@@ -162,7 +162,7 @@ TrueNAS:
 | Concern | Prefer **iSCSI** (`truenas-iscsi-csi-retain`) | Prefer **NFS** (`truenas-nfs-csi-retain`) |
 | --- | --- | --- |
 | Semantics | Single-writer **block** volume; typical RWO. | **File** share; multiple readers depending on app and access mode. |
-| Examples in repo | Databases, app config disks, most *arr PVCs. | Workloads explicitly using the NFS StorageClass (for example some K10 paths use NFS-backed classes). |
+| Examples in repo | Databases, app config disks, most *arr PVCs. | Workloads explicitly using the NFS StorageClass. |
 
 Use **one NAS**, **two CSI installs**, so ZFS datasets and TrueNAS shares stay
 separated (`…/iscsi/…` vs `…/nfs/…` in the values files).

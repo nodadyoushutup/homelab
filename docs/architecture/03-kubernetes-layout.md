@@ -21,7 +21,6 @@ long-lived workloads are GitOps-driven.
 | `argocd-management/` | **GitOps control plane** for this repo: `AppProject` + `Application` CRs, `homelab-addons` ApplicationSet, plus Argo-local config. Synced via the Terraform-managed root Application—see [04-argocd-gitops.md](./04-argocd-gitops.md). |
 | `metallb/`, `ingress-nginx/`, `external-secrets/`, `democratic-csi-*`, `node-exporter/` | **Platform add-ons**: usually `values.yaml` (+ `namespace.yaml` where needed) consumed by the **`homelab-addons`** ApplicationSet in `argocd-management/` (Helm chart from upstream, values from this path). **TrueNAS iSCSI block volumes:** [05-democratic-csi-truenas-iscsi.md](./05-democratic-csi-truenas-iscsi.md). |
 | `langgraph/`, `langchain-agent-chat/` | **First-party workloads**: flat manifests (Deployments, Services, Ingress, ExternalSecrets, PVCs, …) and optional local `charts/` / `templates/` when the app ships chart fragments alongside raw YAML. |
-| `k10/` | **Kasten K10**: Helm `values.yaml`, K10 CR manifests under `manifests/`, and example secrets; one multi-source Argo `Application` in `argocd-management/applications/k10.yaml`. |
 | `qbittorrent/`, `cross-seed/` | **Kustomize** layouts: `base/` plus `overlays/<instance>/` when many similar instances differ by namespace, node placement, or secrets. |
 | `clusterplex/`, `radarr/`, `sonarr/`, … | **Media and apps** as plain manifest bundles (or mixed patterns) per app. |
 | `snapshot-controller/`, `picsur/`, `privatebin/`, `thelounge/`, … | Same idea: one directory per deployable unit or chart-values bundle. |
@@ -56,8 +55,7 @@ Argo `Application` then targets a **single overlay path** (for example
 ### Helm chart + Git manifests (multi-source)
 
 Upstream chart plus `values.yaml` and extra manifests from this repo in one Argo
-`Application`—see `kubernetes/argocd-management/applications/k10.yaml` and
-`kubernetes/argocd-management/applications/ingress-nginx.yaml`.
+`Application`—see `kubernetes/argocd-management/applications/ingress-nginx.yaml`.
 
 ## Relationship to `applications/`
 
