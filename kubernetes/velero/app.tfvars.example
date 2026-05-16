@@ -1,0 +1,12 @@
+# Copy to app.tfvars (gitignored) and apply to Vault path k8s/velero.
+# ExternalSecret velero-s3-credentials reads these properties hourly.
+#
+#   vault kv put k8s/velero \
+#     aws_access_key_id="SERVICE_ACCOUNT_ACCESS_KEY" \
+#     aws_secret_access_key="SERVICE_ACCOUNT_SECRET_KEY"
+#
+# MinIO S3 API (not Console :9001): http://192.168.1.67:9000
+# Bucket: velero-backups
+
+aws_access_key_id     = "REPLACE_ME"
+aws_secret_access_key = "REPLACE_ME"
