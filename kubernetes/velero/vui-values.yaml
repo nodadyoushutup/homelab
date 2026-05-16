@@ -11,6 +11,7 @@ apiService:
   deployment:
     storage:
       enabled: true
+      storageClassName: truenas-iscsi-csi-retain
       resources:
         requests:
           storage: 1Gi
