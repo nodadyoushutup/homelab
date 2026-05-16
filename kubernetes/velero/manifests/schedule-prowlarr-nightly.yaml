@@ -10,5 +10,5 @@ spec:
   template:
     includedNamespaces:
       - prowlarr
-    storageLocation: default
+    storageLocation: prowlarr
     ttl: 336h0m0s

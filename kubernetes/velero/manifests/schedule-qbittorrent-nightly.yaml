@@ -14,7 +14,7 @@ spec:
   template:
     includedNamespaces:
       - qbittorrent-books
-    storageLocation: default
+    storageLocation: qbittorrent-books
     ttl: 336h0m0s
 
 ---
@@ -31,7 +31,7 @@ spec:
   template:
     includedNamespaces:
       - qbittorrent-cross-seed-ab
-    storageLocation: default
+    storageLocation: qbittorrent-cross-seed-ab
     ttl: 336h0m0s
 
 ---
@@ -48,7 +48,7 @@ spec:
   template:
     includedNamespaces:
       - qbittorrent-cross-seed-ant
-    storageLocation: default
+    storageLocation: qbittorrent-cross-seed-ant
     ttl: 336h0m0s
 
 ---
@@ -65,7 +65,7 @@ spec:
   template:
     includedNamespaces:
       - qbittorrent-cross-seed-ath
-    storageLocation: default
+    storageLocation: qbittorrent-cross-seed-ath
     ttl: 336h0m0s
 
 ---
@@ -82,7 +82,7 @@ spec:
   template:
     includedNamespaces:
       - qbittorrent-cross-seed-bhd
-    storageLocation: default
+    storageLocation: qbittorrent-cross-seed-bhd
     ttl: 336h0m0s
 
 ---
@@ -99,7 +99,7 @@ spec:
   template:
     includedNamespaces:
       - qbittorrent-cross-seed-blu
-    storageLocation: default
+    storageLocation: qbittorrent-cross-seed-blu
     ttl: 336h0m0s
 
 ---
@@ -116,7 +116,7 @@ spec:
   template:
     includedNamespaces:
       - qbittorrent-cross-seed-cg
-    storageLocation: default
+    storageLocation: qbittorrent-cross-seed-cg
     ttl: 336h0m0s
 
 ---
@@ -133,7 +133,7 @@ spec:
   template:
     includedNamespaces:
       - qbittorrent-cross-seed-hdb
-    storageLocation: default
+    storageLocation: qbittorrent-cross-seed-hdb
     ttl: 336h0m0s
 
 ---
@@ -150,7 +150,7 @@ spec:
   template:
     includedNamespaces:
       - qbittorrent-cross-seed-kg
-    storageLocation: default
+    storageLocation: qbittorrent-cross-seed-kg
     ttl: 336h0m0s
 
 ---
@@ -167,7 +167,7 @@ spec:
   template:
     includedNamespaces:
       - qbittorrent-cross-seed-sc
-    storageLocation: default
+    storageLocation: qbittorrent-cross-seed-sc
     ttl: 336h0m0s
 
 ---
@@ -184,7 +184,7 @@ spec:
   template:
     includedNamespaces:
       - qbittorrent-freeleech
-    storageLocation: default
+    storageLocation: qbittorrent-freeleech
     ttl: 336h0m0s
 
 ---
@@ -201,7 +201,7 @@ spec:
   template:
     includedNamespaces:
       - qbittorrent-movie-0
-    storageLocation: default
+    storageLocation: qbittorrent-movie-0
     ttl: 336h0m0s
 
 ---
@@ -218,7 +218,7 @@ spec:
   template:
     includedNamespaces:
       - qbittorrent-movie-1
-    storageLocation: default
+    storageLocation: qbittorrent-movie-1
     ttl: 336h0m0s
 
 ---
@@ -235,7 +235,7 @@ spec:
   template:
     includedNamespaces:
       - qbittorrent-movie-2
-    storageLocation: default
+    storageLocation: qbittorrent-movie-2
     ttl: 336h0m0s
 
 ---
@@ -252,7 +252,7 @@ spec:
   template:
     includedNamespaces:
       - qbittorrent-movie-3
-    storageLocation: default
+    storageLocation: qbittorrent-movie-3
     ttl: 336h0m0s
 
 ---
@@ -269,7 +269,7 @@ spec:
   template:
     includedNamespaces:
       - qbittorrent-movie-4
-    storageLocation: default
+    storageLocation: qbittorrent-movie-4
     ttl: 336h0m0s
 
 ---
@@ -286,7 +286,7 @@ spec:
   template:
     includedNamespaces:
       - qbittorrent-movie-5
-    storageLocation: default
+    storageLocation: qbittorrent-movie-5
     ttl: 336h0m0s
 
 ---
@@ -303,7 +303,7 @@ spec:
   template:
     includedNamespaces:
       - qbittorrent-movie-6
-    storageLocation: default
+    storageLocation: qbittorrent-movie-6
     ttl: 336h0m0s
 
 ---
@@ -320,7 +320,7 @@ spec:
   template:
     includedNamespaces:
       - qbittorrent-movie-7
-    storageLocation: default
+    storageLocation: qbittorrent-movie-7
     ttl: 336h0m0s
 
 ---
@@ -337,7 +337,7 @@ spec:
   template:
     includedNamespaces:
       - qbittorrent-movie-8
-    storageLocation: default
+    storageLocation: qbittorrent-movie-8
     ttl: 336h0m0s
 
 ---
@@ -354,7 +354,7 @@ spec:
   template:
     includedNamespaces:
       - qbittorrent-movie-9
-    storageLocation: default
+    storageLocation: qbittorrent-movie-9
     ttl: 336h0m0s
 
 ---
@@ -371,7 +371,7 @@ spec:
   template:
     includedNamespaces:
       - qbittorrent-movie-10
-    storageLocation: default
+    storageLocation: qbittorrent-movie-10
     ttl: 336h0m0s
 
 ---
@@ -388,7 +388,7 @@ spec:
   template:
     includedNamespaces:
       - qbittorrent-television-0
-    storageLocation: default
+    storageLocation: qbittorrent-television-0
     ttl: 336h0m0s
 
 ---
@@ -405,7 +405,7 @@ spec:
   template:
     includedNamespaces:
       - qbittorrent-television-1
-    storageLocation: default
+    storageLocation: qbittorrent-television-1
     ttl: 336h0m0s
 
 ---
@@ -422,7 +422,7 @@ spec:
   template:
     includedNamespaces:
       - qbittorrent-television-2
-    storageLocation: default
+    storageLocation: qbittorrent-television-2
     ttl: 336h0m0s
 
 ---
@@ -439,7 +439,7 @@ spec:
   template:
     includedNamespaces:
       - qbittorrent-upload
-    storageLocation: default
+    storageLocation: qbittorrent-upload
     ttl: 336h0m0s
 
 ---
@@ -456,5 +456,5 @@ spec:
   template:
     includedNamespaces:
       - qbittorrent-xxx
-    storageLocation: default
+    storageLocation: qbittorrent-xxx
     ttl: 336h0m0s

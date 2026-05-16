@@ -10,5 +10,5 @@ spec:
   template:
     includedNamespaces:
       - privatebin
-    storageLocation: default
+    storageLocation: privatebin
     ttl: 336h0m0s

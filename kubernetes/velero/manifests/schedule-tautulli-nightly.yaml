@@ -10,5 +10,5 @@ spec:
   template:
     includedNamespaces:
       - tautulli
-    storageLocation: default
+    storageLocation: tautulli
     ttl: 336h0m0s

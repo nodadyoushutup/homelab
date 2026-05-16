@@ -1,0 +1,759 @@
+# Per-app MinIO prefixes: velero-backups/<app>/backups/<backup-name>/
+
+# Velero always uses a backups/ subdirectory under the BSL prefix.
+
+# Manual or legacy backups can keep using the Helm default BSL (no prefix).
+
+apiVersion: velero.io/v1
+kind: BackupStorageLocation
+metadata:
+  name: radarr
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "15"
+spec:
+  provider: aws
+  accessMode: ReadWrite
+  objectStorage:
+    bucket: velero-backups
+    prefix: radarr
+  config:
+    region: us-east-1
+    s3ForcePathStyle: "true"
+    s3Url: http://192.168.1.120:9000
+    insecureSkipTLSVerify: "true"
+
+---
+
+apiVersion: velero.io/v1
+kind: BackupStorageLocation
+metadata:
+  name: sonarr
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "15"
+spec:
+  provider: aws
+  accessMode: ReadWrite
+  objectStorage:
+    bucket: velero-backups
+    prefix: sonarr
+  config:
+    region: us-east-1
+    s3ForcePathStyle: "true"
+    s3Url: http://192.168.1.120:9000
+    insecureSkipTLSVerify: "true"
+
+---
+
+apiVersion: velero.io/v1
+kind: BackupStorageLocation
+metadata:
+  name: prowlarr
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "15"
+spec:
+  provider: aws
+  accessMode: ReadWrite
+  objectStorage:
+    bucket: velero-backups
+    prefix: prowlarr
+  config:
+    region: us-east-1
+    s3ForcePathStyle: "true"
+    s3Url: http://192.168.1.120:9000
+    insecureSkipTLSVerify: "true"
+
+---
+
+apiVersion: velero.io/v1
+kind: BackupStorageLocation
+metadata:
+  name: seerr
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "15"
+spec:
+  provider: aws
+  accessMode: ReadWrite
+  objectStorage:
+    bucket: velero-backups
+    prefix: seerr
+  config:
+    region: us-east-1
+    s3ForcePathStyle: "true"
+    s3Url: http://192.168.1.120:9000
+    insecureSkipTLSVerify: "true"
+
+---
+
+apiVersion: velero.io/v1
+kind: BackupStorageLocation
+metadata:
+  name: tautulli
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "15"
+spec:
+  provider: aws
+  accessMode: ReadWrite
+  objectStorage:
+    bucket: velero-backups
+    prefix: tautulli
+  config:
+    region: us-east-1
+    s3ForcePathStyle: "true"
+    s3Url: http://192.168.1.120:9000
+    insecureSkipTLSVerify: "true"
+
+---
+
+apiVersion: velero.io/v1
+kind: BackupStorageLocation
+metadata:
+  name: thelounge
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "15"
+spec:
+  provider: aws
+  accessMode: ReadWrite
+  objectStorage:
+    bucket: velero-backups
+    prefix: thelounge
+  config:
+    region: us-east-1
+    s3ForcePathStyle: "true"
+    s3Url: http://192.168.1.120:9000
+    insecureSkipTLSVerify: "true"
+
+---
+
+apiVersion: velero.io/v1
+kind: BackupStorageLocation
+metadata:
+  name: picsur
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "15"
+spec:
+  provider: aws
+  accessMode: ReadWrite
+  objectStorage:
+    bucket: velero-backups
+    prefix: picsur
+  config:
+    region: us-east-1
+    s3ForcePathStyle: "true"
+    s3Url: http://192.168.1.120:9000
+    insecureSkipTLSVerify: "true"
+
+---
+
+apiVersion: velero.io/v1
+kind: BackupStorageLocation
+metadata:
+  name: privatebin
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "15"
+spec:
+  provider: aws
+  accessMode: ReadWrite
+  objectStorage:
+    bucket: velero-backups
+    prefix: privatebin
+  config:
+    region: us-east-1
+    s3ForcePathStyle: "true"
+    s3Url: http://192.168.1.120:9000
+    insecureSkipTLSVerify: "true"
+
+---
+
+apiVersion: velero.io/v1
+kind: BackupStorageLocation
+metadata:
+  name: langgraph
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "15"
+spec:
+  provider: aws
+  accessMode: ReadWrite
+  objectStorage:
+    bucket: velero-backups
+    prefix: langgraph
+  config:
+    region: us-east-1
+    s3ForcePathStyle: "true"
+    s3Url: http://192.168.1.120:9000
+    insecureSkipTLSVerify: "true"
+
+---
+
+apiVersion: velero.io/v1
+kind: BackupStorageLocation
+metadata:
+  name: qbittorrent-books
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "15"
+spec:
+  provider: aws
+  accessMode: ReadWrite
+  objectStorage:
+    bucket: velero-backups
+    prefix: qbittorrent-books
+  config:
+    region: us-east-1
+    s3ForcePathStyle: "true"
+    s3Url: http://192.168.1.120:9000
+    insecureSkipTLSVerify: "true"
+
+---
+
+apiVersion: velero.io/v1
+kind: BackupStorageLocation
+metadata:
+  name: qbittorrent-cross-seed-ab
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "15"
+spec:
+  provider: aws
+  accessMode: ReadWrite
+  objectStorage:
+    bucket: velero-backups
+    prefix: qbittorrent-cross-seed-ab
+  config:
+    region: us-east-1
+    s3ForcePathStyle: "true"
+    s3Url: http://192.168.1.120:9000
+    insecureSkipTLSVerify: "true"
+
+---
+
+apiVersion: velero.io/v1
+kind: BackupStorageLocation
+metadata:
+  name: qbittorrent-cross-seed-ant
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "15"
+spec:
+  provider: aws
+  accessMode: ReadWrite
+  objectStorage:
+    bucket: velero-backups
+    prefix: qbittorrent-cross-seed-ant
+  config:
+    region: us-east-1
+    s3ForcePathStyle: "true"
+    s3Url: http://192.168.1.120:9000
+    insecureSkipTLSVerify: "true"
+
+---
+
+apiVersion: velero.io/v1
+kind: BackupStorageLocation
+metadata:
+  name: qbittorrent-cross-seed-ath
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "15"
+spec:
+  provider: aws
+  accessMode: ReadWrite
+  objectStorage:
+    bucket: velero-backups
+    prefix: qbittorrent-cross-seed-ath
+  config:
+    region: us-east-1
+    s3ForcePathStyle: "true"
+    s3Url: http://192.168.1.120:9000
+    insecureSkipTLSVerify: "true"
+
+---
+
+apiVersion: velero.io/v1
+kind: BackupStorageLocation
+metadata:
+  name: qbittorrent-cross-seed-bhd
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "15"
+spec:
+  provider: aws
+  accessMode: ReadWrite
+  objectStorage:
+    bucket: velero-backups
+    prefix: qbittorrent-cross-seed-bhd
+  config:
+    region: us-east-1
+    s3ForcePathStyle: "true"
+    s3Url: http://192.168.1.120:9000
+    insecureSkipTLSVerify: "true"
+
+---
+
+apiVersion: velero.io/v1
+kind: BackupStorageLocation
+metadata:
+  name: qbittorrent-cross-seed-blu
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "15"
+spec:
+  provider: aws
+  accessMode: ReadWrite
+  objectStorage:
+    bucket: velero-backups
+    prefix: qbittorrent-cross-seed-blu
+  config:
+    region: us-east-1
+    s3ForcePathStyle: "true"
+    s3Url: http://192.168.1.120:9000
+    insecureSkipTLSVerify: "true"
+
+---
+
+apiVersion: velero.io/v1
+kind: BackupStorageLocation
+metadata:
+  name: qbittorrent-cross-seed-cg
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "15"
+spec:
+  provider: aws
+  accessMode: ReadWrite
+  objectStorage:
+    bucket: velero-backups
+    prefix: qbittorrent-cross-seed-cg
+  config:
+    region: us-east-1
+    s3ForcePathStyle: "true"
+    s3Url: http://192.168.1.120:9000
+    insecureSkipTLSVerify: "true"
+
+---
+
+apiVersion: velero.io/v1
+kind: BackupStorageLocation
+metadata:
+  name: qbittorrent-cross-seed-hdb
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "15"
+spec:
+  provider: aws
+  accessMode: ReadWrite
+  objectStorage:
+    bucket: velero-backups
+    prefix: qbittorrent-cross-seed-hdb
+  config:
+    region: us-east-1
+    s3ForcePathStyle: "true"
+    s3Url: http://192.168.1.120:9000
+    insecureSkipTLSVerify: "true"
+
+---
+
+apiVersion: velero.io/v1
+kind: BackupStorageLocation
+metadata:
+  name: qbittorrent-cross-seed-kg
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "15"
+spec:
+  provider: aws
+  accessMode: ReadWrite
+  objectStorage:
+    bucket: velero-backups
+    prefix: qbittorrent-cross-seed-kg
+  config:
+    region: us-east-1
+    s3ForcePathStyle: "true"
+    s3Url: http://192.168.1.120:9000
+    insecureSkipTLSVerify: "true"
+
+---
+
+apiVersion: velero.io/v1
+kind: BackupStorageLocation
+metadata:
+  name: qbittorrent-cross-seed-sc
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "15"
+spec:
+  provider: aws
+  accessMode: ReadWrite
+  objectStorage:
+    bucket: velero-backups
+    prefix: qbittorrent-cross-seed-sc
+  config:
+    region: us-east-1
+    s3ForcePathStyle: "true"
+    s3Url: http://192.168.1.120:9000
+    insecureSkipTLSVerify: "true"
+
+---
+
+apiVersion: velero.io/v1
+kind: BackupStorageLocation
+metadata:
+  name: qbittorrent-freeleech
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "15"
+spec:
+  provider: aws
+  accessMode: ReadWrite
+  objectStorage:
+    bucket: velero-backups
+    prefix: qbittorrent-freeleech
+  config:
+    region: us-east-1
+    s3ForcePathStyle: "true"
+    s3Url: http://192.168.1.120:9000
+    insecureSkipTLSVerify: "true"
+
+---
+
+apiVersion: velero.io/v1
+kind: BackupStorageLocation
+metadata:
+  name: qbittorrent-movie-0
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "15"
+spec:
+  provider: aws
+  accessMode: ReadWrite
+  objectStorage:
+    bucket: velero-backups
+    prefix: qbittorrent-movie-0
+  config:
+    region: us-east-1
+    s3ForcePathStyle: "true"
+    s3Url: http://192.168.1.120:9000
+    insecureSkipTLSVerify: "true"
+
+---
+
+apiVersion: velero.io/v1
+kind: BackupStorageLocation
+metadata:
+  name: qbittorrent-movie-1
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "15"
+spec:
+  provider: aws
+  accessMode: ReadWrite
+  objectStorage:
+    bucket: velero-backups
+    prefix: qbittorrent-movie-1
+  config:
+    region: us-east-1
+    s3ForcePathStyle: "true"
+    s3Url: http://192.168.1.120:9000
+    insecureSkipTLSVerify: "true"
+
+---
+
+apiVersion: velero.io/v1
+kind: BackupStorageLocation
+metadata:
+  name: qbittorrent-movie-2
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "15"
+spec:
+  provider: aws
+  accessMode: ReadWrite
+  objectStorage:
+    bucket: velero-backups
+    prefix: qbittorrent-movie-2
+  config:
+    region: us-east-1
+    s3ForcePathStyle: "true"
+    s3Url: http://192.168.1.120:9000
+    insecureSkipTLSVerify: "true"
+
+---
+
+apiVersion: velero.io/v1
+kind: BackupStorageLocation
+metadata:
+  name: qbittorrent-movie-3
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "15"
+spec:
+  provider: aws
+  accessMode: ReadWrite
+  objectStorage:
+    bucket: velero-backups
+    prefix: qbittorrent-movie-3
+  config:
+    region: us-east-1
+    s3ForcePathStyle: "true"
+    s3Url: http://192.168.1.120:9000
+    insecureSkipTLSVerify: "true"
+
+---
+
+apiVersion: velero.io/v1
+kind: BackupStorageLocation
+metadata:
+  name: qbittorrent-movie-4
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "15"
+spec:
+  provider: aws
+  accessMode: ReadWrite
+  objectStorage:
+    bucket: velero-backups
+    prefix: qbittorrent-movie-4
+  config:
+    region: us-east-1
+    s3ForcePathStyle: "true"
+    s3Url: http://192.168.1.120:9000
+    insecureSkipTLSVerify: "true"
+
+---
+
+apiVersion: velero.io/v1
+kind: BackupStorageLocation
+metadata:
+  name: qbittorrent-movie-5
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "15"
+spec:
+  provider: aws
+  accessMode: ReadWrite
+  objectStorage:
+    bucket: velero-backups
+    prefix: qbittorrent-movie-5
+  config:
+    region: us-east-1
+    s3ForcePathStyle: "true"
+    s3Url: http://192.168.1.120:9000
+    insecureSkipTLSVerify: "true"
+
+---
+
+apiVersion: velero.io/v1
+kind: BackupStorageLocation
+metadata:
+  name: qbittorrent-movie-6
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "15"
+spec:
+  provider: aws
+  accessMode: ReadWrite
+  objectStorage:
+    bucket: velero-backups
+    prefix: qbittorrent-movie-6
+  config:
+    region: us-east-1
+    s3ForcePathStyle: "true"
+    s3Url: http://192.168.1.120:9000
+    insecureSkipTLSVerify: "true"
+
+---
+
+apiVersion: velero.io/v1
+kind: BackupStorageLocation
+metadata:
+  name: qbittorrent-movie-7
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "15"
+spec:
+  provider: aws
+  accessMode: ReadWrite
+  objectStorage:
+    bucket: velero-backups
+    prefix: qbittorrent-movie-7
+  config:
+    region: us-east-1
+    s3ForcePathStyle: "true"
+    s3Url: http://192.168.1.120:9000
+    insecureSkipTLSVerify: "true"
+
+---
+
+apiVersion: velero.io/v1
+kind: BackupStorageLocation
+metadata:
+  name: qbittorrent-movie-8
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "15"
+spec:
+  provider: aws
+  accessMode: ReadWrite
+  objectStorage:
+    bucket: velero-backups
+    prefix: qbittorrent-movie-8
+  config:
+    region: us-east-1
+    s3ForcePathStyle: "true"
+    s3Url: http://192.168.1.120:9000
+    insecureSkipTLSVerify: "true"
+
+---
+
+apiVersion: velero.io/v1
+kind: BackupStorageLocation
+metadata:
+  name: qbittorrent-movie-9
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "15"
+spec:
+  provider: aws
+  accessMode: ReadWrite
+  objectStorage:
+    bucket: velero-backups
+    prefix: qbittorrent-movie-9
+  config:
+    region: us-east-1
+    s3ForcePathStyle: "true"
+    s3Url: http://192.168.1.120:9000
+    insecureSkipTLSVerify: "true"
+
+---
+
+apiVersion: velero.io/v1
+kind: BackupStorageLocation
+metadata:
+  name: qbittorrent-movie-10
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "15"
+spec:
+  provider: aws
+  accessMode: ReadWrite
+  objectStorage:
+    bucket: velero-backups
+    prefix: qbittorrent-movie-10
+  config:
+    region: us-east-1
+    s3ForcePathStyle: "true"
+    s3Url: http://192.168.1.120:9000
+    insecureSkipTLSVerify: "true"
+
+---
+
+apiVersion: velero.io/v1
+kind: BackupStorageLocation
+metadata:
+  name: qbittorrent-television-0
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "15"
+spec:
+  provider: aws
+  accessMode: ReadWrite
+  objectStorage:
+    bucket: velero-backups
+    prefix: qbittorrent-television-0
+  config:
+    region: us-east-1
+    s3ForcePathStyle: "true"
+    s3Url: http://192.168.1.120:9000
+    insecureSkipTLSVerify: "true"
+
+---
+
+apiVersion: velero.io/v1
+kind: BackupStorageLocation
+metadata:
+  name: qbittorrent-television-1
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "15"
+spec:
+  provider: aws
+  accessMode: ReadWrite
+  objectStorage:
+    bucket: velero-backups
+    prefix: qbittorrent-television-1
+  config:
+    region: us-east-1
+    s3ForcePathStyle: "true"
+    s3Url: http://192.168.1.120:9000
+    insecureSkipTLSVerify: "true"
+
+---
+
+apiVersion: velero.io/v1
+kind: BackupStorageLocation
+metadata:
+  name: qbittorrent-television-2
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "15"
+spec:
+  provider: aws
+  accessMode: ReadWrite
+  objectStorage:
+    bucket: velero-backups
+    prefix: qbittorrent-television-2
+  config:
+    region: us-east-1
+    s3ForcePathStyle: "true"
+    s3Url: http://192.168.1.120:9000
+    insecureSkipTLSVerify: "true"
+
+---
+
+apiVersion: velero.io/v1
+kind: BackupStorageLocation
+metadata:
+  name: qbittorrent-upload
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "15"
+spec:
+  provider: aws
+  accessMode: ReadWrite
+  objectStorage:
+    bucket: velero-backups
+    prefix: qbittorrent-upload
+  config:
+    region: us-east-1
+    s3ForcePathStyle: "true"
+    s3Url: http://192.168.1.120:9000
+    insecureSkipTLSVerify: "true"
+
+---
+
+apiVersion: velero.io/v1
+kind: BackupStorageLocation
+metadata:
+  name: qbittorrent-xxx
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "15"
+spec:
+  provider: aws
+  accessMode: ReadWrite
+  objectStorage:
+    bucket: velero-backups
+    prefix: qbittorrent-xxx
+  config:
+    region: us-east-1
+    s3ForcePathStyle: "true"
+    s3Url: http://192.168.1.120:9000
+    insecureSkipTLSVerify: "true"
