@@ -53,6 +53,8 @@ spec:
       namespace: velero
       name: velero-s3-credentials
       jqPathExpressions:
+        - .metadata.labels
+        - .metadata.annotations
         - .status
     - group: batch
       kind: Job
@@ -85,3 +87,4 @@ spec:
       - ServerSideApply=true
       - SkipDryRunOnMissingResource=true
       - RespectIgnoreDifferences=true
+      - SkipHooks=true
