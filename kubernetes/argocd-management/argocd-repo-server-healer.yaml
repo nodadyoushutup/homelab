@@ -1,0 +1,198 @@
+# In-cluster auto-heal for argocd-repo-server after unclean node reboots (power loss).
+# Deletes repo-server pods stuck Unknown or not Ready for 10+ minutes; restarts the
+# deployment when the Service has no ready endpoints.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: argocd-repo-server-healer
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: argocd-repo-server-healer
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch", "delete"]
+  - apiGroups: [""]
+    resources: ["endpoints"]
+    verbs: ["get", "list"]
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: argocd-repo-server-healer
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: argocd-repo-server-healer
+subjects:
+  - kind: ServiceAccount
+    name: argocd-repo-server-healer
+    namespace: argocd
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-repo-server-healer
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+data:
+  heal.sh: |
+    #!/bin/bash
+    set -euo pipefail
+
+    NAMESPACE="${NAMESPACE:-argocd}"
+    DEPLOYMENT="${DEPLOYMENT:-argocd-repo-server}"
+    LABEL_SELECTOR="${LABEL_SELECTOR:-app.kubernetes.io/name=argocd-repo-server}"
+    STUCK_SECONDS="${STUCK_SECONDS:-600}"
+
+    rfc3339_to_epoch() {
+      date -u -d "$1" +%s
+    }
+
+    has_ready_endpoints() {
+      local ips
+      ips="$(kubectl -n "${NAMESPACE}" get endpoints "${DEPLOYMENT}" \
+        -o jsonpath='{.subsets[0].addresses[*].ip}' 2>/dev/null || true)"
+      [[ -n "${ips}" ]]
+    }
+
+    restart_deployment() {
+      echo "INFO: no ready endpoints for ${DEPLOYMENT}; rolling restart"
+      kubectl -n "${NAMESPACE}" rollout restart "deployment/${DEPLOYMENT}"
+    }
+
+    pod_age_seconds() {
+      local name="$1" ts created now
+      ts="$(kubectl -n "${NAMESPACE}" get pod "${name}" -o jsonpath='{.metadata.creationTimestamp}')"
+      created="$(rfc3339_to_epoch "${ts}")"
+      now="$(date -u +%s)"
+      echo $(( now - created ))
+    }
+
+    pod_needs_heal() {
+      local name="$1" age phase ready
+      age="$(pod_age_seconds "${name}")"
+      if (( age < STUCK_SECONDS )); then
+        return 1
+      fi
+
+      phase="$(kubectl -n "${NAMESPACE}" get pod "${name}" -o jsonpath='{.status.phase}')"
+      if [[ "${phase}" == "Unknown" ]]; then
+        return 0
+      fi
+
+      ready="$(kubectl -n "${NAMESPACE}" get pod "${name}" -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}')"
+      if [[ "${ready}" != "True" ]]; then
+        return 0
+      fi
+
+      return 1
+    }
+
+    main() {
+      if ! has_ready_endpoints; then
+        restart_deployment
+        exit 0
+      fi
+
+      local pod
+      while IFS= read -r pod; do
+        [[ -n "${pod}" ]] || continue
+        if pod_needs_heal "${pod}"; then
+          echo "INFO: deleting stuck pod ${NAMESPACE}/${pod} (age >= ${STUCK_SECONDS}s)"
+          kubectl -n "${NAMESPACE}" delete pod "${pod}" --wait=false
+        fi
+      done < <(kubectl -n "${NAMESPACE}" get pods -l "${LABEL_SELECTOR}" \
+        -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}')
+
+      echo "INFO: repo-server healthy; heal run complete"
+    }
+
+    main "$@"
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: argocd-repo-server-healer
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "7"
+spec:
+  schedule: "*/5 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  startingDeadlineSeconds: 120
+  jobTemplate:
+    spec:
+      activeDeadlineSeconds: 180
+      backoffLimit: 1
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: argocd-repo-server-healer
+        spec:
+          serviceAccountName: argocd-repo-server-healer
+          restartPolicy: Never
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1001
+            runAsGroup: 1001
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: healer
+              image: docker.io/bitnami/kubectl@sha256:e2b97dde9666986c61c56d49aae85a714b89b69392baa531438e74ec34096fb4
+              imagePullPolicy: IfNotPresent
+              command:
+                - /bin/bash
+                - /scripts/heal.sh
+              env:
+                - name: NAMESPACE
+                  value: argocd
+                - name: DEPLOYMENT
+                  value: argocd-repo-server
+                - name: LABEL_SELECTOR
+                  value: app.kubernetes.io/name=argocd-repo-server
+                - name: STUCK_SECONDS
+                  value: "600"
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 64Mi
+                limits:
+                  cpu: 100m
+                  memory: 128Mi
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop: ["ALL"]
+              volumeMounts:
+                - name: scripts
+                  mountPath: /scripts
+                  readOnly: true
+                - name: tmp
+                  mountPath: /tmp
+          volumes:
+            - name: scripts
+              configMap:
+                name: argocd-repo-server-healer
+                defaultMode: 0555
+            - name: tmp
+              emptyDir: {}

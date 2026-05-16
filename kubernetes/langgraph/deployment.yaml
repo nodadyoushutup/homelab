@@ -29,7 +29,7 @@ spec:
         - name: langgraph-registry
       containers:
         - name: langgraph
-          image: harbor.nodadyoushutup.com/homelab/langgraph:2026.05.02.160008
+          image: ghcr.io/nodadyoushutup/langgraph:0.0.1
           imagePullPolicy: Always
           workingDir: /app/langgraph/agent
           command:
