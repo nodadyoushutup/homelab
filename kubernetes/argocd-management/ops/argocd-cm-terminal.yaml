@@ -11,6 +11,7 @@ metadata:
     argocd.argoproj.io/sync-wave: "5"
     argocd.argoproj.io/sync-options: Delete=false
 data:
+  url: https://argocd.nodadyoushutup.com
   admin.enabled: "true"
   accounts.admin: apiKey, login
   exec.enabled: "true"

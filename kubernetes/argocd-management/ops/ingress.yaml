@@ -4,6 +4,7 @@ metadata:
   name: argocd
   namespace: argocd
   annotations:
+    argocd.argoproj.io/sync-options: Delete=false
     nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
 spec:
   ingressClassName: nginx
