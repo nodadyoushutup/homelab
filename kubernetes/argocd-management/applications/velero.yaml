@@ -11,6 +11,7 @@ spec:
     - git@github.com:nodadyoushutup/homelab.git
     - https://github.com/nodadyoushutup/homelab.git
     - https://vmware-tanzu.github.io/helm-charts
+    - https://seriohub.github.io/velero-helm/
   destinations:
     - namespace: velero
       server: https://kubernetes.default.svc
@@ -78,6 +79,13 @@ spec:
     - repoURL: git@github.com:nodadyoushutup/homelab.git
       targetRevision: HEAD
       path: kubernetes/velero/manifests
+    - repoURL: https://seriohub.github.io/velero-helm/
+      chart: vui
+      targetRevision: "1.0.6"
+      helm:
+        releaseName: vui
+        valueFiles:
+          - $values/kubernetes/velero/vui-values.yaml
   syncPolicy:
     automated:
       prune: true

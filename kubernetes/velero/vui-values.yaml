@@ -1,0 +1,54 @@
+# seriohub/vui — Velero UI (single-cluster) in namespace velero alongside Velero server.
+# Credentials: kubernetes/velero/manifests/secret-vui-api.yaml (committed; not Vault for now).
+
+global:
+  veleroNamespace: velero
+  clusterName: homelab
+  core: false
+  k8SInclusterMode: true
+
+apiService:
+  deployment:
+    storage:
+      enabled: true
+      resources:
+        requests:
+          storage: 1Gi
+  secret:
+    existingSecret: vui-api-credentials
+
+uiService:
+  deployment:
+    resources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+
+watchdogService:
+  deployment:
+    resources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+  config:
+    apprise: ""
+
+exposure:
+  mode: ingress
+  ingress:
+    ingressClassName: nginx
+    metadata:
+      annotations:
+        argocd.argoproj.io/sync-wave: "15"
+        nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+        nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    spec:
+      tls:
+        - hosts:
+            - velero.nodadyoushutup.com
