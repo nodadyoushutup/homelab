@@ -31,9 +31,34 @@ metadata:
   namespace: argocd
   annotations:
     argocd.argoproj.io/sync-wave: "32"
+    argocd.argoproj.io/sync-options: SkipHooks=true
 spec:
   project: velero
   revisionHistoryLimit: 0
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      namespace: velero
+      name: velero
+      jqPathExpressions:
+        - .spec.template.metadata.annotations
+    - group: ""
+      kind: Secret
+      namespace: velero
+      name: velero-s3-credentials
+      jqPathExpressions:
+        - .data
+    - group: external-secrets.io
+      kind: ExternalSecret
+      namespace: velero
+      name: velero-s3-credentials
+      jqPathExpressions:
+        - .status
+    - group: batch
+      kind: Job
+      namespace: velero
+      jqPathExpressions:
+        - .status
   destination:
     server: https://kubernetes.default.svc
     namespace: velero
@@ -59,3 +84,4 @@ spec:
       - CreateNamespace=true
       - ServerSideApply=true
       - SkipDryRunOnMissingResource=true
+      - RespectIgnoreDifferences=true
