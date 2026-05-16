@@ -6,7 +6,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "20"
 spec:
-  schedule: "0 5 * * *"
+  schedule: "10 5 * * *"
   template:
     snapshotMoveData: true
     includedNamespaces:
