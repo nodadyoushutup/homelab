@@ -75,8 +75,6 @@ spec:
               value: "1"
             - name: LANGGRAPH_N_JOBS_PER_WORKER
               value: "8"
-            - name: HOMELAB_MCP_CODE_URL
-              value: https://mcp.code.nodadyoushutup.com/mcp
             - name: POSTGRES_URI
               value: postgresql://langgraph:langgraph@langgraph-postgres:5432/langgraph?sslmode=disable
           ports:
