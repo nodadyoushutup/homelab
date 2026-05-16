@@ -10,8 +10,7 @@ SERVICE_NAME="talos"
 STAGE_NAME="Talos cluster"
 ENTRYPOINT_RELATIVE="pipelines/terraform/cluster/talos/app.sh"
 TERRAFORM_DIR="${ROOT_DIR}/terraform/cluster/talos/app"
-TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${CONFIG_DIR:-/mnt/eapp/config}}"
-DEFAULT_TFVARS_FILE="${DEFAULT_TFVARS_FILE:-${TFVARS_HOME_DIR}/talos/app.tfvars}"
+TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${CONFIG_DIR:-${ROOT_DIR}/.config}}"
 DEFAULT_BACKEND_FILE="${DEFAULT_BACKEND_FILE:-${TFVARS_HOME_DIR}/minio.backend.hcl}"
 
 PLAN_ARGS_EXTRA=()
@@ -27,8 +26,8 @@ BOOTSTRAP_STATE_ADDRESS="talos_machine_bootstrap.cluster"
 BOOTSTRAP_STATE_ID="machine_bootstrap"
 KUBECONFIG_STATE_ADDRESS="talos_cluster_kubeconfig.cluster"
 TALOS_SECRETS_EXPORT_SCRIPT="${ROOT_DIR}/scripts/terraform/export_talos_secrets_from_machineconfig.py"
-MANAGED_TALOSCONFIG_OUTPUT_PATH="${MANAGED_TALOSCONFIG_OUTPUT_PATH:-${TFVARS_HOME_DIR}/talos/talosconfig}"
-MANAGED_KUBECONFIG_OUTPUT_PATH="${MANAGED_KUBECONFIG_OUTPUT_PATH:-${TFVARS_HOME_DIR}/talos/kubeconfig}"
+MANAGED_TALOSCONFIG_OUTPUT_PATH="${MANAGED_TALOSCONFIG_OUTPUT_PATH:-${TFVARS_HOME_DIR}/terraform/cluster/talos/app/talosconfig}"
+MANAGED_KUBECONFIG_OUTPUT_PATH="${MANAGED_KUBECONFIG_OUTPUT_PATH:-${TFVARS_HOME_DIR}/terraform/cluster/talos/app/kubeconfig}"
 TALOS_SECRETS_IMPORT_PATH="${TALOS_SECRETS_IMPORT_PATH:-}"
 GENERATED_TALOS_SECRETS_IMPORT_PATH=""
 OVERRIDE_TALOSCONFIG_OUTPUT_PATH="__UNSET__"
@@ -197,7 +196,7 @@ redirect_local_file_outputs_if_unwritable() {
   fi
 
   if [[ "${OVERRIDE_TALOSCONFIG_OUTPUT_PATH}" == "${MANAGED_TALOSCONFIG_OUTPUT_PATH}" && "${OVERRIDE_KUBECONFIG_OUTPUT_PATH}" == "${MANAGED_KUBECONFIG_OUTPUT_PATH}" ]]; then
-    echo "[INFO] Redirecting Talos local file outputs to shared managed paths under ${TFVARS_HOME_DIR}/talos"
+    echo "[INFO] Redirecting Talos local file outputs to shared managed paths under ${TFVARS_HOME_DIR}/terraform/cluster/talos/app"
     append_var_override "talosconfig_output_path=${OVERRIDE_TALOSCONFIG_OUTPUT_PATH}"
     append_var_override "kubeconfig_output_path=${OVERRIDE_KUBECONFIG_OUTPUT_PATH}"
     return 0

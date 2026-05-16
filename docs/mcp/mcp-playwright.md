@@ -19,7 +19,7 @@ Not part of the checked-in LangGraph **`mcp.json`** files by default; add a serv
 
 ## Deploy
 
-- Swarm: **`terraform/swarm/playwright-mcp/app/`** (custom **`docker_service`** resource, not the shared **`mcp-service`** module).
+- Swarm: **`terraform/swarm/playwright-mcp/app/`** (explicit **`docker_service`** resource in that root).
 
 ## Related
 

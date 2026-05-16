@@ -1,8 +1,3 @@
-locals {
-  grafana_ini_hash         = substr(filemd5(var.grafana_ini_path), 0, 12)
-  grafana_ini_force_update = parseint(substr(local.grafana_ini_hash, 0, 8), 16)
-}
-
 data "docker_network" "grafana_database" {
   name = "grafana-database"
 }
@@ -19,7 +14,7 @@ resource "docker_volume" "grafana_app" {
 
 resource "docker_config" "grafana_app" {
   name = "grafana-ini-${local.grafana_ini_hash}"
-  data = filebase64(var.grafana_ini_path)
+  data = filebase64(var.ini_path)
 
   lifecycle {
     create_before_destroy = true

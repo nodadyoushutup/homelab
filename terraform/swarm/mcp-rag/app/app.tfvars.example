@@ -1,6 +1,6 @@
-# Copy to /mnt/eapp/config/mcp-rag/app.tfvars (or pass via --tfvars).
+# Copy to /mnt/eapp/code/homelab/.config/mcp-rag/app.tfvars (or pass via --tfvars).
 #
-# Docker SSH + registry credentials: /mnt/eapp/config/providers/docker.tfvars
+# Docker SSH + registry credentials: /mnt/eapp/code/homelab/.config/terraform/providers/docker_arm64.tfvars
 # (`swarm_docker_provider_config`), including Harbor and/or GHCR entries.
 
 image_reference = "harbor.nodadyoushutup.com/homelab/mcp-rag:latest"

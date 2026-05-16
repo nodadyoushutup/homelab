@@ -1,42 +1,49 @@
-# Standalone Docker containers on the pool host (see `provider_config.docker` in tfvars).
+# Standalone Docker containers on the pool host (`provider_config.docker` from docker_amd64.tfvars,
+# merged after docker_arm64.tfvars by pipelines/terraform/swarm/gha-runner-amd64/app.sh).
 # Uses `docker_container` + `devices` so `/dev/kvm` gets proper cgroup permissions (unlike Swarm services).
 
-resource "docker_volume" "gha_runner_config" {
-  name = "${replace(var.github_runner_name, "_", "-")}-nfs-config"
+moved {
+  from = docker_volume.gha_runner_config
+  to   = docker_volume.gha_runner_nfs["config"]
+}
+
+resource "docker_volume" "gha_runner_nfs" {
+  for_each = local.gha_runner_nfs_volume_keys
+
+  name = "${replace(local.runner_name, "_", "-")}-nfs-${each.key}"
 
   driver = "local"
   driver_opts = {
-    type   = "nfs"
-    o      = "addr=192.168.1.100,nfsvers=4.2,rw"
-    device = ":/mnt/eapp/config"
+    type   = trimspace(var.swarm_nfs_volume_type)
+    o      = trimspace(var.swarm_nfs_volume_o_rw)
+    device = each.key == "code" ? trimspace(var.swarm_nfs_code_device) : trimspace(var.swarm_nfs_config_device)
   }
 }
 
 resource "docker_container" "gha_runner" {
-  count = var.github_runner_replicas
+  count = var.replicas
 
-  name  = "${var.github_runner_name}-${count.index + 1}"
-  image = var.github_runner_image
+  name  = "${local.runner_name}-${count.index + 1}"
+  image = local.runner_image
 
   restart = "always"
   user    = "0:0"
 
   group_add = ["kvm"]
 
-  dns = tolist(["192.168.1.1", "1.1.1.1", "8.8.8.8"])
+  dns = var.dns_nameservers
 
   env = toset([
-    "GH_RUNNER_URL=${var.github_runner_url}",
-    "GH_RUNNER_TOKEN=${var.github_runner_token}",
-    "GH_RUNNER_ACCESS_TOKEN=${var.github_runner_access_token}",
-    "GH_RUNNER_NAME=${var.github_runner_name}-${count.index + 1}",
-    "GH_RUNNER_LABELS=${var.github_runner_labels}",
-    "GH_RUNNER_WORKDIR=${var.github_runner_workdir}",
-    "GH_RUNNER_EPHEMERAL=${var.github_runner_ephemeral}",
-    "GH_RUNNER_DISABLEUPDATE=${var.github_runner_disableupdate}",
-    "GH_RUNNER_REMOVE_TOKEN=${var.github_runner_remove_token}",
+    "GH_RUNNER_URL=${var.url}",
+    "GH_RUNNER_TOKEN=${var.registration_token}",
+    "GH_RUNNER_ACCESS_TOKEN=${var.access_token}",
+    "GH_RUNNER_NAME=${local.runner_name}-${count.index + 1}",
+    "GH_RUNNER_LABELS=${local.runner_labels}",
+    "GH_RUNNER_WORKDIR=${local.runner_workdir}",
+    "GH_RUNNER_EPHEMERAL=${local.runner_ephemeral}",
+    "GH_RUNNER_DISABLEUPDATE=${local.runner_disableupdate}",
     "RUNNER_ALLOW_RUNASROOT=1",
-    "HARBOR_BUILD_TMP_PARENT=${var.github_runner_engine_visible_build_path}",
+    "HARBOR_BUILD_TMP_PARENT=${var.engine_visible_build_path}",
   ])
 
   devices {
@@ -53,14 +60,18 @@ resource "docker_container" "gha_runner" {
 
   mounts {
     type   = "bind"
-    source = var.github_runner_engine_visible_build_path
-    target = var.github_runner_engine_visible_build_path
+    source = var.engine_visible_build_path
+    target = var.engine_visible_build_path
   }
 
-  mounts {
-    type   = "volume"
-    source = docker_volume.gha_runner_config.name
-    target = "/mnt/eapp/config"
+  dynamic "mounts" {
+    for_each = local.gha_runner_nfs_volume_keys
+
+    content {
+      type   = "volume"
+      source = docker_volume.gha_runner_nfs[mounts.key].name
+      target = lookup(local.gha_runner_nfs_container_targets, mounts.key)
+    }
   }
 
   healthcheck {

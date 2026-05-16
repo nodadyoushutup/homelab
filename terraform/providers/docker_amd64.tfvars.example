@@ -1,0 +1,24 @@
+# Copy to CONFIG_DIR/terraform/providers/docker_amd64.tfvars (not committed).
+# Optional: only pipelines/terraform/swarm/gha-runner-amd64/app.sh merges this after docker_arm64.tfvars.
+# Holds `provider_config` so Terraform targets the AMD64 pool host (standalone docker_container, not Swarm).
+# Include the same `registry_auths` (or legacy single `registry_auth`) as docker_arm64.tfvars so
+# image pulls over SSH to the pool host authenticate like the Swarm provider.
+
+provider_config = {
+  docker = {
+    host = "ssh://USER@AMD64_POOL_HOST"
+    ssh_opts = [
+      "-o", "StrictHostKeyChecking=accept-new",
+      "-o", "UserKnownHostsFile=/path/to/known_hosts",
+      "-i", "/path/to/id_ed25519",
+    ]
+  }
+
+  registry_auths = [
+    {
+      address  = "ghcr.io"
+      username = "GITHUB_USER_OR_ORG"
+      password = "GITHUB_PAT_WITH_PACKAGES_READ"
+    },
+  ]
+}

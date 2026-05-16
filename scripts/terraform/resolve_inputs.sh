@@ -12,7 +12,7 @@ TFVARS_ARG="${TFVARS_ARG:-}"
 BACKEND_ARG="${BACKEND_ARG:-}"
 DEFAULT_TFVARS_FILE="${DEFAULT_TFVARS_FILE:-}"
 DEFAULT_TFVARS_BASENAME="${DEFAULT_TFVARS_BASENAME:-}"
-TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${CONFIG_DIR:-/mnt/eapp/config}}"
+TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${CONFIG_DIR:-${ROOT_DIR}/.config}}"
 DEFAULT_BACKEND_FILE="${DEFAULT_BACKEND_FILE:-}"
 TERRAFORM_DIR="${TERRAFORM_DIR:-${ROOT_DIR}/terraform}"
 
@@ -127,9 +127,9 @@ emit_shared_config_hint() {
   fi
 
   echo "[ERR] TFVARS home directory not found: ${home_dir}" >&2
-  if [[ "${home_dir}" == "/mnt/eapp/config"* ]]; then
-    echo "[ERR] Expected the shared Jenkins/Terraform config mount at /mnt/eapp/config." >&2
-    echo "[ERR] Ensure the Jenkins agent bind-mounts the host path to /mnt/eapp/config." >&2
+  if [[ "${home_dir}" == "/mnt/eapp/config"* ]] || [[ "${home_dir}" == *"/homelab/.config"* ]]; then
+    echo "[ERR] Expected TFVARS_HOME_DIR / CONFIG_DIR (default: <homelab>/.config) to exist." >&2
+    echo "[ERR] On Jenkins agents, bind-mount that host directory to match TFVARS_HOME_DIR." >&2
   fi
 }
 

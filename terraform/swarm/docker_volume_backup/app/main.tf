@@ -25,11 +25,7 @@ resource "docker_service" "docker_volume_backup" {
       env   = var.env
 
       dns_config {
-        nameservers = [
-          "192.168.1.1",
-          "1.1.1.1",
-          "8.8.8.8",
-        ]
+        nameservers = var.dns_nameservers
       }
 
       dynamic "mounts" {

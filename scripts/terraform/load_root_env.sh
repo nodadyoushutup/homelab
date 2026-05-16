@@ -23,12 +23,10 @@ if [[ -n "${_pipeline_env_file}" && -f "${_pipeline_env_file}" ]]; then
   _pipeline_existing_config_dir_set=0
   _pipeline_existing_tfvars_home_dir_set=0
   _pipeline_existing_jenkins_agent_tfvars_dir_set=0
-  _pipeline_existing_jenkins_tfvars_dir_set=0
   _pipeline_existing_jenkins_controller_tfvars_dir_set=0
   _pipeline_existing_config_dir_value=""
   _pipeline_existing_tfvars_home_dir_value=""
   _pipeline_existing_jenkins_agent_tfvars_dir_value=""
-  _pipeline_existing_jenkins_tfvars_dir_value=""
   _pipeline_existing_jenkins_controller_tfvars_dir_value=""
 
   if [[ -n "${CONFIG_DIR+x}" ]]; then
@@ -42,10 +40,6 @@ if [[ -n "${_pipeline_env_file}" && -f "${_pipeline_env_file}" ]]; then
   if [[ -n "${JENKINS_AGENT_TFVARS_DIR+x}" ]]; then
     _pipeline_existing_jenkins_agent_tfvars_dir_set=1
     _pipeline_existing_jenkins_agent_tfvars_dir_value="${JENKINS_AGENT_TFVARS_DIR}"
-  fi
-  if [[ -n "${JENKINS_TFVARS_DIR+x}" ]]; then
-    _pipeline_existing_jenkins_tfvars_dir_set=1
-    _pipeline_existing_jenkins_tfvars_dir_value="${JENKINS_TFVARS_DIR}"
   fi
   if [[ -n "${JENKINS_CONTROLLER_TFVARS_DIR+x}" ]]; then
     _pipeline_existing_jenkins_controller_tfvars_dir_set=1
@@ -83,24 +77,23 @@ if [[ -n "${_pipeline_env_file}" && -f "${_pipeline_env_file}" ]]; then
   if [[ "${_pipeline_existing_jenkins_agent_tfvars_dir_set}" == "1" ]]; then
     export JENKINS_AGENT_TFVARS_DIR="${_pipeline_existing_jenkins_agent_tfvars_dir_value}"
   fi
-  if [[ "${_pipeline_existing_jenkins_tfvars_dir_set}" == "1" ]]; then
-    export JENKINS_TFVARS_DIR="${_pipeline_existing_jenkins_tfvars_dir_value}"
-  fi
   if [[ "${_pipeline_existing_jenkins_controller_tfvars_dir_set}" == "1" ]]; then
     export JENKINS_CONTROLLER_TFVARS_DIR="${_pipeline_existing_jenkins_controller_tfvars_dir_value}"
   fi
+fi
+
+# Default site layout: Terraform/Kubernetes tfvars + minio.backend.hcl live under <repo>/.config/
+# (migrated from legacy /mnt/eapp/config). Override with CONFIG_DIR in .secrets/.env when needed.
+if [[ -z "${CONFIG_DIR:-}" ]]; then
+  export CONFIG_DIR="${_pipeline_root_dir}/.config"
 fi
 
 if [[ -z "${TFVARS_HOME_DIR:-}" && -n "${CONFIG_DIR:-}" ]]; then
   export TFVARS_HOME_DIR="${CONFIG_DIR}"
 fi
 
-if [[ -z "${JENKINS_AGENT_TFVARS_DIR:-}" && -n "${JENKINS_TFVARS_DIR:-}" ]]; then
-  export JENKINS_AGENT_TFVARS_DIR="${JENKINS_TFVARS_DIR}"
-fi
-
 if [[ -z "${JENKINS_CONTROLLER_TFVARS_DIR:-}" && -n "${CONFIG_DIR:-}" ]]; then
-  export JENKINS_CONTROLLER_TFVARS_DIR="${CONFIG_DIR}/jenkins-controller"
+  export JENKINS_CONTROLLER_TFVARS_DIR="${CONFIG_DIR}/terraform/swarm/jenkins-controller"
 fi
 
 export PIPELINE_ROOT_ENV_LOADED=1

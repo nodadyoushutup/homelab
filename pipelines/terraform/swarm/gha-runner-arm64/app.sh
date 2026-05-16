@@ -10,8 +10,7 @@ SERVICE_NAME="gha-runner-arm64"
 STAGE_NAME="GitHub Actions ARM64 runner app"
 ENTRYPOINT_RELATIVE="pipelines/terraform/swarm/gha-runner-arm64/app.sh"
 TERRAFORM_DIR="${ROOT_DIR}/terraform/swarm/gha-runner-arm64/app"
-TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${CONFIG_DIR:-/mnt/eapp/config}}"
-DEFAULT_TFVARS_FILE="${DEFAULT_TFVARS_FILE:-${TFVARS_HOME_DIR}/gha-runner-arm64/app.tfvars}"
+TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${CONFIG_DIR:-${ROOT_DIR}/.config}}"
 DEFAULT_BACKEND_FILE="${DEFAULT_BACKEND_FILE:-${TFVARS_HOME_DIR}/minio.backend.hcl}"
 
 PLAN_ARGS_EXTRA=()
@@ -19,6 +18,8 @@ APPLY_ARGS_EXTRA=()
 
 PIPELINE_ARGS=("$@")
 
+SWARM_DOCKER_ARM64_POOL_TFVARS="${SWARM_DOCKER_ARM64_POOL_TFVARS:-${TFVARS_HOME_DIR}/terraform/providers/docker_swarm.tfvars}"
+export SWARM_DOCKER_ARM64_POOL_TFVARS
 
 # shellcheck source=/dev/null
 source "${PIPELINE_SCRIPT_ROOT}/swarm_docker_provider_tfvars_env.sh"

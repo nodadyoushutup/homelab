@@ -1,8 +1,3 @@
-locals {
-  telegraf_config_hash  = substr(filemd5("${path.module}/telegraf.conf"), 0, 12)
-  telegraf_force_update = parseint(substr(local.telegraf_config_hash, 0, 8), 16)
-}
-
 resource "docker_network" "telegraf_docker_metrics" {
   name   = "telegraf-docker-metrics"
   driver = "overlay"
@@ -49,11 +44,7 @@ resource "docker_service" "telegraf_docker_metrics" {
       ]
 
       dns_config {
-        nameservers = [
-          "192.168.1.1",
-          "1.1.1.1",
-          "8.8.8.8",
-        ]
+        nameservers = var.dns_nameservers
       }
 
       mounts {

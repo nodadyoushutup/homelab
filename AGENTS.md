@@ -45,7 +45,7 @@ docs to check before doing substantive work.
   Do not point Docker dev chat at Kubernetes/prod LangGraph, and do not point
   Kubernetes/prod chat at Docker dev LangGraph.
 - For LangGraph secrets and config, the single local dotenv source of truth is
-  `<repo>/.secrets/.env` (same file holds `CONFIG_DIR`, Argo CD installer vars, MinIO
+  `<repo>/.secrets/.env` (same file holds optional `CONFIG_DIR` (when unset after load, Terraform tfvars default to `<repo>/.config`; see `scripts/terraform/load_root_env.sh`), Argo CD installer vars, MinIO
   compose keys, and Compose interpolation keys documented in `.secrets/.env.example`). When asked to
   edit the LangGraph `.env`, literally update that file. Do not create or use `.env`
   files inside `applications/langgraph/agent/`, `applications/langgraph/subagents/`,

@@ -12,8 +12,7 @@ STAGE_NAME="Nginx Proxy Manager app"
 ENTRYPOINT_RELATIVE="pipelines/terraform/swarm/nginx_proxy_manager/app.sh"
 TERRAFORM_DIR="${ROOT_DIR}/terraform/swarm/nginx_proxy_manager/app"
 
-TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${CONFIG_DIR:-/mnt/eapp/config}}"
-DEFAULT_TFVARS_FILE="${DEFAULT_TFVARS_FILE:-${TFVARS_HOME_DIR}/nginx-proxy-manager/app.tfvars}"
+TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${CONFIG_DIR:-${ROOT_DIR}/.config}}"
 DEFAULT_BACKEND_FILE="${DEFAULT_BACKEND_FILE:-${TFVARS_HOME_DIR}/minio.backend.hcl}"
 
 PLAN_ARGS_EXTRA=()

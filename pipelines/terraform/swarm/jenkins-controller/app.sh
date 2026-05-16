@@ -11,8 +11,7 @@ STAGE_NAME="Jenkins controller app"
 ENTRYPOINT_RELATIVE="pipelines/terraform/swarm/jenkins-controller/app.sh"
 TERRAFORM_DIR="${ROOT_DIR}/terraform/swarm/jenkins-controller/app"
 
-JENKINS_CONTROLLER_TFVARS_DIR="${JENKINS_CONTROLLER_TFVARS_DIR:-${CONFIG_DIR:-/mnt/eapp/config}/jenkins-controller}"
-DEFAULT_TFVARS_FILE="${DEFAULT_TFVARS_FILE:-${JENKINS_CONTROLLER_TFVARS_DIR}/app.tfvars}"
+JENKINS_CONTROLLER_TFVARS_DIR="${JENKINS_CONTROLLER_TFVARS_DIR:-${CONFIG_DIR:-${ROOT_DIR}/.config}/terraform/swarm/jenkins-controller}"
 
 PLAN_ARGS_EXTRA=()
 APPLY_ARGS_EXTRA=()

@@ -1,4 +1,4 @@
-# Example only — copy to /mnt/eapp/config/nginx-proxy-manager/config.tfvars (or pass via --tfvars).
+# Example only — copy to /mnt/eapp/code/homelab/.config/nginx-proxy-manager/config.tfvars (or pass via --tfvars).
 # Real files are large; this shows the pieces you add per new hostname.
 # To remove NPM entries for retired filesystem/git/ast-grep MCPs only: edit your live tfvars and
 # delete matching certificates/proxy_hosts — see docs/workflows/edge-dns-and-nginx-proxy.md (section "Retired standalone code MCPs").

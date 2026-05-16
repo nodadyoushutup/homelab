@@ -24,7 +24,7 @@ Arm64 Swarm nodes (from repo root, after `HARBOR_USERNAME` / `HARBOR_PASSWORD` a
 ./scripts/agents/publish_mcp_code_harbor.sh
 ```
 
-Then run `pipelines/terraform/swarm/mcp-code/app.sh` (uses `/mnt/eapp/config/providers/docker.tfvars` for `swarm_docker_provider_config`; see `docs/workflows/docker-build-github-actions.md` for publish discipline).
+Then run `pipelines/terraform/swarm/mcp-code/app.sh` (uses `<repo>/.config/terraform/providers/docker_arm64.tfvars` or `docker_amd64.tfvars` for `swarm_docker_provider_config`; see `docs/workflows/docker-build-github-actions.md` for publish discipline).
 
 ## Runtime
 
@@ -54,4 +54,4 @@ Production HTTPS (Nginx Proxy Manager), same pattern as other MCP hosts:
 
 - `https://mcp.code.nodadyoushutup.com/mcp`
 
-Cloudflare **`A`** record and NPM **`proxy_hosts`** / **`certificates`** live in **`/mnt/eapp/config/cloudflare/config.tfvars`** and **`/mnt/eapp/config/nginx-proxy-manager/config.tfvars`** (forward to Swarm ingress **`192.168.1.120:18212`** by default).
+Cloudflare **`A`** record and NPM **`proxy_hosts`** / **`certificates`** live in **`<repo>/.config/terraform/remote/cloudflare/config.tfvars`** and **`<repo>/.config/terraform/swarm/nginx_proxy_manager/config.tfvars`** (forward to Swarm ingress **`192.168.1.120:18212`** by default).

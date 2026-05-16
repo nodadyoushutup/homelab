@@ -1,8 +1,3 @@
-locals {
-  alloy_config_hash  = substr(filemd5(var.alloy_config_path), 0, 12)
-  alloy_force_update = parseint(substr(local.alloy_config_hash, 0, 8), 16)
-}
-
 data "docker_network" "loki" {
   name = "loki"
 }
@@ -13,7 +8,7 @@ resource "docker_volume" "alloy_data" {
 
 resource "docker_config" "alloy" {
   name = "alloy-config-${local.alloy_config_hash}"
-  data = filebase64(var.alloy_config_path)
+  data = filebase64(var.config_path)
 
   lifecycle {
     create_before_destroy = true
@@ -51,11 +46,7 @@ resource "docker_service" "alloy" {
       ]
 
       dns_config {
-        nameservers = [
-          "192.168.1.1",
-          "1.1.1.1",
-          "8.8.8.8",
-        ]
+        nameservers = var.dns_nameservers
       }
 
       mounts {

@@ -1,34 +1,3 @@
-locals {
-  effective_config = jsondecode(jsonencode(var.config))
-
-  virtual_ip_specs = {
-    for vip in try(local.effective_config.virtual_ips, []) :
-    vip.name => vip
-  }
-
-  virtual_ip_import_specs = {
-    for vip in try(local.effective_config.virtual_ips, []) :
-    vip.name => vip
-    if try(vip.import_existing, false)
-  }
-
-  firewall_policy_specs = {
-    for policy in try(local.effective_config.firewall_policies, []) :
-    tostring(policy.policyid) => policy
-  }
-
-  firewall_policy_import_specs = {
-    for policy in try(local.effective_config.firewall_policies, []) :
-    tostring(policy.policyid) => policy
-    if try(policy.import_existing, false)
-  }
-
-  dhcp_server_reservation_specs = {
-    for dhcp in try(local.effective_config.dhcp_server_reservations, []) :
-    tostring(dhcp.fosid) => dhcp
-  }
-}
-
 resource "fortios_firewall_vip" "this" {
   for_each = local.virtual_ip_specs
 

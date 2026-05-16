@@ -28,11 +28,7 @@ resource "docker_service" "dozzle" {
       }
 
       dns_config {
-        nameservers = [
-          "192.168.1.1",
-          "1.1.1.1",
-          "8.8.8.8",
-        ]
+        nameservers = var.dns_nameservers
       }
 
       mounts {

@@ -1,16 +1,10 @@
-locals {
-  service_name  = "chromadb"
-  network_name  = "chromadb"
-  internal_port = 8000
-}
-
 resource "docker_network" "chromadb" {
   name   = local.network_name
   driver = "overlay"
 }
 
 resource "docker_volume" "chromadb_data" {
-  name = var.data_volume_name
+  name = local.chromadb_data_volume
 }
 
 resource "docker_service" "chromadb" {
@@ -32,7 +26,7 @@ resource "docker_service" "chromadb" {
     }
 
     container_spec {
-      image = var.image_reference
+      image = local.chromadb_image
 
       dns_config {
         nameservers = var.dns_nameservers
@@ -59,7 +53,7 @@ resource "docker_service" "chromadb" {
   endpoint_spec {
     ports {
       target_port    = local.internal_port
-      published_port = var.published_port
+      published_port = local.chromadb_published_port
       protocol       = "tcp"
       publish_mode   = "ingress"
     }

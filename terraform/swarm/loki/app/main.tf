@@ -1,8 +1,3 @@
-locals {
-  loki_config_hash  = substr(filemd5(var.loki_config_path), 0, 12)
-  loki_force_update = parseint(substr(local.loki_config_hash, 0, 8), 16)
-}
-
 resource "docker_network" "loki" {
   name   = "loki"
   driver = "overlay"
@@ -50,11 +45,7 @@ resource "docker_service" "loki" {
       ]
 
       dns_config {
-        nameservers = [
-          "192.168.1.1",
-          "1.1.1.1",
-          "8.8.8.8",
-        ]
+        nameservers = var.dns_nameservers
       }
 
       mounts {

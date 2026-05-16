@@ -1,9 +1,3 @@
-locals {
-  records_by_key = {
-    for record in var.records : record.key => record
-  }
-}
-
 resource "cloudflare_dns_record" "records" {
   for_each = local.records_by_key
 

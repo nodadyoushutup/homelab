@@ -7,7 +7,7 @@ ROOT_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR}/load_root_env.sh"
 
-BACKEND_FILE="${BACKEND_FILE:-${TFVARS_HOME_DIR:-${CONFIG_DIR:-/mnt/eapp/config}}/minio.backend.hcl}"
+BACKEND_FILE="${BACKEND_FILE:-${TFVARS_HOME_DIR:-${CONFIG_DIR:-${ROOT_DIR}/.config}}/minio.backend.hcl}"
 ONLY_PATTERN=""
 
 resolve_stage_tfvars() {
@@ -24,6 +24,8 @@ resolve_stage_tfvars() {
   stage_name="${rel_service##*/}"
   hyphen_service_dir="${service_dir//_/-}"
 
+  candidates+=("${TFVARS_HOME_DIR}/terraform/swarm/${service_dir}/${stage_name}.tfvars")
+  candidates+=("${TFVARS_HOME_DIR}/terraform/swarm/${service_dir}/${stage_name}/${stage_name}.tfvars")
   candidates+=("${TFVARS_HOME_DIR}/${service_dir}/${stage_name}.tfvars")
   if [[ "${hyphen_service_dir}" != "${service_dir}" ]]; then
     candidates+=("${TFVARS_HOME_DIR}/${hyphen_service_dir}/${stage_name}.tfvars")
@@ -35,6 +37,8 @@ resolve_stage_tfvars() {
 
   case "${service_dir}/${stage_name}" in
     prometheus/database)
+      candidates+=("${TFVARS_HOME_DIR}/terraform/swarm/prometheus/database.tfvars")
+      candidates+=("${TFVARS_HOME_DIR}/terraform/swarm/victoriametrics/app.tfvars")
       candidates+=("${TFVARS_HOME_DIR}/victoriametrics/app.tfvars")
       ;;
   esac

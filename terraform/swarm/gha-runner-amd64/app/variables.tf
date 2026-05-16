@@ -1,61 +1,37 @@
 variable "provider_config" {
-  description = "Provider configuration map for Docker (host + optional ssh opts)."
+  description = "Docker provider map merged after swarm_docker_provider_config: pool `docker` host/ssh_opts, optional `registry_auths` / `registry_auth` (mirror docker_arm64.tfvars for pool pulls)."
   type        = any
 
   default = {}
 }
 
-variable "github_runner_url" {
+variable "url" {
   description = "GitHub repo or org URL for runner registration."
   type        = string
   default     = "__SET_ME__"
 }
 
-variable "github_runner_token" {
+variable "registration_token" {
   description = "GitHub Actions runner registration token from UI/API."
   type        = string
   sensitive   = true
   default     = "__SET_ME__"
 }
 
-variable "github_runner_access_token" {
+variable "access_token" {
   description = "Optional GitHub access token used to mint registration/remove tokens at runner startup (recommended for replicated runners)."
   type        = string
   sensitive   = true
   default     = ""
 }
 
-variable "github_runner_image" {
-  description = "Container image reference for the runner service (prefer published multi-arch tags)."
-  type        = string
-  default     = "ghcr.io/nodadyoushutup/gha-runner:0.0.5"
-}
-
-variable "github_runner_name" {
-  description = "Runner display name prefix in GitHub; Task slot and Task ID are appended."
-  type        = string
-  default     = "homelab-gha-runner-amd64"
-}
-
-variable "github_runner_replicas" {
+variable "replicas" {
   description = "Number of runner containers on the pool host (see provider_config.docker in tfvars)."
   type        = number
-  default     = 2
+  default     = 4
 }
 
-variable "github_runner_labels" {
-  description = "Comma-separated labels advertised by this runner pool."
-  type        = string
-  default     = "self-hosted,linux,homelab,amd64,build,kvm"
-}
-
-variable "github_runner_workdir" {
-  description = "Working directory inside the runner install."
-  type        = string
-  default     = "_work"
-}
-
-variable "github_runner_engine_visible_build_path" {
+variable "engine_visible_build_path" {
   description = <<-EOT
     Absolute path bind-mounted from the pool host into each runner container at the identical path.
     The container sets HARBOR_BUILD_TMP_PARENT to this value so Harbor clones (and any
@@ -68,30 +44,13 @@ variable "github_runner_engine_visible_build_path" {
   default     = "/var/lib/gha-runner-engine-build"
 }
 
-variable "github_runner_ephemeral" {
-  description = "Whether the runner should be ephemeral (single-job)."
-  type        = bool
-  default     = true
-}
-
-variable "github_runner_disableupdate" {
-  description = "Disable runner self-updates."
-  type        = bool
-  default     = true
-}
-
-variable "github_runner_remove_token" {
-  description = "Optional token to deregister runner on container shutdown."
-  type        = string
-  sensitive   = true
-  default     = ""
-}
-
 variable "swarm_docker_provider_config" {
   description = <<-EOT
     Shared Docker SSH host and registry credentials (GHCR, Harbor, etc.).
-    Set in /mnt/eapp/config/providers/docker.tfvars; Swarm app pipelines source
+    Set in /mnt/eapp/code/homelab/.config/terraform/providers/docker_arm64.tfvars; Swarm app pipelines source
     scripts/terraform/swarm_docker_provider_tfvars_env.sh so terraform receives this file.
+    This AMD64 runner pipeline also merges docker_amd64.tfvars (`provider_config.docker` for the pool
+    host plus the same `registry_auths` pattern as this file) before dns/nfs/stack tfvars.
     Merged with provider_config; per-stack tfvars override on key collision.
     For runner pools, override `docker` in provider_config so Terraform targets the pool host
     (standalone `docker_container`, not Swarm scheduling).
@@ -100,25 +59,73 @@ variable "swarm_docker_provider_config" {
   default     = {}
 }
 
-locals {
-  provider_config = merge(var.swarm_docker_provider_config, var.provider_config)
-  docker_registry_auths = (
-    try(local.provider_config.registry_auths, null) != null
-    ? local.provider_config.registry_auths
-    : (
-      try(local.provider_config.registry_auth, null) != null
-      ? [local.provider_config.registry_auth]
-      : []
-    )
-  )
-  # docker_container uses provider-level registry_auth; pick the entry for this image's registry.
-  github_runner_registry_host = split("/", var.github_runner_image)[0]
-  runner_registry_matching_auths = [
-    for a in local.docker_registry_auths : a
-    if coalesce(try(a.address, null), "ghcr.io") == local.github_runner_registry_host
-  ]
-  docker_registry_auth_for_runner_image = (
-    length(local.runner_registry_matching_auths) > 0 ? local.runner_registry_matching_auths[0] : null
-  )
+variable "dns_nameservers" {
+  description = <<-EOT
+    DNS nameservers for Swarm task dns_config (and standalone runner dns). Set only in
+    CONFIG_DIR/terraform/providers/dns.tfvars (merged by swarm_pipeline.sh before stack tfvars).
+  EOT
+  type        = list(string)
+  sensitive   = true
 }
 
+variable "swarm_nfs_server" {
+  description = <<-EOT
+    Optional legacy; NFS mount options are swarm_nfs_volume_o_rw / swarm_nfs_volume_o_ro in nfs.tfvars.
+  EOT
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "swarm_nfs_code_device" {
+  description = <<-EOT
+    NFS device/export for repo code (e.g. ":/mnt/eapp/code"). Set only in CONFIG_DIR/terraform/providers/nfs.tfvars.
+  EOT
+  type        = string
+  sensitive   = true
+}
+
+variable "swarm_nfs_config_device" {
+  description = <<-EOT
+    NFS device/export for shared config (e.g. ":/mnt/eapp/code/homelab/.config"). Set only in CONFIG_DIR/terraform/providers/nfs.tfvars.
+  EOT
+  type        = string
+  sensitive   = true
+}
+
+variable "swarm_nfs_volume_type" {
+  description = <<-EOT
+    Docker local volume driver_opts.type for NFS-backed mounts (typically "nfs"). Set only in CONFIG_DIR/terraform/providers/nfs.tfvars.
+  EOT
+  type        = string
+  sensitive   = true
+}
+
+variable "swarm_nfs_volume_o_rw" {
+  description = <<-EOT
+    Docker local volume driver_opts.o for read-write NFS (comma-separated options, e.g. addr=HOST,nfsvers=4.2,rw). Set only in CONFIG_DIR/terraform/providers/nfs.tfvars.
+  EOT
+  type        = string
+  sensitive   = true
+}
+
+variable "swarm_nfs_volume_o_ro" {
+  description = <<-EOT
+    Docker local volume driver_opts.o for read-only NFS (e.g. addr=HOST,nfsvers=4.2,ro). Set only in CONFIG_DIR/terraform/providers/nfs.tfvars.
+  EOT
+  type        = string
+  sensitive   = true
+}
+
+# Vault KV fragments (parsed by scripts/terraform/vault_merge_config_secrets.py); unused by this module.
+variable "secrets" {
+  type      = any
+  default   = {}
+  sensitive = true
+}
+
+variable "secret_files" {
+  type      = any
+  default   = {}
+  sensitive = true
+}

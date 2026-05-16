@@ -11,16 +11,6 @@ terraform {
   }
 }
 
-locals {
-  argocd_server_host = trimsuffix(
-    trimprefix(
-      trimprefix(var.argocd_base_url, "https://"),
-      "http://",
-    ),
-    "/",
-  )
-}
-
 provider "argocd" {
   server_addr = local.argocd_server_host
   auth_token  = var.argocd_api_token

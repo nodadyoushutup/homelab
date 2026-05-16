@@ -18,3 +18,16 @@ variable "records" {
     proxied = bool
   }))
 }
+
+# Vault KV fragments (parsed by scripts/terraform/vault_merge_config_secrets.py); unused by this module.
+variable "secrets" {
+  type      = any
+  default   = {}
+  sensitive = true
+}
+
+variable "secret_files" {
+  type      = any
+  default   = {}
+  sensitive = true
+}

@@ -6,14 +6,14 @@
 # Run from repo root after `terraform init` for harbor/config (same backend/tfvars
 # as pipelines/terraform/swarm/harbor/config.sh). Example:
 #
-#   CONFIG_DIR=/mnt/eapp/config ./scripts/misc/harbor_config_forget_state.sh
+#   CONFIG_DIR=/mnt/eapp/code/homelab/.config ./scripts/misc/harbor_config_forget_state.sh
 #
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-CONFIG_DIR="${CONFIG_DIR:-/mnt/eapp/config}"
+CONFIG_DIR="${CONFIG_DIR:-${ROOT_DIR}/.config}"
 BACKEND="${BACKEND:-${CONFIG_DIR}/minio.backend.hcl}"
-TFVARS="${TFVARS:-${CONFIG_DIR}/harbor/config.tfvars}"
+TFVARS="${TFVARS:-${CONFIG_DIR}/terraform/swarm/harbor/config.tfvars}"
 TF_DIR="${ROOT_DIR}/terraform/swarm/harbor/config"
 
 if [[ ! -f "${BACKEND}" || ! -f "${TFVARS}" ]]; then

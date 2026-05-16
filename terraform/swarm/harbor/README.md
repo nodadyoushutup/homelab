@@ -28,9 +28,9 @@ To let Terraform **destroy** all managed Harbor projects/robots before re-applyi
 
 ## First Apply (Recommended Order)
 
-1. Prepare tfvars files from examples:
-   - `terraform/swarm/harbor/app/app.tfvars.example`
-   - `terraform/swarm/harbor/config/config.tfvars.example`
+1. Prepare tfvars files from the **checked-in examples** in this repo (under each slice directory), then copy them to your `CONFIG_DIR` as siblings of the slice folders:
+   - from `terraform/swarm/harbor/app/app.tfvars.example` → **`/mnt/eapp/code/homelab/.config/terraform/swarm/harbor/app.tfvars`**
+   - from `terraform/swarm/harbor/config/config.tfvars.example` → **`/mnt/eapp/code/homelab/.config/terraform/swarm/harbor/config.tfvars`**
 2. Ensure env files for Harbor components are available on the Terraform runner, or set explicit `env` maps in app tfvars.
 3. Stop the current standalone compose Harbor deployment before applying `app` (ports/data paths overlap).
 4. Apply `app` stage.

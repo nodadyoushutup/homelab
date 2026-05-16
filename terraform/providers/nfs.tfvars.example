@@ -1,0 +1,25 @@
+# Copy to <homelab>/.config/terraform/providers/nfs.tfvars (beside docker_arm64.tfvars and dns.tfvars).
+# Default CONFIG_DIR / TFVARS_HOME_DIR is <homelab>/.config (see scripts/terraform/load_root_env.sh).
+# Do not commit site-specific NFS targets to the homelab repo.
+#
+# Required by scripts/terraform/swarm_pipeline.sh (merged after dns.tfvars; no in-module defaults).
+#
+# --- How this maps to Docker Swarm NFS local volumes (see terraform/swarm/*/app/main.tf mounts) ---
+#
+# For each bind, Terraform sets:
+#   mount.target          = path after the LAST ":" in swarm_nfs_*_device  (container mountpoint / "d_target")
+#   mount.source.driver_opts.device = full swarm_nfs_*_device string (NFS volume "device", usually ":/export/path")
+#   mount.source.driver_opts.type   = swarm_nfs_volume_type              (typically "nfs")
+#   mount.source.driver_opts.o     = swarm_nfs_volume_o_rw or _ro      (comma-separated; must include addr=, nfsvers=, rw|ro)
+#
+# Optional extra NFS mount flags (same server): add to the "o" strings, e.g. nconnect=4,soft,timeo=600,retrans=2
+# (only if your nfs-utils / kernel supports them for NFSv4).
+
+# Export paths: passed as driver_opts.device; addr lives only in *_o_* (not in device).
+swarm_nfs_code_device   = ":/mnt/eapp/code"
+swarm_nfs_config_device = ":/mnt/eapp/code/homelab/.config"
+
+# Shared Docker local-volume NFS driver_opts (same for every Swarm stack on this site).
+swarm_nfs_volume_type = "nfs"
+swarm_nfs_volume_o_rw = "addr=__YOUR_NFS_HOST__,nfsvers=4.2,rw"
+swarm_nfs_volume_o_ro = "addr=__YOUR_NFS_HOST__,nfsvers=4.2,ro"

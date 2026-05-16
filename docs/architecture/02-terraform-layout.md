@@ -17,7 +17,7 @@ the detailed checklist.
 | `terraform/cluster/` | Cluster-oriented roots: for example **Talos** app slice, **Proxmox** app slice, **Argo CD** `config/` slice for post-install Argo configuration. |
 | `terraform/network/` | Network appliances and integrations that are not Swarm services themselves—for example **FortiGate** `config/` against the live firewall API. |
 | `terraform/remote/` | SaaS or remote APIs decoupled from on-prem engines—for example **Cloudflare** `config/` for DNS and zone objects. |
-| `terraform/modules/` | **Reusable building blocks** (`mcp-service`, `homelab-nfs-mount`, …) consumed *from* slice roots. These directories are **not** Terraform roots: no remote backend here. |
+| `terraform/modules/` | **Optional shared HCL** for slice roots when a pattern is worth extracting. Swarm stacks currently **inline** their `docker_service` definitions (duplication is OK for now). These directories are **not** Terraform roots: no remote backend here. |
 
 Naming under `swarm/` follows the **service** name (underscores where the
 historical stack used them, for example `nginx_proxy_manager`). Prefer matching
@@ -53,14 +53,42 @@ Illustrative snapshot of how existing services split:
 - **Full trio:** `grafana` (`app`, `config`, `database`), `nginx_proxy_manager`
   (same).
 - **App + config:** `harbor`, `jenkins-controller`, `vault`.
+- **Vault `config/`** pipeline merges plain HCL `secrets` / `secret_files` blocks
+  embedded in slice tfvars (`app.tfvars`, `config.tfvars`, `database.tfvars`) under
+  `TFVARS_HOME/terraform/**` and `TFVARS_HOME/kubernetes/**` (see
+  `scripts/terraform/vault_merge_config_secrets.py`); `terraform/swarm/vault/config.tfvars`
+  must not contain `secrets` or `secret_files`. For bulk moves from an old monolith,
+  use `scripts/terraform/vault_split_k8s_secrets.py` (writes `app.tfvars` fragments).
+  To fold standalone `secrets.tfvars` into slice tfvars, use
+  `scripts/config/consolidate_secrets_into_slice_tfvars.py`.
+- **Shared tfvars layout** mirrors this repo under `CONFIG_DIR`: for each
+  Terraform slice root such as `terraform/swarm/grafana/app/`, live tfvars sit
+  **one level up**, named for the slice: `terraform/swarm/grafana/app.tfvars`,
+  `terraform/swarm/grafana/config.tfvars`, `terraform/swarm/grafana/database.tfvars`.
+  Optional `secrets` / `secret_files` blocks in those files are **Vault-only**
+  (declared as ignored variables on each slice root). The same rule applies under
+  `terraform/cluster/...`, `terraform/remote/...`, and `terraform/network/...`.
+  Swarm Docker provider credentials stay at `terraform/providers/docker_arm64.tfvars`
+  (Swarm control plane SSH + registry auth). The AMD64 GitHub runner pipeline also merges
+  `terraform/providers/docker_amd64.tfvars` for the AMD64 pool-host `provider_config` only; the
+  ARM64 runner pipeline merges `terraform/providers/docker_swarm.tfvars` for the ARM64 pool host.
+  Swarm DNS resolvers live at `terraform/providers/dns.tfvars`, and shared NFS export
+  targets at `terraform/providers/nfs.tfvars` (all required for `swarm_pipeline.sh`,
+  merged as docker_arm64, optional `docker_swarm` pool file when set by that pipeline, then dns,
+  then nfs, then optional `terraform/providers/grafana.tfvars` when present, before each stack's slice tfvars).
+  The Grafana file supplies `provider_config.grafana` for the Grafana `config/` root; other stacks ignore the extra map keys.
+  Values are not defaulted in
+  module code—set them only under CONFIG_DIR. Kubernetes app config under `kubernetes/<app>/`. Use
+  `scripts/config/migrate_config_dir_to_repo_layout.py` to move an older flat
+  `CONFIG_DIR/<name>/` tree (it also flattens legacy `*/<slice>/<slice>.tfvars`
+  and `*/config/secrets.tfvars` when present).
 - **App + database:** `prometheus` (`database/` hosts the VictoriaMetrics-style
   long-term store as its own Swarm service and state).
 - **App only:** majority of MCP stacks, runners, Loki, Chromadb, Rag-engine,
   etc.
 
-Legacy or transitional layouts may still exist (nested directories, empty parent
-folders). **New work** should prefer the flat `terraform/swarm/<service>/<slice>/`
-shape alongside siblings.
+Legacy nested tfvars (`terraform/swarm/<svc>/app/app.tfvars`) may still exist on
+disk until flattened. **New work** should use the sibling naming above.
 
 ## Helper modules versus slices
 

@@ -14,7 +14,7 @@ if [[ $# -gt 1 ]]; then
   exit 2
 fi
 
-mount_path="${1:-/mnt/eapp/config}"
+mount_path="${1:-/mnt/eapp/code/homelab/.config}"
 
 if [[ ! -d "${mount_path}" ]]; then
   echo "[ERR] Shared Terraform config directory is missing: ${mount_path}" >&2

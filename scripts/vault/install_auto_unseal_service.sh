@@ -13,8 +13,8 @@ SERVICE_NAME="vault-auto-unseal.service"
 TARGET_HOST="${TARGET_HOST:-swarm-cp-0.local}"
 TARGET_USER="${TARGET_USER:-${USER}}"
 REMOTE_REPO_DIR="${REMOTE_REPO_DIR:-/mnt/eapp/code/homelab}"
-REMOTE_TFVARS_HOME="${REMOTE_TFVARS_HOME:-${TFVARS_HOME_DIR:-${CONFIG_DIR:-/mnt/eapp/config}}}"
-LOCAL_TFVARS_HOME="${LOCAL_TFVARS_HOME:-${TFVARS_HOME_DIR:-${CONFIG_DIR:-/mnt/eapp/config}}}"
+REMOTE_TFVARS_HOME="${REMOTE_TFVARS_HOME:-${TFVARS_HOME_DIR:-${CONFIG_DIR:-${ROOT_DIR}/.config}}}"
+LOCAL_TFVARS_HOME="${LOCAL_TFVARS_HOME:-${TFVARS_HOME_DIR:-${CONFIG_DIR:-${ROOT_DIR}/.config}}}"
 SYNC_ARTIFACTS="1"
 
 log_info() {
@@ -37,8 +37,8 @@ Options:
   --host <host>                  Target host (default: swarm-cp-0.local)
   --user <user>                  SSH user for target host (default: current user)
   --remote-repo-dir <path>       Repo path on target host (default: /mnt/eapp/code/homelab)
-  --remote-tfvars-home <path>    TFVARS home on target host (default: /mnt/eapp/config)
-  --local-tfvars-home <path>     Local TFVARS home for artifact sync (default: /mnt/eapp/config)
+  --remote-tfvars-home <path>    TFVARS home on target host (default: <repo>/.config)
+  --local-tfvars-home <path>     Local TFVARS home for artifact sync (default: <repo>/.config)
   --no-sync-artifacts            Skip syncing vault init/env artifacts to target host
   -h, --help                     Show this help text
 EOF
@@ -96,8 +96,8 @@ parse_args() {
 sync_vault_artifacts() {
   local ssh_target="$1"
   local local_vault_dir remote_vault_dir
-  local_vault_dir="${LOCAL_TFVARS_HOME}/vault"
-  remote_vault_dir="${REMOTE_TFVARS_HOME}/vault"
+  local_vault_dir="${LOCAL_TFVARS_HOME}/terraform/swarm/vault"
+  remote_vault_dir="${REMOTE_TFVARS_HOME}/terraform/swarm/vault"
 
   [[ -f "${local_vault_dir}/init.json" ]] || fail "Missing ${local_vault_dir}/init.json"
   [[ -f "${local_vault_dir}/.env" ]] || fail "Missing ${local_vault_dir}/.env"

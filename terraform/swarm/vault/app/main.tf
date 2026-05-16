@@ -1,29 +1,3 @@
-locals {
-  stack_name               = "vault"
-  data_volume_name         = "vault-data"
-  network_name             = "vault"
-  service_name             = "vault"
-  vault_server_config      = <<-EOT
-    ui = true
-    disable_mlock = true
-
-    listener "tcp" {
-      address         = "0.0.0.0:8200"
-      cluster_address = "0.0.0.0:8201"
-      tls_disable     = 1
-    }
-
-    storage "raft" {
-      path    = "/vault/file"
-      node_id = "${var.raft_node_id}"
-    }
-
-    api_addr     = "${var.api_addr}"
-    cluster_addr = "${var.cluster_addr}"
-  EOT
-  vault_server_config_hash = substr(sha256(local.vault_server_config), 0, 12)
-}
-
 resource "docker_network" "vault" {
   name   = local.network_name
   driver = "overlay"
@@ -76,12 +50,8 @@ resource "docker_service" "vault" {
         VAULT_ADDR = "http://127.0.0.1:8200"
       }
 
-      dynamic "dns_config" {
-        for_each = var.dns_nameservers == null ? [] : [var.dns_nameservers]
-
-        content {
-          nameservers = dns_config.value
-        }
+      dns_config {
+        nameservers = var.dns_nameservers
       }
 
       mounts {

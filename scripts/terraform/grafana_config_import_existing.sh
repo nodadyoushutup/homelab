@@ -4,9 +4,12 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 STAGE_DIR="${ROOT_DIR}/terraform/swarm/grafana/config"
-TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${CONFIG_DIR:-/mnt/eapp/config}}"
-TFVARS_FILE="${TFVARS_FILE:-${TFVARS_HOME_DIR}/grafana/config.tfvars}"
+TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${CONFIG_DIR:-${ROOT_DIR}/.config}}"
+TFVARS_FILE="${TFVARS_FILE:-${TFVARS_HOME_DIR}/terraform/swarm/grafana/config.tfvars}"
 BACKEND_FILE="${BACKEND_FILE:-${TFVARS_HOME_DIR}/minio.backend.hcl}"
+SWARM_DNS_PROVIDER_TFVARS="${SWARM_DNS_PROVIDER_TFVARS:-${TFVARS_HOME_DIR}/terraform/providers/dns.tfvars}"
+SWARM_NFS_PROVIDER_TFVARS="${SWARM_NFS_PROVIDER_TFVARS:-${TFVARS_HOME_DIR}/terraform/providers/nfs.tfvars}"
+SWARM_GRAFANA_PROVIDER_TFVARS="${SWARM_GRAFANA_PROVIDER_TFVARS:-${TFVARS_HOME_DIR}/terraform/providers/grafana.tfvars}"
 DRY_RUN="0"
 
 usage() {
@@ -46,12 +49,22 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-for required_file in "${TFVARS_FILE}" "${BACKEND_FILE}" "${STAGE_DIR}/main.tf"; do
+for required_file in "${TFVARS_FILE}" "${BACKEND_FILE}" "${STAGE_DIR}/main.tf" "${SWARM_DNS_PROVIDER_TFVARS}" "${SWARM_NFS_PROVIDER_TFVARS}"; do
   if [[ ! -f "${required_file}" ]]; then
     echo "[ERR] Required file not found: ${required_file}" >&2
     exit 1
   fi
 done
+
+IMPORT_VAR_FILES=(-var-file "${SWARM_DNS_PROVIDER_TFVARS}" -var-file "${SWARM_NFS_PROVIDER_TFVARS}")
+if [[ -f "${SWARM_GRAFANA_PROVIDER_TFVARS}" ]]; then
+  IMPORT_VAR_FILES+=(-var-file "${SWARM_GRAFANA_PROVIDER_TFVARS}")
+else
+  echo "[ERR] Missing Grafana provider tfvars: ${SWARM_GRAFANA_PROVIDER_TFVARS}" >&2
+  echo "[ERR] Create it from homelab terraform/providers/grafana.tfvars.example." >&2
+  exit 1
+fi
+IMPORT_VAR_FILES+=(-var-file "${TFVARS_FILE}")
 
 tmp_manifest="$(mktemp)"
 cleanup() {
@@ -112,12 +125,12 @@ while IFS=$'\t' read -r address import_id; do
   fi
 
   if [[ "${DRY_RUN}" == "1" ]]; then
-    echo "[PLAN] terraform -chdir=${STAGE_DIR} import -input=false -var-file ${TFVARS_FILE} ${address} ${import_id}"
+    echo "[PLAN] terraform -chdir=${STAGE_DIR} import -input=false ${IMPORT_VAR_FILES[*]} ${address} ${import_id}"
     continue
   fi
 
   echo "[STEP] Importing ${address} from ${import_id}"
-  terraform -chdir="${STAGE_DIR}" import -input=false -var-file "${TFVARS_FILE}" "${address}" "${import_id}"
+  terraform -chdir="${STAGE_DIR}" import -input=false "${IMPORT_VAR_FILES[@]}" "${address}" "${import_id}"
 done < "${tmp_manifest}"
 
 if [[ "${DRY_RUN}" == "1" ]]; then
@@ -125,5 +138,5 @@ if [[ "${DRY_RUN}" == "1" ]]; then
 fi
 
 echo "[STEP] Verifying refreshed remote state"
-terraform -chdir="${STAGE_DIR}" plan -input=false -refresh-only -var-file "${TFVARS_FILE}" >/dev/null
+terraform -chdir="${STAGE_DIR}" plan -input=false -refresh-only "${IMPORT_VAR_FILES[@]}" >/dev/null
 echo "[DONE] Grafana config imports completed and refresh-only verification passed."

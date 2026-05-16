@@ -58,7 +58,7 @@ fi
 
 # Mirrors export-agent-secret.groovy sanitisation so we look up the correct file
 sanitised_name="$(printf '%s' "$AGENT_NAME" | LC_ALL=C tr -c 'A-Za-z0-9._-' '_')"
-secrets_dir="${JENKINS_SECRETS_DIR:-/mnt/eapp/config/jenkins-controller/agent-secrets}"
+secrets_dir="${JENKINS_SECRETS_DIR:-/mnt/eapp/code/homelab/.config/terraform/swarm/jenkins-controller/agent-secrets}"
 secret_file="${secrets_dir}/${sanitised_name}.secret"
 alt_secret_file=""
 [ "$sanitised_name" = "$AGENT_NAME" ] || alt_secret_file="${secrets_dir}/${AGENT_NAME}.secret"

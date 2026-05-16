@@ -23,11 +23,33 @@ fi
 # shellcheck source=/dev/null
 source "${PIPELINE_SCRIPT_ROOT}/load_root_env.sh"
 
-TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${CONFIG_DIR:-/mnt/eapp/config}}"
-DEFAULT_TFVARS_FILE="${DEFAULT_TFVARS_FILE:-${TFVARS_HOME_DIR}/${DEFAULT_TFVARS_BASENAME}.tfvars}"
+TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${CONFIG_DIR:-${ROOT_DIR}/.config}}"
 DEFAULT_BACKEND_FILE="${DEFAULT_BACKEND_FILE:-${TFVARS_HOME_DIR}/minio.backend.hcl}"
+SWARM_DNS_PROVIDER_TFVARS="${SWARM_DNS_PROVIDER_TFVARS:-${TFVARS_HOME_DIR}/terraform/providers/dns.tfvars}"
+export SWARM_DNS_PROVIDER_TFVARS
+SWARM_NFS_PROVIDER_TFVARS="${SWARM_NFS_PROVIDER_TFVARS:-${TFVARS_HOME_DIR}/terraform/providers/nfs.tfvars}"
+export SWARM_NFS_PROVIDER_TFVARS
+SWARM_GRAFANA_PROVIDER_TFVARS="${SWARM_GRAFANA_PROVIDER_TFVARS:-${TFVARS_HOME_DIR}/terraform/providers/grafana.tfvars}"
+export SWARM_GRAFANA_PROVIDER_TFVARS
 
 TERRAFORM_DIR="${TERRAFORM_DIR:-${ROOT_DIR}/terraform/swarm/${SERVICE_NAME}}"
+
+# Mirror repo layout under CONFIG_DIR: tfvars sit in the same directory as the
+# Terraform slice folder (sibling to main.tf), named for the slice:
+# e.g. terraform/swarm/grafana/app.tfvars next to terraform/swarm/grafana/app/.
+if [[ -z "${DEFAULT_TFVARS_FILE:-}" && -n "${TERRAFORM_DIR:-}" && -n "${ROOT_DIR:-}" ]]; then
+  case "${TERRAFORM_DIR}" in
+    "${ROOT_DIR}"/*)
+      _homelab_tfvars_rel="${TERRAFORM_DIR#"${ROOT_DIR}/}"}"
+      _homelab_tfvars_slice="$(basename "${TERRAFORM_DIR}")"
+      _homelab_tfvars_parent_rel="$(dirname "${_homelab_tfvars_rel}")"
+      DEFAULT_TFVARS_FILE="${TFVARS_HOME_DIR}/${_homelab_tfvars_parent_rel}/${_homelab_tfvars_slice}.tfvars"
+      ;;
+  esac
+fi
+if [[ -z "${DEFAULT_TFVARS_FILE:-}" ]]; then
+  DEFAULT_TFVARS_FILE="${TFVARS_HOME_DIR}/${DEFAULT_TFVARS_BASENAME}.tfvars"
+fi
 
 ENV_SCRIPT="${PIPELINE_SCRIPT_ROOT}/env_check.sh"
 RESOLVE_SCRIPT="${PIPELINE_SCRIPT_ROOT}/resolve_inputs.sh"
@@ -145,14 +167,66 @@ fi
 echo "TFVARS file: ${TFVARS_PATH}"
 echo "Backend config: ${BACKEND_CONFIG_PATH}"
 
-SWARM_DOCKER_TFVARS_PREFIX=()
+SWARM_SHARED_TFVARS_PREFIX=()
 if [[ -n "${SWARM_DOCKER_PROVIDER_TFVARS:-}" && -f "${SWARM_DOCKER_PROVIDER_TFVARS}" ]]; then
-  SWARM_DOCKER_TFVARS_PREFIX=(-var-file "${SWARM_DOCKER_PROVIDER_TFVARS}")
+  SWARM_SHARED_TFVARS_PREFIX+=(-var-file "${SWARM_DOCKER_PROVIDER_TFVARS}")
   echo "Swarm Docker provider tfvars: ${SWARM_DOCKER_PROVIDER_TFVARS}"
   export DOCKER_PROVIDER_TFVARS_PATH="${SWARM_DOCKER_PROVIDER_TFVARS}"
 else
   DOCKER_PROVIDER_TFVARS_PATH=""
   export DOCKER_PROVIDER_TFVARS_PATH
+fi
+if [[ -n "${SWARM_DOCKER_AMD64_PROVIDER_TFVARS:-}" ]]; then
+  if [[ ! -f "${SWARM_DOCKER_AMD64_PROVIDER_TFVARS}" ]]; then
+    echo "[ERR] Missing Swarm Docker amd64 pool tfvars: ${SWARM_DOCKER_AMD64_PROVIDER_TFVARS}" >&2
+    echo "[ERR] Create it from homelab terraform/providers/docker_amd64.tfvars.example." >&2
+    exit 1
+  fi
+  SWARM_SHARED_TFVARS_PREFIX+=(-var-file "${SWARM_DOCKER_AMD64_PROVIDER_TFVARS}")
+  echo "Swarm Docker amd64 pool tfvars: ${SWARM_DOCKER_AMD64_PROVIDER_TFVARS}"
+  export DOCKER_AMD64_PROVIDER_TFVARS_PATH="${SWARM_DOCKER_AMD64_PROVIDER_TFVARS}"
+else
+  DOCKER_AMD64_PROVIDER_TFVARS_PATH=""
+  export DOCKER_AMD64_PROVIDER_TFVARS_PATH
+fi
+if [[ -n "${SWARM_DOCKER_ARM64_POOL_TFVARS:-}" ]]; then
+  if [[ ! -f "${SWARM_DOCKER_ARM64_POOL_TFVARS}" ]]; then
+    echo "[ERR] Missing Swarm Docker pool-host tfvars: ${SWARM_DOCKER_ARM64_POOL_TFVARS}" >&2
+    echo "[ERR] Create it from homelab terraform/providers/docker_swarm.tfvars.example." >&2
+    exit 1
+  fi
+  SWARM_SHARED_TFVARS_PREFIX+=(-var-file "${SWARM_DOCKER_ARM64_POOL_TFVARS}")
+  echo "Swarm Docker pool-host tfvars: ${SWARM_DOCKER_ARM64_POOL_TFVARS}"
+  export DOCKER_ARM64_POOL_PROVIDER_TFVARS_PATH="${SWARM_DOCKER_ARM64_POOL_TFVARS}"
+else
+  DOCKER_ARM64_POOL_PROVIDER_TFVARS_PATH=""
+  export DOCKER_ARM64_POOL_PROVIDER_TFVARS_PATH
+fi
+if [[ ! -f "${SWARM_DNS_PROVIDER_TFVARS}" ]]; then
+  echo "[ERR] Missing Swarm DNS provider tfvars: ${SWARM_DNS_PROVIDER_TFVARS}" >&2
+  echo "[ERR] Add dns_nameservers there (see homelab terraform/providers/dns.tfvars.example)." >&2
+  exit 1
+fi
+SWARM_SHARED_TFVARS_PREFIX+=(-var-file "${SWARM_DNS_PROVIDER_TFVARS}")
+echo "Swarm DNS provider tfvars: ${SWARM_DNS_PROVIDER_TFVARS}"
+export DNS_PROVIDER_TFVARS_PATH="${SWARM_DNS_PROVIDER_TFVARS}"
+
+if [[ ! -f "${SWARM_NFS_PROVIDER_TFVARS}" ]]; then
+  echo "[ERR] Missing Swarm NFS provider tfvars: ${SWARM_NFS_PROVIDER_TFVARS}" >&2
+  echo "[ERR] Add swarm_nfs_* there (see homelab terraform/providers/nfs.tfvars.example)." >&2
+  exit 1
+fi
+SWARM_SHARED_TFVARS_PREFIX+=(-var-file "${SWARM_NFS_PROVIDER_TFVARS}")
+echo "Swarm NFS provider tfvars: ${SWARM_NFS_PROVIDER_TFVARS}"
+export NFS_PROVIDER_TFVARS_PATH="${SWARM_NFS_PROVIDER_TFVARS}"
+
+if [[ -f "${SWARM_GRAFANA_PROVIDER_TFVARS}" ]]; then
+  SWARM_SHARED_TFVARS_PREFIX+=(-var-file "${SWARM_GRAFANA_PROVIDER_TFVARS}")
+  echo "Swarm Grafana provider tfvars: ${SWARM_GRAFANA_PROVIDER_TFVARS}"
+  export GRAFANA_PROVIDER_TFVARS_PATH="${SWARM_GRAFANA_PROVIDER_TFVARS}"
+else
+  GRAFANA_PROVIDER_TFVARS_PATH=""
+  export GRAFANA_PROVIDER_TFVARS_PATH
 fi
 
 if declare -F pipeline_pre_terraform > /dev/null; then
@@ -212,10 +286,10 @@ if ! declare -p APPLY_ARGS_EXTRA >/dev/null 2>&1; then
   APPLY_ARGS_EXTRA=()
 fi
 
-PLAN_ARGS=(-input=false "${SWARM_DOCKER_TFVARS_PREFIX[@]}" -var-file "${TFVARS_PATH}")
+PLAN_ARGS=(-input=false "${SWARM_SHARED_TFVARS_PREFIX[@]}" -var-file "${TFVARS_PATH}")
 PLAN_ARGS+=("${PLAN_ARGS_EXTRA[@]}")
 
-APPLY_ARGS=(-input=false -auto-approve "${SWARM_DOCKER_TFVARS_PREFIX[@]}" -var-file "${TFVARS_PATH}")
+APPLY_ARGS=(-input=false -auto-approve "${SWARM_SHARED_TFVARS_PREFIX[@]}" -var-file "${TFVARS_PATH}")
 APPLY_ARGS+=("${APPLY_ARGS_EXTRA[@]}")
 
 echo "[STAGE] ${STAGE_NAME} plan"

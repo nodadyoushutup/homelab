@@ -1,52 +1,79 @@
-locals {
-  service_name = "mcp-argocd"
-
-  env_file_contents = trimspace(var.env_file_path) != "" ? try(file(var.env_file_path), "") : ""
-  parsed_env = {
-    for raw_line in split("\n", replace(local.env_file_contents, "\r\n", "\n")) :
-    trimspace(split("=", trimspace(raw_line))[0]) => join("=", slice(split("=", trimspace(raw_line)), 1, length(split("=", trimspace(raw_line)))))
-    if trimspace(raw_line) != "" && !startswith(trimspace(raw_line), "#") && length(split("=", trimspace(raw_line))) > 1
-  }
-  default_env = {
-    TZ = var.timezone
-  }
-  effective_env = merge(local.default_env, local.parsed_env, var.env)
+resource "docker_network" "mcp_argocd" {
+  name   = local.service_name
+  driver = "overlay"
 }
 
-module "mcp_argocd" {
-  source = "../../../modules/mcp-service"
+resource "docker_service" "mcp_argocd" {
+  name = local.service_name
 
-  service_name          = local.service_name
-  image_reference       = var.image_reference
-  registry_address      = "ghcr.io"
-  registry_auths        = local.docker_registry_auths
-  internal_port         = 3000
-  published_port        = var.published_port
-  endpoint_host         = var.endpoint_host
-  replicas              = var.replicas
-  placement_constraints = var.placement_constraints
-  platform_architecture = var.platform_architecture
-  dns_nameservers       = var.dns_nameservers
-  env                   = local.effective_env
-  command               = ["sh", "-c"]
-  args = [
-    <<-EOT
-      if [ "$${ARGOCD_INSECURE_SKIP_VERIFY:-false}" = "true" ]; then
-        export NODE_TLS_REJECT_UNAUTHORIZED=0
-      fi
-      exec node dist/index.js http --port 3000
-    EOT
-  ]
-  healthcheck = {
-    test = [
-      "CMD",
-      "node",
-      "-e",
-      "fetch('http://127.0.0.1:3000/mcp',{headers:{'mcp-session-id':'healthcheck'}}).then(r=>process.exit(r.status<500?0:1)).catch(()=>process.exit(1))",
-    ]
-    interval     = "15s"
-    timeout      = "5s"
-    retries      = 10
-    start_period = "30s"
+  dynamic "auth" {
+    for_each = local.docker_service_pull_auth_map
+    content {
+      server_address = auth.value.server_address
+      username       = auth.value.username
+      password       = auth.value.password
+    }
+  }
+
+  task_spec {
+    placement {
+      constraints = var.placement_constraints
+      platforms {
+        os           = "linux"
+        architecture = var.platform_architecture
+      }
+    }
+    networks_advanced {
+      name    = docker_network.mcp_argocd.id
+      aliases = [local.service_name]
+    }
+    container_spec {
+      image   = var.image_reference
+      env     = local.effective_env
+      command = ["sh", "-c"]
+      args = [
+        <<-EOT
+          if [ "$${ARGOCD_INSECURE_SKIP_VERIFY:-false}" = "true" ]; then
+            export NODE_TLS_REJECT_UNAUTHORIZED=0
+          fi
+          exec node dist/index.js http --port 3000
+        EOT
+      ]
+      dns_config {
+        nameservers = var.dns_nameservers
+      }
+      dynamic "healthcheck" {
+        for_each = [local.argocd_healthcheck]
+        content {
+          test         = healthcheck.value.test
+          interval     = try(healthcheck.value.interval, "15s")
+          timeout      = try(healthcheck.value.timeout, "5s")
+          retries      = try(healthcheck.value.retries, 10)
+          start_period = try(healthcheck.value.start_period, "30s")
+        }
+      }
+    }
+    restart_policy {
+      condition    = "on-failure"
+      delay        = "10s"
+      max_attempts = 3
+      window       = "2m"
+    }
+  }
+  mode {
+    replicated {
+      replicas = var.replicas
+    }
+  }
+  update_config {
+    order = "stop-first"
+  }
+  endpoint_spec {
+    ports {
+      target_port    = 3000
+      published_port = var.published_port
+      protocol       = "tcp"
+      publish_mode   = "ingress"
+    }
   }
 }

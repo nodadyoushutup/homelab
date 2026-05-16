@@ -1,17 +1,3 @@
-locals {
-  casc_hash = substr(sha256(file(var.casc_config_path)), 0, 12)
-
-  config_force_update = parseint(substr(local.casc_hash, 0, 8), 16)
-  default_env = {
-    CASC_JENKINS_CONFIG = var.casc_config_container_path
-    SECRETS_DIR         = var.agent_secrets_dir
-  }
-  controller_env = merge(local.default_env, var.env)
-  extra_mounts_by_name = {
-    for mount in var.mounts : mount.name => mount
-  }
-}
-
 resource "docker_network" "jenkins_controller" {
   name   = var.network_name
   driver = "overlay"
@@ -30,18 +16,11 @@ resource "docker_volume" "extra_mounts" {
   driver_opts = each.value.driver_opts
 }
 
-module "image_pull_auth" {
-  source = "../../../modules/swarm-docker-service-pull-auth"
-
-  image_reference = var.controller_image
-  registry_auths  = local.docker_registry_auths
-}
-
 resource "docker_service" "jenkins_controller" {
   name = var.service_name
 
   dynamic "auth" {
-    for_each = module.image_pull_auth.docker_service_auth_map
+    for_each = local.docker_service_pull_auth_map
 
     content {
       server_address = auth.value.server_address
@@ -82,16 +61,16 @@ resource "docker_service" "jenkins_controller" {
       }
 
       dynamic "mounts" {
-        for_each = var.enable_shared_tfvars_mount ? [var.shared_tfvars_volume_name] : []
+        for_each = local.enable_shared_tfvars_mount_effective ? [var.shared_tfvars_volume_name] : []
 
         content {
           type   = "volume"
           source = mounts.value
-          target = var.shared_tfvars_mount_target
+          target = local.shared_config_nfs_target
 
           volume_options {
             driver_name    = var.shared_tfvars_volume_driver
-            driver_options = var.shared_tfvars_volume_driver_opts
+            driver_options = local.shared_tfvars_volume_driver_opts_effective
             no_copy        = false
           }
         }

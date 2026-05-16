@@ -2,13 +2,13 @@ variable "provider_config" {
   description = "Provider configuration map for Docker (host + optional ssh opts)."
   type        = any
 
-  default     = {}
+  default = {}
 }
 
 variable "casc_config_path" {
   description = "Path to the Jenkins Configuration as Code YAML file used to derive agent node definitions."
   type        = string
-  default     = "/mnt/eapp/config/jenkins-controller/jenkins.yaml"
+  default     = "/mnt/eapp/code/homelab/.config/terraform/swarm/jenkins-controller/jenkins.yaml"
 }
 
 variable "agent_label_filter" {
@@ -74,11 +74,17 @@ variable "home_volume_name_prefix" {
 variable "agent_secrets_dir" {
   description = "Shared path where the controller writes Jenkins inbound agent secret files for agents to read."
   type        = string
-  default     = "/mnt/eapp/config/jenkins-controller/agent-secrets"
+  default     = "/mnt/eapp/code/homelab/.config/terraform/swarm/jenkins-controller/agent-secrets"
 }
 
 variable "enable_shared_tfvars_mount" {
   description = "Whether to mount the shared tfvars/configuration root into each agent container."
+  type        = bool
+  default     = true
+}
+
+variable "enable_shared_code_mount" {
+  description = "Whether to mount the shared code NFS export (swarm_nfs_code_device from nfs.tfvars) into each agent container."
   type        = bool
   default     = true
 }
@@ -96,19 +102,19 @@ variable "shared_tfvars_volume_driver" {
 }
 
 variable "shared_tfvars_volume_driver_opts" {
-  description = "Docker volume driver options for the shared tfvars/configuration mount. Defaults to mounting the shared NFS export directly."
+  description = <<-EOT
+    Override NFS volume driver opts for the shared tfvars mount. When null, derived from
+    terraform/providers/nfs.tfvars (swarm_nfs_volume_* and swarm_nfs_*_device).
+  EOT
   type        = map(string)
-  default = {
-    type   = "nfs"
-    o      = "addr=192.168.1.100,nfsvers=4.2,rw"
-    device = ":/mnt/eapp/config"
-  }
+  default     = null
+  sensitive   = true
 }
 
 variable "shared_tfvars_mount_target" {
   description = "Container path where the shared tfvars/configuration root is mounted."
   type        = string
-  default     = "/mnt/eapp/config"
+  default     = "/mnt/eapp/code/homelab/.config"
 }
 
 variable "placement_constraints" {
@@ -118,19 +124,67 @@ variable "placement_constraints" {
 }
 
 variable "dns_nameservers" {
-  description = "DNS resolver list configured inside Jenkins agent containers."
+  description = <<-EOT
+    DNS nameservers for Swarm task dns_config (and standalone runner dns). Set only in
+    CONFIG_DIR/terraform/providers/dns.tfvars (merged by swarm_pipeline.sh before stack tfvars).
+  EOT
   type        = list(string)
-  default = [
-    "192.168.1.1",
-    "1.1.1.1",
-    "8.8.8.8",
-  ]
+  sensitive   = true
+}
+
+variable "swarm_nfs_server" {
+  description = <<-EOT
+    Optional legacy; NFS mount options are swarm_nfs_volume_o_rw / swarm_nfs_volume_o_ro in nfs.tfvars.
+  EOT
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "swarm_nfs_code_device" {
+  description = <<-EOT
+    NFS device/export for repo code (e.g. ":/mnt/eapp/code"). Set only in CONFIG_DIR/terraform/providers/nfs.tfvars.
+  EOT
+  type        = string
+  sensitive   = true
+}
+
+variable "swarm_nfs_config_device" {
+  description = <<-EOT
+    NFS device/export for shared config (e.g. ":/mnt/eapp/code/homelab/.config"). Set only in CONFIG_DIR/terraform/providers/nfs.tfvars.
+  EOT
+  type        = string
+  sensitive   = true
+}
+
+variable "swarm_nfs_volume_type" {
+  description = <<-EOT
+    Docker local volume driver_opts.type for NFS-backed mounts (typically "nfs"). Set only in CONFIG_DIR/terraform/providers/nfs.tfvars.
+  EOT
+  type        = string
+  sensitive   = true
+}
+
+variable "swarm_nfs_volume_o_rw" {
+  description = <<-EOT
+    Docker local volume driver_opts.o for read-write NFS (comma-separated options, e.g. addr=HOST,nfsvers=4.2,rw). Set only in CONFIG_DIR/terraform/providers/nfs.tfvars.
+  EOT
+  type        = string
+  sensitive   = true
+}
+
+variable "swarm_nfs_volume_o_ro" {
+  description = <<-EOT
+    Docker local volume driver_opts.o for read-only NFS (e.g. addr=HOST,nfsvers=4.2,ro). Set only in CONFIG_DIR/terraform/providers/nfs.tfvars.
+  EOT
+  type        = string
+  sensitive   = true
 }
 
 variable "swarm_docker_provider_config" {
   description = <<-EOT
     Shared Docker SSH host and registry credentials (GHCR, Harbor, etc.).
-    Set in /mnt/eapp/config/providers/docker.tfvars; Swarm app pipelines source
+    Set in /mnt/eapp/code/homelab/.config/terraform/providers/docker.tfvars; Swarm app pipelines source
     scripts/terraform/swarm_docker_provider_tfvars_env.sh so terraform receives this file.
     Merged with provider_config; per-stack tfvars override on key collision.
   EOT
@@ -138,16 +192,15 @@ variable "swarm_docker_provider_config" {
   default     = {}
 }
 
-locals {
-  provider_config = merge(var.swarm_docker_provider_config, var.provider_config)
-  docker_registry_auths = (
-    try(local.provider_config.registry_auths, null) != null
-    ? local.provider_config.registry_auths
-    : (
-      try(local.provider_config.registry_auth, null) != null
-      ? [local.provider_config.registry_auth]
-      : []
-    )
-  )
+# Vault KV fragments (parsed by scripts/terraform/vault_merge_config_secrets.py); unused by this module.
+variable "secrets" {
+  type      = any
+  default   = {}
+  sensitive = true
 }
 
+variable "secret_files" {
+  type      = any
+  default   = {}
+  sensitive = true
+}

@@ -10,8 +10,7 @@ SERVICE_NAME="docker_volume_backup"
 STAGE_NAME="Docker Volume Backup app"
 ENTRYPOINT_RELATIVE="pipelines/terraform/swarm/docker_volume_backup/app.sh"
 TERRAFORM_DIR="${ROOT_DIR}/terraform/swarm/docker_volume_backup/app"
-TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${CONFIG_DIR:-/mnt/eapp/config}}"
-DEFAULT_TFVARS_FILE="${DEFAULT_TFVARS_FILE:-${TFVARS_HOME_DIR}/docker_volume_backup/app.tfvars}"
+TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${CONFIG_DIR:-${ROOT_DIR}/.config}}"
 DEFAULT_BACKEND_FILE="${DEFAULT_BACKEND_FILE:-${TFVARS_HOME_DIR}/minio.backend.hcl}"
 
 PLAN_ARGS_EXTRA=()

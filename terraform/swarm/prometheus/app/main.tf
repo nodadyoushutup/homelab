@@ -1,8 +1,3 @@
-locals {
-  prometheus_config_hash  = substr(filemd5(var.prometheus_config_path), 0, 12)
-  prometheus_force_update = parseint(substr(local.prometheus_config_hash, 0, 8), 16)
-}
-
 data "docker_network" "victoriametrics" {
   name = "victoriametrics"
 }
@@ -63,11 +58,7 @@ resource "docker_service" "prometheus" {
       ]
 
       dns_config {
-        nameservers = [
-          "192.168.1.1",
-          "1.1.1.1",
-          "8.8.8.8",
-        ]
+        nameservers = var.dns_nameservers
       }
 
       mounts {

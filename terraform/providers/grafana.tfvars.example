@@ -1,0 +1,10 @@
+# Copy to CONFIG_DIR/terraform/providers/grafana.tfvars (not committed to the homelab repo).
+# Merged by scripts/terraform/swarm_pipeline.sh after dns.tfvars and nfs.tfvars when the file exists.
+# Supplies provider_config.grafana for terraform/swarm/grafana/config (Grafana Terraform provider).
+
+provider_config = {
+  grafana = {
+    url  = "http://__SWARM_NODE_IP__:3000"
+    auth = "admin:__GRAFANA_ADMIN_PASSWORD_OR_API_TOKEN__"
+  }
+}

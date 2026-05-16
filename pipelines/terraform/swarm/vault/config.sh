@@ -8,14 +8,17 @@ source "${PIPELINE_SCRIPT_ROOT}/load_root_env.sh"
 
 if [[ $# -gt 0 ]]; then
   echo "[ERR] vault config pipeline uses fixed input paths and does not accept override arguments." >&2
-  echo "      expected tfvars:  /mnt/eapp/config/vault/config.tfvars" >&2
-  echo "      expected backend: /mnt/eapp/config/minio.backend.hcl" >&2
+  echo "      expected tfvars:  <TFVARS_HOME>/terraform/swarm/vault/config.tfvars" >&2
+  echo "      plus merged HCL:  secrets/secret_files in <TFVARS_HOME>/terraform/**/{app,config,database}.tfvars" >&2
+  echo "      and kubernetes/**/*.tfvars (legacy secrets.tfvars still merged if present;" >&2
+  echo "      see scripts/terraform/vault_merge_config_secrets.py)" >&2
+  echo "      expected backend: <TFVARS_HOME>/minio.backend.hcl (default: <repo>/.config/minio.backend.hcl)" >&2
   exit 2
 fi
 
 VAULT_UNSEAL_SCRIPT="${ROOT_DIR}/scripts/vault/unseal.sh"
-VAULT_TFVARS_HOME="${TFVARS_HOME_DIR:-${CONFIG_DIR:-/mnt/eapp/config}}"
-VAULT_TFVARS_DIR="${VAULT_TFVARS_HOME}/vault"
+VAULT_TFVARS_HOME="${TFVARS_HOME_DIR:-${CONFIG_DIR:-${ROOT_DIR}/.config}}"
+VAULT_TFVARS_DIR="${VAULT_TFVARS_HOME}/terraform/swarm/vault"
 VAULT_ENV_FILE="${VAULT_TFVARS_DIR}/.env"
 VAULT_INIT_FILE="${VAULT_TFVARS_DIR}/init.json"
 DEFAULT_VAULT_ADDR="${DEFAULT_VAULT_ADDR:-http://swarm-cp-0.local:8200}"
@@ -24,8 +27,7 @@ SERVICE_NAME="vault"
 STAGE_NAME="Vault config"
 ENTRYPOINT_RELATIVE="pipelines/terraform/swarm/vault/config.sh"
 TERRAFORM_DIR="${ROOT_DIR}/terraform/swarm/vault/config"
-TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${CONFIG_DIR:-/mnt/eapp/config}}"
-DEFAULT_TFVARS_FILE="${TFVARS_HOME_DIR}/vault/config.tfvars"
+TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${CONFIG_DIR:-${ROOT_DIR}/.config}}"
 DEFAULT_BACKEND_FILE="${TFVARS_HOME_DIR}/minio.backend.hcl"
 
 PLAN_ARGS_EXTRA=()
@@ -160,6 +162,24 @@ pipeline_pre_terraform() {
   fi
 
   assert_unsealed
+
+  VAULT_MERGED_SECRETS_TFVARS="$(mktemp -t vault-merged-secrets-XXXXXX.auto.tfvars.json)"
+  trap 'rm -f "${VAULT_MERGED_SECRETS_TFVARS:-}"' EXIT
+
+  _merge_py=(python3)
+  if command -v uv >/dev/null 2>&1; then
+    _merge_py=(uv run --with "python-hcl2>=4,<5" python3)
+  fi
+  if ! "${_merge_py[@]}" "${ROOT_DIR}/scripts/terraform/vault_merge_config_secrets.py" \
+    --tfvars-home "${TFVARS_HOME_DIR}" \
+    --vault-config-tfvars "${TFVARS_HOME_DIR}/terraform/swarm/vault/config.tfvars" \
+    --out "${VAULT_MERGED_SECRETS_TFVARS}"; then
+    echo "[ERR] Vault secret merge failed (see messages above)." >&2
+    exit 1
+  fi
+
+  PLAN_ARGS_EXTRA+=(-var-file "${VAULT_MERGED_SECRETS_TFVARS}")
+  APPLY_ARGS_EXTRA+=(-var-file "${VAULT_MERGED_SECRETS_TFVARS}")
 }
 
 source "${PIPELINE_SCRIPT_ROOT}/swarm_pipeline.sh"

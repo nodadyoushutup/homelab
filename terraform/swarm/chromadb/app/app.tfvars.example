@@ -1,8 +1,8 @@
-# Copy to /mnt/eapp/config/chromadb/app.tfvars (or pass via --tfvars).
+# Copy to /mnt/eapp/code/homelab/.config/terraform/swarm/chromadb/app.tfvars (or pass via --tfvars).
 #
-# Docker SSH + registry credentials: /mnt/eapp/config/providers/docker.tfvars
+# Docker SSH + registry credentials: /mnt/eapp/code/homelab/.config/terraform/providers/docker_arm64.tfvars
 # (`swarm_docker_provider_config`). Override via `provider_config` in this file if needed.
+#
+# Image, Swarm publish port, and data volume name are pinned in main.tf (chromadb/chroma:1.5.9).
 
-image_reference = "chromadb/chroma:latest@sha256:bd21353aee6ccdf4a57bd91e6001626826700f3838e1f230d4aae75bfd4889a1"
-published_port  = 8000
-endpoint_host   = "192.168.1.120"
+endpoint_host = "192.168.1.120"

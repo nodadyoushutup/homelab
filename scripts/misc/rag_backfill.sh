@@ -17,8 +17,8 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 REMOTE_CLIENT="${REPO_ROOT}/scripts/misc/rag_backfill_remote.py"
 
 DEFAULT_HOST="nodadyoushutup@192.168.1.120"
-DEFAULT_SSH_KEY="/mnt/eapp/config/.ssh/id_ed25519"
-DEFAULT_KNOWN_HOSTS="/mnt/eapp/config/.ssh/known_hosts"
+DEFAULT_SSH_KEY="${RAG_BACKFILL_SSH_KEY:-${REPO_ROOT}/.config/.ssh/id_ed25519}"
+DEFAULT_KNOWN_HOSTS="${RAG_BACKFILL_KNOWN_HOSTS:-${REPO_ROOT}/.config/.ssh/known_hosts}"
 DEFAULT_CONTAINER_FILTER="name=rag-engine"
 DEFAULT_SERVICE_NAME="rag-engine"
 

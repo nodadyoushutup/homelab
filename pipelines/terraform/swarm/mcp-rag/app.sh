@@ -10,8 +10,7 @@ SERVICE_NAME="mcp-rag"
 STAGE_NAME="MCP RAG app"
 ENTRYPOINT_RELATIVE="pipelines/terraform/swarm/mcp-rag/app.sh"
 TERRAFORM_DIR="${ROOT_DIR}/terraform/swarm/mcp-rag/app"
-TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${CONFIG_DIR:-/mnt/eapp/config}}"
-DEFAULT_TFVARS_FILE="${DEFAULT_TFVARS_FILE:-${TFVARS_HOME_DIR}/mcp-rag/app.tfvars}"
+TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${CONFIG_DIR:-${ROOT_DIR}/.config}}"
 DEFAULT_BACKEND_FILE="${DEFAULT_BACKEND_FILE:-${TFVARS_HOME_DIR}/minio.backend.hcl}"
 
 PLAN_ARGS_EXTRA=()

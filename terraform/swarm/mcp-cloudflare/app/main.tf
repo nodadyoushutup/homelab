@@ -1,34 +1,62 @@
-locals {
-  service_name = "mcp-cloudflare"
-
-  env_file_contents = trimspace(var.env_file_path) != "" ? try(file(var.env_file_path), "") : ""
-  parsed_env = {
-    for raw_line in split("\n", replace(local.env_file_contents, "\r\n", "\n")) :
-    trimspace(split("=", trimspace(raw_line))[0]) => join("=", slice(split("=", trimspace(raw_line)), 1, length(split("=", trimspace(raw_line)))))
-    if trimspace(raw_line) != "" && !startswith(trimspace(raw_line), "#") && length(split("=", trimspace(raw_line))) > 1
-  }
-  default_env = {
-    TZ                         = var.timezone
-    MCP_CLOUDFLARE_LISTEN_PORT = "8084"
-  }
-  effective_env = merge(local.default_env, local.parsed_env, var.env)
+resource "docker_network" "mcp_cloudflare" {
+  name   = local.service_name
+  driver = "overlay"
 }
 
-module "mcp_cloudflare" {
-  source = "../../../modules/mcp-service"
+resource "docker_service" "mcp_cloudflare" {
+  name = local.service_name
 
-  service_name          = local.service_name
-  image_reference       = var.image_reference
-  registry_address      = "harbor.nodadyoushutup.com"
-  registry_auths        = local.docker_registry_auths
-  internal_port         = 8084
-  published_port        = var.published_port
-  endpoint_host         = var.endpoint_host
-  replicas              = var.replicas
-  placement_constraints = var.placement_constraints
-  platform_architecture = var.platform_architecture
-  dns_nameservers       = var.dns_nameservers
-  env                   = local.effective_env
-  user                  = "1000:1000"
-  cap_drop              = ["ALL"]
+  dynamic "auth" {
+    for_each = local.docker_service_pull_auth_map
+    content {
+      server_address = auth.value.server_address
+      username       = auth.value.username
+      password       = auth.value.password
+    }
+  }
+
+  task_spec {
+    placement {
+      constraints = var.placement_constraints
+      platforms {
+        os           = "linux"
+        architecture = var.platform_architecture
+      }
+    }
+    networks_advanced {
+      name    = docker_network.mcp_cloudflare.id
+      aliases = [local.service_name]
+    }
+    container_spec {
+      image    = var.image_reference
+      env      = local.effective_env
+      user     = "1000:1000"
+      cap_drop = ["ALL"]
+      dns_config {
+        nameservers = var.dns_nameservers
+      }
+    }
+    restart_policy {
+      condition    = "on-failure"
+      delay        = "10s"
+      max_attempts = 3
+      window       = "2m"
+    }
+  }
+  mode {
+    replicated {
+      replicas = var.replicas
+    }
+  }
+  update_config {
+    order = "stop-first"
+  }
+  endpoint_spec {
+    ports {
+      target_port    = 8084
+      published_port = var.published_port
+      protocol       = "tcp"
+      publish_mode   = "ingress"
+    }
+  }
 }

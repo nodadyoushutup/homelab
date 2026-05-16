@@ -1,53 +1,3 @@
-locals {
-  casc_config     = yamldecode(file(var.casc_config_path))
-  requested_nodes = try(local.casc_config.jenkins.nodes, [])
-
-  normalized_label_filter = toset([
-    for label in var.agent_label_filter : lower(trimspace(label))
-    if trimspace(label) != ""
-  ])
-
-  casc_node_definitions = {
-    for node in local.requested_nodes : trimspace(tostring(node.permanent.name)) => {
-      name      = trimspace(tostring(node.permanent.name))
-      safe_name = lower(replace(trimspace(tostring(node.permanent.name)), "/[^0-9A-Za-z_.-]/", "-"))
-      remote_fs = trimspace(tostring(try(node.permanent.remoteFS, var.default_remote_fs)))
-      label_tokens = toset([
-        for token in split(" ", replace(
-          trimspace(tostring(try(
-            node.permanent.labelString,
-            join(" ", try(node.permanent.labels, []))
-          ))),
-          ",",
-          " "
-        )) : lower(trimspace(token))
-        if trimspace(token) != ""
-      ])
-      placement_constraints = concat(
-        var.placement_constraints,
-        trimspace(tostring(try(node.permanent.nodeDescription, ""))) != "" ? [
-          "node.hostname==${trimspace(tostring(node.permanent.nodeDescription))}"
-        ] : []
-      )
-    } if try(trimspace(tostring(node.permanent.name)) != "", false)
-  }
-
-  agent_definitions = {
-    for node_name, node in local.casc_node_definitions : node_name => node
-    if length(local.normalized_label_filter) == 0 || alltrue([
-      for label in local.normalized_label_filter : contains(node.label_tokens, label)
-    ])
-  }
-
-  default_env = {
-    JENKINS_SECRETS_DIR = var.agent_secrets_dir
-  }
-  agent_env = merge(local.default_env, var.env)
-  extra_mounts_by_name = {
-    for mount in var.mounts : mount.name => mount
-  }
-}
-
 resource "docker_volume" "agent_home" {
   for_each = local.agent_definitions
 
@@ -63,20 +13,13 @@ resource "docker_volume" "extra_mounts" {
   driver_opts = each.value.driver_opts
 }
 
-module "image_pull_auth" {
-  source = "../../../modules/swarm-docker-service-pull-auth"
-
-  image_reference = var.agent_image
-  registry_auths  = local.docker_registry_auths
-}
-
 resource "docker_service" "jenkins_agent" {
   for_each = local.agent_definitions
 
   name = startswith(each.value.safe_name, "${var.service_name_prefix}-") ? each.value.safe_name : "${var.service_name_prefix}-${each.value.safe_name}"
 
   dynamic "auth" {
-    for_each = module.image_pull_auth.docker_service_auth_map
+    for_each = local.docker_service_pull_auth_map
 
     content {
       server_address = auth.value.server_address
@@ -119,17 +62,33 @@ resource "docker_service" "jenkins_agent" {
       }
 
       dynamic "mounts" {
-        for_each = var.enable_shared_tfvars_mount ? [var.shared_tfvars_volume_name] : []
+        for_each = local.enable_shared_tfvars_mount_effective ? [var.shared_tfvars_volume_name] : []
 
         content {
           type   = "volume"
           source = mounts.value
-          target = var.shared_tfvars_mount_target
+          target = local.swarm_nfs_config_target
 
           volume_options {
             driver_name    = var.shared_tfvars_volume_driver
-            driver_options = var.shared_tfvars_volume_driver_opts
+            driver_options = local.shared_tfvars_volume_driver_opts_effective
             no_copy        = false
+          }
+        }
+      }
+
+      dynamic "mounts" {
+        for_each = local.swarm_nfs_code_mounts
+
+        content {
+          type   = mounts.value.type
+          source = mounts.value.source
+          target = mounts.value.target
+
+          volume_options {
+            driver_name    = mounts.value.volume_options.driver_name
+            driver_options = mounts.value.volume_options.driver_options
+            no_copy        = mounts.value.volume_options.no_copy
           }
         }
       }

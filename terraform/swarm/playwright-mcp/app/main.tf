@@ -1,20 +1,3 @@
-locals {
-  service_name  = "playwright-mcp"
-  network_name  = "playwright-mcp"
-  internal_port = 8931
-  config_file   = "${path.module}/config.json"
-}
-
-module "code_nfs" {
-  source = "../../../modules/homelab-nfs-mount"
-
-  volume_name = "${local.service_name}-mnt-eapp-code"
-  target      = "/mnt/eapp/code"
-  device      = var.nfs_code_device
-  nfs_server  = var.nfs_server
-  read_only   = false
-}
-
 resource "docker_network" "playwright_mcp" {
   name   = local.network_name
   driver = "overlay"
@@ -59,16 +42,20 @@ resource "docker_service" "playwright_mcp" {
         nameservers = var.dns_nameservers
       }
 
-      mounts {
-        type      = module.code_nfs.mount.type
-        source    = module.code_nfs.mount.source
-        target    = module.code_nfs.mount.target
-        read_only = module.code_nfs.mount.read_only
+      dynamic "mounts" {
+        for_each = local.swarm_nfs_code_mounts
 
-        volume_options {
-          driver_name    = module.code_nfs.mount.volume_options.driver_name
-          driver_options = module.code_nfs.mount.volume_options.driver_options
-          no_copy        = module.code_nfs.mount.volume_options.no_copy
+        content {
+          type      = mounts.value.type
+          source    = mounts.value.source
+          target    = mounts.value.target
+          read_only = mounts.value.read_only
+
+          volume_options {
+            driver_name    = mounts.value.volume_options.driver_name
+            driver_options = mounts.value.volume_options.driver_options
+            no_copy        = mounts.value.volume_options.no_copy
+          }
         }
       }
 

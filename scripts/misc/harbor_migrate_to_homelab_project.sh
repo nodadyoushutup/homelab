@@ -5,7 +5,7 @@
 #
 # Requires: skopeo, curl, python3
 # Credentials: export HARBOR_URL, HARBOR_USER, HARBOR_PASS (and optional HARBOR_INSECURE=1),
-# or pass --tfvars (default: ${TFVARS_HOME_DIR:-/mnt/eapp/config}/harbor/config.tfvars).
+# or pass --tfvars (default: <repo>/.config/terraform/swarm/harbor/config.tfvars).
 #
 # Usage:
 #   ./scripts/misc/harbor_migrate_to_homelab_project.sh --ensure-project
@@ -13,7 +13,8 @@
 
 set -euo pipefail
 
-TFVARS_DEFAULT="${TFVARS_HOME_DIR:-/mnt/eapp/config}/harbor/config.tfvars"
+_REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+TFVARS_DEFAULT="${TFVARS_HOME_DIR:-${CONFIG_DIR:-${_REPO_ROOT}/.config}}/terraform/swarm/harbor/config.tfvars"
 TFVARS_FILE="${TFVARS_FILE:-$TFVARS_DEFAULT}"
 ENSURE_PROJECT=0
 
