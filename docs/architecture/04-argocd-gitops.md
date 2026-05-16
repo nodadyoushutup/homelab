@@ -68,10 +68,10 @@ each with the same Helm multi-source or manifest pattern used elsewhere.
 
 ## Hand-written `Application` examples
 
-Some stacks need **one-off** spec (inline Helm values, `ignoreDifferences`, or
-non-standard sources). Those live as full YAML under `argocd-management/`, for
-example the K10 Application that pulls `https://charts.kasten.io/` with inline
-values—see `kubernetes/argocd-management/applications/k10.yaml`.
+Some stacks need **one-off** spec (`ignoreDifferences`, or multi-source Helm +
+Git). Those live as full YAML under `argocd-management/`, for example the K10
+Application (upstream chart + `kubernetes/k10/values.yaml` + manifests)—see
+`kubernetes/argocd-management/applications/k10.yaml`.
 
 LangGraph and Agent Chat use a **dedicated AppProject** each, `sourceRepos`
 including this homelab repo (and extra Helm repo URLs when the app chart is

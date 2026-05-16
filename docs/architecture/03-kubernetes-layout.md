@@ -4,25 +4,24 @@ This file describes how **`kubernetes/`** is organized: top-level folders,
 common manifest patterns, and how that tree relates to **Argo CD** and
 **`applications/`**.
 
-Argo CD projects, Applications, and Terraform-managed ApplicationSets are
-documented in [04-argocd-gitops.md](./04-argocd-gitops.md).
+Argo CD projects, Applications, and the Git-managed `homelab-addons`
+ApplicationSet are documented in [04-argocd-gitops.md](./04-argocd-gitops.md).
 
 ## Top-level folders
 
 Everything under `kubernetes/` is **cluster-facing**: YAML, Helm values,
 Kustomize roots, or small helper manifests. There is no hard requirement that
-every subdirectory has an Argo `Application`—some are only referenced from
-Terraform’s ApplicationSet or from another manifest—but in practice most
+every subdirectory has an Argo `Application`—some are only referenced from the
+`homelab-addons` ApplicationSet or from another manifest—but in practice most
 long-lived workloads are GitOps-driven.
 
 | Folder | Typical role |
 | --- | --- |
 | `bootstrap/` | **Seed** `Application` manifest (placeholder repo URL/revision) used once to point Argo at `kubernetes/argocd-management`. Not the ongoing source of truth for workloads. |
-| `argocd-management/` | **GitOps control plane** for this repo: `AppProject` + `Application` CRs, plus Argo-local config (notifications, RBAC patches). Synced as a unit—see [04-argocd-gitops.md](./04-argocd-gitops.md). |
-| `metallb/`, `ingress-nginx/`, `external-secrets/`, `democratic-csi-*`, `node-exporter/` | **Platform add-ons**: usually `values.yaml` (+ `namespace.yaml` where needed) consumed by the Terraform **ApplicationSet** in `terraform/cluster/argocd/config/` (Helm chart from upstream, values from this path). **TrueNAS iSCSI block volumes:** [05-democratic-csi-truenas-iscsi.md](./05-democratic-csi-truenas-iscsi.md). |
+| `argocd-management/` | **GitOps control plane** for this repo: `AppProject` + `Application` CRs, `homelab-addons` ApplicationSet, plus Argo-local config. Synced via the Terraform-managed root Application—see [04-argocd-gitops.md](./04-argocd-gitops.md). |
+| `metallb/`, `ingress-nginx/`, `external-secrets/`, `democratic-csi-*`, `node-exporter/` | **Platform add-ons**: usually `values.yaml` (+ `namespace.yaml` where needed) consumed by the **`homelab-addons`** ApplicationSet in `argocd-management/` (Helm chart from upstream, values from this path). **TrueNAS iSCSI block volumes:** [05-democratic-csi-truenas-iscsi.md](./05-democratic-csi-truenas-iscsi.md). |
 | `langgraph/`, `langchain-agent-chat/` | **First-party workloads**: flat manifests (Deployments, Services, Ingress, ExternalSecrets, PVCs, …) and optional local `charts/` / `templates/` when the app ships chart fragments alongside raw YAML. |
-| `k10/` | **Kasten K10** Helm values / supporting files; the Argo `Application` that references the upstream chart often lives under `argocd-management/` with chart-specific spec. |
-| `k10-config/` | **Post-install K10 config** (for example profiles) kept separate from the Helm release tree. |
+| `k10/` | **Kasten K10**: Helm `values.yaml`, K10 CR manifests under `manifests/`, and example secrets; one multi-source Argo `Application` in `argocd-management/applications/k10.yaml`. |
 | `qbittorrent/`, `cross-seed/` | **Kustomize** layouts: `base/` plus `overlays/<instance>/` when many similar instances differ by namespace, node placement, or secrets. |
 | `clusterplex/`, `radarr/`, `sonarr/`, … | **Media and apps** as plain manifest bundles (or mixed patterns) per app. |
 | `snapshot-controller/`, `picsur/`, `privatebin/`, `thelounge/`, … | Same idea: one directory per deployable unit or chart-values bundle. |
@@ -54,11 +53,11 @@ Argo `Application` then targets a **single overlay path** (for example
 `kubernetes/qbittorrent/overlays/books` in
 `kubernetes/argocd-management/qbittorrent-books-app.yaml`).
 
-### Inline Helm in Git (exceptional)
+### Helm chart + Git manifests (multi-source)
 
-Prefer values in Git + chart version pinned in Argo. Some apps still embed a
-large `spec.source.helm.values` block under `argocd-management/` when upstream
-charts expect that workflow—see K10 under `kubernetes/argocd-management/k10-app.yaml`.
+Upstream chart plus `values.yaml` and extra manifests from this repo in one Argo
+`Application`—see `kubernetes/argocd-management/applications/k10.yaml` and
+`kubernetes/argocd-management/applications/ingress-nginx.yaml`.
 
 ## Relationship to `applications/`
 

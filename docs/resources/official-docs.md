@@ -32,7 +32,7 @@ When a project does not maintain a standalone docs site, this file links to the 
 | ingress-nginx | `kubernetes/ingress-nginx/`, ingress manifests across app directories | [ingress-nginx docs](https://kubernetes.github.io/ingress-nginx/) |
 | MetalLB | `kubernetes/metallb/`, `kubernetes/argocd-management/` addon wiring | [MetalLB docs](https://metallb.io/) |
 | democratic-csi | `kubernetes/democratic-csi-iscsi/`, `kubernetes/democratic-csi-nfs/` | [democratic-csi docs](https://democratic-csi.github.io/charts/) |
-| Veeam Kasten K10 | `kubernetes/k10/`, `kubernetes/k10-config/`, `kubernetes/argocd-management/k10-app.yaml` | [K10 docs](https://docs.kasten.io/latest/) |
+| Veeam Kasten K10 | `kubernetes/k10/`, `kubernetes/argocd-management/applications/k10.yaml` | [K10 docs](https://docs.kasten.io/latest/) |
 | CSI snapshot controller / external-snapshotter | `kubernetes/snapshot-controller/`, `kubernetes/argocd-management/snapshot-controller-app.yaml` | [external-snapshotter docs](https://kubernetes-csi.github.io/docs/external-snapshotter.html) |
 
 ## Edge, networking, storage, and secrets
