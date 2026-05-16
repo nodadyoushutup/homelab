@@ -44,7 +44,8 @@ metrics:
   serviceMonitor:
     enabled: false
 
-upgradeCRDs: true
+# CRDs installed on first deploy; avoid re-running upgrade job (bitnami kubectl image issues).
+upgradeCRDs: false
 
 # Chart 11.x defaults to bitnamilegacy/kubectl tags that may not exist on the cluster.
 kubectl:
