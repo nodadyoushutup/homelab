@@ -157,6 +157,25 @@ spec:
 apiVersion: velero.io/v1
 kind: BackupStorageLocation
 metadata:
+  name: clusterplex
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "15"
+spec:
+  provider: aws
+  accessMode: ReadWrite
+  objectStorage:
+    bucket: clusterplex
+  config:
+    region: us-east-1
+    s3ForcePathStyle: "true"
+    s3Url: http://192.168.1.67:9000
+    insecureSkipTLSVerify: "true"
+---
+
+apiVersion: velero.io/v1
+kind: BackupStorageLocation
+metadata:
   name: langgraph
   namespace: velero
   annotations:

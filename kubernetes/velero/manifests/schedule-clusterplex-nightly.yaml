@@ -1,0 +1,15 @@
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: clusterplex-nightly
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "20"
+spec:
+  schedule: "0 5 * * *"
+  template:
+    snapshotMoveData: true
+    includedNamespaces:
+      - clusterplex
+    storageLocation: clusterplex
+    ttl: 336h0m0s
