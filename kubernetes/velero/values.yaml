@@ -27,7 +27,8 @@ configuration:
   features: EnableCSI
 
 backupsEnabled: true
-snapshotsEnabled: true
+# Legacy VolumeSnapshotLocation CRs are not used; CSI snapshots use feature EnableCSI.
+snapshotsEnabled: false
 deployNodeAgent: false
 
 resources:
@@ -44,6 +45,12 @@ metrics:
     enabled: false
 
 upgradeCRDs: true
+
+# Chart 11.x defaults to bitnamilegacy/kubectl tags that may not exist on the cluster.
+kubectl:
+  image:
+    repository: registry.k8s.io/kubectl
+    tag: v1.35.0
 
 rbac:
   create: true
