@@ -19,3 +19,28 @@ spec:
   namespaceResourceWhitelist:
     - group: "*"
       kind: "*"
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: prowlarr
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "33"
+spec:
+  project: prowlarr
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: prowlarr
+  source:
+    repoURL: git@github.com:nodadyoushutup/homelab.git
+    targetRevision: HEAD
+    path: kubernetes/prowlarr
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

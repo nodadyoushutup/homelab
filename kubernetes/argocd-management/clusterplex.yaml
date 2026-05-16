@@ -1,4 +1,28 @@
 apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: clusterplex
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "30"
+spec:
+  description: ClusterPlex manifests managed from homelab GitOps repo
+  sourceRepos:
+    - https://pabloromeo.github.io/clusterplex
+    - git@github.com:nodadyoushutup/homelab.git
+    - https://github.com/nodadyoushutup/homelab.git
+  destinations:
+    - namespace: clusterplex
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+  namespaceResourceWhitelist:
+    - group: "*"
+      kind: "*"
+
+---
+apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: clusterplex
