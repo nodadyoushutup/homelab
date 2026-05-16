@@ -49,14 +49,6 @@ spec:
       name: velero-s3-credentials
       jqPathExpressions:
         - .data
-    - group: external-secrets.io
-      kind: ExternalSecret
-      namespace: velero
-      name: velero-s3-credentials
-      jqPathExpressions:
-        - .metadata.labels
-        - .metadata.annotations
-        - .status
     - group: batch
       kind: Job
       namespace: velero
