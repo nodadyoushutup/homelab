@@ -106,7 +106,7 @@ jobs:
               ;;
             langgraph)
               image_name="langgraph"
-              docker_context="applications/langgraph"
+              docker_context="."
               dockerfile="applications/langgraph/docker/Dockerfile"
               supported_platforms="linux/amd64"
               build_strategy="direct"
