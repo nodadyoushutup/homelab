@@ -13,9 +13,11 @@ spec:
   destinations:
     - namespace: thelounge
       server: https://kubernetes.default.svc
+    - namespace: '*'
+      server: https://kubernetes.default.svc
   clusterResourceWhitelist:
-    - group: ""
-      kind: Namespace
+    - group: "*"
+      kind: "*"
   namespaceResourceWhitelist:
     - group: "*"
       kind: "*"
