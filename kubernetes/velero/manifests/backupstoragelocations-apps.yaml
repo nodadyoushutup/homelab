@@ -1,8 +1,6 @@
-# Per-app MinIO prefixes: velero-backups/<app>/backups/<backup-name>/
-
-# Velero always uses a backups/ subdirectory under the BSL prefix.
-
-# Manual or legacy backups can keep using the Helm default BSL (no prefix).
+# Per-app MinIO buckets on http://192.168.1.67:9000 (one bucket per app).
+# Layout per bucket: <bucket>/backups/<backup-name>/ and <bucket>/kopia/<namespace>/
+# Velero always uses a backups/ subdirectory at the bucket root.
 
 apiVersion: velero.io/v1
 kind: BackupStorageLocation
@@ -15,14 +13,12 @@ spec:
   provider: aws
   accessMode: ReadWrite
   objectStorage:
-    bucket: velero-backups
-    prefix: radarr
+    bucket: radarr
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
     s3Url: http://192.168.1.67:9000
     insecureSkipTLSVerify: "true"
-
 ---
 
 apiVersion: velero.io/v1
@@ -36,14 +32,12 @@ spec:
   provider: aws
   accessMode: ReadWrite
   objectStorage:
-    bucket: velero-backups
-    prefix: sonarr
+    bucket: sonarr
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
     s3Url: http://192.168.1.67:9000
     insecureSkipTLSVerify: "true"
-
 ---
 
 apiVersion: velero.io/v1
@@ -57,14 +51,12 @@ spec:
   provider: aws
   accessMode: ReadWrite
   objectStorage:
-    bucket: velero-backups
-    prefix: prowlarr
+    bucket: prowlarr
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
     s3Url: http://192.168.1.67:9000
     insecureSkipTLSVerify: "true"
-
 ---
 
 apiVersion: velero.io/v1
@@ -78,14 +70,12 @@ spec:
   provider: aws
   accessMode: ReadWrite
   objectStorage:
-    bucket: velero-backups
-    prefix: seerr
+    bucket: seerr
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
     s3Url: http://192.168.1.67:9000
     insecureSkipTLSVerify: "true"
-
 ---
 
 apiVersion: velero.io/v1
@@ -99,14 +89,12 @@ spec:
   provider: aws
   accessMode: ReadWrite
   objectStorage:
-    bucket: velero-backups
-    prefix: tautulli
+    bucket: tautulli
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
     s3Url: http://192.168.1.67:9000
     insecureSkipTLSVerify: "true"
-
 ---
 
 apiVersion: velero.io/v1
@@ -120,14 +108,12 @@ spec:
   provider: aws
   accessMode: ReadWrite
   objectStorage:
-    bucket: velero-backups
-    prefix: thelounge
+    bucket: thelounge
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
     s3Url: http://192.168.1.67:9000
     insecureSkipTLSVerify: "true"
-
 ---
 
 apiVersion: velero.io/v1
@@ -141,14 +127,12 @@ spec:
   provider: aws
   accessMode: ReadWrite
   objectStorage:
-    bucket: velero-backups
-    prefix: picsur
+    bucket: picsur
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
     s3Url: http://192.168.1.67:9000
     insecureSkipTLSVerify: "true"
-
 ---
 
 apiVersion: velero.io/v1
@@ -162,14 +146,12 @@ spec:
   provider: aws
   accessMode: ReadWrite
   objectStorage:
-    bucket: velero-backups
-    prefix: privatebin
+    bucket: privatebin
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
     s3Url: http://192.168.1.67:9000
     insecureSkipTLSVerify: "true"
-
 ---
 
 apiVersion: velero.io/v1
@@ -183,14 +165,12 @@ spec:
   provider: aws
   accessMode: ReadWrite
   objectStorage:
-    bucket: velero-backups
-    prefix: langgraph
+    bucket: langgraph
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
     s3Url: http://192.168.1.67:9000
     insecureSkipTLSVerify: "true"
-
 ---
 
 apiVersion: velero.io/v1
@@ -204,14 +184,12 @@ spec:
   provider: aws
   accessMode: ReadWrite
   objectStorage:
-    bucket: velero-backups
-    prefix: qbittorrent-books
+    bucket: qbittorrent-books
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
     s3Url: http://192.168.1.67:9000
     insecureSkipTLSVerify: "true"
-
 ---
 
 apiVersion: velero.io/v1
@@ -225,14 +203,12 @@ spec:
   provider: aws
   accessMode: ReadWrite
   objectStorage:
-    bucket: velero-backups
-    prefix: qbittorrent-cross-seed-ab
+    bucket: qbittorrent-cross-seed-ab
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
     s3Url: http://192.168.1.67:9000
     insecureSkipTLSVerify: "true"
-
 ---
 
 apiVersion: velero.io/v1
@@ -246,14 +222,12 @@ spec:
   provider: aws
   accessMode: ReadWrite
   objectStorage:
-    bucket: velero-backups
-    prefix: qbittorrent-cross-seed-ant
+    bucket: qbittorrent-cross-seed-ant
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
     s3Url: http://192.168.1.67:9000
     insecureSkipTLSVerify: "true"
-
 ---
 
 apiVersion: velero.io/v1
@@ -267,14 +241,12 @@ spec:
   provider: aws
   accessMode: ReadWrite
   objectStorage:
-    bucket: velero-backups
-    prefix: qbittorrent-cross-seed-ath
+    bucket: qbittorrent-cross-seed-ath
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
     s3Url: http://192.168.1.67:9000
     insecureSkipTLSVerify: "true"
-
 ---
 
 apiVersion: velero.io/v1
@@ -288,14 +260,12 @@ spec:
   provider: aws
   accessMode: ReadWrite
   objectStorage:
-    bucket: velero-backups
-    prefix: qbittorrent-cross-seed-bhd
+    bucket: qbittorrent-cross-seed-bhd
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
     s3Url: http://192.168.1.67:9000
     insecureSkipTLSVerify: "true"
-
 ---
 
 apiVersion: velero.io/v1
@@ -309,14 +279,12 @@ spec:
   provider: aws
   accessMode: ReadWrite
   objectStorage:
-    bucket: velero-backups
-    prefix: qbittorrent-cross-seed-blu
+    bucket: qbittorrent-cross-seed-blu
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
     s3Url: http://192.168.1.67:9000
     insecureSkipTLSVerify: "true"
-
 ---
 
 apiVersion: velero.io/v1
@@ -330,14 +298,12 @@ spec:
   provider: aws
   accessMode: ReadWrite
   objectStorage:
-    bucket: velero-backups
-    prefix: qbittorrent-cross-seed-cg
+    bucket: qbittorrent-cross-seed-cg
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
     s3Url: http://192.168.1.67:9000
     insecureSkipTLSVerify: "true"
-
 ---
 
 apiVersion: velero.io/v1
@@ -351,14 +317,12 @@ spec:
   provider: aws
   accessMode: ReadWrite
   objectStorage:
-    bucket: velero-backups
-    prefix: qbittorrent-cross-seed-hdb
+    bucket: qbittorrent-cross-seed-hdb
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
     s3Url: http://192.168.1.67:9000
     insecureSkipTLSVerify: "true"
-
 ---
 
 apiVersion: velero.io/v1
@@ -372,14 +336,12 @@ spec:
   provider: aws
   accessMode: ReadWrite
   objectStorage:
-    bucket: velero-backups
-    prefix: qbittorrent-cross-seed-kg
+    bucket: qbittorrent-cross-seed-kg
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
     s3Url: http://192.168.1.67:9000
     insecureSkipTLSVerify: "true"
-
 ---
 
 apiVersion: velero.io/v1
@@ -393,14 +355,12 @@ spec:
   provider: aws
   accessMode: ReadWrite
   objectStorage:
-    bucket: velero-backups
-    prefix: qbittorrent-cross-seed-sc
+    bucket: qbittorrent-cross-seed-sc
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
     s3Url: http://192.168.1.67:9000
     insecureSkipTLSVerify: "true"
-
 ---
 
 apiVersion: velero.io/v1
@@ -414,14 +374,12 @@ spec:
   provider: aws
   accessMode: ReadWrite
   objectStorage:
-    bucket: velero-backups
-    prefix: qbittorrent-freeleech
+    bucket: qbittorrent-freeleech
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
     s3Url: http://192.168.1.67:9000
     insecureSkipTLSVerify: "true"
-
 ---
 
 apiVersion: velero.io/v1
@@ -435,14 +393,12 @@ spec:
   provider: aws
   accessMode: ReadWrite
   objectStorage:
-    bucket: velero-backups
-    prefix: qbittorrent-movie-0
+    bucket: qbittorrent-movie-0
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
     s3Url: http://192.168.1.67:9000
     insecureSkipTLSVerify: "true"
-
 ---
 
 apiVersion: velero.io/v1
@@ -456,14 +412,12 @@ spec:
   provider: aws
   accessMode: ReadWrite
   objectStorage:
-    bucket: velero-backups
-    prefix: qbittorrent-movie-1
+    bucket: qbittorrent-movie-1
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
     s3Url: http://192.168.1.67:9000
     insecureSkipTLSVerify: "true"
-
 ---
 
 apiVersion: velero.io/v1
@@ -477,14 +431,12 @@ spec:
   provider: aws
   accessMode: ReadWrite
   objectStorage:
-    bucket: velero-backups
-    prefix: qbittorrent-movie-2
+    bucket: qbittorrent-movie-2
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
     s3Url: http://192.168.1.67:9000
     insecureSkipTLSVerify: "true"
-
 ---
 
 apiVersion: velero.io/v1
@@ -498,14 +450,12 @@ spec:
   provider: aws
   accessMode: ReadWrite
   objectStorage:
-    bucket: velero-backups
-    prefix: qbittorrent-movie-3
+    bucket: qbittorrent-movie-3
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
     s3Url: http://192.168.1.67:9000
     insecureSkipTLSVerify: "true"
-
 ---
 
 apiVersion: velero.io/v1
@@ -519,14 +469,12 @@ spec:
   provider: aws
   accessMode: ReadWrite
   objectStorage:
-    bucket: velero-backups
-    prefix: qbittorrent-movie-4
+    bucket: qbittorrent-movie-4
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
     s3Url: http://192.168.1.67:9000
     insecureSkipTLSVerify: "true"
-
 ---
 
 apiVersion: velero.io/v1
@@ -540,14 +488,12 @@ spec:
   provider: aws
   accessMode: ReadWrite
   objectStorage:
-    bucket: velero-backups
-    prefix: qbittorrent-movie-5
+    bucket: qbittorrent-movie-5
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
     s3Url: http://192.168.1.67:9000
     insecureSkipTLSVerify: "true"
-
 ---
 
 apiVersion: velero.io/v1
@@ -561,14 +507,12 @@ spec:
   provider: aws
   accessMode: ReadWrite
   objectStorage:
-    bucket: velero-backups
-    prefix: qbittorrent-movie-6
+    bucket: qbittorrent-movie-6
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
     s3Url: http://192.168.1.67:9000
     insecureSkipTLSVerify: "true"
-
 ---
 
 apiVersion: velero.io/v1
@@ -582,14 +526,12 @@ spec:
   provider: aws
   accessMode: ReadWrite
   objectStorage:
-    bucket: velero-backups
-    prefix: qbittorrent-movie-7
+    bucket: qbittorrent-movie-7
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
     s3Url: http://192.168.1.67:9000
     insecureSkipTLSVerify: "true"
-
 ---
 
 apiVersion: velero.io/v1
@@ -603,14 +545,12 @@ spec:
   provider: aws
   accessMode: ReadWrite
   objectStorage:
-    bucket: velero-backups
-    prefix: qbittorrent-movie-8
+    bucket: qbittorrent-movie-8
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
     s3Url: http://192.168.1.67:9000
     insecureSkipTLSVerify: "true"
-
 ---
 
 apiVersion: velero.io/v1
@@ -624,14 +564,12 @@ spec:
   provider: aws
   accessMode: ReadWrite
   objectStorage:
-    bucket: velero-backups
-    prefix: qbittorrent-movie-9
+    bucket: qbittorrent-movie-9
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
     s3Url: http://192.168.1.67:9000
     insecureSkipTLSVerify: "true"
-
 ---
 
 apiVersion: velero.io/v1
@@ -645,14 +583,12 @@ spec:
   provider: aws
   accessMode: ReadWrite
   objectStorage:
-    bucket: velero-backups
-    prefix: qbittorrent-movie-10
+    bucket: qbittorrent-movie-10
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
     s3Url: http://192.168.1.67:9000
     insecureSkipTLSVerify: "true"
-
 ---
 
 apiVersion: velero.io/v1
@@ -666,14 +602,12 @@ spec:
   provider: aws
   accessMode: ReadWrite
   objectStorage:
-    bucket: velero-backups
-    prefix: qbittorrent-television-0
+    bucket: qbittorrent-television-0
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
     s3Url: http://192.168.1.67:9000
     insecureSkipTLSVerify: "true"
-
 ---
 
 apiVersion: velero.io/v1
@@ -687,14 +621,12 @@ spec:
   provider: aws
   accessMode: ReadWrite
   objectStorage:
-    bucket: velero-backups
-    prefix: qbittorrent-television-1
+    bucket: qbittorrent-television-1
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
     s3Url: http://192.168.1.67:9000
     insecureSkipTLSVerify: "true"
-
 ---
 
 apiVersion: velero.io/v1
@@ -708,14 +640,12 @@ spec:
   provider: aws
   accessMode: ReadWrite
   objectStorage:
-    bucket: velero-backups
-    prefix: qbittorrent-television-2
+    bucket: qbittorrent-television-2
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
     s3Url: http://192.168.1.67:9000
     insecureSkipTLSVerify: "true"
-
 ---
 
 apiVersion: velero.io/v1
@@ -729,14 +659,12 @@ spec:
   provider: aws
   accessMode: ReadWrite
   objectStorage:
-    bucket: velero-backups
-    prefix: qbittorrent-upload
+    bucket: qbittorrent-upload
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
     s3Url: http://192.168.1.67:9000
     insecureSkipTLSVerify: "true"
-
 ---
 
 apiVersion: velero.io/v1
@@ -750,8 +678,7 @@ spec:
   provider: aws
   accessMode: ReadWrite
   objectStorage:
-    bucket: velero-backups
-    prefix: qbittorrent-xxx
+    bucket: qbittorrent-xxx
   config:
     region: us-east-1
     s3ForcePathStyle: "true"

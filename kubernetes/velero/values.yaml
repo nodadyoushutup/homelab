@@ -19,9 +19,8 @@ configuration:
   backupStorageLocation:
     - name: default
       provider: aws
-      bucket: velero-backups
-      # Per-app BSLs use bucket root prefixes (radarr/, …); default needs its own prefix.
-      prefix: misc
+      bucket: velero-misc
+      # Ad-hoc backups not tied to a per-app BSL; per-app buckets are separate MinIO buckets.
       default: true
       config:
         region: us-east-1
