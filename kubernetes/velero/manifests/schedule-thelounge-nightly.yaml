@@ -1,0 +1,14 @@
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: thelounge-nightly
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "20"
+spec:
+  schedule: "0 1 * * *"
+  template:
+    includedNamespaces:
+      - thelounge
+    storageLocation: default
+    ttl: 336h0m0s

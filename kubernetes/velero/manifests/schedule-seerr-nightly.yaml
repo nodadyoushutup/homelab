@@ -1,0 +1,14 @@
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: seerr-nightly
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "20"
+spec:
+  schedule: "0 5 * * *"
+  template:
+    includedNamespaces:
+      - seerr
+    storageLocation: default
+    ttl: 336h0m0s

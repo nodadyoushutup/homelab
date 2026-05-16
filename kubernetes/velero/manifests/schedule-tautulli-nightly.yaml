@@ -1,0 +1,14 @@
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: tautulli-nightly
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "20"
+spec:
+  schedule: "0 6 * * *"
+  template:
+    includedNamespaces:
+      - tautulli
+    storageLocation: default
+    ttl: 336h0m0s

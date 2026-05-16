@@ -1,0 +1,460 @@
+# Nightly Velero schedules for qBittorrent instances (config PVCs only; media is NFS).
+
+---
+
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: qbittorrent-books-nightly
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "21"
+spec:
+  schedule: "10 0 * * *"
+  template:
+    includedNamespaces:
+      - qbittorrent-books
+    storageLocation: default
+    ttl: 336h0m0s
+
+---
+
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: qbittorrent-cross-seed-ab-nightly
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "21"
+spec:
+  schedule: "20 0 * * *"
+  template:
+    includedNamespaces:
+      - qbittorrent-cross-seed-ab
+    storageLocation: default
+    ttl: 336h0m0s
+
+---
+
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: qbittorrent-cross-seed-ant-nightly
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "21"
+spec:
+  schedule: "30 0 * * *"
+  template:
+    includedNamespaces:
+      - qbittorrent-cross-seed-ant
+    storageLocation: default
+    ttl: 336h0m0s
+
+---
+
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: qbittorrent-cross-seed-ath-nightly
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "21"
+spec:
+  schedule: "40 0 * * *"
+  template:
+    includedNamespaces:
+      - qbittorrent-cross-seed-ath
+    storageLocation: default
+    ttl: 336h0m0s
+
+---
+
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: qbittorrent-cross-seed-bhd-nightly
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "21"
+spec:
+  schedule: "50 0 * * *"
+  template:
+    includedNamespaces:
+      - qbittorrent-cross-seed-bhd
+    storageLocation: default
+    ttl: 336h0m0s
+
+---
+
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: qbittorrent-cross-seed-blu-nightly
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "21"
+spec:
+  schedule: "0 1 * * *"
+  template:
+    includedNamespaces:
+      - qbittorrent-cross-seed-blu
+    storageLocation: default
+    ttl: 336h0m0s
+
+---
+
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: qbittorrent-cross-seed-cg-nightly
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "21"
+spec:
+  schedule: "10 1 * * *"
+  template:
+    includedNamespaces:
+      - qbittorrent-cross-seed-cg
+    storageLocation: default
+    ttl: 336h0m0s
+
+---
+
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: qbittorrent-cross-seed-hdb-nightly
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "21"
+spec:
+  schedule: "20 1 * * *"
+  template:
+    includedNamespaces:
+      - qbittorrent-cross-seed-hdb
+    storageLocation: default
+    ttl: 336h0m0s
+
+---
+
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: qbittorrent-cross-seed-kg-nightly
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "21"
+spec:
+  schedule: "30 1 * * *"
+  template:
+    includedNamespaces:
+      - qbittorrent-cross-seed-kg
+    storageLocation: default
+    ttl: 336h0m0s
+
+---
+
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: qbittorrent-cross-seed-sc-nightly
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "21"
+spec:
+  schedule: "40 1 * * *"
+  template:
+    includedNamespaces:
+      - qbittorrent-cross-seed-sc
+    storageLocation: default
+    ttl: 336h0m0s
+
+---
+
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: qbittorrent-freeleech-nightly
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "21"
+spec:
+  schedule: "50 1 * * *"
+  template:
+    includedNamespaces:
+      - qbittorrent-freeleech
+    storageLocation: default
+    ttl: 336h0m0s
+
+---
+
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: qbittorrent-movie-0-nightly
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "21"
+spec:
+  schedule: "0 2 * * *"
+  template:
+    includedNamespaces:
+      - qbittorrent-movie-0
+    storageLocation: default
+    ttl: 336h0m0s
+
+---
+
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: qbittorrent-movie-1-nightly
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "21"
+spec:
+  schedule: "10 2 * * *"
+  template:
+    includedNamespaces:
+      - qbittorrent-movie-1
+    storageLocation: default
+    ttl: 336h0m0s
+
+---
+
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: qbittorrent-movie-2-nightly
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "21"
+spec:
+  schedule: "20 2 * * *"
+  template:
+    includedNamespaces:
+      - qbittorrent-movie-2
+    storageLocation: default
+    ttl: 336h0m0s
+
+---
+
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: qbittorrent-movie-3-nightly
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "21"
+spec:
+  schedule: "30 2 * * *"
+  template:
+    includedNamespaces:
+      - qbittorrent-movie-3
+    storageLocation: default
+    ttl: 336h0m0s
+
+---
+
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: qbittorrent-movie-4-nightly
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "21"
+spec:
+  schedule: "40 2 * * *"
+  template:
+    includedNamespaces:
+      - qbittorrent-movie-4
+    storageLocation: default
+    ttl: 336h0m0s
+
+---
+
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: qbittorrent-movie-5-nightly
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "21"
+spec:
+  schedule: "50 2 * * *"
+  template:
+    includedNamespaces:
+      - qbittorrent-movie-5
+    storageLocation: default
+    ttl: 336h0m0s
+
+---
+
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: qbittorrent-movie-6-nightly
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "21"
+spec:
+  schedule: "0 3 * * *"
+  template:
+    includedNamespaces:
+      - qbittorrent-movie-6
+    storageLocation: default
+    ttl: 336h0m0s
+
+---
+
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: qbittorrent-movie-7-nightly
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "21"
+spec:
+  schedule: "10 3 * * *"
+  template:
+    includedNamespaces:
+      - qbittorrent-movie-7
+    storageLocation: default
+    ttl: 336h0m0s
+
+---
+
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: qbittorrent-movie-8-nightly
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "21"
+spec:
+  schedule: "20 3 * * *"
+  template:
+    includedNamespaces:
+      - qbittorrent-movie-8
+    storageLocation: default
+    ttl: 336h0m0s
+
+---
+
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: qbittorrent-movie-9-nightly
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "21"
+spec:
+  schedule: "30 3 * * *"
+  template:
+    includedNamespaces:
+      - qbittorrent-movie-9
+    storageLocation: default
+    ttl: 336h0m0s
+
+---
+
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: qbittorrent-movie-10-nightly
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "21"
+spec:
+  schedule: "40 3 * * *"
+  template:
+    includedNamespaces:
+      - qbittorrent-movie-10
+    storageLocation: default
+    ttl: 336h0m0s
+
+---
+
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: qbittorrent-television-0-nightly
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "21"
+spec:
+  schedule: "50 3 * * *"
+  template:
+    includedNamespaces:
+      - qbittorrent-television-0
+    storageLocation: default
+    ttl: 336h0m0s
+
+---
+
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: qbittorrent-television-1-nightly
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "21"
+spec:
+  schedule: "0 4 * * *"
+  template:
+    includedNamespaces:
+      - qbittorrent-television-1
+    storageLocation: default
+    ttl: 336h0m0s
+
+---
+
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: qbittorrent-television-2-nightly
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "21"
+spec:
+  schedule: "10 4 * * *"
+  template:
+    includedNamespaces:
+      - qbittorrent-television-2
+    storageLocation: default
+    ttl: 336h0m0s
+
+---
+
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: qbittorrent-upload-nightly
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "21"
+spec:
+  schedule: "20 4 * * *"
+  template:
+    includedNamespaces:
+      - qbittorrent-upload
+    storageLocation: default
+    ttl: 336h0m0s
+
+---
+
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: qbittorrent-xxx-nightly
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "21"
+spec:
+  schedule: "30 4 * * *"
+  template:
+    includedNamespaces:
+      - qbittorrent-xxx
+    storageLocation: default
+    ttl: 336h0m0s
