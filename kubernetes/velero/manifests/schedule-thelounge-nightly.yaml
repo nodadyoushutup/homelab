@@ -8,6 +8,7 @@ metadata:
 spec:
   schedule: "0 1 * * *"
   template:
+    snapshotMoveData: true
     includedNamespaces:
       - thelounge
     storageLocation: thelounge

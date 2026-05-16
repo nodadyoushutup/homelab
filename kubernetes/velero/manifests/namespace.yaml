@@ -4,3 +4,7 @@ metadata:
   name: velero
   labels:
     app.kubernetes.io/name: velero
+    # node-agent needs privileged for CSI snapshot data movement (iSCSI block access).
+    pod-security.kubernetes.io/enforce: privileged
+    pod-security.kubernetes.io/audit: privileged
+    pod-security.kubernetes.io/warn: privileged

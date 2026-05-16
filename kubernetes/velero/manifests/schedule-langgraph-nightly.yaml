@@ -8,6 +8,7 @@ metadata:
 spec:
   schedule: "0 9 * * *"
   template:
+    snapshotMoveData: true
     includedNamespaces:
       - langgraph
     storageLocation: langgraph

@@ -8,6 +8,7 @@ metadata:
 spec:
   schedule: "0 7 * * *"
   template:
+    snapshotMoveData: true
     includedNamespaces:
       - picsur
     storageLocation: picsur

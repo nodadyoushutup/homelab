@@ -1,4 +1,6 @@
-# Velero — MinIO (S3-compatible) + CSI snapshots via democratic-csi / snapshot-controller.
+# Velero — MinIO (S3-compatible) + CSI snapshot data movement to off-cluster object storage.
+# CSI snapshots on TrueNAS during backup; node-agent copies PVC blocks into the BSL (MinIO).
+# Inline NFS volume mounts in Deployments are not PVCs and are not backed up.
 # Credentials: secret velero-s3-credentials (ExternalSecret or bootstrap example secret).
 
 initContainers:
@@ -31,7 +33,23 @@ configuration:
 backupsEnabled: true
 # Legacy VolumeSnapshotLocation CRs are not used; CSI snapshots use feature EnableCSI.
 snapshotsEnabled: false
-deployNodeAgent: false
+# Required for CSI snapshot data movement (snapshotMoveData) into MinIO.
+deployNodeAgent: true
+
+nodeAgent:
+  # CSI data movement only; no filesystem-backup hostPath mounts.
+  disableHostPath: true
+  podSecurityContext:
+    runAsUser: 0
+  containerSecurityContext:
+    privileged: true
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 2000m
+      memory: 2Gi
 
 resources:
   requests:

@@ -8,6 +8,7 @@ metadata:
 spec:
   schedule: "0 5 * * *"
   template:
+    snapshotMoveData: true
     includedNamespaces:
       - seerr
     storageLocation: seerr

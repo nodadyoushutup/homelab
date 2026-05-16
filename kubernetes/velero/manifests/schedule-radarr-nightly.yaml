@@ -8,6 +8,7 @@ metadata:
 spec:
   schedule: "0 3 * * *"
   template:
+    snapshotMoveData: true
     includedNamespaces:
       - radarr
     storageLocation: radarr

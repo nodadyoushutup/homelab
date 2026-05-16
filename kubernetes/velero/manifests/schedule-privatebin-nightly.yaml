@@ -8,6 +8,7 @@ metadata:
 spec:
   schedule: "0 8 * * *"
   template:
+    snapshotMoveData: true
     includedNamespaces:
       - privatebin
     storageLocation: privatebin

@@ -8,6 +8,7 @@ metadata:
 spec:
   schedule: "0 4 * * *"
   template:
+    snapshotMoveData: true
     includedNamespaces:
       - prowlarr
     storageLocation: prowlarr
