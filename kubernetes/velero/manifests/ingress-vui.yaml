@@ -1,0 +1,40 @@
+# VUI ingress (mirrors seriohub/vui chart when exposure.mode=ingress).
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: vui-ingress
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "15"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: velero.nodadyoushutup.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: vui-ui-clusterip-svc
+                port:
+                  number: 80
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: vui-api-clusterip-svc
+                port:
+                  number: 80
+          - path: /ws
+            pathType: Prefix
+            backend:
+              service:
+                name: vui-api-clusterip-svc
+                port:
+                  number: 80
+  tls:
+    - hosts:
+        - velero.nodadyoushutup.com

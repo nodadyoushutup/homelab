@@ -36,16 +36,6 @@ watchdogService:
   config:
     apprise: ""
 
+# Ingress is kubernetes/velero/manifests/ingress-vui.yaml (avoids duplicate chart Ingress).
 exposure:
-  mode: ingress
-  ingress:
-    ingressClassName: nginx
-    metadata:
-      annotations:
-        argocd.argoproj.io/sync-wave: "15"
-        nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
-        nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
-    spec:
-      tls:
-        - hosts:
-            - velero.nodadyoushutup.com
+  mode: clusterIP
