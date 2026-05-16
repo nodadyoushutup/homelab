@@ -2,7 +2,7 @@
 
 ## What “RAG” means here
 
-The repo maintains a **semantic index** of allowed paths: files are chunked, embedded through the configured provider (Google by default, OpenAI optionally), and stored in **Chroma**. Queries embed the question text with the **same provider/model/dimensions** and run a vector search so results stay comparable to ingest.
+The repo maintains a **semantic index** of allowed paths: files are chunked, embedded through the configured provider (OpenAI by default; Google and Voyage-backed `anthropic` optional), and stored in **Chroma**. Queries embed the question text with the **same provider/model/dimensions** and run a vector search so results stay comparable to ingest.
 
 Downstream clients (**`mcp-rag`**, LangGraph agents, Cursor, Codex, or direct HTTP) should treat **`rag-engine`** as the retrieval API, not a raw Chroma client with ad hoc settings—otherwise embeddings and collection choice can drift from what ingest used.
 

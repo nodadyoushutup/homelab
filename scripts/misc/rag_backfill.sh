@@ -2,7 +2,7 @@
 # Trigger rag-engine backfill via POST /v1/backfill (default), or optionally run
 # ``python -m ingest.backfill`` inside a container over SSH (legacy).
 #
-# Default loads <repo>/.secrets/.env for RAG_ENGINE_BASE_URL and RAG_ENGINE_API_KEY.
+# Default loads <repo>/.config/.env for RAG_ENGINE_BASE_URL and RAG_ENGINE_API_KEY.
 # Long runs: set RAG_BACKFILL_HTTP_TIMEOUT_SEC (seconds) for the client; raise nginx
 # proxy read timeouts for the rag-engine route so the connection is not cut mid-run.
 #
@@ -38,7 +38,7 @@ usage() {
   cat <<EOF
 Usage: scripts/misc/rag_backfill.sh [options] [-- <backfill args>]
 
-Default: POST \$RAG_ENGINE_BASE_URL/v1/backfill (see .secrets/.env). Same flags as
+Default: POST \$RAG_ENGINE_BASE_URL/v1/backfill (see .config/.env). Same flags as
   python -m ingest.backfill  (e.g. --dry-run, --yes, --prune-orphans).
 
   scripts/misc/rag_backfill.sh --dry-run
@@ -62,7 +62,7 @@ Options
   -h, --help
 
 Path allowlists / excludes are defined on the rag-engine service (e.g. RAG_ALLOWED_PATH_PREFIXES
-in .secrets/.env after redeploy). This script does not need the repo mounted locally for the
+in .config/.env after redeploy). This script does not need the repo mounted locally for the
 HTTP default.
 EOF
 }
@@ -76,7 +76,10 @@ need_cmd() {
 }
 
 load_repo_env() {
-  local envf="${REPO_ROOT}/.secrets/.env"
+  local envf="${REPO_ROOT}/.config/.env"
+  if [[ ! -f "${envf}" && -f "${REPO_ROOT}/.secrets/.env" ]]; then
+    envf="${REPO_ROOT}/.secrets/.env"
+  fi
   if [[ -f "$envf" ]]; then
     set -a
     # shellcheck disable=SC1090

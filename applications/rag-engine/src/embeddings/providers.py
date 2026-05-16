@@ -7,7 +7,7 @@ SUPPORTED_EMBEDDING_PROVIDERS = ("google", "openai", "anthropic")
 
 
 def embedding_provider() -> str:
-    provider = (os.getenv("RAG_EMBEDDING_PROVIDER") or "google").strip().lower()
+    provider = (os.getenv("RAG_EMBEDDING_PROVIDER") or "openai").strip().lower()
     if provider not in SUPPORTED_EMBEDDING_PROVIDERS:
         raise RuntimeError(
             "RAG_EMBEDDING_PROVIDER must be one of "

@@ -40,13 +40,15 @@ def _log(msg: str) -> None:
 
 
 def _load_dotenv(repo_root: Path) -> None:
-    path = repo_root / ".secrets" / ".env"
+    path = repo_root / ".config" / ".env"
+    if not path.is_file():
+        path = repo_root / ".secrets" / ".env"
     if not path.is_file():
         return
     try:
         raw = path.read_text(encoding="utf-8", errors="replace")
     except OSError as exc:
-        _log(f"warning: could not read .secrets/.env: {exc}")
+        _log(f"warning: could not read {path}: {exc}")
         return
     for line in raw.splitlines():
         s = line.strip()
@@ -176,7 +178,7 @@ def _filter(paths: list[str], removed: list[str]) -> tuple[list[str], list[str]]
 def _post_embed(repo: Path, commit: str, paths: list[str], removed_paths: list[str]) -> int:
     base = (os.getenv("RAG_ENGINE_BASE_URL") or "").strip().rstrip("/")
     if not base:
-        _log("RAG_ENGINE_BASE_URL is unset; skipping embed (set in .secrets/.env)")
+        _log("RAG_ENGINE_BASE_URL is unset; skipping embed (set in .config/.env)")
         return 0
 
     url = f"{base}/v1/embed-commit"

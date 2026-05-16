@@ -27,9 +27,9 @@ class ProviderConfigTests(unittest.TestCase):
             os.environ.pop(key, None)
         self.addCleanup(self._patch.stop)
 
-    def test_default_provider_stays_google(self) -> None:
-        self.assertEqual(embeddings.embedding_provider(), "google")
-        self.assertEqual(embeddings.embedding_model(), "gemini-embedding-001")
+    def test_default_provider_is_openai(self) -> None:
+        self.assertEqual(embeddings.embedding_provider(), "openai")
+        self.assertEqual(embeddings.embedding_model(), "text-embedding-3-small")
 
     def test_openai_provider_default_model(self) -> None:
         os.environ["RAG_EMBEDDING_PROVIDER"] = "openai"

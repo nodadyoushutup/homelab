@@ -2,7 +2,7 @@
 
 ## Embedding provider and model
 
-- Provider selector: **`RAG_EMBEDDING_PROVIDER`** supports **`google`** (default), **`openai`**, and **`anthropic`**.
+- Provider selector: **`RAG_EMBEDDING_PROVIDER`** supports **`openai`** (default), **`google`**, and **`anthropic`**.
 - Default model id: **`RAG_EMBEDDING_MODEL`**. When unset/empty, Google uses **`gemini-embedding-001`**, OpenAI uses **`text-embedding-3-small`**, and **`anthropic`** uses **`voyage-3.5`** (Voyage AI — see below).
 - Provider dispatch lives in **`applications/rag-engine/src/embeddings/providers.py`**. Google-specific calls live in **`embeddings/google_genai.py`**; OpenAI-specific calls live in **`embeddings/openai_client.py`**; **`anthropic`** is implemented in **`embeddings/anthropic_client.py`**.
 - OpenAI optional dimensions override: **`RAG_OPENAI_EMBEDDING_DIMENSIONS`**. This is only sent for `text-embedding-3*` models.
