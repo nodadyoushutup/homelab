@@ -21,6 +21,8 @@ spec:
       securityContext:
         seccompProfile:
           type: RuntimeDefault
+      imagePullSecrets:
+        - name: langchain-agent-chat-registry
       containers:
         - name: langchain-agent-chat
           image: ghcr.io/nodadyoushutup/langchain-agent-chat:0.0.1

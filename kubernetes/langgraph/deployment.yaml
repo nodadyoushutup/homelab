@@ -25,6 +25,8 @@ spec:
         fsGroup: 1000
         seccompProfile:
           type: RuntimeDefault
+      imagePullSecrets:
+        - name: langgraph-registry
       containers:
         - name: langgraph
           image: ghcr.io/nodadyoushutup/langgraph:0.0.1
