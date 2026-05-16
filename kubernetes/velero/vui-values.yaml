@@ -10,11 +10,7 @@ global:
 apiService:
   deployment:
     storage:
-      enabled: true
-      storageClassName: truenas-iscsi-csi-retain
-      resources:
-        requests:
-          storage: 1Gi
+      enabled: false
   secret:
     existingSecret: vui-api-credentials
 
