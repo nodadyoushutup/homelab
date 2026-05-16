@@ -25,7 +25,8 @@ resource "argocd_application" "argocd_management" {
 
     sync_policy {
       automated {
-        prune     = true
+        # App-of-apps: prune can drop child Application CRs when render mode changes.
+        prune     = false
         self_heal = true
       }
 
