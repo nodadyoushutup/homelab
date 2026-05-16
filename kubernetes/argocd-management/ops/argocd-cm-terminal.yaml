@@ -1,11 +1,19 @@
+# Terminal/exec settings only — must keep Argo CD install labels or the server cannot find this CM.
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: argocd-cm
   namespace: argocd
+  labels:
+    app.kubernetes.io/name: argocd-cm
+    app.kubernetes.io/part-of: argocd
   annotations:
     argocd.argoproj.io/sync-wave: "5"
+    argocd.argoproj.io/sync-options: Delete=false
 data:
   admin.enabled: "true"
   accounts.admin: apiKey, login
   exec.enabled: "true"
+  resource.customizations.ignoreResourceUpdates.all: |-
+    jsonPointers:
+      - /status
