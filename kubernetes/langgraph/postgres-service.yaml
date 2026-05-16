@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: langgraph-postgres
+  namespace: langgraph
+  annotations:
+    argocd.argoproj.io/sync-wave: "20"
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: langgraph-postgres
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: postgres
+      protocol: TCP
