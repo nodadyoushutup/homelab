@@ -98,6 +98,10 @@ resource "terraform_data" "loki_swarm_logs_overview_file_hash" {
   triggers_replace = local.loki_swarm_logs_overview_file_hash
 }
 
+resource "terraform_data" "velero_overview_file_hash" {
+  triggers_replace = local.velero_overview_file_hash
+}
+
 resource "grafana_data_source" "prometheus" {
   name              = "Prometheus"
   uid               = "prometheus"
@@ -148,6 +152,11 @@ resource "grafana_folder" "proxmox" {
 resource "grafana_folder" "logs" {
   title = "Logs"
   uid   = "logs-folder"
+}
+
+resource "grafana_folder" "kubernetes" {
+  title = "Kubernetes"
+  uid   = "kubernetes-folder"
 }
 
 resource "grafana_dashboard" "node_exporter_overview" {
@@ -397,5 +406,15 @@ resource "grafana_dashboard" "loki_swarm_logs_overview" {
 
   lifecycle {
     replace_triggered_by = [terraform_data.loki_swarm_logs_overview_file_hash]
+  }
+}
+
+resource "grafana_dashboard" "velero_overview" {
+  folder      = grafana_folder.kubernetes.id
+  overwrite   = true
+  config_json = local.velero_overview_content
+
+  lifecycle {
+    replace_triggered_by = [terraform_data.velero_overview_file_hash]
   }
 }

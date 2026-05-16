@@ -98,4 +98,8 @@ locals {
   loki_swarm_logs_overview_file_path = "${path.module}/dashboards/loki-swarm-logs-overview.json"
   loki_swarm_logs_overview_file_hash = filemd5(local.loki_swarm_logs_overview_file_path)
   loki_swarm_logs_overview_content   = file(local.loki_swarm_logs_overview_file_path)
+
+  velero_overview_file_path = "${path.module}/dashboards/velero-overview.json"
+  velero_overview_file_hash = filemd5(local.velero_overview_file_path)
+  velero_overview_content   = file(local.velero_overview_file_path)
 }
