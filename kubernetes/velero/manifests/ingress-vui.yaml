@@ -6,6 +6,8 @@ metadata:
   namespace: velero
   annotations:
     argocd.argoproj.io/sync-wave: "15"
+    # NPM terminates TLS and forwards HTTP; do not bounce back to HTTPS (redirect loop).
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
     nginx.ingress.kubernetes.io/proxy-http-version: "1.1"

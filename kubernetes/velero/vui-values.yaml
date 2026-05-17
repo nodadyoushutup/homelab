@@ -39,3 +39,7 @@ watchdogService:
 # Ingress is kubernetes/velero/manifests/ingress-vui.yaml (avoids duplicate chart Ingress).
 exposure:
   mode: clusterIP
+  clusterIP:
+    protocol: https
+    wsProtocol: wss
+    localAddress: velero.nodadyoushutup.com
