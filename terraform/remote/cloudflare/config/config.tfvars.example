@@ -19,6 +19,14 @@ records = [
     ttl     = 1
     proxied = false
   },
+  # Kubernetes ingress (MetalLB / ingress-nginx) — not the Swarm NPM edge IP.
+  {
+    key     = "velero_a"
+    name    = "velero.example.com"
+    content = "192.0.2.241"
+    ttl     = 1
+    proxied = false
+  },
   # Only apps intentionally exposed on WAN should use your public IP in `content`;
   # align FortiGate VIPs / firewall with that same allowlist (see docs/workflows/edge-dns-and-nginx-proxy.md).
 ]
