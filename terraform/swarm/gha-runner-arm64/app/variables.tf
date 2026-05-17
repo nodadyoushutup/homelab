@@ -1,5 +1,5 @@
 variable "provider_config" {
-  description = "Docker provider map merged after swarm_docker_provider_config: pool `docker` host/ssh_opts, optional `registry_auths` / `registry_auth` (mirror docker_arm64.tfvars for pool pulls; live values in docker_swarm.tfvars for this stack)."
+  description = "Docker provider map merged after swarm_docker_provider_config: pool `docker` host/ssh_opts, optional `registry_auths` / `registry_auth` (mirror docker_arm64.tfvars for pool pulls; live values in docker_arm64_pool.tfvars for this stack)."
   type        = any
 
   default = {}
@@ -26,7 +26,7 @@ variable "access_token" {
 }
 
 variable "replicas" {
-  description = "Number of runner containers on the pool host (see provider_config.docker in docker_swarm.tfvars)."
+  description = "Number of runner containers on the pool host (see provider_config.docker in docker_arm64_pool.tfvars)."
   type        = number
   default     = 2
 }
@@ -49,7 +49,7 @@ variable "swarm_docker_provider_config" {
     Shared Docker SSH host and registry credentials (GHCR, Harbor, etc.).
     Set in /mnt/eapp/code/homelab/.config/terraform/providers/docker_arm64.tfvars; Swarm app pipelines source
     scripts/terraform/swarm_docker_provider_tfvars_env.sh so terraform receives this file.
-    This ARM64 runner pipeline also merges docker_swarm.tfvars (`provider_config.docker` for the pool
+    This ARM64 runner pipeline also merges docker_arm64_pool.tfvars (`provider_config.docker` for the pool
     host plus the same `registry_auths` pattern as this file) before dns/nfs/stack tfvars.
     Merged with provider_config; per-stack tfvars override on key collision.
     For runner pools, override `docker` in provider_config so Terraform targets the pool host

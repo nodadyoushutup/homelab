@@ -1,14 +1,18 @@
-# Copy to CONFIG_DIR/terraform/providers/docker_swarm.tfvars (not committed).
-# Optional: only pipelines/terraform/swarm/gha-runner-arm64/app.sh merges this after docker_arm64.tfvars.
+# Copy to CONFIG_DIR/terraform/providers/docker_arm64_pool.tfvars (not committed).
+# Only pipelines/terraform/swarm/gha-runner-arm64/app.sh merges this after docker_arm64.tfvars.
 # Holds `provider_config` so Terraform targets the ARM64 pool host (standalone docker_container, not Swarm).
 # Include the same `registry_auths` (or legacy single `registry_auth`) as docker_arm64.tfvars so
 # image pulls over SSH to the pool host authenticate like the Swarm provider.
 
 provider_config = {
   docker = {
-    host = "ssh://USER@ARM64_POOL_HOST"
+    # Example: dedicated Swarm worker with RAM headroom (not the control plane).
+    host = "ssh://USER@swarm-wk-0.local"
     ssh_opts = [
       "-o", "StrictHostKeyChecking=accept-new",
+      "-o", "ConnectTimeout=15",
+      "-o", "ServerAliveInterval=10",
+      "-o", "ServerAliveCountMax=3",
       "-o", "UserKnownHostsFile=/path/to/known_hosts",
       "-i", "/path/to/id_ed25519",
     ]

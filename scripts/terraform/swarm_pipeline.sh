@@ -192,7 +192,7 @@ fi
 if [[ -n "${SWARM_DOCKER_ARM64_POOL_TFVARS:-}" ]]; then
   if [[ ! -f "${SWARM_DOCKER_ARM64_POOL_TFVARS}" ]]; then
     echo "[ERR] Missing Swarm Docker pool-host tfvars: ${SWARM_DOCKER_ARM64_POOL_TFVARS}" >&2
-    echo "[ERR] Create it from homelab terraform/providers/docker_swarm.tfvars.example." >&2
+    echo "[ERR] Create it from homelab terraform/providers/docker_arm64_pool.tfvars.example." >&2
     exit 1
   fi
   SWARM_SHARED_TFVARS_PREFIX+=(-var-file "${SWARM_DOCKER_ARM64_POOL_TFVARS}")

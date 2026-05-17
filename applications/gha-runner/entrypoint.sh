@@ -111,14 +111,17 @@ if bool_true "${GH_RUNNER_DISABLEUPDATE:-true}"; then
   config_args+=(--disableupdate)
 fi
 
-# Restarts of an ephemeral runner reuse the container's writable layer, so a
-# stale .runner from the prior registration is still on disk; config.sh then
-# refuses to re-register ("Cannot configure the runner because it is already
-# configured"). --replace only handles the GitHub-side conflict, not the local
-# file. Try a graceful deregister first, then force-remove the leftover state.
-if [[ -f .runner ]]; then
+# Restarts with restart:always reuse the container writable layer. A stale .runner
+# makes config.sh exit non-zero ("already configured"); Docker restarts forever.
+# --replace only handles GitHub-side name conflicts, not local files.
+remove_local_runner_state() {
+  if [[ ! -f .runner ]]; then
+    rm -f .credentials .credentials_rsaparams .path .env
+    return 0
+  fi
+
   echo "[INFO] Stale runner registration found on disk; cleaning up before re-config."
-  remove_token=""
+  local remove_token=""
   if [[ -n "${runner_access_token}" && "${runner_access_token}" != "__SET_ME__" ]]; then
     remove_token="$(request_runner_token "${runner_url}" "remove-token" "${runner_access_token}" "${github_api_url}" || true)"
   fi
@@ -126,9 +129,27 @@ if [[ -f .runner ]]; then
     ./config.sh remove --unattended --token "${remove_token}" || true
   fi
   rm -f .runner .credentials .credentials_rsaparams .path .env
-fi
+}
 
-./config.sh "${config_args[@]}"
+register_runner() {
+  ./config.sh "${config_args[@]}"
+}
+
+remove_local_runner_state
+
+config_err_log="$(mktemp)"
+if ! register_runner 2>"${config_err_log}"; then
+  if grep -qi 'already configured' "${config_err_log}"; then
+    echo "[WARN] config.sh reported already configured; clearing local state and retrying once."
+    rm -f .runner .credentials .credentials_rsaparams .path .env
+    register_runner
+  else
+    cat "${config_err_log}" >&2
+    rm -f "${config_err_log}"
+    exit 1
+  fi
+fi
+rm -f "${config_err_log}"
 
 cleanup() {
   local remove_token="${GH_RUNNER_REMOVE_TOKEN:-}"

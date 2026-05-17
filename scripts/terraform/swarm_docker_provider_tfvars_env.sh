@@ -2,11 +2,11 @@
 # Optional: export path to shared Swarm Docker provider tfvars (SSH host + registry auth).
 # Default: terraform/providers/docker_arm64.tfvars (Swarm control plane). gha-runner-amd64 merges
 # terraform/providers/docker_amd64.tfvars via SWARM_DOCKER_AMD64_PROVIDER_TFVARS; gha-runner-arm64
-# merges terraform/providers/docker_swarm.tfvars via SWARM_DOCKER_ARM64_POOL_TFVARS.
+# merges terraform/providers/docker_arm64_pool.tfvars via SWARM_DOCKER_ARM64_POOL_TFVARS.
 # DNS: terraform/providers/dns.tfvars. NFS: terraform/providers/nfs.tfvars.
 # Grafana API (Grafana Terraform provider for grafana/config slice): optional
 # terraform/providers/grafana.tfvars (merged by swarm_pipeline.sh when present).
-# swarm_pipeline.sh merges docker_arm64, optional amd64 or docker_swarm pool tfvars when set by those pipelines, dns, then nfs before stack tfvars.
+# swarm_pipeline.sh merges docker_arm64, optional amd64 or docker_arm64_pool tfvars when set by those pipelines, dns, then nfs before stack tfvars.
 # Source from pipelines/terraform/swarm/*/app.sh and select database stages before
 # scripts/terraform/swarm_pipeline.sh. Non-Docker stacks (Cloudflare, Jenkins config, etc.)
 # must NOT source this file.
