@@ -6,7 +6,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "31"
 spec:
-  description: Velero backup platform addon
+  description: Velero backup platform and VUI (https://vui.nodadyoushutup.com)
   sourceRepos:
     - git@github.com:nodadyoushutup/homelab.git
     - https://github.com/nodadyoushutup/homelab.git

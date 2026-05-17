@@ -21,8 +21,8 @@ records = [
   },
   # Kubernetes ingress (MetalLB / ingress-nginx) — not the Swarm NPM edge IP.
   {
-    key     = "velero_a"
-    name    = "velero.example.com"
+    key     = "vui_a"
+    name    = "vui.example.com"
     content = "192.0.2.241"
     ttl     = 1
     proxied = false
