@@ -59,6 +59,12 @@ variable "screenshot_dir" {
   default     = "/mnt/eapp/code/homelab/data/screenshots"
 }
 
+variable "config_file" {
+  description = "Playwright MCP config JSON path inside the task (must be on the NFS code mount)."
+  type        = string
+  default     = "/mnt/eapp/code/homelab/terraform/swarm/mcp-playwright/app/config.json"
+}
+
 variable "dns_nameservers" {
   description = <<-EOT
     DNS nameservers for Swarm task dns_config (and standalone runner dns). Set only in

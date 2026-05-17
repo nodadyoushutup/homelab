@@ -1,8 +1,6 @@
 locals {
-  service_name  = "playwright-mcp"
-  network_name  = "playwright-mcp"
+  service_name = "mcp-playwright"
   internal_port = 8931
-  config_file   = "${path.module}/config.json"
 
   swarm_nfs_ready = (
     trimspace(var.swarm_nfs_code_device) != "" &&

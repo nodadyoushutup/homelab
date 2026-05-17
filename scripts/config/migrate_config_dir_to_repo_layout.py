@@ -78,8 +78,6 @@ def explicit_remote(repo: Path, cfg_name: str) -> str | None:
 
 
 ALIASES: dict[str, str] = {
-    "langflow": "terraform/swarm/mcp-langflow",
-    "mcp-langflow": "terraform/swarm/mcp-langflow",
     "chat-ui": "terraform/swarm/langchain-agent-chat",
     "langchain-agent-chat": "terraform/swarm/langchain-agent-chat",
     "victoriametrics": "terraform/swarm/victoriametrics",
@@ -188,7 +186,7 @@ def flatten_legacy_config_secrets_iterative(cfg: Path) -> None:
 
 
 def flatten_duplicate_parent_dir_tfvars(cfg: Path) -> None:
-    """e.g. .../mcp-langflow/mcp-langflow/app.tfvars -> .../mcp-langflow/app.tfvars."""
+    """e.g. .../mcp-code/mcp-code/app.tfvars -> .../mcp-code/app.tfvars."""
     for p in sorted(cfg.rglob("*.tfvars")):
         if not p.is_file() or ".terraform" in p.parts:
             continue

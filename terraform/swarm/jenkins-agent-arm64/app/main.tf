@@ -37,7 +37,7 @@ resource "docker_container" "jenkins_agent" {
 
   restart = "always"
 
-  group_add = ["kvm"]
+  group_add = var.kvm_supplementary_groups
 
   dns = var.dns_nameservers
 

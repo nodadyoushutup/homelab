@@ -1,6 +1,6 @@
 terraform {
   backend "s3" {
-    key = "playwright-mcp.tfstate"
+    key = "mcp-playwright.tfstate"
   }
 
   required_providers {

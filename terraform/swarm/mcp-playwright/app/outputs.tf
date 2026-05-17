@@ -1,6 +1,6 @@
 output "service_name" {
   description = "Docker Swarm service name."
-  value       = docker_service.playwright_mcp.name
+  value       = docker_service.mcp_playwright.name
 }
 
 output "mcp_url" {

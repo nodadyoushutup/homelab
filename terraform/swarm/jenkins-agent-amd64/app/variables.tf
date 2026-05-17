@@ -50,6 +50,12 @@ variable "engine_visible_build_path" {
   default     = "/var/lib/gha-runner-engine-build"
 }
 
+variable "kvm_supplementary_groups" {
+  description = "Supplementary groups for /dev/kvm; include the pool host KVM gid (device node keeps host ownership)."
+  type        = list(string)
+  default     = ["kvm", "993"]
+}
+
 variable "service_name_prefix" {
   description = "Prefix for Docker volume names on the pool host."
   type        = string

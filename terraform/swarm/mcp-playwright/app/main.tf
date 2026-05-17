@@ -1,9 +1,9 @@
-resource "docker_network" "playwright_mcp" {
-  name   = local.network_name
+resource "docker_network" "mcp_playwright" {
+  name   = local.service_name
   driver = "overlay"
 }
 
-resource "docker_service" "playwright_mcp" {
+resource "docker_service" "mcp_playwright" {
   name = local.service_name
 
   task_spec {
@@ -17,7 +17,7 @@ resource "docker_service" "playwright_mcp" {
     }
 
     networks_advanced {
-      name    = docker_network.playwright_mcp.id
+      name    = docker_network.mcp_playwright.id
       aliases = [local.service_name]
     }
 
@@ -35,7 +35,7 @@ resource "docker_service" "playwright_mcp" {
         "--output-dir",
         var.output_dir,
         "--config",
-        local.config_file,
+        var.config_file,
       ]
 
       dns_config {

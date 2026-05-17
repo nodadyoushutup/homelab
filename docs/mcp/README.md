@@ -8,7 +8,7 @@ Each page describes **how to use** one Model Context Protocol (MCP) server defin
 | **mcp-code** | [mcp-code.md](mcp-code.md) |
 | **mcp-github** | [mcp-github.md](mcp-github.md) |
 | **mcp-atlassian** | [mcp-atlassian.md](mcp-atlassian.md) |
-| **playwright-mcp** | [mcp-playwright.md](mcp-playwright.md) |
+| **mcp-playwright** | [mcp-playwright.md](mcp-playwright.md) |
 | **mcp-argocd** | [mcp-argocd.md](mcp-argocd.md) |
 | **mcp-kubernetes** | [mcp-kubernetes.md](mcp-kubernetes.md) |
 | **mcp-terraform** | [mcp-terraform.md](mcp-terraform.md) |
@@ -19,4 +19,4 @@ Each page describes **how to use** one Model Context Protocol (MCP) server defin
 
 For the pattern used when a service gets a new public name (DNS plus reverse proxy), see [edge-dns-and-nginx-proxy.md](../workflows/edge-dns-and-nginx-proxy.md).
 
-Example Cursor wiring for a subset of servers lives in **`.cursor/mcp.json`** (URLs are environment-specific). Per-server guides use **`mcp-*.md`** filenames; Playwright’s Swarm service is **`playwright-mcp`**, documented in **`mcp-playwright.md`**.
+Example Cursor wiring for a subset of servers lives in **`.cursor/mcp.json`** (URLs are environment-specific). Per-server guides use **`mcp-*.md`** filenames aligned with Swarm stack names (**`mcp-rag`**, **`mcp-playwright`**, etc.).
