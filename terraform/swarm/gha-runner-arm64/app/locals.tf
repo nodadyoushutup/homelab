@@ -17,7 +17,7 @@ locals {
   } : {}
 }
 locals {
-  runner_image         = "ghcr.io/nodadyoushutup/gha-runner:0.0.5"
+  runner_image         = "ghcr.io/nodadyoushutup/gha-runner:0.0.6"
   runner_name          = "homelab-gha-runner-arm64"
   runner_labels        = "self-hosted,linux,homelab,arm64,build,kvm"
   runner_workdir       = "_work"

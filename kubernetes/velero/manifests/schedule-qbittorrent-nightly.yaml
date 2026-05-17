@@ -1,5 +1,4 @@
-# TEMP: initial Kopia seed run — 5 min stagger from deploy time.
-# Restore production crons: scripts/misc/velero_schedules_restore_production.sh
+# Nightly Velero backups: 5-minute stagger from 00:00 (cluster local time).
 
 ---
 
@@ -11,7 +10,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "21"
 spec:
-  schedule: "3 0 * * *"
+  schedule: "50 0 * * *"
   template:
     snapshotMoveData: true
     includedNamespaces:
@@ -29,7 +28,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "21"
 spec:
-  schedule: "8 0 * * *"
+  schedule: "55 0 * * *"
   template:
     snapshotMoveData: true
     includedNamespaces:
@@ -47,7 +46,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "21"
 spec:
-  schedule: "13 0 * * *"
+  schedule: "0 1 * * *"
   template:
     snapshotMoveData: true
     includedNamespaces:
@@ -65,7 +64,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "21"
 spec:
-  schedule: "18 0 * * *"
+  schedule: "5 1 * * *"
   template:
     snapshotMoveData: true
     includedNamespaces:
@@ -83,7 +82,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "21"
 spec:
-  schedule: "23 0 * * *"
+  schedule: "10 1 * * *"
   template:
     snapshotMoveData: true
     includedNamespaces:
@@ -101,7 +100,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "21"
 spec:
-  schedule: "28 0 * * *"
+  schedule: "15 1 * * *"
   template:
     snapshotMoveData: true
     includedNamespaces:
@@ -119,7 +118,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "21"
 spec:
-  schedule: "33 0 * * *"
+  schedule: "20 1 * * *"
   template:
     snapshotMoveData: true
     includedNamespaces:
@@ -137,7 +136,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "21"
 spec:
-  schedule: "38 0 * * *"
+  schedule: "25 1 * * *"
   template:
     snapshotMoveData: true
     includedNamespaces:
@@ -155,7 +154,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "21"
 spec:
-  schedule: "43 0 * * *"
+  schedule: "30 1 * * *"
   template:
     snapshotMoveData: true
     includedNamespaces:
@@ -173,7 +172,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "21"
 spec:
-  schedule: "48 0 * * *"
+  schedule: "35 1 * * *"
   template:
     snapshotMoveData: true
     includedNamespaces:
@@ -191,7 +190,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "21"
 spec:
-  schedule: "53 0 * * *"
+  schedule: "40 1 * * *"
   template:
     snapshotMoveData: true
     includedNamespaces:
@@ -209,7 +208,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "21"
 spec:
-  schedule: "58 0 * * *"
+  schedule: "45 1 * * *"
   template:
     snapshotMoveData: true
     includedNamespaces:
@@ -227,7 +226,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "21"
 spec:
-  schedule: "3 1 * * *"
+  schedule: "50 1 * * *"
   template:
     snapshotMoveData: true
     includedNamespaces:
@@ -245,7 +244,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "21"
 spec:
-  schedule: "8 1 * * *"
+  schedule: "55 1 * * *"
   template:
     snapshotMoveData: true
     includedNamespaces:
@@ -263,7 +262,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "21"
 spec:
-  schedule: "13 1 * * *"
+  schedule: "0 2 * * *"
   template:
     snapshotMoveData: true
     includedNamespaces:
@@ -281,7 +280,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "21"
 spec:
-  schedule: "18 1 * * *"
+  schedule: "5 2 * * *"
   template:
     snapshotMoveData: true
     includedNamespaces:
@@ -299,7 +298,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "21"
 spec:
-  schedule: "23 1 * * *"
+  schedule: "10 2 * * *"
   template:
     snapshotMoveData: true
     includedNamespaces:
@@ -317,7 +316,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "21"
 spec:
-  schedule: "28 1 * * *"
+  schedule: "15 2 * * *"
   template:
     snapshotMoveData: true
     includedNamespaces:
@@ -335,7 +334,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "21"
 spec:
-  schedule: "33 1 * * *"
+  schedule: "20 2 * * *"
   template:
     snapshotMoveData: true
     includedNamespaces:
@@ -353,7 +352,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "21"
 spec:
-  schedule: "38 1 * * *"
+  schedule: "25 2 * * *"
   template:
     snapshotMoveData: true
     includedNamespaces:
@@ -371,7 +370,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "21"
 spec:
-  schedule: "43 1 * * *"
+  schedule: "30 2 * * *"
   template:
     snapshotMoveData: true
     includedNamespaces:
@@ -389,7 +388,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "21"
 spec:
-  schedule: "48 1 * * *"
+  schedule: "35 2 * * *"
   template:
     snapshotMoveData: true
     includedNamespaces:
@@ -407,7 +406,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "21"
 spec:
-  schedule: "53 1 * * *"
+  schedule: "40 2 * * *"
   template:
     snapshotMoveData: true
     includedNamespaces:
@@ -425,7 +424,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "21"
 spec:
-  schedule: "58 1 * * *"
+  schedule: "45 2 * * *"
   template:
     snapshotMoveData: true
     includedNamespaces:
@@ -443,7 +442,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "21"
 spec:
-  schedule: "3 2 * * *"
+  schedule: "50 2 * * *"
   template:
     snapshotMoveData: true
     includedNamespaces:
@@ -461,7 +460,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "21"
 spec:
-  schedule: "8 2 * * *"
+  schedule: "55 2 * * *"
   template:
     snapshotMoveData: true
     includedNamespaces:
@@ -479,7 +478,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "21"
 spec:
-  schedule: "13 2 * * *"
+  schedule: "0 3 * * *"
   template:
     snapshotMoveData: true
     includedNamespaces:

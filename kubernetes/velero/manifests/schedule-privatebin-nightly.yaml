@@ -1,5 +1,4 @@
-# TEMP: initial Kopia seed run — 5 min stagger from deploy time.
-# Restore production crons: scripts/misc/velero_schedules_restore_production.sh
+# Nightly Velero backups: 5-minute stagger from 00:00 (cluster local time).
 
 apiVersion: velero.io/v1
 kind: Schedule
@@ -9,7 +8,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "20"
 spec:
-  schedule: "38 23 * * *"
+  schedule: "15 0 * * *"
   template:
     snapshotMoveData: true
     includedNamespaces:

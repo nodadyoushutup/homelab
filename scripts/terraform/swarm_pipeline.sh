@@ -34,22 +34,14 @@ export SWARM_GRAFANA_PROVIDER_TFVARS
 
 TERRAFORM_DIR="${TERRAFORM_DIR:-${ROOT_DIR}/terraform/swarm/${SERVICE_NAME}}"
 
-# Mirror repo layout under CONFIG_DIR: tfvars sit in the same directory as the
-# Terraform slice folder (sibling to main.tf), named for the slice:
-# e.g. terraform/swarm/grafana/app.tfvars next to terraform/swarm/grafana/app/.
-if [[ -z "${DEFAULT_TFVARS_FILE:-}" && -n "${TERRAFORM_DIR:-}" && -n "${ROOT_DIR:-}" ]]; then
-  case "${TERRAFORM_DIR}" in
-    "${ROOT_DIR}"/*)
-      _homelab_tfvars_rel="${TERRAFORM_DIR#"${ROOT_DIR}/}"}"
-      _homelab_tfvars_slice="$(basename "${TERRAFORM_DIR}")"
-      _homelab_tfvars_parent_rel="$(dirname "${_homelab_tfvars_rel}")"
-      DEFAULT_TFVARS_FILE="${TFVARS_HOME_DIR}/${_homelab_tfvars_parent_rel}/${_homelab_tfvars_slice}.tfvars"
-      ;;
-  esac
-fi
-if [[ -z "${DEFAULT_TFVARS_FILE:-}" ]]; then
-  DEFAULT_TFVARS_FILE="${TFVARS_HOME_DIR}/${DEFAULT_TFVARS_BASENAME}.tfvars"
-fi
+# shellcheck source=/dev/null
+source "${PIPELINE_SCRIPT_ROOT}/resolve_default_tfvars_file.sh"
+DEFAULT_TFVARS_FILE="$(homelab_resolve_default_tfvars_file \
+  "${ROOT_DIR}" \
+  "${TERRAFORM_DIR}" \
+  "${TFVARS_HOME_DIR}" \
+  "${DEFAULT_TFVARS_BASENAME}" \
+  "${DEFAULT_TFVARS_FILE:-}")"
 
 ENV_SCRIPT="${PIPELINE_SCRIPT_ROOT}/env_check.sh"
 RESOLVE_SCRIPT="${PIPELINE_SCRIPT_ROOT}/resolve_inputs.sh"
