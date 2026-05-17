@@ -1,0 +1,257 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": { "type": "grafana", "uid": "-- Grafana --" },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "links": [],
+  "liveNow": false,
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": ["homelab", "truenas"],
+  "time": { "from": "now-1h", "to": "now" },
+  "timezone": "",
+  "title": "TrueNAS",
+  "uid": "truenas",
+  "version": 1,
+  "templating": {
+    "list": [
+      {
+        "name": "host",
+        "label": "Host",
+        "type": "query",
+        "datasource": { "type": "graphite", "uid": "graphite" },
+        "definition": "truenas.*",
+        "query": "truenas.*",
+        "includeAll": false,
+        "multi": false,
+        "refresh": 2,
+        "sort": 1,
+        "options": [],
+        "current": { "selected": true, "text": "nas", "value": "nas" },
+        "hide": 0
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Avg disk utilization",
+      "description": "disk_util utilization %",
+      "type": "stat",
+      "datasource": { "type": "graphite", "uid": "graphite" },
+      "gridPos": { "h": 5, "w": 8, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "refId": "A",
+          "target": "alias(averageSeries(aliasByNode(truenas.$host.disk_util.*.utilization, 3)), 'util %')"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 70 },
+              { "color": "red", "value": 90 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 2,
+      "title": "CPU usage",
+      "description": "Tries truenas_cpu_usage (SCALE) then legacy truenas.$host.cpu.* counters. If empty on nas, that host is not sending CPU charts to Graphite yet (disk charts can still work).",
+      "type": "stat",
+      "datasource": { "type": "graphite", "uid": "graphite" },
+      "gridPos": { "h": 5, "w": 8, "x": 8, "y": 0 },
+      "targets": [
+        {
+          "refId": "A",
+          "target": "alias(averageSeries(truenas.$host.truenas_cpu_usage.cpu.cpu*), 'cpu %')"
+        },
+        {
+          "refId": "B",
+          "target": "alias(scale(divideSeries(sumSeries(truenas.$host.cpu.*.{user,system,iowait,irq,softirq,nice,steal}), sumSeries(truenas.$host.cpu.*.*)), 100), 'cpu %')"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 1,
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 70 },
+              { "color": "red", "value": 90 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 3,
+      "title": "Memory used",
+      "description": "Tries truenas_meminfo then legacy system.ram. If empty on nas, that host is not sending RAM charts to Graphite yet.",
+      "type": "stat",
+      "datasource": { "type": "graphite", "uid": "graphite" },
+      "gridPos": { "h": 5, "w": 8, "x": 16, "y": 0 },
+      "targets": [
+        {
+          "refId": "A",
+          "target": "alias(scale(divideSeries(diffSeries(truenas.$host.truenas_meminfo.total.total, truenas.$host.truenas_meminfo.available.available), truenas.$host.truenas_meminfo.total.total), 100), 'mem %')"
+        },
+        {
+          "refId": "B",
+          "target": "alias(averageSeries(asPercent(groupByNode(truenas.$host.system.ram.used, 1, 'sum'), groupByNode(truenas.$host.system.ram.*, 1, 'sum'))), 'mem %')"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 1,
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 80 },
+              { "color": "red", "value": 95 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 4,
+      "title": "CPU & memory",
+      "type": "timeseries",
+      "datasource": { "type": "graphite", "uid": "graphite" },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 5 },
+      "targets": [
+        {
+          "refId": "A",
+          "target": "alias(averageSeries(truenas.$host.truenas_cpu_usage.cpu.cpu*), 'cpu %')"
+        },
+        {
+          "refId": "B",
+          "target": "alias(scale(divideSeries(sumSeries(truenas.$host.cpu.*.{user,system,iowait,irq,softirq,nice,steal}), sumSeries(truenas.$host.cpu.*.*)), 100), 'cpu %')"
+        },
+        {
+          "refId": "C",
+          "target": "alias(scale(divideSeries(diffSeries(truenas.$host.truenas_meminfo.total.total, truenas.$host.truenas_meminfo.available.available), truenas.$host.truenas_meminfo.total.total), 100), 'mem %')"
+        },
+        {
+          "refId": "D",
+          "target": "alias(averageSeries(asPercent(groupByNode(truenas.$host.system.ram.used, 1, 'sum'), groupByNode(truenas.$host.system.ram.*, 1, 'sum'))), 'mem %')"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "lineWidth": 1,
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      }
+    },
+    {
+      "id": 5,
+      "title": "Disk activity",
+      "description": "nas: avg disk_busy %. backup: sum of truenas_disk_stats write ops.",
+      "type": "timeseries",
+      "datasource": { "type": "graphite", "uid": "graphite" },
+      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 13 },
+      "targets": [
+        {
+          "refId": "A",
+          "target": "alias(averageSeries(aliasByNode(truenas.$host.disk_busy.*.busy, 3)), 'busy %')"
+        },
+        {
+          "refId": "B",
+          "target": "alias(sumSeries(truenas.$host.truenas_disk_stats.*.writes), 'writes/s')"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "lineWidth": 1,
+            "showPoints": "never"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "busy %" },
+            "properties": [{ "id": "unit", "value": "percent" }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "writes/s" },
+            "properties": [{ "id": "unit", "value": "ops" }]
+          }
+        ]
+      },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      }
+    }
+  ]
+}

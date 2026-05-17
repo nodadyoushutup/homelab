@@ -247,7 +247,7 @@ pipeline_pre_terraform() {
 
 PIPELINE_ARGS=("$@")
 
-SWARM_DOCKER_ARM64_POOL_TFVARS="${SWARM_DOCKER_ARM64_POOL_TFVARS:-${TFVARS_HOME_DIR:-${CONFIG_DIR:-${ROOT_DIR}/.config}}/terraform/providers/docker_arm64_pool.tfvars}"
+SWARM_DOCKER_ARM64_POOL_TFVARS="${SWARM_DOCKER_ARM64_POOL_TFVARS:-${TFVARS_HOME_DIR:-${CONFIG_DIR:-${ROOT_DIR}/.config}}/terraform/providers/docker_arm64_pool_jenkins.tfvars}"
 export SWARM_DOCKER_ARM64_POOL_TFVARS
 
 if [[ -f "${SWARM_DOCKER_ARM64_POOL_TFVARS}" ]]; then

@@ -1,3 +1,13 @@
+variable "placement_constraints" {
+  description = <<-EOT
+    Swarm placement constraints for the global Telegraf task (one per matching node).
+    Default excludes runner-amd64; swarm-wk-0 (role=swarm-wk-0) is the monitoring node and
+    must keep a task for local Docker metrics used by Prometheus/Grafana.
+  EOT
+  type        = list(string)
+  default     = ["node.hostname!=runner-amd64"]
+}
+
 variable "provider_config" {
   description = "Configuration for the Docker provider"
   type        = any

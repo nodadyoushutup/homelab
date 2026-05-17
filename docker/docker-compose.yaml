@@ -1,0 +1,29 @@
+# qBittorrent exporter — local dev (martabal; Swarm still uses applications/qbittorrent-metrics-exporter).
+#
+# From docker/:
+#   docker compose pull
+#   docker compose up -d
+#   docker compose logs -f qbittorrent-exporter-dev
+#
+# Metrics: http://localhost:9020/metrics
+# Settings: <repo>/.config/.env (see .config/.env.example).
+name: qbittorrent-exporter-dev
+
+services:
+  qbittorrent-exporter-dev:
+    image: ghcr.io/martabal/qbittorrent-exporter:v2.0.1
+    pull_policy: if_not_present
+    env_file:
+      - ../.config/.env
+    ports:
+      - "9020:8090"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget --spider --quiet http://127.0.0.1:8090/metrics || exit 1",
+        ]
+      interval: 15s
+      timeout: 10s
+      retries: 6
+      start_period: 60s

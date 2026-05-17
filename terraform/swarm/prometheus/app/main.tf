@@ -27,10 +27,10 @@ resource "docker_service" "prometheus" {
     force_update = local.prometheus_force_update
 
     placement {
-      constraints = ["node.labels.role==swarm-cp-0"]
+      constraints = var.placement_constraints
       platforms {
         os           = "linux"
-        architecture = "aarch64"
+        architecture = var.platform_architecture
       }
     }
 
@@ -52,7 +52,7 @@ resource "docker_service" "prometheus" {
       args = [
         "--config.file=/etc/prometheus/prometheus.yml",
         "--storage.tsdb.path=/prometheus",
-        "--storage.tsdb.retention.time=15d",
+        "--storage.tsdb.retention.time=1h",
         "--web.enable-lifecycle",
         "--web.enable-admin-api",
       ]

@@ -5,7 +5,7 @@ and write the sorted list to a file so operators can diff new datapoints over ti
 
 Usage:
     python3 scripts/graphite_inventory.py \
-        --base-url http://swarm-cp-0.local:8081 \
+        --base-url http://swarm-wk-0.local:8081 \
         --prefix truenas.nas \
         --output /tmp/metrics.txt
 """

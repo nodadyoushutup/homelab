@@ -1,16 +1,21 @@
 #!/bin/sh
 set -eu
 
-startup_delay="${STARTUP_DELAY_SECONDS:-300}"
+: "${STARTUP_DELAY_SECONDS:?STARTUP_DELAY_SECONDS is required}"
+: "${QBITTORRENT_WAIT_FOR_LOGIN:?QBITTORRENT_WAIT_FOR_LOGIN is required}"
+
+startup_delay="${STARTUP_DELAY_SECONDS}"
 if [ "$startup_delay" -gt 0 ] 2>/dev/null; then
   echo "qbittorrent-metrics-exporter: sleeping ${startup_delay}s before start"
   sleep "$startup_delay"
 fi
 
-if [ "${QBITTORRENT_WAIT_FOR_LOGIN:-1}" = "1" ] && [ -n "${QBITTORRENT_HOSTS:-}" ]; then
+if [ "${QBITTORRENT_WAIT_FOR_LOGIN}" = "1" ] && [ -n "${QBITTORRENT_HOSTS:-}" ]; then
   echo "qbittorrent-metrics-exporter: waiting for qBittorrent Web UI logins"
-  pass="${QBITTORRENT_PASSWORD:-}"
-  user="${QBITTORRENT_USERNAME:-admin}"
+  : "${QBITTORRENT_PASSWORD:?QBITTORRENT_PASSWORD is required when QBITTORRENT_WAIT_FOR_LOGIN=1}"
+  : "${QBITTORRENT_USERNAME:?QBITTORRENT_USERNAME is required when QBITTORRENT_WAIT_FOR_LOGIN=1}"
+  pass="${QBITTORRENT_PASSWORD}"
+  user="${QBITTORRENT_USERNAME}"
   # QBITTORRENT_HOSTS entries look like name=https://host.example.com
   while :; do
     fail=0
@@ -36,4 +41,7 @@ if [ "${QBITTORRENT_WAIT_FOR_LOGIN:-1}" = "1" ] && [ -n "${QBITTORRENT_HOSTS:-}"
   done
 fi
 
-exec qbittorrent-metrics-exporter "$@"
+if [ "$#" -gt 0 ]; then
+  exec "$@"
+fi
+exec qbittorrent-metrics-exporter

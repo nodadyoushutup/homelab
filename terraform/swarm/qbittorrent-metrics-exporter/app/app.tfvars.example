@@ -1,21 +1,24 @@
 # Copy to CONFIG_DIR/terraform/swarm/qbittorrent-metrics-exporter/app.tfvars
-# (default: /mnt/eapp/code/homelab/.config/terraform/swarm/qbittorrent-metrics-exporter/app.tfvars)
 #
-# Build/push: GitHub Actions workflow docker_build_push.yml → build_target
-# `qbittorrent-metrics-exporter`, target_registry `harbor` or `both`, build_platforms `arm64`.
-#
-# Docker SSH + registry: CONFIG_DIR/terraform/providers/docker_arm64.tfvars
+# One martabal/qbittorrent-exporter Swarm service per instance (ports from exporter_port_base).
+# Prometheus: CONFIG_DIR/terraform/swarm/prometheus/prometheus.yaml job qbittorrent_exporter
+# After apply: terraform output -json prometheus_scrape_static_configs (sync ports/labels)
 
-image_reference = "harbor.nodadyoushutup.com/homelab/qbittorrent-metrics-exporter:0.3.2"
-published_port  = 18080
-endpoint_host   = "192.168.1.120"
+image_reference    = "ghcr.io/martabal/qbittorrent-exporter:v2.0.1"
+exporter_port_base   = 18300
+endpoint_host        = "192.168.1.121"
+placement_constraints = ["node.labels.role==swarm-wk-0"]
+enable_high_cardinality = false
+insecure_skip_verify   = true
 
-# All instance URLs are defaulted in locals.tf; override or extend here if needed:
+# Rollout trial: one instance before enabling the full fleet.
+# qbittorrent_hosts_only = ["movie-0"]
+
+# Override or extend instance URLs (defaults in locals.tf):
 # qbittorrent_hosts = {
 #   "movie-0" = "https://qbittorrent.movie.0.nodadyoushutup.com"
 # }
 
 env = {
-  QBITTORRENT_USERNAME = "admin"
   QBITTORRENT_PASSWORD = "replace-me"
 }

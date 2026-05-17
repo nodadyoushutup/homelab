@@ -89,7 +89,7 @@ variable "secret_files" {
 
 variable "config_path" {
   description = <<-EOT
-    Absolute path to stack config under CONFIG_DIR (nginx.conf for this service; same name as alloy app.config_path).
+    Absolute path to stack config under CONFIG_DIR (nginx.conf for this service).
     Validated at plan time; not mounted by this root yet—the Swarm service uses Python only.
   EOT
   type        = string

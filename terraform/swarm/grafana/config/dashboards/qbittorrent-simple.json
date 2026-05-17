@@ -34,27 +34,7 @@
       {
         "current": { "selected": true, "text": "All", "value": "$__all" },
         "datasource": { "type": "prometheus", "uid": "prometheus" },
-        "definition": "label_values(qbittorrent_global_torrents{job=\"qbittorrent_exporter\"}, qbittorrent_type)",
-        "hide": 0,
-        "includeAll": true,
-        "allValue": ".*",
-        "label": "Type",
-        "multi": true,
-        "name": "type",
-        "options": [],
-        "query": {
-          "query": "label_values(qbittorrent_global_torrents{job=\"qbittorrent_exporter\"}, qbittorrent_type)",
-          "refId": "PrometheusVariableQuery"
-        },
-        "refresh": 2,
-        "regex": "",
-        "sort": 1,
-        "type": "query"
-      },
-      {
-        "current": { "selected": true, "text": "All", "value": "$__all" },
-        "datasource": { "type": "prometheus", "uid": "prometheus" },
-        "definition": "label_values(qbittorrent_global_torrents{job=\"qbittorrent_exporter\",qbittorrent_type=~\"$type\"}, qbittorrent_instance)",
+        "definition": "label_values(qbittorrent_global_torrents{job=\"qbittorrent_exporter\"}, qbittorrent_instance)",
         "hide": 0,
         "includeAll": true,
         "allValue": ".*",
@@ -63,7 +43,7 @@
         "name": "instance",
         "options": [],
         "query": {
-          "query": "label_values(qbittorrent_global_torrents{job=\"qbittorrent_exporter\",qbittorrent_type=~\"$type\"}, qbittorrent_instance)",
+          "query": "label_values(qbittorrent_global_torrents{job=\"qbittorrent_exporter\"}, qbittorrent_instance)",
           "refId": "PrometheusVariableQuery"
         },
         "refresh": 2,
@@ -108,7 +88,7 @@
       },
       "targets": [
         {
-          "expr": "sum(qbittorrent_global_torrents{job=\"qbittorrent_exporter\",qbittorrent_type=~\"$type\",qbittorrent_instance=~\"$instance\"})",
+          "expr": "sum(qbittorrent_global_torrents{job=\"qbittorrent_exporter\",qbittorrent_instance=~\"$instance\"})",
           "instant": true,
           "legendFormat": "total",
           "refId": "A"
@@ -143,7 +123,7 @@
       },
       "targets": [
         {
-          "expr": "sum(qbittorrent_torrent_states{job=\"qbittorrent_exporter\",qbittorrent_type=~\"$type\",qbittorrent_instance=~\"$instance\",name=~\"uploading|downloading\"})",
+          "expr": "sum(qbittorrent_torrent_states{job=\"qbittorrent_exporter\",qbittorrent_instance=~\"$instance\",name=~\"uploading|downloading\"})",
           "instant": true,
           "legendFormat": "active",
           "refId": "A"
@@ -177,7 +157,7 @@
       },
       "targets": [
         {
-          "expr": "sum(qbittorrent_torrent_states{job=\"qbittorrent_exporter\",qbittorrent_type=~\"$type\",qbittorrent_instance=~\"$instance\",name=~\"downloading|forcedDL|metaDL|forcedMetaDL|stalledDL|checkingDL|queuedDL\"})",
+          "expr": "sum(qbittorrent_torrent_states{job=\"qbittorrent_exporter\",qbittorrent_instance=~\"$instance\",name=~\"downloading|forcedDL|metaDL|forcedMetaDL|stalledDL|checkingDL|queuedDL\"})",
           "instant": true,
           "legendFormat": "downloading",
           "refId": "A"
@@ -211,7 +191,7 @@
       },
       "targets": [
         {
-          "expr": "sum(qbittorrent_torrent_states{job=\"qbittorrent_exporter\",qbittorrent_type=~\"$type\",qbittorrent_instance=~\"$instance\",name=~\"uploading|forcedUP|stalledUP|queuedUP|checkingUP\"})",
+          "expr": "sum(qbittorrent_torrent_states{job=\"qbittorrent_exporter\",qbittorrent_instance=~\"$instance\",name=~\"uploading|forcedUP|stalledUP|queuedUP|checkingUP\"})",
           "instant": true,
           "legendFormat": "seeding",
           "refId": "A"
@@ -245,7 +225,7 @@
       },
       "targets": [
         {
-          "expr": "sum(qbittorrent_torrent_states{job=\"qbittorrent_exporter\",qbittorrent_type=~\"$type\",qbittorrent_instance=~\"$instance\",name=~\"pausedDL|pausedUP\"})",
+          "expr": "sum(qbittorrent_torrent_states{job=\"qbittorrent_exporter\",qbittorrent_instance=~\"$instance\",name=~\"pausedDL|pausedUP\"})",
           "instant": true,
           "legendFormat": "paused",
           "refId": "A"
@@ -282,7 +262,7 @@
       },
       "targets": [
         {
-          "expr": "sum(qbittorrent_torrent_states{job=\"qbittorrent_exporter\",qbittorrent_type=~\"$type\",qbittorrent_instance=~\"$instance\",name=~\"error|missingFiles\"})",
+          "expr": "sum(qbittorrent_torrent_states{job=\"qbittorrent_exporter\",qbittorrent_instance=~\"$instance\",name=~\"error|missingFiles\"})",
           "instant": true,
           "legendFormat": "error",
           "refId": "A"
@@ -321,7 +301,7 @@
       },
       "targets": [
         {
-          "expr": "sum(qbittorrent_global_download_speed_bytes{job=\"qbittorrent_exporter\",qbittorrent_type=~\"$type\",qbittorrent_instance=~\"$instance\"})",
+          "expr": "sum(qbittorrent_global_download_speed_bytes{job=\"qbittorrent_exporter\",qbittorrent_instance=~\"$instance\"})",
           "legendFormat": "download",
           "refId": "A"
         }
@@ -351,7 +331,7 @@
       },
       "targets": [
         {
-          "expr": "sum(qbittorrent_global_upload_speed_bytes{job=\"qbittorrent_exporter\",qbittorrent_type=~\"$type\",qbittorrent_instance=~\"$instance\"})",
+          "expr": "sum(qbittorrent_global_upload_speed_bytes{job=\"qbittorrent_exporter\",qbittorrent_instance=~\"$instance\"})",
           "legendFormat": "upload",
           "refId": "A"
         }
@@ -384,7 +364,7 @@
       },
       "targets": [
         {
-          "expr": "avg(qbittorrent_global_ratio{job=\"qbittorrent_exporter\",qbittorrent_type=~\"$type\",qbittorrent_instance=~\"$instance\"})",
+          "expr": "avg(qbittorrent_global_ratio{job=\"qbittorrent_exporter\",qbittorrent_instance=~\"$instance\"})",
           "instant": true,
           "legendFormat": "ratio",
           "refId": "A"
@@ -432,7 +412,7 @@
       },
       "targets": [
         {
-          "expr": "sum by (name) (qbittorrent_torrent_states{job=\"qbittorrent_exporter\",qbittorrent_type=~\"$type\",qbittorrent_instance=~\"$instance\",name=~\"downloading|uploading|stalledDL|stalledUP|forcedDL|forcedUP|pausedDL|pausedUP|error|missingFiles\"})",
+          "expr": "sum by (name) (qbittorrent_torrent_states{job=\"qbittorrent_exporter\",qbittorrent_instance=~\"$instance\",name=~\"downloading|uploading|stalledDL|stalledUP|forcedDL|forcedUP|pausedDL|pausedUP|error|missingFiles\"})",
           "legendFormat": "{{name}}",
           "refId": "A"
         }

@@ -7,7 +7,6 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BASE_LIB="${SCRIPT_DIR}/base.sh"
 KNOWN_SERVICES=(
-  alloy
   docker_volume_backup
   dozzle
   gha-runner-amd64
@@ -18,7 +17,6 @@ KNOWN_SERVICES=(
   jenkins-agent-amd64
   jenkins-agent-arm64
   jenkins-controller
-  loki
   nginx_proxy_manager
   node_exporter
   prometheus
@@ -27,7 +25,6 @@ KNOWN_SERVICES=(
   cloud-image-repository
 )
 declare -A SERVICE_MAP=(
-  [alloy]="alloy"
   [docker-volume-backup]="docker_volume_backup"
   [docker_volume_backup]="docker_volume_backup"
   [dozzle]="dozzle"
@@ -55,7 +52,6 @@ declare -A SERVICE_MAP=(
   [jenkins_controller]="jenkins-controller"
   [jenkins-config]="jenkins-controller"
   [jenkins_config]="jenkins-controller"
-  [loki]="loki"
   [minio]="minio"
   [nginx-proxy-manager]="nginx_proxy_manager"
   [nginx_proxy_manager]="nginx_proxy_manager"

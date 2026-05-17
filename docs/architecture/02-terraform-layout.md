@@ -84,7 +84,7 @@ Illustrative snapshot of how existing services split:
   and `*/config/secrets.tfvars` when present).
 - **App + database:** `prometheus` (`database/` hosts the VictoriaMetrics-style
   long-term store as its own Swarm service and state).
-- **App only:** majority of MCP stacks, runners, Loki, Chromadb, Rag-engine,
+- **App only:** majority of MCP stacks, runners, Chromadb, Rag-engine,
   etc.
 
 Legacy nested tfvars (`terraform/swarm/<svc>/app/app.tfvars`) may still exist on

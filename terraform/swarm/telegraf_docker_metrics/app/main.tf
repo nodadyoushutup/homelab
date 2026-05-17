@@ -19,6 +19,7 @@ resource "docker_service" "telegraf_docker_metrics" {
     force_update = local.telegraf_force_update
 
     placement {
+      constraints = var.placement_constraints
       platforms {
         os           = "linux"
         architecture = "aarch64"

@@ -20,7 +20,7 @@ variable "replicas" {
 variable "placement_constraints" {
   description = "Swarm placement constraints for the ChromaDB service."
   type        = list(string)
-  default     = ["node.labels.role==swarm-cp-0"]
+  default     = ["node.labels.role==swarm-wk-4"]
 }
 
 variable "platform_architecture" {

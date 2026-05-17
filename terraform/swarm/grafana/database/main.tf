@@ -13,7 +13,7 @@ resource "docker_service" "grafana_database" {
 
   task_spec {
     placement {
-      constraints = ["node.labels.role==swarm-cp-0"]
+      constraints = ["node.labels.role==swarm-wk-0"]
       platforms {
         os           = "linux"
         architecture = "aarch64"

@@ -8,33 +8,27 @@ variable "provider_config" {
 }
 
 variable "image_reference" {
-  description = "qbittorrent-metrics-exporter image to run."
+  description = "martabal/qbittorrent-exporter image (one Swarm service per qBittorrent instance)."
   type        = string
-  default     = "harbor.nodadyoushutup.com/homelab/qbittorrent-metrics-exporter:0.3.2-homelab"
+  default     = "ghcr.io/martabal/qbittorrent-exporter:v2.0.1"
 }
 
-variable "published_port" {
-  description = "Swarm ingress port for Prometheus /metrics."
+variable "exporter_port_base" {
+  description = "First host port for Prometheus scrape targets; each instance uses base + index (sorted instance name)."
   type        = number
-  default     = 18080
+  default     = 18300
 }
 
 variable "endpoint_host" {
-  description = "Host used when reporting the external metrics URL."
+  description = "Swarm ingress host for Prometheus scrape URLs."
   type        = string
-  default     = "192.168.1.120"
-}
-
-variable "replicas" {
-  description = "Number of exporter replicas (keep at 1)."
-  type        = number
-  default     = 1
+  default     = "192.168.1.121"
 }
 
 variable "placement_constraints" {
-  description = "Swarm placement constraints for this service."
+  description = "Swarm placement constraints for exporter services."
   type        = list(string)
-  default     = ["node.labels.role==swarm-cp-0"]
+  default     = ["node.labels.role==swarm-wk-0"]
 }
 
 variable "platform_architecture" {
@@ -43,32 +37,50 @@ variable "platform_architecture" {
   default     = "aarch64"
 }
 
-variable "scrape_interval_seconds" {
-  description = "How often the exporter polls each qBittorrent Web UI (seconds)."
-  type        = number
-  default     = 120
-}
-
-variable "startup_delay_seconds" {
-  description = "Delay before starting the exporter process (lets qBittorrent pods finish rolling)."
-  type        = number
-  default     = 300
-}
-
 variable "qbittorrent_hosts" {
   description = "Map of instance name to qBittorrent Web UI base URL (https://...). Merged over built-in defaults."
   type        = map(string)
   default     = {}
 }
 
-variable "log_level" {
-  description = "RUST_LOG level for the exporter."
+variable "qbittorrent_hosts_only" {
+  description = "When non-empty, deploy exporters only for these instance keys (must exist in defaults or qbittorrent_hosts)."
+  type        = set(string)
+  default     = []
+}
+
+variable "qbittorrent_username" {
+  description = "qBittorrent Web UI username for all instances."
   type        = string
-  default     = "info"
+  default     = "admin"
+}
+
+variable "enable_high_cardinality" {
+  description = "Per-torrent high-cardinality metrics (heavy; keep false for large libraries)."
+  type        = bool
+  default     = false
+}
+
+variable "insecure_skip_verify" {
+  description = "Skip TLS verification for qBittorrent Web UI HTTPS."
+  type        = bool
+  default     = true
+}
+
+variable "enable_tracker" {
+  description = "Export tracker-related metrics."
+  type        = bool
+  default     = true
+}
+
+variable "log_level" {
+  description = "Exporter log level (INFO, DEBUG, WARN, ERROR)."
+  type        = string
+  default     = "INFO"
 }
 
 variable "env" {
-  description = "Additional environment variables merged over defaults."
+  description = "Additional environment variables merged per instance (e.g. QBITTORRENT_PASSWORD)."
   type        = map(string)
   default     = {}
   sensitive   = true
@@ -125,7 +137,6 @@ variable "swarm_docker_provider_config" {
   default     = {}
 }
 
-# Vault KV fragments (merged by scripts/terraform/vault_merge_config_secrets.py); unused by this module.
 variable "secrets" {
   type      = any
   default   = {}

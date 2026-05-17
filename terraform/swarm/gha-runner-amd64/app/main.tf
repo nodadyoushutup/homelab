@@ -75,7 +75,7 @@ resource "docker_container" "gha_runner" {
   }
 
   healthcheck {
-    test         = ["CMD-SHELL", "test -f /tmp/gha-runner-ready"]
+    test         = ["CMD", "test", "-f", "/tmp/gha-runner-ready"]
     interval     = "30s"
     timeout      = "10s"
     retries      = 5

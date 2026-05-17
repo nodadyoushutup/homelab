@@ -1,0 +1,23 @@
+# Expose Velero Prometheus metrics to Swarm Prometheus (ClusterIP is not routable off-cluster).
+# Scrape target: .config/terraform/swarm/prometheus/prometheus.yaml job velero
+apiVersion: v1
+kind: Service
+metadata:
+  name: velero-metrics
+  namespace: velero
+  labels:
+    app.kubernetes.io/name: velero
+    app.kubernetes.io/instance: velero
+    homelab/component: velero-metrics
+spec:
+  type: NodePort
+  selector:
+    app.kubernetes.io/instance: velero
+    app.kubernetes.io/name: velero
+    name: velero
+  ports:
+    - name: http-monitoring
+      port: 8085
+      targetPort: http-monitoring
+      nodePort: 30085
+      protocol: TCP
