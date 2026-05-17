@@ -11,6 +11,16 @@ apiService:
   deployment:
     storage:
       enabled: false
+    # Velero 1.18+ uses Queued/ReadyToStart phases; stock velero-api:0.3.1 omits them (vui-api#68).
+    volumeMounts:
+      - name: backup-model-patch
+        mountPath: /app/models/k8s/backup.py
+        subPath: backup.py
+        readOnly: true
+    volumes:
+      - name: backup-model-patch
+        configMap:
+          name: vui-api-backup-model
   secret:
     existingSecret: vui-api-credentials
 
