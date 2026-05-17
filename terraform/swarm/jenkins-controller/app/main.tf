@@ -66,7 +66,7 @@ resource "docker_service" "jenkins_controller" {
         content {
           type   = "volume"
           source = mounts.value
-          target = local.shared_config_nfs_target
+          target = var.shared_tfvars_mount_target
 
           volume_options {
             driver_name    = var.shared_tfvars_volume_driver

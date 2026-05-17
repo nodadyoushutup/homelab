@@ -36,21 +36,24 @@ variable "env" {
 }
 
 variable "agent_image" {
-  description = "Jenkins agent image reference validated during stage preflight and applied to each agent service."
+  description = "Jenkins agent image reference validated during stage preflight and applied to each pool container."
   type        = string
-  default     = "harbor.nodadyoushutup.com/homelab/jenkins-agent:0.0.10"
+  default     = "ghcr.io/nodadyoushutup/jenkins-agent:0.0.9"
+}
+
+variable "engine_visible_build_path" {
+  description = <<-EOT
+    Absolute path bind-mounted from the pool host for nested Docker builds (Harbor/Packer job workspaces).
+    Must exist on the pool host before apply.
+  EOT
+  type        = string
+  default     = "/var/lib/gha-runner-engine-build"
 }
 
 variable "service_name_prefix" {
-  description = "Docker Swarm service name prefix for Jenkins agents."
+  description = "Prefix for Docker volume names on the pool host."
   type        = string
   default     = "jenkins-agent-arm64"
-}
-
-variable "network_name" {
-  description = "Overlay network name shared with the Jenkins controller."
-  type        = string
-  default     = "jenkins"
 }
 
 variable "jenkins_url" {
@@ -118,9 +121,9 @@ variable "shared_tfvars_mount_target" {
 }
 
 variable "placement_constraints" {
-  description = "Swarm placement constraints applied to matching Jenkins agent services in addition to any hostname derived from JCasC."
+  description = "Deprecated (Swarm-only). Retained for tfvars compatibility; pool-host containers ignore this."
   type        = list(string)
-  default     = ["node.platform.arch==aarch64"]
+  default     = []
 }
 
 variable "dns_nameservers" {

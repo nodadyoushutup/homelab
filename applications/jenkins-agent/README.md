@@ -1,6 +1,6 @@
 # Jenkins Agent Image
 
-This directory builds the custom inbound Jenkins agent image used by the Swarm
+This directory builds the custom inbound Jenkins agent image used by the homelab
 Jenkins agent pools.
 
 The Dockerfile uses `scripts/install/automation_tooling.sh` as the shared
@@ -26,16 +26,34 @@ Build and publish this image with `.github/workflows/docker_build_push.yml`
 using:
 
 - `build_target=jenkins-agent`
-- `target_registry=harbor` or `target_registry=github`
+- `target_registry=github` or `target_registry=harbor`
 - a required `version`
 
 The workflow publishes a multi-arch image for both `linux/amd64` and
-`linux/arm64`, which is required by the split Swarm Jenkins agent stages.
+`linux/arm64`.
 
-## KVM and Packer on Swarm
+## Pool deployment (not Swarm)
 
-Swarm stacks **`terraform/swarm/jenkins-agent-amd64`** and **`terraform/swarm/jenkins-agent-arm64`** bind-mount **`/dev/kvm`** from each scheduled node into the agent container (same idea as the GHA runner services). The image installs QEMU/Packer via `automation_tooling.sh`; the **`jenkins`** user is added to the **`kvm`** group in the Dockerfile so jobs can open the device when it is `root:kvm` on the host.
+Agent pools are **`docker_container`** resources on dedicated pool hosts (same
+pattern as `gha-runner-*`), not Swarm services:
 
-Requirements on the **node**: a working **`/dev/kvm`** and loaded **`kvm`** kernel support (see `applications/gha-runner/README.md` host checks). If a node has no KVM device, the bind mount can prevent the service from starting—fix the host or temporarily remove the mount in Terraform.
+| Pool | Terraform | Docker provider host |
+| --- | --- | --- |
+| ARM64 | `terraform/swarm/jenkins-agent-arm64/app` | `swarm-wk-0` (`docker_arm64_pool.tfvars`) |
+| AMD64 | `terraform/swarm/jenkins-agent-amd64/app` | AMD64 pool host (`docker_amd64.tfvars`) |
 
-Give Packer (or other) jobs an agent label that matches **KVM-capable** nodes only, for example the Packer Jenkinsfile default uses `swarm && amd64 && kvm`; ensure JCasC agent **`labelString`** includes **`kvm`** where appropriate.
+Terraform provisions **`devices { host_path = "/dev/kvm" }`** and
+**`group_add = ["kvm"]`** so Packer/QEMU can use hardware acceleration.
+Swarm bind-mounts alone are not sufficient ([moby/moby#24865](https://github.com/moby/moby/issues/24865)).
+
+Agents reach the controller via published ports on the Swarm ingress host
+(`JENKINS_URL`, `JENKINS_TUNNEL` in each pool’s `app.tfvars`), not the internal
+`jenkins` overlay DNS name.
+
+## KVM on the pool host
+
+Requirements on the **pool host**: working **`/dev/kvm`** and loaded **`kvm`**
+kernel modules (see `applications/gha-runner/README.md` host checks).
+
+Give Packer jobs a label that matches KVM-capable agents (for example
+`swarm && amd64 && kvm` in the Packer Jenkinsfile).

@@ -78,7 +78,7 @@ variable "shared_tfvars_mount_target" {
 variable "controller_image" {
   description = "Jenkins controller image reference"
   type        = string
-  default     = "harbor.nodadyoushutup.com/homelab/jenkins-controller:0.0.3"
+  default     = "ghcr.io/nodadyoushutup/jenkins-controller:0.0.16"
 }
 
 variable "service_name" {

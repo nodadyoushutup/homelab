@@ -247,6 +247,13 @@ pipeline_pre_terraform() {
 
 PIPELINE_ARGS=("$@")
 
+SWARM_DOCKER_ARM64_POOL_TFVARS="${SWARM_DOCKER_ARM64_POOL_TFVARS:-${TFVARS_HOME_DIR:-${CONFIG_DIR:-${ROOT_DIR}/.config}}/terraform/providers/docker_arm64_pool.tfvars}"
+export SWARM_DOCKER_ARM64_POOL_TFVARS
+
+if [[ -f "${SWARM_DOCKER_ARM64_POOL_TFVARS}" ]]; then
+  PLAN_ARGS_EXTRA+=(-var-file "${SWARM_DOCKER_ARM64_POOL_TFVARS}")
+  APPLY_ARGS_EXTRA+=(-var-file "${SWARM_DOCKER_ARM64_POOL_TFVARS}")
+fi
 
 # shellcheck source=/dev/null
 source "${PIPELINE_SCRIPT_ROOT}/swarm_docker_provider_tfvars_env.sh"
