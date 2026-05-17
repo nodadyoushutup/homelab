@@ -52,4 +52,4 @@ exposure:
   clusterIP:
     protocol: https
     wsProtocol: wss
-    localAddress: velero.nodadyoushutup.com
+    localAddress: vui.nodadyoushutup.com
