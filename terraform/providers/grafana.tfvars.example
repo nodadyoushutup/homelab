@@ -1,6 +1,8 @@
 # Copy to CONFIG_DIR/terraform/providers/grafana.tfvars (not committed to the homelab repo).
-# Merged by scripts/terraform/swarm_pipeline.sh after dns.tfvars and nfs.tfvars when the file exists.
-# Supplies provider_config.grafana for terraform/swarm/grafana/config (Grafana Terraform provider).
+# Loaded only by terraform/swarm/grafana/config (pipelines/terraform/swarm/grafana/config.sh
+# sources scripts/terraform/swarm_grafana_provider_tfvars_env.sh). Not part of the global
+# swarm_pipeline shared prefix — avoids provider_config collisions with NPM and other stacks.
+# Supplies provider_config.grafana for the Grafana Terraform provider.
 
 provider_config = {
   grafana = {

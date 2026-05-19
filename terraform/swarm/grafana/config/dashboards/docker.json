@@ -17,7 +17,7 @@
   },
   "editable": true,
   "fiscalYearStartMonth": 0,
-  "graphTooltip": 0,
+  "graphTooltip": 1,
   "links": [],
   "liveNow": false,
   "refresh": "30s",
@@ -25,7 +25,8 @@
   "tags": [
     "homelab",
     "docker",
-    "telegraf"
+    "telegraf",
+    "containers"
   ],
   "time": {
     "from": "now-1h",
@@ -34,7 +35,7 @@
   "timezone": "",
   "title": "Docker",
   "uid": "docker",
-  "version": 1,
+  "version": 2,
   "templating": {
     "list": [
       {
@@ -52,52 +53,146 @@
         "multi": true,
         "refresh": 1,
         "sort": 1,
-        "options": [],
         "current": {
           "selected": true,
           "text": "All",
           "value": "$__all"
-        },
-        "hide": 0
+        }
       },
       {
-        "name": "node",
+        "name": "host",
         "label": "Host",
         "type": "query",
         "datasource": {
           "type": "prometheus",
           "uid": "prometheus"
         },
-        "definition": "label_values(docker_n_containers_running{job=\"telegraf_docker_metrics\", platform=~\"$platform\"}, engine_host)",
-        "query": "label_values(docker_n_containers_running{job=\"telegraf_docker_metrics\", platform=~\"$platform\"}, engine_host)",
+        "definition": "label_values(docker_container_mem_usage{job=\"telegraf_docker_metrics\", platform=~\"$platform\", com_docker_swarm_service_name!=\"\"}, engine_host)",
+        "query": "label_values(docker_container_mem_usage{job=\"telegraf_docker_metrics\", platform=~\"$platform\", com_docker_swarm_service_name!=\"\"}, engine_host)",
         "includeAll": true,
         "allValue": ".*",
-        "multi": false,
+        "multi": true,
         "refresh": 2,
         "sort": 1,
-        "options": [],
         "current": {
           "selected": true,
           "text": "All",
           "value": "$__all"
+        }
+      },
+      {
+        "name": "service",
+        "label": "Service",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
         },
-        "hide": 0
+        "definition": "label_values(docker_container_mem_usage{job=\"telegraf_docker_metrics\", platform=~\"$platform\", engine_host=~\"$host\", com_docker_swarm_service_name!=\"\"}, com_docker_swarm_service_name)",
+        "query": "label_values(docker_container_mem_usage{job=\"telegraf_docker_metrics\", platform=~\"$platform\", engine_host=~\"$host\", com_docker_swarm_service_name!=\"\"}, com_docker_swarm_service_name)",
+        "includeAll": true,
+        "allValue": ".*",
+        "multi": true,
+        "refresh": 2,
+        "sort": 1,
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        }
+      },
+      {
+        "name": "container",
+        "label": "Container",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
+        "definition": "label_values(docker_container_mem_usage{job=\"telegraf_docker_metrics\", platform=~\"$platform\", engine_host=~\"$host\", com_docker_swarm_service_name=~\"$service\", container_status=\"running\"}, container_name)",
+        "query": "label_values(docker_container_mem_usage{job=\"telegraf_docker_metrics\", platform=~\"$platform\", engine_host=~\"$host\", com_docker_swarm_service_name=~\"$service\", container_status=\"running\"}, container_name)",
+        "includeAll": true,
+        "allValue": ".*",
+        "multi": true,
+        "refresh": 2,
+        "sort": 1,
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        }
       }
     ]
   },
   "panels": [
     {
       "type": "row",
-      "title": "Hosts",
+      "title": "Overview",
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
         "y": 0
       },
-      "id": 100,
+      "id": 1,
       "collapsed": false,
       "panels": []
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 0,
+        "y": 1
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "expr": "sum(docker_n_containers_running{job=\"telegraf_docker_metrics\", platform=~\"$platform\", engine_host=~\"$host\", com_docker_swarm_service_name=~\"$service\", container_name=~\"$container\",engine_host=~\"$host\"})",
+          "instant": true,
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "title": "Running containers",
+      "type": "stat"
     },
     {
       "datasource": {
@@ -125,8 +220,64 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 8,
-        "x": 0,
+        "w": 4,
+        "x": 4,
+        "y": 1
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "expr": "sum(docker_n_containers_stopped{job=\"telegraf_docker_metrics\", platform=~\"$platform\", engine_host=~\"$host\", com_docker_swarm_service_name=~\"$service\", container_name=~\"$container\",engine_host=~\"$host\"})",
+          "instant": true,
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "title": "Stopped containers",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 8,
         "y": 1
       },
       "id": 4,
@@ -146,13 +297,13 @@
       },
       "targets": [
         {
-          "expr": "count(count by (engine_host) (docker_n_containers_running{job=\"telegraf_docker_metrics\", platform=~\"$platform\"}))",
+          "expr": "count(count by (com_docker_swarm_service_name) (docker_container_mem_usage{job=\"telegraf_docker_metrics\", platform=~\"$platform\", engine_host=~\"$host\", com_docker_swarm_service_name=~\"$service\", container_name=~\"$container\",container_status=\"running\",com_docker_swarm_service_name!=\"\"}))",
           "instant": true,
-          "legendFormat": "total",
+          "legendFormat": "",
           "refId": "A"
         }
       ],
-      "title": "Total hosts",
+      "title": "Swarm services",
       "type": "stat"
     },
     {
@@ -170,12 +321,16 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "red",
+                "color": "green",
                 "value": null
               },
               {
-                "color": "green",
+                "color": "yellow",
                 "value": 1
+              },
+              {
+                "color": "red",
+                "value": 10
               }
             ]
           },
@@ -185,8 +340,8 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 8,
-        "x": 8,
+        "w": 4,
+        "x": 12,
         "y": 1
       },
       "id": 5,
@@ -206,13 +361,13 @@
       },
       "targets": [
         {
-          "expr": "count(max by (engine_host) (up{job=\"telegraf_docker_metrics\", platform=~\"$platform\"} * on(instance) group_left(engine_host) count by(instance, engine_host)(docker_n_containers_running{job=\"telegraf_docker_metrics\", platform=~\"$platform\"})) == 1)",
+          "expr": "sum(increase(docker_container_status_restart_count{job=\"telegraf_docker_metrics\", platform=~\"$platform\", engine_host=~\"$host\", com_docker_swarm_service_name=~\"$service\", container_name=~\"$container\",container_status=\"running\",com_docker_swarm_service_name!=\"\"}[1h]))",
           "instant": true,
-          "legendFormat": "online",
+          "legendFormat": "",
           "refId": "A"
         }
       ],
-      "title": "Online hosts",
+      "title": "Restarts (1h)",
       "type": "stat"
     },
     {
@@ -234,8 +389,12 @@
                 "value": null
               },
               {
-                "color": "red",
+                "color": "yellow",
                 "value": 1
+              },
+              {
+                "color": "red",
+                "value": 10
               }
             ]
           },
@@ -245,7 +404,7 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 8,
+        "w": 4,
         "x": 16,
         "y": 1
       },
@@ -266,13 +425,13 @@
       },
       "targets": [
         {
-          "expr": "count(max by (engine_host) (up{job=\"telegraf_docker_metrics\", platform=~\"$platform\"} * on(instance) group_left(engine_host) count by(instance, engine_host)(docker_n_containers_running{job=\"telegraf_docker_metrics\", platform=~\"$platform\"})) == 0)",
+          "expr": "count(docker_container_health_failing_streak{job=\"telegraf_docker_metrics\", platform=~\"$platform\", engine_host=~\"$host\", com_docker_swarm_service_name=~\"$service\", container_name=~\"$container\",container_status=\"running\",com_docker_swarm_service_name!=\"\"} > 0)",
           "instant": true,
-          "legendFormat": "offline",
+          "legendFormat": "",
           "refId": "A"
         }
       ],
-      "title": "Offline hosts",
+      "title": "Unhealthy",
       "type": "stat"
     },
     {
@@ -285,218 +444,70 @@
           "color": {
             "mode": "thresholds"
           },
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "color-text"
-            },
-            "inspect": false
-          },
+          "decimals": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
                 "color": "green",
                 "value": null
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 9,
-        "w": 12,
-        "x": 0,
-        "y": 5
-      },
-      "id": 16,
-      "options": {
-        "cellHeight": "sm",
-        "footer": {
-          "countRows": false,
-          "fields": "",
-          "reducer": [
-            "sum"
-          ],
-          "show": false
-        },
-        "showHeader": true,
-        "sortBy": [
-          {
-            "desc": false,
-            "displayName": "Host"
-          }
-        ]
-      },
-      "targets": [
-        {
-          "expr": "max by (engine_host, platform) (up{job=\"telegraf_docker_metrics\", platform=~\"$platform\"} * on(instance) group_left(engine_host) count by(instance, engine_host)(docker_n_containers_running{job=\"telegraf_docker_metrics\", platform=~\"$platform\"}))",
-          "format": "table",
-          "instant": true,
-          "legendFormat": "__auto",
-          "refId": "A"
-        }
-      ],
-      "title": "Online",
-      "transformations": [
-        {
-          "id": "filterByValue",
-          "options": {
-            "filters": [
+              },
               {
-                "config": {
-                  "id": "equal",
-                  "options": {
-                    "value": 1
-                  }
-                },
-                "fieldName": "Value"
-              }
-            ],
-            "match": "all",
-            "type": "include"
-          }
-        },
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {
-              "Time": true,
-              "Value": true,
-              "__name__": true,
-              "instance": true,
-              "job": true
-            },
-            "indexByName": {
-              "platform": 1,
-              "engine_host": 0
-            },
-            "renameByName": {
-              "platform": "Type",
-              "engine_host": "Host"
-            }
-          }
-        }
-      ],
-      "type": "table"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "color-text"
-            },
-            "inspect": false
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
+                "color": "yellow",
+                "value": 1
+              },
               {
                 "color": "red",
-                "value": null
+                "value": 10
               }
             ]
-          }
+          },
+          "unit": "short"
         },
         "overrides": []
       },
       "gridPos": {
-        "h": 9,
-        "w": 12,
-        "x": 12,
-        "y": 5
+        "h": 4,
+        "w": 4,
+        "x": 20,
+        "y": 1
       },
-      "id": 17,
+      "id": 7,
       "options": {
-        "cellHeight": "sm",
-        "footer": {
-          "countRows": false,
-          "fields": "",
-          "reducer": [
-            "sum"
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
           ],
-          "show": false
+          "fields": "",
+          "values": false
         },
-        "showHeader": true,
-        "sortBy": [
-          {
-            "desc": false,
-            "displayName": "Host"
-          }
-        ]
+        "textMode": "auto"
       },
       "targets": [
         {
-          "expr": "max by (engine_host, platform) (up{job=\"telegraf_docker_metrics\", platform=~\"$platform\"} * on(instance) group_left(engine_host) count by(instance, engine_host)(docker_n_containers_running{job=\"telegraf_docker_metrics\", platform=~\"$platform\"}))",
-          "format": "table",
+          "expr": "count(100 * rate(docker_container_cpu_throttling_throttled_periods{job=\"telegraf_docker_metrics\", platform=~\"$platform\", engine_host=~\"$host\", com_docker_swarm_service_name=~\"$service\", container_name=~\"$container\",container_status=\"running\",com_docker_swarm_service_name!=\"\"}[5m]) / clamp_min(rate(docker_container_cpu_throttling_periods{job=\"telegraf_docker_metrics\", platform=~\"$platform\", engine_host=~\"$host\", com_docker_swarm_service_name=~\"$service\", container_name=~\"$container\",container_status=\"running\",com_docker_swarm_service_name!=\"\"}[5m]), 0.00001) > 5)",
           "instant": true,
-          "legendFormat": "__auto",
+          "legendFormat": "",
           "refId": "A"
         }
       ],
-      "title": "Offline",
-      "transformations": [
-        {
-          "id": "filterByValue",
-          "options": {
-            "filters": [
-              {
-                "config": {
-                  "id": "equal",
-                  "options": {
-                    "value": 0
-                  }
-                },
-                "fieldName": "Value"
-              }
-            ],
-            "match": "all",
-            "type": "include"
-          }
-        },
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {
-              "Time": true,
-              "Value": true,
-              "__name__": true,
-              "instance": true,
-              "job": true
-            },
-            "indexByName": {
-              "platform": 1,
-              "engine_host": 0
-            },
-            "renameByName": {
-              "platform": "Type",
-              "engine_host": "Host"
-            }
-          }
-        }
-      ],
-      "type": "table"
+      "title": "CPU throttled",
+      "type": "stat"
     },
     {
       "type": "row",
-      "title": "Averages",
+      "title": "Running containers",
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 14
+        "y": 5
       },
-      "id": 101,
+      "id": 8,
       "collapsed": false,
       "panels": []
     },
@@ -510,733 +521,262 @@
           "color": {
             "mode": "thresholds"
           },
-          "decimals": 1,
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
                 "color": "green",
                 "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "CPU %"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
               },
               {
-                "color": "yellow",
-                "value": 70
+                "id": "decimals",
+                "value": 1
               },
               {
-                "color": "red",
-                "value": 90
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 70
+                    },
+                    {
+                      "color": "red",
+                      "value": 90
+                    }
+                  ]
+                }
               }
             ]
           },
-          "unit": "percent"
-        },
-        "overrides": []
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Mem %"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 70
+                    },
+                    {
+                      "color": "red",
+                      "value": 90
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Memory"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "bytes"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Network"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "Bps"
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
-        "h": 4,
-        "w": 6,
+        "h": 12,
+        "w": 24,
         "x": 0,
-        "y": 15
-      },
-      "id": 1,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "center",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto"
-      },
-      "targets": [
-        {
-          "expr": "avg(docker_container_cpu_usage_percent{job=\"telegraf_docker_metrics\", platform=~\"$platform\", engine_host=~\"$node\", com_docker_swarm_service_name!=\"\", container_status=\"running\"})",
-          "legendFormat": "cpu",
-          "refId": "A"
-        }
-      ],
-      "title": "CPU",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "decimals": 1,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "yellow",
-                "value": 70
-              },
-              {
-                "color": "red",
-                "value": 90
-              }
-            ]
-          },
-          "unit": "percent"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 6,
-        "y": 15
-      },
-      "id": 2,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "center",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto"
-      },
-      "targets": [
-        {
-          "expr": "avg(docker_container_mem_usage_percent{job=\"telegraf_docker_metrics\", platform=~\"$platform\", engine_host=~\"$node\", com_docker_swarm_service_name!=\"\", container_status=\"running\"})",
-          "legendFormat": "memory",
-          "refId": "A"
-        }
-      ],
-      "title": "Memory",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "decimals": 1,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "yellow",
-                "value": 70
-              },
-              {
-                "color": "red",
-                "value": 90
-              }
-            ]
-          },
-          "unit": "percent"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 12,
-        "y": 15
-      },
-      "id": 8,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "center",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto"
-      },
-      "targets": [
-        {
-          "expr": "avg(sum by (engine_host) (rate(docker_container_blkio_io_service_bytes_recursive_read{job=\"telegraf_docker_metrics\", platform=~\"$platform\", engine_host=~\"$node\", com_docker_swarm_service_name!=\"\", container_status=\"running\"}[5m]) + rate(docker_container_blkio_io_service_bytes_recursive_write{job=\"telegraf_docker_metrics\", platform=~\"$platform\", engine_host=~\"$node\", com_docker_swarm_service_name!=\"\", container_status=\"running\"}[5m])))",
-          "legendFormat": "disk",
-          "refId": "A"
-        }
-      ],
-      "title": "Block I/O",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "decimals": 1,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "yellow",
-                "value": 1048576
-              },
-              {
-                "color": "red",
-                "value": 10485760
-              }
-            ]
-          },
-          "unit": "Bps"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 18,
-        "y": 15
+        "y": 6
       },
       "id": 9,
       "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "center",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
           "fields": "",
-          "values": false
+          "reducer": [
+            "sum"
+          ],
+          "show": false
         },
-        "textMode": "auto"
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "CPU %"
+          }
+        ]
       },
       "targets": [
         {
-          "expr": "avg(sum by (engine_host) (rate(docker_container_net_rx_bytes{job=\"telegraf_docker_metrics\", platform=~\"$platform\", engine_host=~\"$node\", com_docker_swarm_service_name!=\"\", container_status=\"running\"}[5m]) + rate(docker_container_net_tx_bytes{job=\"telegraf_docker_metrics\", platform=~\"$platform\", engine_host=~\"$node\", com_docker_swarm_service_name!=\"\", container_status=\"running\"}[5m])))",
-          "legendFormat": "network",
-          "refId": "A"
+          "expr": "docker_container_cpu_usage_percent{job=\"telegraf_docker_metrics\", platform=~\"$platform\", engine_host=~\"$host\", com_docker_swarm_service_name=~\"$service\", container_name=~\"$container\",container_status=\"running\",com_docker_swarm_service_name!=\"\"}",
+          "format": "table",
+          "instant": true,
+          "refId": "cpu"
+        },
+        {
+          "expr": "docker_container_mem_usage_percent{job=\"telegraf_docker_metrics\", platform=~\"$platform\", engine_host=~\"$host\", com_docker_swarm_service_name=~\"$service\", container_name=~\"$container\",container_status=\"running\",com_docker_swarm_service_name!=\"\"}",
+          "format": "table",
+          "instant": true,
+          "refId": "mem_pct"
+        },
+        {
+          "expr": "docker_container_mem_usage{job=\"telegraf_docker_metrics\", platform=~\"$platform\", engine_host=~\"$host\", com_docker_swarm_service_name=~\"$service\", container_name=~\"$container\",container_status=\"running\",com_docker_swarm_service_name!=\"\"}",
+          "format": "table",
+          "instant": true,
+          "refId": "mem"
+        },
+        {
+          "expr": "rate(docker_container_net_rx_bytes{job=\"telegraf_docker_metrics\", platform=~\"$platform\", engine_host=~\"$host\", com_docker_swarm_service_name=~\"$service\", container_name=~\"$container\",container_status=\"running\",com_docker_swarm_service_name!=\"\"}[5m]) + rate(docker_container_net_tx_bytes{job=\"telegraf_docker_metrics\", platform=~\"$platform\", engine_host=~\"$host\", com_docker_swarm_service_name=~\"$service\", container_name=~\"$container\",container_status=\"running\",com_docker_swarm_service_name!=\"\"}[5m])",
+          "format": "table",
+          "instant": true,
+          "refId": "net"
+        },
+        {
+          "expr": "increase(docker_container_status_restart_count{job=\"telegraf_docker_metrics\", platform=~\"$platform\", engine_host=~\"$host\", com_docker_swarm_service_name=~\"$service\", container_name=~\"$container\",container_status=\"running\",com_docker_swarm_service_name!=\"\"}[24h])",
+          "format": "table",
+          "instant": true,
+          "refId": "restarts"
         }
       ],
-      "title": "Network",
-      "type": "stat"
+      "title": "Container inventory",
+      "transformations": [
+        {
+          "id": "seriesToColumns",
+          "options": {
+            "byField": "container_name"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "Time 1": true,
+              "Time 2": true,
+              "Time 3": true,
+              "Time 4": true,
+              "Time 5": true,
+              "__name__": true,
+              "__name__ 1": true,
+              "container_id": true,
+              "container_id 1": true,
+              "container_image": true,
+              "container_status": true,
+              "engine_host 1": true,
+              "engine_host 2": true,
+              "engine_host 3": true,
+              "engine_host 4": true,
+              "host": true,
+              "instance": true,
+              "job": true,
+              "platform": true,
+              "com_docker_swarm_node_id": true,
+              "com_docker_swarm_service_id": true,
+              "com_docker_swarm_task_id": true
+            },
+            "indexByName": {
+              "com_docker_swarm_service_name": 0,
+              "container_name": 1,
+              "engine_host": 2,
+              "Value #cpu": 3,
+              "Value #mem_pct": 4,
+              "Value #mem": 5,
+              "Value #net": 6,
+              "Value #restarts": 7
+            },
+            "renameByName": {
+              "Value #cpu": "CPU %",
+              "Value #mem_pct": "Mem %",
+              "Value #mem": "Memory",
+              "Value #net": "Network",
+              "Value #restarts": "Restarts 24h",
+              "com_docker_swarm_service_name": "Service",
+              "container_name": "Container",
+              "engine_host": "Host"
+            }
+          }
+        }
+      ],
+      "type": "table"
     },
     {
       "type": "row",
-      "title": "Over Time",
+      "title": "Top services",
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 19
-      },
-      "id": 102,
-      "collapsed": false,
-      "panels": []
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 15,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "smooth",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "unit": "percent"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 16,
-        "w": 8,
-        "x": 0,
-        "y": 20
-      },
-      "id": 3,
-      "options": {
-        "legend": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "targets": [
-        {
-          "expr": "avg by (engine_host) (docker_container_cpu_usage_percent{job=\"telegraf_docker_metrics\", platform=~\"$platform\", engine_host=~\"$node\", com_docker_swarm_service_name!=\"\", container_status=\"running\"})",
-          "legendFormat": "{{engine_host}}",
-          "refId": "A"
-        }
-      ],
-      "title": "CPU over time",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 15,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "smooth",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "unit": "percent"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 16,
-        "w": 8,
-        "x": 8,
-        "y": 20
+        "y": 18
       },
       "id": 10,
-      "options": {
-        "legend": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "targets": [
-        {
-          "expr": "avg by (engine_host) (docker_container_mem_usage_percent{job=\"telegraf_docker_metrics\", platform=~\"$platform\", engine_host=~\"$node\", com_docker_swarm_service_name!=\"\", container_status=\"running\"})",
-          "legendFormat": "{{engine_host}}",
-          "refId": "A"
-        }
-      ],
-      "title": "Memory over time",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 15,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "smooth",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "unit": "Bps"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 16,
-        "w": 8,
-        "x": 16,
-        "y": 20
-      },
-      "id": 12,
-      "options": {
-        "legend": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "targets": [
-        {
-          "expr": "sum by (engine_host) (rate(docker_container_net_rx_bytes{job=\"telegraf_docker_metrics\", platform=~\"$platform\", engine_host=~\"$node\", com_docker_swarm_service_name!=\"\", container_status=\"running\"}[5m]) + rate(docker_container_net_tx_bytes{job=\"telegraf_docker_metrics\", platform=~\"$platform\", engine_host=~\"$node\", com_docker_swarm_service_name!=\"\", container_status=\"running\"}[5m]))",
-          "legendFormat": "{{engine_host}}",
-          "refId": "A"
-        }
-      ],
-      "title": "Network usage over time",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 15,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "smooth",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "unit": "short"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 16,
-        "w": 8,
-        "x": 0,
-        "y": 36
-      },
-      "id": 13,
-      "options": {
-        "legend": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "targets": [
-        {
-          "expr": "sum by (engine_host) (docker_n_containers_stopped{job=\"telegraf_docker_metrics\", platform=~\"$platform\", engine_host=~\"$node\"})",
-          "legendFormat": "{{engine_host}}",
-          "refId": "A"
-        }
-      ],
-      "title": "Stopped containers",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 15,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "smooth",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "unit": "short"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 16,
-        "w": 8,
-        "x": 8,
-        "y": 36
-      },
-      "id": 14,
-      "options": {
-        "legend": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "targets": [
-        {
-          "expr": "sum by (engine_host) (docker_n_containers_running{job=\"telegraf_docker_metrics\", platform=~\"$platform\", engine_host=~\"$node\"})",
-          "legendFormat": "{{engine_host}}",
-          "refId": "A"
-        }
-      ],
-      "title": "Running containers",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 15,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "smooth",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "unit": "Bps"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 16,
-        "w": 8,
-        "x": 16,
-        "y": 36
-      },
-      "id": 15,
-      "options": {
-        "legend": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "targets": [
-        {
-          "expr": "sum by (engine_host) (rate(docker_container_blkio_io_service_bytes_recursive_read{job=\"telegraf_docker_metrics\", platform=~\"$platform\", engine_host=~\"$node\", com_docker_swarm_service_name!=\"\", container_status=\"running\"}[5m]) + rate(docker_container_blkio_io_service_bytes_recursive_write{job=\"telegraf_docker_metrics\", platform=~\"$platform\", engine_host=~\"$node\", com_docker_swarm_service_name!=\"\", container_status=\"running\"}[5m]))",
-          "legendFormat": "{{engine_host}}",
-          "refId": "A"
-        }
-      ],
-      "title": "Block I/O over time",
-      "type": "timeseries"
-    },
-    {
-      "type": "row",
-      "title": "Services",
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 52
-      },
-      "id": 103,
       "collapsed": false,
       "panels": []
     },
@@ -1252,6 +792,7 @@
           },
           "decimals": 1,
           "max": 100,
+          "min": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -1295,10 +836,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 14,
-        "w": 24,
+        "h": 10,
+        "w": 12,
         "x": 0,
-        "y": 53
+        "y": 19
       },
       "id": 11,
       "options": {
@@ -1325,7 +866,7 @@
       },
       "targets": [
         {
-          "expr": "topk(15, avg by (com_docker_swarm_service_name) (docker_container_cpu_usage_percent{job=\"telegraf_docker_metrics\", platform=~\"$platform\", engine_host=~\"$node\", com_docker_swarm_service_name!=\"\", container_status=\"running\"}))",
+          "expr": "topk(12, avg by (com_docker_swarm_service_name) (docker_container_cpu_usage_percent{job=\"telegraf_docker_metrics\", platform=~\"$platform\", engine_host=~\"$host\", com_docker_swarm_service_name=~\"$service\", container_name=~\"$container\",container_status=\"running\",com_docker_swarm_service_name!=\"\"}))",
           "instant": true,
           "legendFormat": "{{com_docker_swarm_service_name}}",
           "refId": "A"
@@ -1345,13 +886,798 @@
             },
             "renameByName": {
               "Metric": "Service",
-              "Value": "CPU %"
+              "Value": "CPU by service"
             }
           }
         }
       ],
-      "title": "Top services by CPU",
+      "title": "CPU by service",
       "type": "barchart"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 1,
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 70
+              },
+              {
+                "color": "red",
+                "value": 90
+              }
+            ]
+          },
+          "unit": "percent",
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 12,
+        "y": 19
+      },
+      "id": 12,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.9,
+        "fullHighlight": false,
+        "groupWidth": 1,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        },
+        "orientation": "vertical",
+        "showValue": "auto",
+        "stacking": "none",
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "xField": "Service",
+        "xTickLabelRotation": -45,
+        "xTickLabelSpacing": 0
+      },
+      "targets": [
+        {
+          "expr": "topk(12, avg by (com_docker_swarm_service_name) (docker_container_mem_usage_percent{job=\"telegraf_docker_metrics\", platform=~\"$platform\", engine_host=~\"$host\", com_docker_swarm_service_name=~\"$service\", container_name=~\"$container\",container_status=\"running\",com_docker_swarm_service_name!=\"\"}))",
+          "instant": true,
+          "legendFormat": "{{com_docker_swarm_service_name}}",
+          "refId": "A"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "seriesToRows",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "indexByName": {
+              "Metric": 0,
+              "Value": 1
+            },
+            "renameByName": {
+              "Metric": "Service",
+              "Value": "Memory by service"
+            }
+          }
+        }
+      ],
+      "title": "Memory by service",
+      "type": "barchart"
+    },
+    {
+      "type": "row",
+      "title": "Selection",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 29
+      },
+      "id": 13,
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 1,
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 70
+              },
+              {
+                "color": "red",
+                "value": 90
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 30
+      },
+      "id": 14,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "expr": "avg(docker_container_cpu_usage_percent{job=\"telegraf_docker_metrics\", platform=~\"$platform\", engine_host=~\"$host\", com_docker_swarm_service_name=~\"$service\", container_name=~\"$container\",container_status=\"running\",com_docker_swarm_service_name!=\"\"})",
+          "instant": true,
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "title": "CPU",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 1,
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 70
+              },
+              {
+                "color": "red",
+                "value": 90
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 30
+      },
+      "id": 15,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "expr": "avg(docker_container_mem_usage_percent{job=\"telegraf_docker_metrics\", platform=~\"$platform\", engine_host=~\"$host\", com_docker_swarm_service_name=~\"$service\", container_name=~\"$container\",container_status=\"running\",com_docker_swarm_service_name!=\"\"})",
+          "instant": true,
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "title": "Memory",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1048576
+              },
+              {
+                "color": "red",
+                "value": 10485760
+              }
+            ]
+          },
+          "unit": "Bps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 30
+      },
+      "id": 16,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(docker_container_net_rx_bytes{job=\"telegraf_docker_metrics\", platform=~\"$platform\", engine_host=~\"$host\", com_docker_swarm_service_name=~\"$service\", container_name=~\"$container\",container_status=\"running\",com_docker_swarm_service_name!=\"\"}[5m]) + rate(docker_container_net_tx_bytes{job=\"telegraf_docker_metrics\", platform=~\"$platform\", engine_host=~\"$host\", com_docker_swarm_service_name=~\"$service\", container_name=~\"$container\",container_status=\"running\",com_docker_swarm_service_name!=\"\"}[5m]))",
+          "instant": true,
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "title": "Network",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1048576
+              },
+              {
+                "color": "red",
+                "value": 10485760
+              }
+            ]
+          },
+          "unit": "Bps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 30
+      },
+      "id": 17,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(docker_container_blkio_io_service_bytes_recursive_read{job=\"telegraf_docker_metrics\", platform=~\"$platform\", engine_host=~\"$host\", com_docker_swarm_service_name=~\"$service\", container_name=~\"$container\",container_status=\"running\",com_docker_swarm_service_name!=\"\"}[5m]) + rate(docker_container_blkio_io_service_bytes_recursive_write{job=\"telegraf_docker_metrics\", platform=~\"$platform\", engine_host=~\"$host\", com_docker_swarm_service_name=~\"$service\", container_name=~\"$container\",container_status=\"running\",com_docker_swarm_service_name!=\"\"}[5m]))",
+          "instant": true,
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "title": "Block I/O",
+      "type": "stat"
+    },
+    {
+      "type": "row",
+      "title": "Over time",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 34
+      },
+      "id": 18,
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 0,
+        "y": 35
+      },
+      "id": 19,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "expr": "docker_container_cpu_usage_percent{job=\"telegraf_docker_metrics\", platform=~\"$platform\", engine_host=~\"$host\", com_docker_swarm_service_name=~\"$service\", container_name=~\"$container\",container_status=\"running\",com_docker_swarm_service_name!=\"\"}",
+          "legendFormat": "{{container_name}}",
+          "refId": "A"
+        }
+      ],
+      "title": "CPU",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 12,
+        "y": 35
+      },
+      "id": 20,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "expr": "docker_container_mem_usage_percent{job=\"telegraf_docker_metrics\", platform=~\"$platform\", engine_host=~\"$host\", com_docker_swarm_service_name=~\"$service\", container_name=~\"$container\",container_status=\"running\",com_docker_swarm_service_name!=\"\"}",
+          "legendFormat": "{{container_name}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Memory",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "unit": "Bps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 0,
+        "y": 45
+      },
+      "id": 21,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "expr": "rate(docker_container_net_rx_bytes{job=\"telegraf_docker_metrics\", platform=~\"$platform\", engine_host=~\"$host\", com_docker_swarm_service_name=~\"$service\", container_name=~\"$container\",container_status=\"running\",com_docker_swarm_service_name!=\"\"}[5m]) + rate(docker_container_net_tx_bytes{job=\"telegraf_docker_metrics\", platform=~\"$platform\", engine_host=~\"$host\", com_docker_swarm_service_name=~\"$service\", container_name=~\"$container\",container_status=\"running\",com_docker_swarm_service_name!=\"\"}[5m])",
+          "legendFormat": "{{container_name}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Network",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "unit": "Bps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 12,
+        "y": 45
+      },
+      "id": 22,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "expr": "rate(docker_container_blkio_io_service_bytes_recursive_read{job=\"telegraf_docker_metrics\", platform=~\"$platform\", engine_host=~\"$host\", com_docker_swarm_service_name=~\"$service\", container_name=~\"$container\",container_status=\"running\",com_docker_swarm_service_name!=\"\"}[5m]) + rate(docker_container_blkio_io_service_bytes_recursive_write{job=\"telegraf_docker_metrics\", platform=~\"$platform\", engine_host=~\"$host\", com_docker_swarm_service_name=~\"$service\", container_name=~\"$container\",container_status=\"running\",com_docker_swarm_service_name!=\"\"}[5m])",
+          "legendFormat": "{{container_name}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Block I/O",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 55
+      },
+      "id": 23,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "expr": "increase(docker_container_status_restart_count{job=\"telegraf_docker_metrics\", platform=~\"$platform\", engine_host=~\"$host\", com_docker_swarm_service_name=~\"$service\", container_name=~\"$container\",container_status=\"running\",com_docker_swarm_service_name!=\"\"}[1h])",
+          "legendFormat": "{{container_name}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Restarts",
+      "type": "timeseries"
     }
   ]
 }

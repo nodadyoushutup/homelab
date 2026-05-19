@@ -25,7 +25,7 @@ The stack is intentionally development-only:
   network using
   `http://langgraph-dev:2024`
 - LangGraph backend state is stored in the Compose-managed Postgres database
-  using `POSTGRES_URI` from `<repo>/.config/.env`
+  using `POSTGRES_URI` from `<repo>/.config/docker/*.env`
 - this dev pair is separate from the Kubernetes production pair; do not point
   Docker dev chat at production LangGraph, and do not point production chat at
   Docker dev LangGraph
@@ -36,10 +36,10 @@ The `langgraph-dev` service intentionally uses the image's built-in `WORKDIR`
 and `CMD`. Its LangGraph-specific wiring is the bind mount onto
 `/app/langgraph`, the separate state volume for
 `/app/langgraph/agent/.langgraph_api`, the custom LangGraph API checkpointer in
-`agent/langgraph.json`, and `env_file: ../.config/.env` so API keys, model
+`agent/langgraph.json`, and `env_file: ../.config/docker/*.env` so API keys, model
 overrides, and database settings match local host development. The checkpointer
 uses `POSTGRES_URI` to store graph checkpoints in `langgraph-postgres`. Create
-or edit `<repo>/.config/.env` at the homelab repo root; do not use a LangGraph
+or edit `<repo>/.config/docker/*.env` at the homelab repo root; do not use a LangGraph
 app-local `.env` file.
 
 The `langchain-agent-chat-dev` service runs a Next.js dev server against the
@@ -75,7 +75,7 @@ Default endpoints:
 - LangChain Agent Chat: `http://localhost:3000`
 - LangGraph Postgres: Compose-internal `langgraph-postgres:5432`
 
-Secrets live in [`../.config/.env`](./../.config/.env).
+Secrets live in [`../.config/docker/*.env`](./../.config/docker/*.env).
 
 For now, non-secret dev defaults such as ports and public local URLs are
 hardcoded directly in `docker-compose.yml`. **`rag-engine-dev`** sets

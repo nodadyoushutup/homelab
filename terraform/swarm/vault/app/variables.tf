@@ -1,10 +1,3 @@
-variable "provider_config" {
-  description = "Provider configuration map for Docker (host + optional ssh opts)."
-  type        = any
-
-  default = {}
-}
-
 variable "dns_nameservers" {
   description = <<-EOT
     DNS nameservers for Swarm task dns_config (and standalone runner dns). Set only in
@@ -112,7 +105,6 @@ variable "swarm_docker_provider_config" {
     Shared Docker SSH host and registry credentials (GHCR, Harbor, etc.).
     Set in /mnt/eapp/code/homelab/.config/terraform/providers/docker_arm64.tfvars; Swarm app pipelines source
     scripts/terraform/swarm_docker_provider_tfvars_env.sh so terraform receives this file.
-    Merged with provider_config; per-stack tfvars override on key collision.
   EOT
   type        = any
   default     = {}

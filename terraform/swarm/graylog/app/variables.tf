@@ -1,10 +1,3 @@
-variable "provider_config" {
-  description = "Configuration for the Docker provider"
-  type        = any
-
-  default = {}
-}
-
 variable "env" {
   description = "Graylog and Data Node environment (secrets and HTTP external URI)."
   type = object({

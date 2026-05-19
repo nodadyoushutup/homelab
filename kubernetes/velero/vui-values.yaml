@@ -26,6 +26,9 @@ apiService:
 
 uiService:
   deployment:
+    # Next.js bakes NEXT_PUBLIC_* at pod start; bump this when exposure.clusterIP.localAddress changes.
+    annotations:
+      homelab.nodadyoushutup.com/vui-api-exposure-host: vui.nodadyoushutup.com
     resources:
       requests:
         cpu: 50m

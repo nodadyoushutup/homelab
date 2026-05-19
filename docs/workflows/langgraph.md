@@ -48,9 +48,9 @@ When a task changes the LangGraph implementation:
    - use an existing builder class from `framework/agents/`, or add a new
      reusable builder there when the behavior should be shared by multiple
      concrete agents
-   - document any new settings in the homelab ``.config/.env`` pattern (see
-     ``.config/.env.example`` when present); when asked to edit the LangGraph
-     `.env`, update `<repo>/.config/.env` itself; do not add per-agent ``.env``
+   - document any new settings in the homelab ``.config/docker/`` pattern (see
+     ``.config/docker/.example`` when present); when asked to edit the LangGraph
+     `.env`, update `<repo>/.config/docker/` itself; do not add per-agent ``.env``
      files
 5. if the task adds a new internal Deep Agents subagent:
    - add its task-specific config directory inside the owning app
@@ -130,7 +130,7 @@ After changing the LangGraph scaffold:
    directory with `langgraph dev`, or use `applications/langgraph/docker/agent_server.sh`
    for the default `langgraph` backend and `applications/langgraph/docker/chat.sh` for the
    paired local LangChain Agent Chat app when you are intentionally testing that local
-   dev path (ensure ``.config/.env`` exists at the homelab repo root; do not use
+   dev path (ensure ``.config/docker/`` exists at the homelab repo root; do not use
    a LangGraph app-local ``.env`` file)
 4. if the change touches the Docker dev stack, validate the dev pair against
    Docker endpoints only: chat at `http://localhost:3000`, chat API passthrough

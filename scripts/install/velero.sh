@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Install or upgrade Velero (Helm) and apply homelab manifests (BSLs, schedules, ESO).
-# Creates per-app MinIO buckets on VELERO_MINIO_URL using MINIO_ROOT_* from .config/.env.
+# Creates per-app MinIO buckets on VELERO_MINIO_URL using MINIO_ROOT_* from .config/docker/minio.env.
 #
 # Prerequisites: kubectl, cluster access, snapshot-controller + CSI VolumeSnapshotClasses,
 # velero-s3-credentials in namespace velero (Vault ESO or bootstrap secret).
@@ -78,7 +78,7 @@ create_minio_buckets() {
   fi
 
   if [[ -z "${MINIO_ROOT_USER:-}" || -z "${MINIO_ROOT_PASSWORD:-}" ]]; then
-    echo "[ERR] MINIO_ROOT_USER and MINIO_ROOT_PASSWORD must be set (e.g. in ${ROOT_DIR}/.config/.env)." >&2
+    echo "[ERR] MINIO_ROOT_USER and MINIO_ROOT_PASSWORD must be set (e.g. in ${ROOT_DIR}/.config/docker/minio.env)." >&2
     exit 1
   fi
 

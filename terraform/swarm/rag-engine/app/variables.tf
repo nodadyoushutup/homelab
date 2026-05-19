@@ -1,13 +1,3 @@
-variable "provider_config" {
-  description = <<-EOT
-    Docker remote (host + ssh_opts). Optional nested registry_auth { address?, username, password }
-    feeds both the docker provider and the Swarm service image pull — same pattern as gha-runner-arm64 / chromadb.
-  EOT
-  type        = any
-
-  default = {}
-}
-
 variable "image_reference" {
   description = "RAG engine image to run."
   type        = string
@@ -185,7 +175,6 @@ variable "swarm_docker_provider_config" {
     Shared Docker SSH host and registry credentials (GHCR, Harbor, etc.).
     Set in /mnt/eapp/code/homelab/.config/terraform/providers/docker_arm64.tfvars; Swarm app pipelines source
     scripts/terraform/swarm_docker_provider_tfvars_env.sh so terraform receives this file.
-    Merged with provider_config; per-stack tfvars override on key collision.
   EOT
   type        = any
   default     = {}

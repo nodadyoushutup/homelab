@@ -178,7 +178,7 @@ def _filter(paths: list[str], removed: list[str]) -> tuple[list[str], list[str]]
 def _post_embed(repo: Path, commit: str, paths: list[str], removed_paths: list[str]) -> int:
     base = (os.getenv("RAG_ENGINE_BASE_URL") or "").strip().rstrip("/")
     if not base:
-        _log("RAG_ENGINE_BASE_URL is unset; skipping embed (set in .config/.env)")
+        _log("RAG_ENGINE_BASE_URL is unset; skipping embed (set in .config/docker/rag.env)")
         return 0
 
     url = f"{base}/v1/embed-commit"

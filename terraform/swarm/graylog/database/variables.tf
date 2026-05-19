@@ -1,10 +1,3 @@
-variable "provider_config" {
-  description = "Configuration for the Docker provider"
-  type        = any
-
-  default = {}
-}
-
 variable "swarm_docker_provider_config" {
   description = <<-EOT
     Shared Docker SSH host and registry credentials (GHCR, Harbor, etc.).

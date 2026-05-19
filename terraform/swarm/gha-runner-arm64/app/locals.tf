@@ -29,16 +29,7 @@ locals {
 
 
 locals {
-  provider_config = merge(var.swarm_docker_provider_config, var.provider_config)
-  docker_registry_auths = (
-    try(local.provider_config.registry_auths, null) != null
-    ? local.provider_config.registry_auths
-    : (
-      try(local.provider_config.registry_auth, null) != null
-      ? [local.provider_config.registry_auth]
-      : []
-    )
-  )
+  docker_registry_auths = coalesce(try(var.swarm_docker_provider_config.registry_auths, null), [])
   # docker_container uses provider-level registry_auth; pick the entry for this image's registry.
   runner_registry_host = split("/", local.runner_image)[0]
   runner_registry_matching_auths = [

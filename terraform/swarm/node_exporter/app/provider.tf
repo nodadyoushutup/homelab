@@ -12,8 +12,8 @@ terraform {
 }
 
 provider "docker" {
-  host     = local.provider_config.docker.host
-  ssh_opts = local.provider_config.docker.ssh_opts
+  host     = var.swarm_docker_provider_config.docker.host
+  ssh_opts = var.swarm_docker_provider_config.docker.ssh_opts
 
   dynamic "registry_auth" {
     for_each = local.docker_registry_auths

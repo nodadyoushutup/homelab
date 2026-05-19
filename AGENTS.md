@@ -3,6 +3,17 @@
 This repo is docs-driven. Use this file as the directory to the source-of-truth
 docs to check before doing substantive work.
 
+## Hard cuts only — no legacy support
+
+**When changing code, configs, or APIs in this repo, never keep backward compatibility with the old shape.**
+
+- Do **not** add fallbacks, dual-read paths, deprecation shims, “try the new key, else the old key,” or silent migration helpers.
+- Do **not** document “legacy” alternate field names, env vars, or tfvars keys alongside the current one.
+- **Hard cut every change:** remove the old path, update callers and examples in the same change, and state what operators must update (tfvars, `.config`, pipelines) if the edit is breaking.
+- Prefer one canonical name and one code path. If something is renamed or restructured, delete the old name—do not alias it.
+
+Agents and humans must treat “support both for now” as **out of scope** unless the user explicitly requests a temporary bridge for a named migration window.
+
 ## Where To Look
 
 - `docs/workflows/`: execution workflows
@@ -39,14 +50,14 @@ docs to check before doing substantive work.
   **`langgraph-dev`** sets **`HOMELAB_MCP_RAG_URL`** so in-container agents use
   that MCP. **Chroma stays on Swarm**; **`rag-engine-dev`** defaults Chroma to
   **`192.168.1.120:8000`** via Compose (overriding **`chromadb`** in
-  **`.config/.env`**). Adjust with **`HOMELAB_DEV_CHROMA_HOST`** /
+  **`rag.env`**). Adjust with **`HOMELAB_DEV_CHROMA_HOST`** /
   **`HOMELAB_DEV_CHROMA_PORT`** if needed. Swarm RAG deploys are unchanged. The Kubernetes pair is
   production only: `kubernetes/langgraph` and `kubernetes/langchain-agent-chat`.
   Do not point Docker dev chat at Kubernetes/prod LangGraph, and do not point
   Kubernetes/prod chat at Docker dev LangGraph.
 - For LangGraph secrets and config, the single local dotenv source of truth is
-  `<repo>/.config/.env` (same tree holds tfvars under `<repo>/.config/terraform/**`; optional `CONFIG_DIR` in the dotenv when unset defaults to `<repo>/.config`; see `scripts/terraform/load_root_env.sh` and `.config/.env.example`). When asked to
-  edit the LangGraph `.env`, literally update `<repo>/.config/.env`. Do not create or use `.env`
+  `<repo>/.config/docker/*.env` (split files; see `.config/docker/README.md`). Tfvars live under `<repo>/.config/terraform/**`; optional `CONFIG_DIR` in `site.env`. Pipelines use `scripts/terraform/load_root_env.sh`. When asked to
+  edit the LangGraph `.env`, update the relevant file under `<repo>/.config/docker/` (usually `langgraph.env`, `shared.env`, `mcp.env`). Do not create or use `.env`
   files inside `applications/langgraph/agent/`, `applications/langgraph/subagents/`,
   or other LangGraph app directories for now.
 - If a stable pattern changes, update the corresponding docs as part of the
@@ -64,5 +75,5 @@ docs to check before doing substantive work.
 - Repo RAG MCP URL is `https://mcp.rag.nodadyoushutup.com/mcp`. Cursor project
   `.cursor/mcp.json` includes the URL; set `x-api-key` matching `MCP_RAG_API_KEY`
   via User-level Cursor MCP/`~/.cursor/mcp.json` when the Swarm service enforces auth.
-  LangGraph fills the header from `.config/.env`; Codex uses `env_http_headers` in `.codex/config.toml`.
+  LangGraph fills the header from `.config/docker/mcp.env`; Codex uses `env_http_headers` in `.codex/config.toml`.
 - LangGraph Homelab runtime enforces **docs `rag_search` before every specialist delegation**, a second **code-location `rag_search` before `code` and `tech_lead` delegation**, and **read/search before writes** on the Code specialist; see `docs/workflows/rag-agent-mcp-integration-roadmap.md`. Break-glass: **`HOMELAB_DISABLE_WORKFLOW_GATES=1`** on the agent process only.

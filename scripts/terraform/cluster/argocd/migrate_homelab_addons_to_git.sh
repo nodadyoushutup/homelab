@@ -13,7 +13,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/../../../.." && pwd)"
 TF_DIR="${ROOT_DIR}/terraform/cluster/argocd/config"
 
-# Stale CONFIG_DIR=/mnt/eapp/config breaks minio.backend.hcl lookup; .config/.env should leave CONFIG_DIR empty.
+# Stale CONFIG_DIR=/mnt/eapp/config breaks minio.backend.hcl lookup; .config/docker/site.env should leave CONFIG_DIR empty.
 unset CONFIG_DIR TFVARS_HOME_DIR PIPELINE_ROOT_ENV_LOADED
 source "${ROOT_DIR}/scripts/terraform/load_root_env.sh"
 

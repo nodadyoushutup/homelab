@@ -18,7 +18,7 @@ Use repository root as context (see `.github/workflows/docker_build_push.yml` ta
 docker build -f applications/mcp-code/Dockerfile -t mcp-code:dev .
 ```
 
-Arm64 Swarm nodes (from repo root, after `HARBOR_USERNAME` / `HARBOR_PASSWORD` are set, e.g. in `.config/.env`):
+Arm64 Swarm nodes (from repo root, after `HARBOR_USERNAME` / `HARBOR_PASSWORD` are set, e.g. in `.config/docker/agents.env`):
 
 ```bash
 ./scripts/agents/publish_mcp_code_harbor.sh

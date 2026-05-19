@@ -17,14 +17,6 @@ NPM_DIR="${ROOT_DIR}/terraform/swarm/nginx_proxy_manager/config"
 DRY_RUN="${DRY_RUN:-0}"
 ONLY="${ONLY:-}"
 
-NPM_PROVIDER_FLAGS=(
-  -var-file "${TFVARS_HOME_DIR}/terraform/providers/dns.tfvars"
-  -var-file "${TFVARS_HOME_DIR}/terraform/providers/nfs.tfvars"
-)
-if [[ -f "${TFVARS_HOME_DIR}/terraform/providers/grafana.tfvars" ]]; then
-  NPM_PROVIDER_FLAGS+=(-var-file "${TFVARS_HOME_DIR}/terraform/providers/grafana.tfvars")
-fi
-
 echo "[STEP] terraform init (cloudflare)"
 (cd "${CF_DIR}" && terraform init -backend-config="${BACKEND_FILE}" -reconfigure >/dev/null)
 

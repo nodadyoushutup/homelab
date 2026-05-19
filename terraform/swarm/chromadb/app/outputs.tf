@@ -5,12 +5,12 @@ output "service_name" {
 
 output "chromadb_url" {
   description = "HTTP ChromaDB endpoint URL on the Swarm ingress network."
-  value       = "http://${var.endpoint_host}:${local.chromadb_published_port}"
+  value       = "http://${var.endpoint_host}:8000"
 }
 
 output "published_port" {
   description = "Published Swarm ingress port."
-  value       = local.chromadb_published_port
+  value       = 8000
 }
 
 output "data_volume_name" {

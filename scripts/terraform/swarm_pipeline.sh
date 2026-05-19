@@ -212,14 +212,11 @@ SWARM_SHARED_TFVARS_PREFIX+=(-var-file "${SWARM_NFS_PROVIDER_TFVARS}")
 echo "Swarm NFS provider tfvars: ${SWARM_NFS_PROVIDER_TFVARS}"
 export NFS_PROVIDER_TFVARS_PATH="${SWARM_NFS_PROVIDER_TFVARS}"
 
-if [[ -f "${SWARM_GRAFANA_PROVIDER_TFVARS}" ]]; then
-  SWARM_SHARED_TFVARS_PREFIX+=(-var-file "${SWARM_GRAFANA_PROVIDER_TFVARS}")
-  echo "Swarm Grafana provider tfvars: ${SWARM_GRAFANA_PROVIDER_TFVARS}"
-  export GRAFANA_PROVIDER_TFVARS_PATH="${SWARM_GRAFANA_PROVIDER_TFVARS}"
-else
-  GRAFANA_PROVIDER_TFVARS_PATH=""
-  export GRAFANA_PROVIDER_TFVARS_PATH
-fi
+# grafana.tfvars (provider_config.grafana) is merged only by grafana/config pipelines
+# via scripts/terraform/swarm_grafana_provider_tfvars_env.sh — not here. Last-wins
+# -var-file merge would clobber stack provider_config on NPM and other stages.
+GRAFANA_PROVIDER_TFVARS_PATH="${SWARM_GRAFANA_PROVIDER_TFVARS}"
+export GRAFANA_PROVIDER_TFVARS_PATH
 
 if declare -F pipeline_pre_terraform > /dev/null; then
   pipeline_pre_terraform

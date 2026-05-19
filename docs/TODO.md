@@ -1,2 +1,3 @@
 - Architecture Docs
-- Cross Seed Apps In k8S
+- Cross Seed Apps In k8s
+- Kometa in k8s

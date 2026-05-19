@@ -70,11 +70,11 @@ Illustrative snapshot of how existing services split:
   `terraform/cluster/...`, `terraform/remote/...`, and `terraform/network/...`.
   Swarm Docker provider credentials stay at `terraform/providers/docker_arm64.tfvars`
   (Swarm control plane SSH + registry auth). The AMD64 GitHub runner pipeline also merges
-  `terraform/providers/docker_amd64.tfvars` for the AMD64 pool-host `provider_config` only; the
-  ARM64 runner pipeline merges `terraform/providers/docker_swarm.tfvars` for the ARM64 pool host.
+  `terraform/providers/docker_amd64.tfvars` for the AMD64 pool-host `swarm_docker_provider_config` only; the
+  ARM64 runner pipeline merges `terraform/providers/docker_arm64_pool.tfvars` for the ARM64 pool host.
   Swarm DNS resolvers live at `terraform/providers/dns.tfvars`, and shared NFS export
   targets at `terraform/providers/nfs.tfvars` (all required for `swarm_pipeline.sh`,
-  merged as docker_arm64, optional `docker_swarm` pool file when set by that pipeline, then dns,
+  merged as docker_arm64, optional pool tfvars (`docker_arm64_pool`, `docker_amd64`, etc.) when set by that pipeline, then dns,
   then nfs, then optional `terraform/providers/grafana.tfvars` when present, before each stack's slice tfvars).
   The Grafana file supplies `provider_config.grafana` for the Grafana `config/` root; other stacks ignore the extra map keys.
   Values are not defaulted in

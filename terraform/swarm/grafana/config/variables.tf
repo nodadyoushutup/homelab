@@ -1,8 +1,8 @@
 variable "provider_config" {
   description = <<-EOT
     Grafana provider URL and auth (provider_config.grafana). Set only in
-    CONFIG_DIR/terraform/providers/grafana.tfvars; swarm_pipeline.sh merges that file
-    when it exists (before this slice's tfvars).
+    CONFIG_DIR/terraform/providers/grafana.tfvars; grafana/config.sh appends that file
+    via swarm_grafana_provider_tfvars_env.sh (after this slice's stack tfvars).
   EOT
   type        = any
 }

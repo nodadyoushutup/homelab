@@ -1,12 +1,3 @@
-variable "provider_config" {
-  description = <<-EOT
-    Docker remote (host + ssh_opts). Optional nested registry_auth feeds both the docker
-    provider and the Swarm service image pull.
-  EOT
-  type        = any
-  default     = {}
-}
-
 variable "image_reference" {
   description = "martabal/qbittorrent-exporter image (one Swarm service per qBittorrent instance)."
   type        = string

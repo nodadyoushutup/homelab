@@ -68,10 +68,10 @@ prompts, MCP config, skills, and graph exports. `framework/agent_factories.py`
 remains as a thin compatibility layer around the shared builder classes.
 
 Secrets and shared model defaults live only in the homelab root file
-`.config/.env`. When someone says to edit the LangGraph `.env`, update that
+`.config/docker/`. When someone says to edit the LangGraph `.env`, update that
 exact file. Do not add `applications/langgraph/agent/.env` (or other per-app
 dotenv files); if an old `agent/.env` is still on disk, move any variables into
-`.config/.env` and remove it so nothing shadows the central file via the
+`.config/docker/` and remove it so nothing shadows the central file via the
 process environment.
 
 ## Current Intent
@@ -105,7 +105,7 @@ What is already in place:
 
 What is still expected before real deployment:
 
-- keep `.config/.env` at the homelab repo root filled in for local runs, or use
+- keep `.config/docker/` at the homelab repo root filled in for local runs, or use
   cluster secrets in Kubernetes instead of that file
 - replace `.mcp.json.example`-style placeholders with real `mcp.json` configs
 - install dependencies
@@ -118,7 +118,7 @@ What is still expected before real deployment:
 
 The scaffold now defaults all LangGraph apps to `openai:gpt-5.4`.
 
-Set `OPENAI_API_KEY` and related keys in `.config/.env` at the homelab repo root,
+Set `OPENAI_API_KEY` and related keys in `.config/docker/` at the homelab repo root,
 or inject them through your deployment environment (for example the
 `langgraph-app-env` ExternalSecret in Kubernetes). Local `docker compose` and
 `docker/agent_server.sh` both read that file. Direct `langgraph dev` runs load
@@ -164,8 +164,8 @@ Helpful overrides:
 - `LANGCHAIN_AGENT_CHAT_ASSISTANT_ID`: frontend default graph id override
 - `LANGCHAIN_AGENT_CHAT_LANGGRAPH_API_URL`: frontend proxy upstream override
 - `LANGCHAIN_AGENT_CHAT_CLEAR_PORT=0`: skip automatic frontend port cleanup
-- `HOMELAB_CONFIG_ENV`: absolute path to the dotenv file to use instead of
-  `<repo>/.config/.env` (same variable as ``framework.configuration``)
+- `HOMELAB_CONFIG_ENV_DIR`: directory of split dotenv files (default
+  `<repo>/.config/docker`; same as ``framework.configuration``)
 
 Compatibility note:
 - `docker/agent_server.sh` still accepts the previous `LANGGRAPH_DEBUG_*` variables as

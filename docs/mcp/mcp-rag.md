@@ -12,7 +12,7 @@ When **`MCP_RAG_API_KEY`** is set on the **mcp-rag** container, clients must sen
 
 ## LangGraph agents (this repo)
 
-`applications/langgraph/agent/mcp.json` and **`applications/langgraph/subagents/*/mcp.json`** register **mcp-rag** with **`x_api_key_from_env": "MCP_RAG_API_KEY"`** where used. **`framework.agents`** call **`merged_settings()`** before building tools, so set **`MCP_RAG_API_KEY=…`** next to **`OPENAI_API_KEY`** in repo **`.config/.env`** when required (see **`.config/.env.example`**). Override the base URL with **`HOMELAB_MCP_RAG_URL`** when pointing agents at a different endpoint (for example Compose **mcp-rag-dev**).
+`applications/langgraph/agent/mcp.json` and **`applications/langgraph/subagents/*/mcp.json`** register **mcp-rag** with **`x_api_key_from_env": "MCP_RAG_API_KEY"`** where used. **`framework.agents`** call **`merged_settings()`** before building tools, so set **`MCP_RAG_API_KEY=…`** next to **`OPENAI_API_KEY`** in repo **`.config/docker/mcp.env`** when required (see **`.config/docker/mcp.env.example`**). Override the base URL with **`HOMELAB_MCP_RAG_URL`** when pointing agents at a different endpoint (for example Compose **mcp-rag-dev**).
 
 Retrieval-first and read-before-write rules are enforced in code for the supervisor and Code specialist. See [rag-agent-mcp-integration-roadmap.md](../workflows/rag-agent-mcp-integration-roadmap.md).
 

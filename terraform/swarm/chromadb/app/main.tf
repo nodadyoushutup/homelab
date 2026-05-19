@@ -1,14 +1,14 @@
 resource "docker_network" "chromadb" {
-  name   = local.network_name
+  name   = "chromadb"
   driver = "overlay"
 }
 
 resource "docker_volume" "chromadb_data" {
-  name = local.chromadb_data_volume
+  name = "chromadb-data"
 }
 
 resource "docker_service" "chromadb" {
-  name = local.service_name
+  name = "chromadb"
 
   task_spec {
     placement {
@@ -22,11 +22,12 @@ resource "docker_service" "chromadb" {
 
     networks_advanced {
       name    = docker_network.chromadb.id
-      aliases = [local.service_name]
+      aliases = ["chromadb"]
     }
 
     container_spec {
-      image = local.chromadb_image
+      # Pin matches chroma-core/chroma GitHub release (not Docker "latest"); bump when upgrading Chroma.
+      image = "chromadb/chroma:1.5.9"
 
       dns_config {
         nameservers = var.dns_nameservers
@@ -52,8 +53,8 @@ resource "docker_service" "chromadb" {
 
   endpoint_spec {
     ports {
-      target_port    = local.internal_port
-      published_port = local.chromadb_published_port
+      target_port    = 8000
+      published_port = 8000
       protocol       = "tcp"
       publish_mode   = "ingress"
     }

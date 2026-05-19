@@ -81,6 +81,13 @@ assert_tfvars_path "explicit override" \
   "${TFVARS_HOME_DIR}/terraform/swarm/qbittorrent-metrics-exporter/app.tfvars" \
   "${TFVARS_HOME_DIR}/terraform/swarm/qbittorrent-metrics-exporter/app.tfvars"
 
+assert_tfvars_path "prometheus-pve-exporter app" \
+  "${ROOT_DIR}" \
+  "${ROOT_DIR}/terraform/swarm/prometheus-pve-exporter/app" \
+  "prometheus-pve-exporter" \
+  "" \
+  "${TFVARS_HOME_DIR}/terraform/swarm/prometheus-pve-exporter/app.tfvars"
+
 assert_tfvars_path "basename fallback" \
   "${ROOT_DIR}" \
   "/tmp/outside-repo/terraform/foo/app" \

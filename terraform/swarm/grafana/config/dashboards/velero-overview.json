@@ -20,7 +20,7 @@
   "refresh": "30s",
   "schemaVersion": 39,
   "tags": ["homelab", "velero", "kubernetes", "backup"],
-  "time": { "from": "now-24h", "to": "now" },
+  "time": { "from": "now-6h", "to": "now" },
   "timepicker": {
     "refresh_intervals": ["10s", "30s", "1m", "5m"],
     "time_options": ["1h", "6h", "24h", "7d", "30d"]
@@ -70,6 +70,7 @@
       "targets": [
         {
           "expr": "velero_backup_location_status_gauge{backup_location_name=\"default\"}",
+          "instant": true,
           "legendFormat": "default",
           "refId": "A"
         }
@@ -109,6 +110,7 @@
       "targets": [
         {
           "expr": "max(velero_backup_last_status)",
+          "instant": true,
           "legendFormat": "last backup",
           "refId": "A"
         }
@@ -147,6 +149,7 @@
       "targets": [
         {
           "expr": "(time() - max(velero_backup_last_successful_timestamp)) / 3600",
+          "instant": true,
           "legendFormat": "hours ago",
           "refId": "A"
         }
@@ -170,19 +173,19 @@
         "graphMode": "none",
         "justifyMode": "center",
         "orientation": "auto",
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "textMode": "auto"
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": true },
+        "textMode": "value_and_name"
       },
       "targets": [
-        { "expr": "velero_backup_total", "legendFormat": "backups", "refId": "A" },
-        { "expr": "velero_restore_total", "legendFormat": "restores", "refId": "B" }
+        { "expr": "velero_backup_total", "instant": true, "legendFormat": "backups", "refId": "A" },
+        { "expr": "velero_restore_total", "instant": true, "legendFormat": "restores", "refId": "B" }
       ],
       "title": "Totals (cluster)",
       "type": "stat"
     },
     {
       "type": "row",
-      "title": "Backup activity (24h)",
+      "title": "Backup activity",
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 6 },
       "id": 101,
       "collapsed": false,
@@ -212,7 +215,7 @@
         "textMode": "auto"
       },
       "targets": [
-        { "expr": "sum(increase(velero_backup_success_total[$__range]))", "refId": "A" }
+        { "expr": "sum(increase(velero_backup_success_total[$__range]))", "instant": true, "refId": "A" }
       ],
       "title": "Successful",
       "type": "stat"
@@ -241,7 +244,7 @@
         "textMode": "auto"
       },
       "targets": [
-        { "expr": "sum(increase(velero_backup_failure_total[$__range]))", "refId": "A" }
+        { "expr": "sum(increase(velero_backup_failure_total[$__range]))", "instant": true, "refId": "A" }
       ],
       "title": "Failed",
       "type": "stat"
@@ -270,7 +273,7 @@
         "textMode": "auto"
       },
       "targets": [
-        { "expr": "sum(increase(velero_backup_partial_failure_total[$__range]))", "refId": "A" }
+        { "expr": "sum(increase(velero_backup_partial_failure_total[$__range]))", "instant": true, "refId": "A" }
       ],
       "title": "Partial failures",
       "type": "stat"
@@ -299,7 +302,7 @@
         "textMode": "auto"
       },
       "targets": [
-        { "expr": "sum(increase(velero_backup_warning_total[$__range]))", "refId": "A" }
+        { "expr": "sum(increase(velero_backup_warning_total[$__range]))", "instant": true, "refId": "A" }
       ],
       "title": "Warnings",
       "type": "stat"
@@ -330,7 +333,7 @@
             "stacking": { "group": "A", "mode": "none" },
             "thresholdsStyle": { "mode": "off" }
           },
-          "unit": "ops"
+          "unit": "short"
         },
         "overrides": []
       },
@@ -341,11 +344,11 @@
         "tooltip": { "mode": "multi", "sort": "desc" }
       },
       "targets": [
-        { "expr": "sum(rate(velero_backup_success_total[5m]))", "legendFormat": "success", "refId": "A" },
-        { "expr": "sum(rate(velero_backup_failure_total[5m]))", "legendFormat": "failure", "refId": "B" },
-        { "expr": "sum(rate(velero_backup_partial_failure_total[5m]))", "legendFormat": "partial", "refId": "C" }
+        { "expr": "sum(increase(velero_backup_success_total[30m]))", "legendFormat": "success", "refId": "A" },
+        { "expr": "sum(increase(velero_backup_failure_total[30m]))", "legendFormat": "failure", "refId": "B" },
+        { "expr": "sum(increase(velero_backup_partial_failure_total[30m]))", "legendFormat": "partial", "refId": "C" }
       ],
-      "title": "Backup outcomes (rate)",
+      "title": "Backup outcomes (30m increase)",
       "type": "timeseries"
     },
     {
@@ -374,7 +377,7 @@
             "stacking": { "group": "A", "mode": "none" },
             "thresholdsStyle": { "mode": "off" }
           },
-          "unit": "ops"
+          "unit": "short"
         },
         "overrides": []
       },
@@ -385,12 +388,12 @@
         "tooltip": { "mode": "multi", "sort": "desc" }
       },
       "targets": [
-        { "expr": "sum(rate(velero_csi_snapshot_success_total[5m]))", "legendFormat": "CSI success", "refId": "A" },
-        { "expr": "sum(rate(velero_csi_snapshot_failure_total[5m]))", "legendFormat": "CSI failure", "refId": "B" },
-        { "expr": "sum(rate(velero_volume_snapshot_success_total[5m]))", "legendFormat": "vol snap success", "refId": "C" },
-        { "expr": "sum(rate(velero_volume_snapshot_failure_total[5m]))", "legendFormat": "vol snap failure", "refId": "D" }
+        { "expr": "sum(increase(velero_csi_snapshot_success_total[30m]))", "legendFormat": "CSI success", "refId": "A" },
+        { "expr": "sum(increase(velero_csi_snapshot_failure_total[30m]))", "legendFormat": "CSI failure", "refId": "B" },
+        { "expr": "sum(increase(velero_volume_snapshot_success_total[30m]))", "legendFormat": "vol snap success", "refId": "C" },
+        { "expr": "sum(increase(velero_volume_snapshot_failure_total[30m]))", "legendFormat": "vol snap failure", "refId": "D" }
       ],
-      "title": "Volume / CSI snapshots (rate)",
+      "title": "Volume / CSI snapshots (30m increase)",
       "type": "timeseries"
     },
     {
@@ -488,7 +491,7 @@
             "showPoints": "never",
             "stacking": { "group": "A", "mode": "none" }
           },
-          "unit": "ops"
+          "unit": "short"
         },
         "overrides": []
       },
@@ -499,11 +502,11 @@
         "tooltip": { "mode": "multi", "sort": "desc" }
       },
       "targets": [
-        { "expr": "sum(rate(velero_restore_success_total[5m]))", "legendFormat": "restore success", "refId": "A" },
-        { "expr": "sum(rate(velero_restore_failed_total[5m]))", "legendFormat": "restore failed", "refId": "B" },
-        { "expr": "sum(rate(velero_restore_partial_failure_total[5m]))", "legendFormat": "restore partial", "refId": "C" }
+        { "expr": "sum(increase(velero_restore_success_total[1h]))", "legendFormat": "restore success", "refId": "A" },
+        { "expr": "sum(increase(velero_restore_failed_total[1h]))", "legendFormat": "restore failed", "refId": "B" },
+        { "expr": "sum(increase(velero_restore_partial_failure_total[1h]))", "legendFormat": "restore partial", "refId": "C" }
       ],
-      "title": "Restore activity (rate)",
+      "title": "Restore activity (1h increase)",
       "type": "timeseries"
     }
   ]

@@ -12,42 +12,14 @@ N_JOBS_PER_WORKER="${AGENT_SERVER_N_JOBS_PER_WORKER:-${LANGGRAPH_DEBUG_N_JOBS_PE
 CLEAR_PORT="${AGENT_SERVER_CLEAR_PORT:-1}"
 PUBLIC_HOST="${AGENT_SERVER_PUBLIC_HOST:-${LANGGRAPH_DEBUG_PUBLIC_HOST:-}}"
 
-# Load homelab-wide secrets into the shell so ``langgraph`` sees the same keys as
-# ``framework.configuration.merged_settings`` (default: <repo>/.config/.env,
-# override with ``HOMELAB_CONFIG_ENV``).
+# Load homelab split dotenv (same order as ``framework.configuration.merged_settings``).
 HOMELAB_ROOT="$(cd "${ROOT_DIR}/../.." && pwd)"
-SECRETS_ENV="${HOMELAB_CONFIG_ENV:-${HOMELAB_SECRETS_ENV:-${HOMELAB_ROOT}/.config/.env}}"
-if [[ -f "${SECRETS_ENV}" ]]; then
-  _py=""
-  if [[ -x "${ROOT_DIR}/.venv/bin/python" ]]; then
-    _py="${ROOT_DIR}/.venv/bin/python"
-  elif command -v python3 >/dev/null 2>&1; then
-    _py="$(command -v python3)"
-  fi
-  if [[ -n "${_py}" ]]; then
-    eval "$("${_py}" - "${SECRETS_ENV}" <<'PY'
-import shlex
-import sys
-from pathlib import Path
-
-try:
-    from dotenv import dotenv_values
-except ImportError:
-    sys.exit(0)
-
-path = Path(sys.argv[1])
-if not path.is_file():
-    sys.exit(0)
-for key, val in dotenv_values(path).items():
-    if val is None:
-        continue
-    print(f"export {shlex.quote(str(key))}={shlex.quote(str(val))}")
-PY
-)"
-  fi
-  unset _py
+export ROOT_DIR="${HOMELAB_ROOT}"
+# shellcheck source=../../../scripts/terraform/load_docker_env.sh
+if [[ -f "${HOMELAB_ROOT}/scripts/terraform/load_docker_env.sh" ]]; then
+  # shellcheck disable=SC1091
+  source "${HOMELAB_ROOT}/scripts/terraform/load_docker_env.sh"
 fi
-
 force_kill_port() {
   local target_port="$1"
   local pids=()

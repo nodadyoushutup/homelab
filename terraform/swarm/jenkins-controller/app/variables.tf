@@ -1,10 +1,3 @@
-variable "provider_config" {
-  description = "Configuration for the Docker provider"
-  type        = any
-
-  default = {}
-}
-
 variable "casc_config_path" {
   description = "Path to the Jenkins Configuration as Code YAML file shared through the tfvars/configuration mount."
   type        = string
@@ -216,7 +209,6 @@ variable "swarm_docker_provider_config" {
     Shared Docker SSH host and registry credentials (GHCR, Harbor, etc.).
     Set in /mnt/eapp/code/homelab/.config/terraform/providers/docker.tfvars; Swarm app pipelines source
     scripts/terraform/swarm_docker_provider_tfvars_env.sh so terraform receives this file.
-    Merged with provider_config; per-stack tfvars override on key collision.
   EOT
   type        = any
   default     = {}

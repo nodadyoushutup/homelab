@@ -1,4 +1,4 @@
-# Standalone Docker containers on the AMD64 pool host (`provider_config.docker` from
+# Standalone Docker containers on the AMD64 pool host (`swarm_docker_provider_config.docker` from
 # docker_amd64.tfvars). Uses `docker_container` + `devices` for `/dev/kvm` (unlike Swarm services).
 
 resource "docker_volume" "agent_home" {

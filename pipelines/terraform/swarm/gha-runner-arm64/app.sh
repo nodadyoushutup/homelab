@@ -13,8 +13,8 @@ TERRAFORM_DIR="${ROOT_DIR}/terraform/swarm/gha-runner-arm64/app"
 TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${CONFIG_DIR:-${ROOT_DIR}/.config}}"
 DEFAULT_BACKEND_FILE="${DEFAULT_BACKEND_FILE:-${TFVARS_HOME_DIR}/minio.backend.hcl}"
 
-# Re-merge pool-host `provider_config` after shared tfvars (e.g. grafana.tfvars only sets
-# `provider_config.grafana` and would otherwise drop `provider_config.docker` from docker_arm64_pool.tfvars).
+# Pool-host Docker provider: docker_arm64_pool.tfvars sets `swarm_docker_provider_config` last
+# (after shared docker_arm64 / dns / nfs / stack tfvars) so Terraform targets the pool host.
 PLAN_ARGS_EXTRA=()
 APPLY_ARGS_EXTRA=()
 

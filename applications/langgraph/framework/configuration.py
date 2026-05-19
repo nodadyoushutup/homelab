@@ -9,6 +9,19 @@ from dotenv import dotenv_values
 
 LANGGRAPH_ROOT = Path(__file__).resolve().parents[1]
 
+DOCKER_ENV_LOAD_ORDER: tuple[str, ...] = (
+    "site.env",
+    "shared.env",
+    "postgres.env",
+    "rag.env",
+    "mcp.env",
+    "langgraph.env",
+    "agents.env",
+    "argocd.env",
+    "minio.env",
+    "qbittorrent.env",
+)
+
 
 def default_repo_root() -> Path:
     """Infer homelab repo root from ``applications/langgraph`` layout."""
@@ -18,12 +31,30 @@ def default_repo_root() -> Path:
     return LANGGRAPH_ROOT.parent.parent.resolve()
 
 
-def config_env_path() -> Path:
-    """Homelab-wide dotenv (API keys, compose, pipeline env) — not per-agent ``.env``."""
-    override = os.environ.get("HOMELAB_CONFIG_ENV") or os.environ.get("HOMELAB_SECRETS_ENV")
+def config_env_dir() -> Path:
+    """Directory of split homelab dotenv files (``.config/docker``)."""
+    override = os.environ.get("HOMELAB_CONFIG_ENV_DIR")
     if override:
         return Path(override).expanduser().resolve()
-    return (default_repo_root() / ".config" / ".env").resolve()
+    legacy = os.environ.get("HOMELAB_CONFIG_ENV") or os.environ.get("HOMELAB_SECRETS_ENV")
+    if legacy:
+        path = Path(legacy).expanduser().resolve()
+        if path.is_dir():
+            return path
+        if path.name == ".env" and path.parent.name == "docker":
+            return path.parent
+    return (default_repo_root() / ".config" / "docker").resolve()
+
+
+def config_env_files() -> list[Path]:
+    """Split dotenv paths in merge order (later files override earlier keys)."""
+    env_dir = config_env_dir()
+    return [env_dir / name for name in DOCKER_ENV_LOAD_ORDER]
+
+
+def config_env_path() -> Path:
+    """Primary dotenv path for error messages (``langgraph.env``)."""
+    return config_env_dir() / "langgraph.env"
 
 
 def secrets_env_path() -> Path:
@@ -39,29 +70,40 @@ def load_env_file(path: Path) -> dict[str, str]:
     return {key: value for key, value in values.items() if value is not None}
 
 
+def load_merged_env_files(paths: list[Path]) -> dict[str, str]:
+    merged: dict[str, str] = {}
+    for path in paths:
+        merged.update(load_env_file(path))
+    return merged
+
+
 def assert_no_langgraph_local_env_files() -> None:
     """Fail fast if ignored app-local dotenv files reappear under LangGraph."""
-    allowed = config_env_path()
+    allowed_dir = config_env_dir()
     local_env_files = list(LANGGRAPH_ROOT.rglob(".env"))
     if local_env_files:
         formatted = ", ".join(str(path) for path in sorted(local_env_files))
         raise RuntimeError(
             "LangGraph configuration must come from "
-            f"{allowed}; remove app-local .env file(s): {formatted}"
+            f"{allowed_dir}/*.env; remove app-local .env file(s): {formatted}"
         )
 
 
 def merged_settings(app_dir: Path, *extra_env_files: Path) -> dict[str, str]:
-    """Merge homelab secrets, then the process environment.
+    """Merge homelab split dotenv files, then the process environment.
 
-    ``app_dir`` is retained for call-site compatibility; configuration is loaded from
-    ``config_env_path()`` (default ``<repo>/.config/.env``) instead of per-agent
-    ``.env`` files. ``extra_env_files`` is also retained for compatibility, but
-    intentionally ignored so LangGraph local config has a single dotenv source.
+    ``app_dir`` and ``extra_env_files`` are retained for call-site compatibility but
+    ignored so LangGraph uses the canonical ``.config/docker/*.env`` set only.
     """
     _ = (app_dir, extra_env_files)
     assert_no_langgraph_local_env_files()
-    secrets = load_env_file(config_env_path())
+    monolith = config_env_dir() / ".env"
+    if monolith.exists():
+        raise RuntimeError(
+            f"Remove monolithic {monolith} and use split files under {config_env_dir()} "
+            "(see .config/docker/README.md)."
+        )
+    secrets = load_merged_env_files(config_env_files())
     for key, value in secrets.items():
         os.environ.setdefault(key, value)
 

@@ -6,12 +6,11 @@
 #
 # Docker SSH host + registry auth (GHCR, Harbor, …) live in
 # `/mnt/eapp/code/homelab/.config/terraform/providers/docker_arm64.tfvars` as `swarm_docker_provider_config`.
-# Optional: set `provider_config` here to override keys from that file.
 
 image_reference     = "harbor.nodadyoushutup.com/homelab/rag-engine:0.0.7"
 published_port      = 9015
 endpoint_host       = "192.168.1.120"
-env_file_path    = "/mnt/eapp/code/homelab/.config/.env"
+env_file_path    = "/mnt/eapp/code/homelab/.config/docker/rag.env"
 workspace_mount  = "/mnt/eapp/code/homelab"
 # swarm_nfs_* — set only in CONFIG_DIR/terraform/providers/nfs.tfvars (merged by swarm_pipeline).
 

@@ -56,7 +56,7 @@ for required_file in "${TFVARS_FILE}" "${BACKEND_FILE}" "${STAGE_DIR}/main.tf" "
   fi
 done
 
-IMPORT_VAR_FILES=(-var-file "${SWARM_DNS_PROVIDER_TFVARS}" -var-file "${SWARM_NFS_PROVIDER_TFVARS}")
+IMPORT_VAR_FILES=(-var-file "${SWARM_DNS_PROVIDER_TFVARS}" -var-file "${SWARM_NFS_PROVIDER_TFVARS}" -var-file "${TFVARS_FILE}")
 if [[ -f "${SWARM_GRAFANA_PROVIDER_TFVARS}" ]]; then
   IMPORT_VAR_FILES+=(-var-file "${SWARM_GRAFANA_PROVIDER_TFVARS}")
 else
@@ -64,7 +64,6 @@ else
   echo "[ERR] Create it from homelab terraform/providers/grafana.tfvars.example." >&2
   exit 1
 fi
-IMPORT_VAR_FILES+=(-var-file "${TFVARS_FILE}")
 
 tmp_manifest="$(mktemp)"
 cleanup() {

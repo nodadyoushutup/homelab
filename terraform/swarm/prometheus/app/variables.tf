@@ -1,10 +1,3 @@
-variable "provider_config" {
-  description = "Configuration map passed to the Docker provider"
-  type        = any
-
-  default = {}
-}
-
 variable "prometheus_config_path" {
   description = "Absolute path to prometheus.yaml stored outside the repo"
   type        = string
@@ -27,7 +20,6 @@ variable "swarm_docker_provider_config" {
     Shared Docker SSH host and registry credentials (GHCR, Harbor, etc.).
     Set in /mnt/eapp/code/homelab/.config/terraform/providers/docker_arm64.tfvars; Swarm app pipelines source
     scripts/terraform/swarm_docker_provider_tfvars_env.sh so terraform receives this file.
-    Merged with provider_config; per-stack tfvars override on key collision.
   EOT
   type        = any
   default     = {}

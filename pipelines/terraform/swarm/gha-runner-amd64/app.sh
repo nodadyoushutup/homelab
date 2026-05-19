@@ -21,8 +21,8 @@ PIPELINE_ARGS=("$@")
 SWARM_DOCKER_AMD64_PROVIDER_TFVARS="${SWARM_DOCKER_AMD64_PROVIDER_TFVARS:-${TFVARS_HOME_DIR}/terraform/providers/docker_amd64.tfvars}"
 export SWARM_DOCKER_AMD64_PROVIDER_TFVARS
 
-# Re-merge pool-host `provider_config` after shared tfvars (e.g. grafana.tfvars only sets
-# `provider_config.grafana` and would otherwise drop `provider_config.docker` from docker_amd64.tfvars).
+# Pool-host Docker provider: docker_amd64.tfvars sets `swarm_docker_provider_config` last
+# (after shared docker_arm64 / dns / nfs / stack tfvars) so Terraform targets the pool host.
 if [[ -f "${SWARM_DOCKER_AMD64_PROVIDER_TFVARS}" ]]; then
   PLAN_ARGS_EXTRA+=(-var-file "${SWARM_DOCKER_AMD64_PROVIDER_TFVARS}")
   APPLY_ARGS_EXTRA+=(-var-file "${SWARM_DOCKER_AMD64_PROVIDER_TFVARS}")

@@ -1,4 +1,4 @@
-# Standalone Docker containers on the pool host (`provider_config.docker` from docker_amd64.tfvars,
+# Standalone Docker containers on the pool host (`swarm_docker_provider_config.docker` from docker_amd64.tfvars,
 # merged after docker_arm64.tfvars by pipelines/terraform/swarm/gha-runner-amd64/app.sh).
 # Uses `docker_container` + `devices` so `/dev/kvm` gets proper cgroup permissions (unlike Swarm services).
 

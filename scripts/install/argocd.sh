@@ -56,7 +56,7 @@ require_command() {
 
 require_argocd_credentials() {
   if [[ -z "${ARGOCD_ADMIN_USERNAME}" || -z "${ARGOCD_ADMIN_PASSWORD}" ]]; then
-    echo "[ERR] ARGOCD_ADMIN_USERNAME and ARGOCD_ADMIN_PASSWORD must be set (e.g. in ${ROOT_DIR}/.config/.env)." >&2
+    echo "[ERR] ARGOCD_ADMIN_USERNAME and ARGOCD_ADMIN_PASSWORD must be set (e.g. in .config/docker/argocd.env)." >&2
     exit 1
   fi
 }
