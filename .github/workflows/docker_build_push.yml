@@ -100,9 +100,13 @@ jobs:
             exit 1
           fi
 
+          ghcr_image_name=""
+
           case "$build_target" in
             cloud-image-repository)
               image_name="cloud-image-repository"
+              # Repo-scoped GHCR path; flat cloud-image-repository package is not writable by homelab GITHUB_TOKEN.
+              ghcr_image_name="homelab/cloud-image-repository"
               docker_context="applications/cloud-image-repository"
               build_strategy="direct"
               ;;
@@ -236,7 +240,7 @@ jobs:
 
           if [ "${build_strategy}" = "direct" ]; then
             if [ "${publish_github}" = "true" ]; then
-              ghcr_image_base="${GHCR_NAMESPACE}/${image_name}"
+              ghcr_image_base="${GHCR_NAMESPACE}/${ghcr_image_name:-${image_name}}"
             fi
 
             if [ "${publish_harbor}" = "true" ]; then
