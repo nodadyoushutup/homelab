@@ -12,6 +12,8 @@ spec:
     repoURL: __ARGOCD_GITOPS_REPO_URL__
     targetRevision: __ARGOCD_GITOPS_REPO_REVISION__
     path: kubernetes/argocd-management
+    directory:
+      recurse: true
   syncPolicy:
     automated:
       prune: true

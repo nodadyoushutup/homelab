@@ -21,6 +21,11 @@ resource "argocd_application" "argocd_management" {
       repo_url        = "git@github.com:nodadyoushutup/homelab.git"
       target_revision = "HEAD"
       path            = "kubernetes/argocd-management"
+
+      # Manifests live under applications/ and ops/ only; directory sources do not recurse by default.
+      directory {
+        recurse = true
+      }
     }
 
     sync_policy {

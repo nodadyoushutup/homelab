@@ -20,7 +20,9 @@ Kubernetes directory roles are summarized in
    platform add-ons) is GitOps-managed.
 
 3. **`kubernetes/argocd-management/`** — Git-tracked Argo registry synced recursively
-   by the root Application. Layout:
+   by the root Application (`spec.source.directory.recurse: true` — required because
+   manifests live only under `applications/` and `ops/`, not the directory root).
+   Layout:
    - **`applications/`** — one `<name>.yaml` per stack (AppProject + Application,
      or Application-only when using `default`)
    - **`ops/`** — Argo-local config (notifications, terminal RBAC, healer CronJob,
