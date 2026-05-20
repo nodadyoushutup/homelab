@@ -4,6 +4,18 @@ variable "image_reference" {
   default     = "ghcr.io/martabal/qbittorrent-exporter:v2.0.1"
 }
 
+variable "placement" {
+  description = "Swarm task placement (constraints and platforms). Omit in tfvars to skip placement in the task spec."
+  type = object({
+    constraints = optional(list(string))
+    platforms = optional(list(object({
+      os           = string
+      architecture = string
+    })))
+  })
+  default = null
+}
+
 variable "exporter_port_base" {
   description = "First host port for Prometheus scrape targets; each instance uses base + index (sorted instance name)."
   type        = number
@@ -16,17 +28,7 @@ variable "endpoint_host" {
   default     = "192.168.1.121"
 }
 
-variable "placement_constraints" {
-  description = "Swarm placement constraints for exporter services."
-  type        = list(string)
-  default     = ["node.labels.role==swarm-wk-0"]
-}
 
-variable "platform_architecture" {
-  description = "Docker platform architecture for placement."
-  type        = string
-  default     = "aarch64"
-}
 
 variable "qbittorrent_hosts" {
   description = "Map of instance name to qBittorrent Web UI base URL (https://...). Merged over built-in defaults."

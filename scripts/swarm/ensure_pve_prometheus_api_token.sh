@@ -148,13 +148,18 @@ pve_curl PUT "/access/acl" \
   -d "tokens=${token_full_id}" >/dev/null
 
 mkdir -p "$(dirname "${PVE_EXPORTER_TFVARS}")"
-python3 - "${PVE_EXPORTER_TFVARS}" "${PVE_MONITOR_USER}" "${PVE_TOKEN_ID}" "${PVE_TOKEN_VALUE}" <<'PY'
+ROOT_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+python3 - "${ROOT_DIR}" "${PVE_EXPORTER_TFVARS}" "${PVE_MONITOR_USER}" "${PVE_TOKEN_ID}" "${PVE_TOKEN_VALUE}" <<'PY'
 import pathlib
 import re
 import sys
 
-path = pathlib.Path(sys.argv[1])
-user, token_name, token_value = sys.argv[2:5]
+root = pathlib.Path(sys.argv[1])
+path = pathlib.Path(sys.argv[2])
+user, token_name, token_value = sys.argv[3:6]
+
+sys.path.insert(0, str(root / "scripts" / "terraform"))
+from migrate_swarm_placement_tfvars import migrate_tfvars_text  # noqa: E402
 
 env_block = f'''env = {{
   PVE_USER        = "{user}"
@@ -163,23 +168,34 @@ env_block = f'''env = {{
 }}
 '''
 
+default_header = """# Managed by scripts/swarm/ensure_pve_prometheus_api_token.sh
+
+placement = {
+  constraints = ["node.labels.role==swarm-wk-0"]
+  platforms = [
+    {
+      os           = "linux"
+      architecture = "aarch64"
+    },
+  ]
+}
+endpoint_host            = "192.168.1.121"
+published_port           = 9221
+pve_targets              = ["192.168.1.10"]
+verify_ssl               = false
+disable_config_collector = true
+
+"""
+
 if path.exists():
     text = path.read_text(encoding="utf-8")
-    if re.search(r'^\s*env\s*=', text, flags=re.M):
-        text = re.sub(r'^\s*env\s*=\s*\{.*?\n\}\s*\n', env_block + "\n", text, count=1, flags=re.S | re.M)
+    text, _ = migrate_tfvars_text(text)
+    if re.search(r"^\s*env\s*=", text, flags=re.M):
+        text = re.sub(r"^\s*env\s*=\s*\{.*?\n\}\s*\n", env_block + "\n", text, count=1, flags=re.S | re.M)
     else:
         text = text.rstrip() + "\n\n" + env_block
 else:
-    text = """# Managed by scripts/swarm/ensure_pve_prometheus_api_token.sh
-
-placement_constraints = ["node.labels.role==swarm-wk-0"]
-endpoint_host         = "192.168.1.121"
-published_port        = 9221
-pve_targets           = ["192.168.1.10"]
-verify_ssl            = false
-disable_config_collector = true
-
-""" + env_block
+    text = default_header + env_block
 
 path.write_text(text, encoding="utf-8")
 print(f"[OK] Updated {path}")

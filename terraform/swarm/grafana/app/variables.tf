@@ -4,6 +4,18 @@ variable "env" {
   default     = null
 }
 
+variable "placement" {
+  description = "Swarm task placement (constraints and platforms). Omit in tfvars to skip placement in the task spec."
+  type = object({
+    constraints = optional(list(string))
+    platforms = optional(list(object({
+      os           = string
+      architecture = string
+    })))
+  })
+  default = null
+}
+
 variable "ini_path" {
   description = "Absolute path to grafana.ini stored outside the repo"
   type        = string

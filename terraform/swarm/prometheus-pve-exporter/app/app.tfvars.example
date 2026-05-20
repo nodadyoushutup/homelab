@@ -3,8 +3,6 @@
 # 1. Run scripts/swarm/ensure_pve_prometheus_api_token.sh (creates prometheus@pve + API token).
 # 2. Add scrape job to CONFIG_DIR/terraform/swarm/prometheus/prometheus.yaml (see outputs).
 # 3. Apply this stack, then re-apply prometheus/app so config reloads.
-
-placement_constraints = ["node.labels.role==swarm-wk-0"]
 endpoint_host         = "192.168.1.121"
 published_port        = 9221
 pve_targets           = ["192.168.1.10"]
@@ -25,3 +23,13 @@ env = {
 #   PVE_TOKEN_VALUE = "REPLACE_WITH_TOKEN_SECRET"
 #   PVE_VERIFY_SSL  = "false"
 # }
+
+placement = {
+  constraints = ['node.labels.role==swarm-wk-0']
+  platforms = [
+    {
+      os           = "linux"
+      architecture = "aarch64"
+    },
+  ]
+}

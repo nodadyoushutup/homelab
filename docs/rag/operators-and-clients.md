@@ -6,7 +6,7 @@
 
 | Stack | Terraform | Wrapper script |
 | --- | --- | --- |
-| ChromaDB | **`terraform/swarm/chromadb/app`** | **`pipelines/terraform/swarm/chromadb/app.sh`** (bespoke; **`docker_arm64.tfvars`** + **`chromadb/app.tfvars`**, not **`swarm_pipeline.sh`**) |
+| ChromaDB | **`terraform/swarm/chromadb/app`** | **`pipelines/terraform/swarm/chromadb/app.sh`** (bespoke; **`docker_arm64.tfvars`** + **`dns.tfvars`** + **`chromadb/app.tfvars`**, not **`swarm_pipeline.sh`**) |
 | RAG engine | **`terraform/swarm/rag-engine/app`** | **`pipelines/terraform/swarm/rag-engine/app.sh`** |
 | MCP RAG | **`terraform/swarm/mcp-rag/app`** | **`pipelines/terraform/swarm/mcp-rag/app.sh`** |
 

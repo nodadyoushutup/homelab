@@ -32,12 +32,20 @@ resource "docker_service" "jenkins_controller" {
   task_spec {
     force_update = local.config_force_update
 
-    placement {
-      constraints = var.placement_constraints
+    dynamic "placement" {
+      for_each = var.placement == null ? [] : [var.placement]
 
-      platforms {
-        os           = "linux"
-        architecture = var.platform_architecture
+      content {
+        constraints = try(placement.value.constraints, null)
+
+        dynamic "platforms" {
+          for_each = try(placement.value.platforms, [])
+
+          content {
+            os           = platforms.value.os
+            architecture = platforms.value.architecture
+          }
+        }
       }
     }
 

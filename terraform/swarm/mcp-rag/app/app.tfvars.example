@@ -6,3 +6,13 @@
 image_reference = "harbor.nodadyoushutup.com/homelab/mcp-rag:latest"
 published_port  = 9016
 endpoint_host   = "192.168.1.120"
+
+placement = {
+  constraints = ['node.labels.role==swarm-wk-4']
+  platforms = [
+    {
+      os           = "linux"
+      architecture = "aarch64"
+    },
+  ]
+}

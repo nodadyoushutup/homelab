@@ -85,12 +85,20 @@ resource "docker_service" "cloud_image_repository" {
   task_spec {
     force_update = local.app_force_update
 
-    placement {
-      constraints = ["node.labels.role==swarm-cp-0"]
+    dynamic "placement" {
+      for_each = var.placement == null ? [] : [var.placement]
 
-      platforms {
-        os           = "linux"
-        architecture = "aarch64"
+      content {
+        constraints = try(placement.value.constraints, null)
+
+        dynamic "platforms" {
+          for_each = try(placement.value.platforms, [])
+
+          content {
+            os           = platforms.value.os
+            architecture = platforms.value.architecture
+          }
+        }
       }
     }
 

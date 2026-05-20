@@ -4,6 +4,18 @@ variable "image_reference" {
   default     = "homelab/mcp-bash-pipeline:2026.04.17.1"
 }
 
+variable "placement" {
+  description = "Swarm task placement (constraints and platforms). Omit in tfvars to skip placement in the task spec."
+  type = object({
+    constraints = optional(list(string))
+    platforms = optional(list(object({
+      os           = string
+      architecture = string
+    })))
+  })
+  default = null
+}
+
 variable "env" {
   description = "Additional environment variables to pass to the container."
   type        = map(string)
@@ -35,17 +47,7 @@ variable "replicas" {
   default     = 1
 }
 
-variable "placement_constraints" {
-  description = "Swarm placement constraints for this MCP service."
-  type        = list(string)
-  default     = ["node.labels.role==swarm-wk-4"]
-}
 
-variable "platform_architecture" {
-  description = "Docker platform architecture for placement."
-  type        = string
-  default     = "aarch64"
-}
 
 variable "dns_nameservers" {
   description = <<-EOT

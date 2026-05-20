@@ -1,13 +1,25 @@
 variable "env" {
   description = "Graylog and Data Node environment (secrets and HTTP external URI)."
   type = object({
-    GRAYLOG_PASSWORD_SECRET     = string
-    GRAYLOG_ROOT_PASSWORD_SHA2  = string
-    GRAYLOG_HTTP_EXTERNAL_URI   = string
-    GRAYLOG_MONGODB_URI         = optional(string)
-    GRAYLOG_HTTP_BIND_ADDRESS   = optional(string)
+    GRAYLOG_PASSWORD_SECRET    = string
+    GRAYLOG_ROOT_PASSWORD_SHA2 = string
+    GRAYLOG_HTTP_EXTERNAL_URI  = string
+    GRAYLOG_MONGODB_URI        = optional(string)
+    GRAYLOG_HTTP_BIND_ADDRESS  = optional(string)
   })
   sensitive = true
+}
+
+variable "placement" {
+  description = "Swarm task placement (constraints and platforms). Omit in tfvars to skip placement in the task spec."
+  type = object({
+    constraints = optional(list(string))
+    platforms = optional(list(object({
+      os           = string
+      architecture = string
+    })))
+  })
+  default = null
 }
 
 variable "published_port_ui" {

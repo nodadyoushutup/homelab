@@ -7,12 +7,20 @@ resource "docker_service" "log" {
   name = "harbor-log"
 
   task_spec {
-    placement {
-      constraints = [var.node_constraint]
+    dynamic "placement" {
+      for_each = var.placement == null ? [] : [var.placement]
 
-      platforms {
-        os           = "linux"
-        architecture = var.platform_architecture
+      content {
+        constraints = try(placement.value.constraints, null)
+
+        dynamic "platforms" {
+          for_each = try(placement.value.platforms, [])
+
+          content {
+            os           = platforms.value.os
+            architecture = platforms.value.architecture
+          }
+        }
       }
     }
 
@@ -75,12 +83,20 @@ resource "docker_service" "registry" {
   depends_on = [docker_service.log]
 
   task_spec {
-    placement {
-      constraints = [var.node_constraint]
+    dynamic "placement" {
+      for_each = var.placement == null ? [] : [var.placement]
 
-      platforms {
-        os           = "linux"
-        architecture = var.platform_architecture
+      content {
+        constraints = try(placement.value.constraints, null)
+
+        dynamic "platforms" {
+          for_each = try(placement.value.platforms, [])
+
+          content {
+            os           = platforms.value.os
+            architecture = platforms.value.architecture
+          }
+        }
       }
     }
 
@@ -145,12 +161,20 @@ resource "docker_service" "registryctl" {
   depends_on = [docker_service.log]
 
   task_spec {
-    placement {
-      constraints = [var.node_constraint]
+    dynamic "placement" {
+      for_each = var.placement == null ? [] : [var.placement]
 
-      platforms {
-        os           = "linux"
-        architecture = var.platform_architecture
+      content {
+        constraints = try(placement.value.constraints, null)
+
+        dynamic "platforms" {
+          for_each = try(placement.value.platforms, [])
+
+          content {
+            os           = platforms.value.os
+            architecture = platforms.value.architecture
+          }
+        }
       }
     }
 
@@ -223,12 +247,20 @@ resource "docker_service" "postgresql" {
   depends_on = [docker_service.log]
 
   task_spec {
-    placement {
-      constraints = [var.node_constraint]
+    dynamic "placement" {
+      for_each = var.placement == null ? [] : [var.placement]
 
-      platforms {
-        os           = "linux"
-        architecture = var.platform_architecture
+      content {
+        constraints = try(placement.value.constraints, null)
+
+        dynamic "platforms" {
+          for_each = try(placement.value.platforms, [])
+
+          content {
+            os           = platforms.value.os
+            architecture = platforms.value.architecture
+          }
+        }
       }
     }
 
@@ -281,12 +313,20 @@ resource "docker_service" "redis" {
   depends_on = [docker_service.log]
 
   task_spec {
-    placement {
-      constraints = [var.node_constraint]
+    dynamic "placement" {
+      for_each = var.placement == null ? [] : [var.placement]
 
-      platforms {
-        os           = "linux"
-        architecture = var.platform_architecture
+      content {
+        constraints = try(placement.value.constraints, null)
+
+        dynamic "platforms" {
+          for_each = try(placement.value.platforms, [])
+
+          content {
+            os           = platforms.value.os
+            architecture = platforms.value.architecture
+          }
+        }
       }
     }
 
@@ -336,12 +376,20 @@ resource "docker_service" "core" {
   ]
 
   task_spec {
-    placement {
-      constraints = [var.node_constraint]
+    dynamic "placement" {
+      for_each = var.placement == null ? [] : [var.placement]
 
-      platforms {
-        os           = "linux"
-        architecture = var.platform_architecture
+      content {
+        constraints = try(placement.value.constraints, null)
+
+        dynamic "platforms" {
+          for_each = try(placement.value.platforms, [])
+
+          content {
+            os           = platforms.value.os
+            architecture = platforms.value.architecture
+          }
+        }
       }
     }
 
@@ -434,12 +482,20 @@ resource "docker_service" "portal" {
   depends_on = [docker_service.log]
 
   task_spec {
-    placement {
-      constraints = [var.node_constraint]
+    dynamic "placement" {
+      for_each = var.placement == null ? [] : [var.placement]
 
-      platforms {
-        os           = "linux"
-        architecture = var.platform_architecture
+      content {
+        constraints = try(placement.value.constraints, null)
+
+        dynamic "platforms" {
+          for_each = try(placement.value.platforms, [])
+
+          content {
+            os           = platforms.value.os
+            architecture = platforms.value.architecture
+          }
+        }
       }
     }
 
@@ -485,12 +541,20 @@ resource "docker_service" "jobservice" {
   depends_on = [docker_service.core]
 
   task_spec {
-    placement {
-      constraints = [var.node_constraint]
+    dynamic "placement" {
+      for_each = var.placement == null ? [] : [var.placement]
 
-      platforms {
-        os           = "linux"
-        architecture = var.platform_architecture
+      content {
+        constraints = try(placement.value.constraints, null)
+
+        dynamic "platforms" {
+          for_each = try(placement.value.platforms, [])
+
+          content {
+            os           = platforms.value.os
+            architecture = platforms.value.architecture
+          }
+        }
       }
     }
 
@@ -562,12 +626,20 @@ resource "docker_service" "proxy" {
   ]
 
   task_spec {
-    placement {
-      constraints = [var.node_constraint]
+    dynamic "placement" {
+      for_each = var.placement == null ? [] : [var.placement]
 
-      platforms {
-        os           = "linux"
-        architecture = var.platform_architecture
+      content {
+        constraints = try(placement.value.constraints, null)
+
+        dynamic "platforms" {
+          for_each = try(placement.value.platforms, [])
+
+          content {
+            os           = platforms.value.os
+            architecture = platforms.value.architecture
+          }
+        }
       }
     }
 
@@ -631,12 +703,20 @@ resource "docker_service" "trivy_adapter" {
   ]
 
   task_spec {
-    placement {
-      constraints = [var.node_constraint]
+    dynamic "placement" {
+      for_each = var.placement == null ? [] : [var.placement]
 
-      platforms {
-        os           = "linux"
-        architecture = var.platform_architecture
+      content {
+        constraints = try(placement.value.constraints, null)
+
+        dynamic "platforms" {
+          for_each = try(placement.value.platforms, [])
+
+          content {
+            os           = platforms.value.os
+            architecture = platforms.value.architecture
+          }
+        }
       }
     }
 

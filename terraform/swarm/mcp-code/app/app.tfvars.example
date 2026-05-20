@@ -7,6 +7,14 @@
 image_reference    = "ghcr.io/nodadyoushutup/mcp-code:0.0.2"
 published_port     = 18212
 endpoint_host      = "192.168.1.120"
-# placement_constraints = ["node.labels.role==swarm-wk-4"]
-# platform_architecture = "aarch64" # or "amd64" per node
+# Omit placement to let Swarm schedule without constraints/platforms.
+# placement = {
+#   constraints = ["node.labels.role==swarm-wk-4"]
+#   platforms = [
+#     {
+#       os           = "linux"
+#       architecture = "aarch64"
+#     },
+#   ]
+# }
 # Shared docker_arm64.tfvars, dns.tfvars, and nfs.tfvars supply swarm_* inputs (see terraform/providers/*.tfvars.example).

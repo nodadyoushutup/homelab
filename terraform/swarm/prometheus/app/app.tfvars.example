@@ -7,4 +7,12 @@
 #   docker node update --label-add role=swarm-wk-0 <node-id>
 # Verify: scripts/swarm/ensure_swarm_worker_node.sh --role swarm-wk-0 --host swarm-wk-0.local
 
-placement_constraints = ["node.labels.role==swarm-wk-0"]
+placement = {
+  constraints = ['node.labels.role==swarm-wk-0']
+  platforms = [
+    {
+      os           = "linux"
+      architecture = "aarch64"
+    },
+  ]
+}

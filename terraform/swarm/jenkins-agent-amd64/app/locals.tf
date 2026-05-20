@@ -23,12 +23,6 @@ locals {
         )) : lower(trimspace(token))
         if trimspace(token) != ""
       ])
-      placement_constraints = concat(
-        var.placement_constraints,
-        trimspace(tostring(try(node.permanent.nodeDescription, ""))) != "" ? [
-          "node.hostname==${trimspace(tostring(node.permanent.nodeDescription))}"
-        ] : []
-      )
     } if try(trimspace(tostring(node.permanent.name)) != "", false)
   }
 
@@ -61,7 +55,7 @@ locals {
     device = trimspace(var.swarm_nfs_config_device)
   } : null
   shared_tfvars_volume_driver_opts_effective = coalesce(var.shared_tfvars_volume_driver_opts, local.shared_tfvars_nfs_driver_opts_default)
-  enable_shared_tfvars_mount_effective = var.enable_shared_tfvars_mount && local.shared_tfvars_volume_driver_opts_effective != null
+  enable_shared_tfvars_mount_effective       = var.enable_shared_tfvars_mount && local.shared_tfvars_volume_driver_opts_effective != null
   jenkins_agent_nfs_volume_keys = local.swarm_nfs_ready ? toset(compact([
     var.enable_shared_tfvars_mount ? "config" : "",
     var.enable_shared_code_mount ? "code" : "",

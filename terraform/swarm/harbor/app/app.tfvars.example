@@ -39,3 +39,13 @@ env_file_paths = {
 #   proxy         = "ghcr.io/nodadyoushutup/nginx-photon:0.0.1@sha256:b85eb46199a1f8f4cc0c4c4985cbfdda8dfd37c5d3c95596bf6eb31e0f1e8628"
 #   trivy_adapter = "ghcr.io/nodadyoushutup/trivy-adapter-photon:0.0.1@sha256:daaaa8c06c597d88d5f11b677748f8128c96212bf3078b70fe269e4ad7e3596a"
 # }
+
+placement = {
+  constraints = ['node.labels.role==swarm-cp-0']
+  platforms = [
+    {
+      os           = "linux"
+      architecture = "aarch64"
+    },
+  ]
+}

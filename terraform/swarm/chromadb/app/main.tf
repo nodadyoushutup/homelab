@@ -11,12 +11,20 @@ resource "docker_service" "chromadb" {
   name = "chromadb"
 
   task_spec {
-    placement {
-      constraints = var.placement_constraints
+    dynamic "placement" {
+      for_each = var.placement == null ? [] : [var.placement]
 
-      platforms {
-        os           = "linux"
-        architecture = var.platform_architecture
+      content {
+        constraints = try(placement.value.constraints, null)
+
+        dynamic "platforms" {
+          for_each = try(placement.value.platforms, [])
+
+          content {
+            os           = platforms.value.os
+            architecture = platforms.value.architecture
+          }
+        }
       }
     }
 
@@ -26,7 +34,6 @@ resource "docker_service" "chromadb" {
     }
 
     container_spec {
-      # Pin matches chroma-core/chroma GitHub release (not Docker "latest"); bump when upgrading Chroma.
       image = "chromadb/chroma:1.5.9"
 
       dns_config {

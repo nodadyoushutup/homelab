@@ -14,11 +14,20 @@ resource "docker_service" "mysql" {
   name = "mysql"
 
   task_spec {
-    placement {
-      constraints = ["node.labels.role==swarm-cp-0"]
-      platforms {
-        os           = "linux"
-        architecture = "aarch64"
+    dynamic "placement" {
+      for_each = var.placement == null ? [] : [var.placement]
+
+      content {
+        constraints = try(placement.value.constraints, null)
+
+        dynamic "platforms" {
+          for_each = try(placement.value.platforms, [])
+
+          content {
+            os           = platforms.value.os
+            architecture = platforms.value.architecture
+          }
+        }
       }
     }
 

@@ -4,6 +4,18 @@ variable "image_reference" {
   default     = "mcr.microsoft.com/playwright/mcp:latest"
 }
 
+variable "placement" {
+  description = "Swarm task placement (constraints and platforms). Omit in tfvars to skip placement in the task spec."
+  type = object({
+    constraints = optional(list(string))
+    platforms = optional(list(object({
+      os           = string
+      architecture = string
+    })))
+  })
+  default = null
+}
+
 variable "published_port" {
   description = "Swarm ingress port exposed for the Playwright MCP HTTP endpoint."
   type        = number
@@ -22,17 +34,7 @@ variable "replicas" {
   default     = 1
 }
 
-variable "placement_constraints" {
-  description = "Swarm placement constraints for the Playwright MCP service."
-  type        = list(string)
-  default     = ["node.labels.role==swarm-wk-4"]
-}
 
-variable "platform_architecture" {
-  description = "Docker platform architecture for placement."
-  type        = string
-  default     = "aarch64"
-}
 
 variable "allowed_hosts" {
   description = "Host headers accepted by the HTTP MCP server. Use [\"*\"] for internal-only wildcard access."

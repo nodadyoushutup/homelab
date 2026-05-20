@@ -8,6 +8,18 @@ variable "swarm_docker_provider_config" {
   default     = {}
 }
 
+variable "placement" {
+  description = "Swarm task placement (constraints and platforms). Omit in tfvars to skip placement in the task spec."
+  type = object({
+    constraints = optional(list(string))
+    platforms = optional(list(object({
+      os           = string
+      architecture = string
+    })))
+  })
+  default = null
+}
+
 variable "dns_nameservers" {
   description = <<-EOT
     DNS nameservers for Swarm task dns_config (and standalone runner dns). Set only in

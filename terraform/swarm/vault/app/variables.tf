@@ -57,7 +57,7 @@ variable "swarm_nfs_volume_o_ro" {
 }
 
 variable "placement" {
-  description = "Placement configuration for the Vault service"
+  description = "Swarm task placement (constraints and platforms). Omit in tfvars to skip placement in the task spec."
   type = object({
     constraints = optional(list(string))
     platforms = optional(list(object({
@@ -65,15 +65,7 @@ variable "placement" {
       architecture = string
     })))
   })
-  default = {
-    constraints = ["node.labels.role==swarm-cp-0"]
-    platforms = [
-      {
-        os           = "linux"
-        architecture = "aarch64"
-      }
-    ]
-  }
+  default = null
 }
 
 variable "api_addr" {

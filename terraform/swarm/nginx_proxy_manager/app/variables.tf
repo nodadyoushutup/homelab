@@ -4,6 +4,18 @@ variable "db_mysql_host" {
   default     = "mysql"
 }
 
+variable "placement" {
+  description = "Swarm task placement (constraints and platforms). Omit in tfvars to skip placement in the task spec."
+  type = object({
+    constraints = optional(list(string))
+    platforms = optional(list(object({
+      os           = string
+      architecture = string
+    })))
+  })
+  default = null
+}
+
 variable "env" {
   description = "Additional environment variables to pass to the Nginx Proxy Manager container"
   type        = map(string)

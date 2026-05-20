@@ -7,7 +7,6 @@
 image_reference    = "ghcr.io/martabal/qbittorrent-exporter:v2.0.1"
 exporter_port_base   = 18300
 endpoint_host        = "192.168.1.121"
-placement_constraints = ["node.labels.role==swarm-wk-0"]
 enable_high_cardinality = false
 insecure_skip_verify   = true
 
@@ -21,4 +20,14 @@ insecure_skip_verify   = true
 
 env = {
   QBITTORRENT_PASSWORD = "replace-me"
+}
+
+placement = {
+  constraints = ['node.labels.role==swarm-wk-0']
+  platforms = [
+    {
+      os           = "linux"
+      architecture = "aarch64"
+    },
+  ]
 }

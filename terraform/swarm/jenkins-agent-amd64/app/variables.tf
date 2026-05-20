@@ -119,11 +119,6 @@ variable "shared_tfvars_mount_target" {
   default     = "/mnt/eapp/code/homelab/.config"
 }
 
-variable "placement_constraints" {
-  description = "Deprecated (Swarm-only). Retained for tfvars compatibility; pool-host containers ignore this."
-  type        = list(string)
-  default     = []
-}
 
 variable "dns_nameservers" {
   description = <<-EOT

@@ -4,6 +4,18 @@ variable "casc_config_path" {
   default     = "/mnt/eapp/code/homelab/.config/terraform/swarm/jenkins-controller/jenkins.yaml"
 }
 
+variable "placement" {
+  description = "Swarm task placement (constraints and platforms). Omit in tfvars to skip placement in the task spec."
+  type = object({
+    constraints = optional(list(string))
+    platforms = optional(list(object({
+      os           = string
+      architecture = string
+    })))
+  })
+  default = null
+}
+
 variable "casc_config_container_path" {
   description = "In-container path used by JCasC to read the shared Jenkins Configuration as Code YAML file."
   type        = string
@@ -134,17 +146,7 @@ variable "agent_published_port" {
   default     = 50000
 }
 
-variable "placement_constraints" {
-  description = "Swarm placement constraints for the controller service"
-  type        = list(string)
-  default     = ["node.labels.role==swarm-wk-1"]
-}
 
-variable "platform_architecture" {
-  description = "CPU architecture used for service scheduling"
-  type        = string
-  default     = "aarch64"
-}
 
 variable "dns_nameservers" {
   description = <<-EOT

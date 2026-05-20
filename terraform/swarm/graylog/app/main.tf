@@ -19,12 +19,20 @@ resource "docker_service" "graylog_datanode" {
   name = "graylog-datanode"
 
   task_spec {
-    placement {
-      constraints = ["node.labels.role==swarm-cp-0"]
+    dynamic "placement" {
+      for_each = var.placement == null ? [] : [var.placement]
 
-      platforms {
-        os           = "linux"
-        architecture = "aarch64"
+      content {
+        constraints = try(placement.value.constraints, null)
+
+        dynamic "platforms" {
+          for_each = try(placement.value.platforms, [])
+
+          content {
+            os           = platforms.value.os
+            architecture = platforms.value.architecture
+          }
+        }
       }
     }
 
@@ -43,9 +51,9 @@ resource "docker_service" "graylog_datanode" {
       image    = "graylog/graylog-datanode:7.1.1@sha256:cd5f5ec598c9f4ac5f8c856b90dda925998f0568d04b40ee928819aee747762d"
 
       env = {
-        GRAYLOG_DATANODE_NODE_ID_FILE     = "/var/lib/graylog-datanode/node-id"
-        GRAYLOG_DATANODE_PASSWORD_SECRET   = local.graylog_password_secret
-        GRAYLOG_DATANODE_MONGODB_URI       = local.graylog_mongodb_uri
+        GRAYLOG_DATANODE_NODE_ID_FILE    = "/var/lib/graylog-datanode/node-id"
+        GRAYLOG_DATANODE_PASSWORD_SECRET = local.graylog_password_secret
+        GRAYLOG_DATANODE_MONGODB_URI     = local.graylog_mongodb_uri
       }
 
       dns_config {
@@ -87,12 +95,20 @@ resource "docker_service" "graylog" {
   name = "graylog"
 
   task_spec {
-    placement {
-      constraints = ["node.labels.role==swarm-cp-0"]
+    dynamic "placement" {
+      for_each = var.placement == null ? [] : [var.placement]
 
-      platforms {
-        os           = "linux"
-        architecture = "aarch64"
+      content {
+        constraints = try(placement.value.constraints, null)
+
+        dynamic "platforms" {
+          for_each = try(placement.value.platforms, [])
+
+          content {
+            os           = platforms.value.os
+            architecture = platforms.value.architecture
+          }
+        }
       }
     }
 
@@ -113,12 +129,12 @@ resource "docker_service" "graylog" {
       command = ["/usr/bin/tini", "--", "/docker-entrypoint.sh"]
 
       env = {
-        GRAYLOG_NODE_ID_FILE         = "/usr/share/graylog/data/data/node-id"
-        GRAYLOG_PASSWORD_SECRET      = local.graylog_password_secret
-        GRAYLOG_ROOT_PASSWORD_SHA2   = local.graylog_root_password
-        GRAYLOG_HTTP_BIND_ADDRESS    = local.graylog_http_bind
-        GRAYLOG_HTTP_EXTERNAL_URI    = local.graylog_http_external
-        GRAYLOG_MONGODB_URI          = local.graylog_mongodb_uri
+        GRAYLOG_NODE_ID_FILE       = "/usr/share/graylog/data/data/node-id"
+        GRAYLOG_PASSWORD_SECRET    = local.graylog_password_secret
+        GRAYLOG_ROOT_PASSWORD_SHA2 = local.graylog_root_password
+        GRAYLOG_HTTP_BIND_ADDRESS  = local.graylog_http_bind
+        GRAYLOG_HTTP_EXTERNAL_URI  = local.graylog_http_external
+        GRAYLOG_MONGODB_URI        = local.graylog_mongodb_uri
       }
 
       dns_config {

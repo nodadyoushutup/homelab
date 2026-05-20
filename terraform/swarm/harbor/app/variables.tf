@@ -1,13 +1,13 @@
-variable "node_constraint" {
-  description = "Swarm placement constraint for Harbor services."
-  type        = string
-  default     = "node.labels.role==swarm-cp-0"
-}
-
-variable "platform_architecture" {
-  description = "CPU architecture for Harbor service placement."
-  type        = string
-  default     = "aarch64"
+variable "placement" {
+  description = "Swarm task placement (constraints and platforms). Omit in tfvars to skip placement in the task spec."
+  type = object({
+    constraints = optional(list(string))
+    platforms = optional(list(object({
+      os           = string
+      architecture = string
+    })))
+  })
+  default = null
 }
 
 variable "network_name" {

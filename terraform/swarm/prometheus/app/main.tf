@@ -26,11 +26,20 @@ resource "docker_service" "prometheus" {
   task_spec {
     force_update = local.prometheus_force_update
 
-    placement {
-      constraints = var.placement_constraints
-      platforms {
-        os           = "linux"
-        architecture = var.platform_architecture
+    dynamic "placement" {
+      for_each = var.placement == null ? [] : [var.placement]
+
+      content {
+        constraints = try(placement.value.constraints, null)
+
+        dynamic "platforms" {
+          for_each = try(placement.value.platforms, [])
+
+          content {
+            os           = platforms.value.os
+            architecture = platforms.value.architecture
+          }
+        }
       }
     }
 

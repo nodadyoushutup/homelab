@@ -16,10 +16,12 @@ fi
 CONFIG_DIR="${CONFIG_DIR:-${ROOT_DIR}/.config}"
 export CONFIG_DIR
 DEFAULT_DOCKER_TFVARS="${CONFIG_DIR}/terraform/providers/docker_arm64.tfvars"
+DEFAULT_DNS_TFVARS="${CONFIG_DIR}/terraform/providers/dns.tfvars"
 DEFAULT_APP_TFVARS="${CONFIG_DIR}/terraform/swarm/chromadb/app.tfvars"
 DEFAULT_BACKEND="${CONFIG_DIR}/minio.backend.hcl"
 
 DOCKER_TFVARS="${SWARM_DOCKER_PROVIDER_TFVARS:-${CHROMADB_DOCKER_TFVARS:-${DEFAULT_DOCKER_TFVARS}}}"
+DNS_TFVARS="${SWARM_DNS_PROVIDER_TFVARS:-${CHROMADB_DNS_TFVARS:-${DEFAULT_DNS_TFVARS}}}"
 APP_TFVARS="${CHROMADB_APP_TFVARS:-${DEFAULT_APP_TFVARS}}"
 BACKEND_CONFIG="${CHROMADB_BACKEND:-${DEFAULT_BACKEND}}"
 
@@ -31,11 +33,12 @@ Deploy ChromaDB on Docker Swarm (terraform init, plan, apply).
 
 Options:
   --docker-tfvars <path>    Swarm Docker provider (default: ${DEFAULT_DOCKER_TFVARS})
-  --tfvars <path>           Stack settings + dns_nameservers (default: ${DEFAULT_APP_TFVARS})
+  --dns-tfvars <path>       Shared dns_nameservers (default: ${DEFAULT_DNS_TFVARS})
+  --tfvars <path>           Stack settings (default: ${DEFAULT_APP_TFVARS})
   --backend <path>          S3 backend config (default: ${DEFAULT_BACKEND})
   -h, --help                Show this help
 
-Environment overrides: SWARM_DOCKER_PROVIDER_TFVARS, CHROMADB_APP_TFVARS, CHROMADB_BACKEND, CONFIG_DIR (from .config/docker/site.env)
+Environment overrides: SWARM_DOCKER_PROVIDER_TFVARS, SWARM_DNS_PROVIDER_TFVARS, CHROMADB_APP_TFVARS, CHROMADB_BACKEND, CONFIG_DIR (from .config/docker/site.env)
 USAGE
 }
 
@@ -64,6 +67,14 @@ while [[ ${#ARGS[@]} -gt 0 ]]; do
         exit 2
       }
       DOCKER_TFVARS="${ARGS[1]}"
+      ARGS=("${ARGS[@]:2}")
+      ;;
+    --dns-tfvars)
+      [[ ${#ARGS[@]} -ge 2 ]] || {
+        echo "[ERR] --dns-tfvars requires a path" >&2
+        exit 2
+      }
+      DNS_TFVARS="${ARGS[1]}"
       ARGS=("${ARGS[@]:2}")
       ;;
     --tfvars)
@@ -123,11 +134,13 @@ fi
 
 require_terraform
 require_file "docker provider tfvars" "${DOCKER_TFVARS}"
+require_file "dns provider tfvars" "${DNS_TFVARS}"
 require_file "app tfvars" "${APP_TFVARS}"
 require_file "backend config" "${BACKEND_CONFIG}"
 
 echo "Terraform dir:     ${TERRAFORM_DIR}"
 echo "Docker tfvars:     ${DOCKER_TFVARS}"
+echo "DNS tfvars:        ${DNS_TFVARS}"
 echo "App tfvars:        ${APP_TFVARS}"
 echo "Backend config:    ${BACKEND_CONFIG}"
 
@@ -172,6 +185,7 @@ fi
 PLAN_ARGS=(
   -input=false
   -var-file "${DOCKER_TFVARS}"
+  -var-file "${DNS_TFVARS}"
   -var-file "${APP_TFVARS}"
 )
 

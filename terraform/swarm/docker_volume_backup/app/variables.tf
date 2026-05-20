@@ -4,6 +4,18 @@ variable "env" {
   default     = {}
 }
 
+variable "placement" {
+  description = "Swarm task placement (constraints and platforms). Omit in tfvars to skip placement in the task spec."
+  type = object({
+    constraints = optional(list(string))
+    platforms = optional(list(object({
+      os           = string
+      architecture = string
+    })))
+  })
+  default = null
+}
+
 variable "backup_mounts" {
   description = "Map of backup mounts where each object defines source volume and target path"
   type = map(object({

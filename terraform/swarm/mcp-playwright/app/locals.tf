@@ -1,5 +1,5 @@
 locals {
-  service_name = "mcp-playwright"
+  service_name  = "mcp-playwright"
   internal_port = 8931
 
   swarm_nfs_ready = (
