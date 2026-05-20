@@ -27,26 +27,27 @@ on:
       build_target:
         description: "Build target"
         required: true
+        default: cloud-image-repository
         type: choice
         options:
+          - cloud-image-repository
+          - gha-runner
+          - harbor-runtime-set
+          - jenkins-agent
+          - jenkins-controller
           - langchain-agent-chat
           - langgraph
-          - harbor-runtime-set
+          - mcp-atlassian
           - mcp-bash-pipeline
           - mcp-cloudflare
           - mcp-code
           - mcp-fortigate
           - mcp-github
           - mcp-google-workspace
-          - mcp-atlassian
-          - mcp-terraform
           - mcp-rag
-          - rag-engine
+          - mcp-terraform
           - qbittorrent-metrics-exporter
-          - gha-runner
-          - jenkins-agent
-          - jenkins-controller
-          - cloud-image-repository
+          - rag-engine
 
 permissions:
   contents: write
@@ -100,6 +101,34 @@ jobs:
           fi
 
           case "$build_target" in
+            cloud-image-repository)
+              image_name="cloud-image-repository"
+              docker_context="applications/cloud-image-repository"
+              build_strategy="direct"
+              ;;
+            gha-runner)
+              image_name="gha-runner"
+              docker_context="."
+              dockerfile="applications/gha-runner/Dockerfile"
+              build_strategy="direct"
+              ;;
+            harbor-runtime-set)
+              image_name="harbor-runtime-set"
+              docker_context="applications/harbor"
+              build_strategy="harbor-runtime-set"
+              ;;
+            jenkins-agent)
+              image_name="jenkins-agent"
+              docker_context="."
+              dockerfile="applications/jenkins-agent/Dockerfile"
+              build_strategy="direct"
+              ;;
+            jenkins-controller)
+              image_name="jenkins-controller"
+              docker_context="."
+              dockerfile="applications/jenkins-controller/Dockerfile"
+              build_strategy="direct"
+              ;;
             langchain-agent-chat)
               image_name="langchain-agent-chat"
               docker_context="applications/langchain-agent-chat"
@@ -113,10 +142,10 @@ jobs:
               supported_platforms="linux/amd64"
               build_strategy="direct"
               ;;
-            harbor-runtime-set)
-              image_name="harbor-runtime-set"
-              docker_context="applications/harbor"
-              build_strategy="harbor-runtime-set"
+            mcp-atlassian)
+              image_name="mcp-atlassian"
+              docker_context="applications/mcp-atlassian"
+              build_strategy="direct"
               ;;
             mcp-bash-pipeline)
               image_name="mcp-bash-pipeline"
@@ -149,9 +178,9 @@ jobs:
               docker_context="applications/mcp-google-workspace"
               build_strategy="direct"
               ;;
-            mcp-atlassian)
-              image_name="mcp-atlassian"
-              docker_context="applications/mcp-atlassian"
+            mcp-rag)
+              image_name="mcp-rag"
+              docker_context="applications/mcp-rag"
               build_strategy="direct"
               ;;
             mcp-terraform)
@@ -159,42 +188,14 @@ jobs:
               docker_context="applications/mcp-terraform"
               build_strategy="direct"
               ;;
-            mcp-rag)
-              image_name="mcp-rag"
-              docker_context="applications/mcp-rag"
-              build_strategy="direct"
-              ;;
-            rag-engine)
-              image_name="rag-engine"
-              docker_context="applications/rag-engine"
-              build_strategy="direct"
-              ;;
             qbittorrent-metrics-exporter)
               image_name="qbittorrent-metrics-exporter"
               docker_context="applications/qbittorrent-metrics-exporter"
               build_strategy="direct"
               ;;
-            gha-runner)
-              image_name="gha-runner"
-              docker_context="."
-              dockerfile="applications/gha-runner/Dockerfile"
-              build_strategy="direct"
-              ;;
-            jenkins-agent)
-              image_name="jenkins-agent"
-              docker_context="."
-              dockerfile="applications/jenkins-agent/Dockerfile"
-              build_strategy="direct"
-              ;;
-            jenkins-controller)
-              image_name="jenkins-controller"
-              docker_context="."
-              dockerfile="applications/jenkins-controller/Dockerfile"
-              build_strategy="direct"
-              ;;
-            cloud-image-repository)
-              image_name="cloud-image-repository"
-              docker_context="applications/cloud-image-repository"
+            rag-engine)
+              image_name="rag-engine"
+              docker_context="applications/rag-engine"
               build_strategy="direct"
               ;;
             *)
@@ -318,6 +319,9 @@ jobs:
     needs: prepare
     if: needs.prepare.outputs.build_strategy == 'direct' && needs.prepare.outputs.build_amd64 == 'true'
     runs-on: [self-hosted, linux, homelab, amd64, build]
+    permissions:
+      contents: read
+      packages: write
 
     steps:
       - name: Check out the code
@@ -328,13 +332,17 @@ jobs:
         with:
           install: true
 
+      - name: Clear stale GHCR login (self-hosted runners)
+        if: needs.prepare.outputs.publish_github == 'true'
+        run: docker logout ghcr.io 2>/dev/null || true
+
       - name: Log in to GitHub Container Registry
         if: needs.prepare.outputs.publish_github == 'true'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GHCR_TOKEN || github.token }}
 
       - name: Validate Harbor credentials
         if: needs.prepare.outputs.publish_harbor == 'true'
@@ -401,6 +409,9 @@ jobs:
     needs: prepare
     if: needs.prepare.outputs.build_strategy == 'direct' && needs.prepare.outputs.build_arm64 == 'true'
     runs-on: [self-hosted, linux, homelab, arm64]
+    permissions:
+      contents: read
+      packages: write
 
     steps:
       - name: Check out the code
@@ -411,13 +422,17 @@ jobs:
         with:
           install: true
 
+      - name: Clear stale GHCR login (self-hosted runners)
+        if: needs.prepare.outputs.publish_github == 'true'
+        run: docker logout ghcr.io 2>/dev/null || true
+
       - name: Log in to GitHub Container Registry
         if: needs.prepare.outputs.publish_github == 'true'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GHCR_TOKEN || github.token }}
 
       - name: Validate Harbor credentials
         if: needs.prepare.outputs.publish_harbor == 'true'
@@ -489,15 +504,22 @@ jobs:
       needs.build_direct_arm64.result != 'failure' &&
       needs.build_direct_arm64.result != 'cancelled'
     runs-on: [self-hosted, linux, homelab, amd64, build]
+    permissions:
+      contents: read
+      packages: write
 
     steps:
+      - name: Clear stale GHCR login (self-hosted runners)
+        if: needs.prepare.outputs.publish_github == 'true'
+        run: docker logout ghcr.io 2>/dev/null || true
+
       - name: Log in to GitHub Container Registry
         if: needs.prepare.outputs.publish_github == 'true'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GHCR_TOKEN || github.token }}
 
       - name: Validate Harbor credentials
         if: needs.prepare.outputs.publish_harbor == 'true'
@@ -582,6 +604,9 @@ jobs:
     needs: prepare
     if: needs.prepare.outputs.build_strategy == 'harbor-runtime-set' && needs.prepare.outputs.build_amd64 == 'true'
     runs-on: [self-hosted, linux, homelab, amd64, build]
+    permissions:
+      contents: read
+      packages: write
     env:
       # Swarm sets this on the runner container, but the Actions job often does not inherit it;
       # must match bind mount + engine_visible_build_path on the runner nodes.
@@ -596,13 +621,17 @@ jobs:
         with:
           install: true
 
+      - name: Clear stale GHCR login (self-hosted runners)
+        if: needs.prepare.outputs.publish_github == 'true'
+        run: docker logout ghcr.io 2>/dev/null || true
+
       - name: Log in to GitHub Container Registry
         if: needs.prepare.outputs.publish_github == 'true'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GHCR_TOKEN || github.token }}
 
       - name: Validate Harbor credentials
         if: needs.prepare.outputs.publish_harbor == 'true'
@@ -660,6 +689,9 @@ jobs:
     needs: prepare
     if: needs.prepare.outputs.build_strategy == 'harbor-runtime-set' && needs.prepare.outputs.build_arm64 == 'true'
     runs-on: [self-hosted, linux, homelab, arm64]
+    permissions:
+      contents: read
+      packages: write
     env:
       HARBOR_BUILD_TMP_PARENT: /var/lib/gha-runner-engine-build
 
@@ -672,13 +704,17 @@ jobs:
         with:
           install: true
 
+      - name: Clear stale GHCR login (self-hosted runners)
+        if: needs.prepare.outputs.publish_github == 'true'
+        run: docker logout ghcr.io 2>/dev/null || true
+
       - name: Log in to GitHub Container Registry
         if: needs.prepare.outputs.publish_github == 'true'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GHCR_TOKEN || github.token }}
 
       - name: Validate Harbor credentials
         if: needs.prepare.outputs.publish_harbor == 'true'
@@ -745,6 +781,9 @@ jobs:
       needs.build_harbor_runtime_arm64.result != 'failure' &&
       needs.build_harbor_runtime_arm64.result != 'cancelled'
     runs-on: [self-hosted, linux, homelab, amd64, build]
+    permissions:
+      contents: read
+      packages: write
 
     steps:
       - name: Check out the code
@@ -755,13 +794,17 @@ jobs:
         with:
           install: true
 
+      - name: Clear stale GHCR login (self-hosted runners)
+        if: needs.prepare.outputs.publish_github == 'true'
+        run: docker logout ghcr.io 2>/dev/null || true
+
       - name: Log in to GitHub Container Registry
         if: needs.prepare.outputs.publish_github == 'true'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GHCR_TOKEN || github.token }}
 
       - name: Validate Harbor credentials
         if: needs.prepare.outputs.publish_harbor == 'true'

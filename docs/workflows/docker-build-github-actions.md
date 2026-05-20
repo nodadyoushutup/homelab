@@ -136,6 +136,16 @@ complete every automated step (pins, push, pipeline trigger, sync API) first.
 8. **Verify health** with probes, service status, or Argo CD application status.
    Only then treat the container work as **complete**.
 
+## GHCR `permission_denied: write_package`
+
+The image **built** but **`docker push` to `ghcr.io/...` failed**. That is registry auth or package ACL—not a Dockerfile problem.
+
+1. **Repo workflow token** — **Settings → Actions → General → Workflow permissions** must be **Read and write** (not read-only). The workflow also sets job-level `packages: write`.
+2. **New package name** — First publish of `ghcr.io/<owner>/<image_name>` creates a GHCR package. Open [your packages](https://github.com/users?tab=packages), select the package if it exists, **Package settings → Manage Actions access**, and ensure **`homelab`** has **Write** (or delete a stray package created outside this repo and re-run the workflow).
+3. **Self-hosted runners** — Stale `~/.docker/config.json` creds can block push after a successful login. The workflow runs `docker logout ghcr.io` before login; re-run after pulling workflow fixes.
+4. **Optional PAT** — Add repo secret **`GHCR_TOKEN`**: classic PAT with **`write:packages`** (and **`read:packages`**). The workflow uses `secrets.GHCR_TOKEN || github.token` for `docker/login-action`.
+5. **Harbor unblock** — Dispatch with **`target_registry`** **`harbor`** or **`both`** and pin **`harbor.nodadyoushutup.com/homelab/<image_name>:<version>`** in Terraform until GHCR is fixed.
+
 ## Break-glass
 
 - **Compose dev** bind mounts (`docker/docker-compose.yml`) do not require this
