@@ -42,7 +42,7 @@ resource "docker_service" "telegraf_docker_metrics" {
     }
 
     container_spec {
-      image = "telegraf:1.36.3@sha256:532feb6341c2eb835eac808160f3011f3e5b0f87cb05e53797e6c98e107708dc"
+      image = "telegraf:1.38.4@sha256:fb0a95f7a42958b1e7219faf075552795f7e043432a28c54baf070442b6259ee"
       user  = "0:0"
       command = [
         "telegraf",
