@@ -88,6 +88,7 @@ jobs:
         id: prepare
         env:
           GITHUB_TOKEN: ${{ github.token }}
+          GHCR_ADMIN_TOKEN: ${{ secrets.RUNNER_ADMIN_TOKEN }}
         shell: bash
         run: |
           set -euo pipefail
@@ -111,33 +112,17 @@ jobs:
               docker_context="applications/cloud-image-repository"
               build_strategy="direct"
               if [ "${target_registry}" = "github" ] || [ "${target_registry}" = "both" ]; then
-                echo "GHCR container packages visible to GITHUB_TOKEN:"
-                curl -sS \
-                  -H "Authorization: Bearer ${GITHUB_TOKEN}" \
-                  -H "Accept: application/vnd.github+json" \
-                  -H "X-GitHub-Api-Version: 2022-11-28" \
-                  "https://api.github.com/user/packages?package_type=container&per_page=100" \
-                  | jq -r '.[] | "\(.name) repo=\(.repository.name // "none") id=\(.id)"' || true
+                package_token="${GHCR_ADMIN_TOKEN:-${GITHUB_TOKEN}}"
                 echo "Cleaning GHCR packages so flat ghcr.io/${{ github.repository_owner }}/cloud-image-repository can publish..."
                 for package_spec in "cloud-image-repository" "homelab%2Fcloud-image-repository"; do
                   delete_status="$(
                     curl -sS -o "/tmp/ghcr-package-delete-${package_spec}.json" -w '%{http_code}' -X DELETE \
-                      -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+                      -H "Authorization: Bearer ${package_token}" \
                       -H "Accept: application/vnd.github+json" \
                       -H "X-GitHub-Api-Version: 2022-11-28" \
                       "https://api.github.com/user/packages/container/${package_spec}" || true
                   )"
                   echo "GHCR delete ${package_spec}: HTTP ${delete_status}"
-                  if [ "${delete_status}" != "204" ] && [ "${delete_status}" != "404" ]; then
-                    link_status="$(
-                      curl -sS -o "/tmp/ghcr-package-link-${package_spec}.json" -w '%{http_code}' -X POST \
-                        -H "Authorization: Bearer ${GITHUB_TOKEN}" \
-                        -H "Accept: application/vnd.github+json" \
-                        -H "X-GitHub-Api-Version: 2022-11-28" \
-                        "https://api.github.com/user/packages/container/${package_spec}/repositories/${{ github.repository_id }}" || true
-                    )"
-                    echo "GHCR link ${package_spec} to homelab: HTTP ${link_status}"
-                  fi
                 done
               fi
               ;;
@@ -377,7 +362,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
-          password: ${{ secrets.GHCR_TOKEN || github.token }}
+          password: ${{ secrets.RUNNER_ADMIN_TOKEN || secrets.GHCR_TOKEN || github.token }}
 
       - name: Validate Harbor credentials
         if: needs.prepare.outputs.publish_harbor == 'true'
@@ -428,13 +413,9 @@ jobs:
             --platform linux/amd64 \
             --provenance=false \
             --file "${{ needs.prepare.outputs.dockerfile }}" \
-            --load \
+            --push \
             "${tag_args[@]}" \
             "${{ needs.prepare.outputs.docker_context }}"
-
-          for image_ref in "${image_refs[@]}"; do
-            docker push "${image_ref}"
-          done
 
       - name: Post-job Docker cleanup (self-hosted disk)
         if: always()
@@ -467,7 +448,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
-          password: ${{ secrets.GHCR_TOKEN || github.token }}
+          password: ${{ secrets.RUNNER_ADMIN_TOKEN || secrets.GHCR_TOKEN || github.token }}
 
       - name: Validate Harbor credentials
         if: needs.prepare.outputs.publish_harbor == 'true'
@@ -518,13 +499,9 @@ jobs:
             --platform linux/arm64 \
             --provenance=false \
             --file "${{ needs.prepare.outputs.dockerfile }}" \
-            --load \
+            --push \
             "${tag_args[@]}" \
             "${{ needs.prepare.outputs.docker_context }}"
-
-          for image_ref in "${image_refs[@]}"; do
-            docker push "${image_ref}"
-          done
 
   publish_direct_manifest:
     needs:
@@ -554,7 +531,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
-          password: ${{ secrets.GHCR_TOKEN || github.token }}
+          password: ${{ secrets.RUNNER_ADMIN_TOKEN || secrets.GHCR_TOKEN || github.token }}
 
       - name: Validate Harbor credentials
         if: needs.prepare.outputs.publish_harbor == 'true'
@@ -666,7 +643,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
-          password: ${{ secrets.GHCR_TOKEN || github.token }}
+          password: ${{ secrets.RUNNER_ADMIN_TOKEN || secrets.GHCR_TOKEN || github.token }}
 
       - name: Validate Harbor credentials
         if: needs.prepare.outputs.publish_harbor == 'true'
@@ -749,7 +726,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
-          password: ${{ secrets.GHCR_TOKEN || github.token }}
+          password: ${{ secrets.RUNNER_ADMIN_TOKEN || secrets.GHCR_TOKEN || github.token }}
 
       - name: Validate Harbor credentials
         if: needs.prepare.outputs.publish_harbor == 'true'
@@ -839,7 +816,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
-          password: ${{ secrets.GHCR_TOKEN || github.token }}
+          password: ${{ secrets.RUNNER_ADMIN_TOKEN || secrets.GHCR_TOKEN || github.token }}
 
       - name: Validate Harbor credentials
         if: needs.prepare.outputs.publish_harbor == 'true'
