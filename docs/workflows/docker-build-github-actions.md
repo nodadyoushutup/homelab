@@ -141,9 +141,9 @@ complete every automated step (pins, push, pipeline trigger, sync API) first.
 The image **built** but **`docker push` to `ghcr.io/...` failed**. That is registry auth or package ACL—not a Dockerfile problem.
 
 1. **Repo workflow token** — **Settings → Actions → General → Workflow permissions** must be **Read and write** (not read-only). The workflow also sets job-level `packages: write`.
-2. **Orphan flat package** — An existing **`ghcr.io/<owner>/<image_name>`** package not linked to **`homelab`** can cause `write_package` on first publish. The **`cloud-image-repository`** build target runs a prepare-step cleanup (delete or link) before push. Otherwise delete the stray package under [your packages](https://github.com/users?tab=packages) → **Package settings** → **Manage Actions access** (grant **`homelab`** **Write**).
+2. **Orphan package** — A **`ghcr.io/<owner>/<image_name>`** package created outside the **`homelab`** workflow (for example via a personal PAT) may not appear under the repo **Packages** tab and can block `write_package`. Delete it under [your packages](https://github.com/users?tab=packages) or **Package settings → Manage Actions access** (grant **`homelab`** **Write**), then re-run the workflow so **`GITHUB_TOKEN`** publishes and links it like other images.
 3. **Self-hosted runners** — Stale `~/.docker/config.json` creds can block push after a successful login. The workflow runs `docker logout ghcr.io` before login; re-run after pulling workflow fixes.
-4. **Optional PAT** — Add repo secret **`GHCR_TOKEN`**: classic PAT with **`write:packages`** (and **`read:packages`**). The workflow uses `secrets.GHCR_TOKEN || github.token` for `docker/login-action`.
+4. **Optional PAT** — Add repo secret **`GHCR_TOKEN`**: classic PAT with **`write:packages`**. The workflow uses `secrets.GHCR_TOKEN || github.token` for `docker/login-action`.
 5. **Harbor unblock** — Dispatch with **`target_registry`** **`harbor`** or **`both`** and pin **`harbor.nodadyoushutup.com/homelab/<image_name>:<version>`** in Terraform until GHCR is fixed.
 
 ## Break-glass
