@@ -45,7 +45,7 @@ resource "docker_service" "cloud_image_repository" {
     }
 
     container_spec {
-      image = var.image_reference
+      image = "ghcr.io/nodadyoushutup/cloud-image-repository:0.0.1"
 
       env = {
         CLOUD_IMAGE_REPOSITORY_DATA_ROOT = local.data_mount_target

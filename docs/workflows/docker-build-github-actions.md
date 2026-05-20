@@ -36,7 +36,7 @@ images from this repository. Follow it whenever work produces or requires a new
 | `version` | New semver after **+0.0.1** patch bump |
 | `target_registry` | `github` |
 | `build_platforms` | `both` |
-| `build_target` | One of the workflow choices (e.g. `rag-engine`, `mcp-rag`, `langgraph`, …) |
+| `build_target` | One of the workflow choices (default `cloud-image-repository`; e.g. `rag-engine`, `mcp-rag`, `langgraph`, …) |
 
 Optional: read the workflow file for the authoritative list of `build_target`
 values and special cases.

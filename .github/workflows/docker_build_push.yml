@@ -319,9 +319,6 @@ jobs:
     needs: prepare
     if: needs.prepare.outputs.build_strategy == 'direct' && needs.prepare.outputs.build_amd64 == 'true'
     runs-on: [self-hosted, linux, homelab, amd64, build]
-    permissions:
-      contents: read
-      packages: write
 
     steps:
       - name: Check out the code
@@ -332,17 +329,13 @@ jobs:
         with:
           install: true
 
-      - name: Clear stale GHCR login (self-hosted runners)
-        if: needs.prepare.outputs.publish_github == 'true'
-        run: docker logout ghcr.io 2>/dev/null || true
-
       - name: Log in to GitHub Container Registry
         if: needs.prepare.outputs.publish_github == 'true'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GHCR_TOKEN || github.token }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Validate Harbor credentials
         if: needs.prepare.outputs.publish_harbor == 'true'
@@ -409,9 +402,6 @@ jobs:
     needs: prepare
     if: needs.prepare.outputs.build_strategy == 'direct' && needs.prepare.outputs.build_arm64 == 'true'
     runs-on: [self-hosted, linux, homelab, arm64]
-    permissions:
-      contents: read
-      packages: write
 
     steps:
       - name: Check out the code
@@ -422,17 +412,13 @@ jobs:
         with:
           install: true
 
-      - name: Clear stale GHCR login (self-hosted runners)
-        if: needs.prepare.outputs.publish_github == 'true'
-        run: docker logout ghcr.io 2>/dev/null || true
-
       - name: Log in to GitHub Container Registry
         if: needs.prepare.outputs.publish_github == 'true'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GHCR_TOKEN || github.token }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Validate Harbor credentials
         if: needs.prepare.outputs.publish_harbor == 'true'
@@ -504,22 +490,15 @@ jobs:
       needs.build_direct_arm64.result != 'failure' &&
       needs.build_direct_arm64.result != 'cancelled'
     runs-on: [self-hosted, linux, homelab, amd64, build]
-    permissions:
-      contents: read
-      packages: write
 
     steps:
-      - name: Clear stale GHCR login (self-hosted runners)
-        if: needs.prepare.outputs.publish_github == 'true'
-        run: docker logout ghcr.io 2>/dev/null || true
-
       - name: Log in to GitHub Container Registry
         if: needs.prepare.outputs.publish_github == 'true'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GHCR_TOKEN || github.token }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Validate Harbor credentials
         if: needs.prepare.outputs.publish_harbor == 'true'
@@ -604,9 +583,6 @@ jobs:
     needs: prepare
     if: needs.prepare.outputs.build_strategy == 'harbor-runtime-set' && needs.prepare.outputs.build_amd64 == 'true'
     runs-on: [self-hosted, linux, homelab, amd64, build]
-    permissions:
-      contents: read
-      packages: write
     env:
       # Swarm sets this on the runner container, but the Actions job often does not inherit it;
       # must match bind mount + engine_visible_build_path on the runner nodes.
@@ -621,17 +597,13 @@ jobs:
         with:
           install: true
 
-      - name: Clear stale GHCR login (self-hosted runners)
-        if: needs.prepare.outputs.publish_github == 'true'
-        run: docker logout ghcr.io 2>/dev/null || true
-
       - name: Log in to GitHub Container Registry
         if: needs.prepare.outputs.publish_github == 'true'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GHCR_TOKEN || github.token }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Validate Harbor credentials
         if: needs.prepare.outputs.publish_harbor == 'true'
@@ -689,9 +661,6 @@ jobs:
     needs: prepare
     if: needs.prepare.outputs.build_strategy == 'harbor-runtime-set' && needs.prepare.outputs.build_arm64 == 'true'
     runs-on: [self-hosted, linux, homelab, arm64]
-    permissions:
-      contents: read
-      packages: write
     env:
       HARBOR_BUILD_TMP_PARENT: /var/lib/gha-runner-engine-build
 
@@ -704,17 +673,13 @@ jobs:
         with:
           install: true
 
-      - name: Clear stale GHCR login (self-hosted runners)
-        if: needs.prepare.outputs.publish_github == 'true'
-        run: docker logout ghcr.io 2>/dev/null || true
-
       - name: Log in to GitHub Container Registry
         if: needs.prepare.outputs.publish_github == 'true'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GHCR_TOKEN || github.token }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Validate Harbor credentials
         if: needs.prepare.outputs.publish_harbor == 'true'
@@ -781,9 +746,6 @@ jobs:
       needs.build_harbor_runtime_arm64.result != 'failure' &&
       needs.build_harbor_runtime_arm64.result != 'cancelled'
     runs-on: [self-hosted, linux, homelab, amd64, build]
-    permissions:
-      contents: read
-      packages: write
 
     steps:
       - name: Check out the code
@@ -794,17 +756,13 @@ jobs:
         with:
           install: true
 
-      - name: Clear stale GHCR login (self-hosted runners)
-        if: needs.prepare.outputs.publish_github == 'true'
-        run: docker logout ghcr.io 2>/dev/null || true
-
       - name: Log in to GitHub Container Registry
         if: needs.prepare.outputs.publish_github == 'true'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GHCR_TOKEN || github.token }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Validate Harbor credentials
         if: needs.prepare.outputs.publish_harbor == 'true'

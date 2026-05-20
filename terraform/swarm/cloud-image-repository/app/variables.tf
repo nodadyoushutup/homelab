@@ -1,9 +1,3 @@
-variable "image_reference" {
-  description = "Cloud image repository image (build via Docker - Build and Push Image, build_target cloud-image-repository)."
-  type        = string
-  default     = "ghcr.io/nodadyoushutup/cloud-image-repository:0.0.1"
-}
-
 variable "swarm_docker_provider_config" {
   description = <<-EOT
     Shared Docker SSH host and registry credentials (GHCR, Harbor, etc.).

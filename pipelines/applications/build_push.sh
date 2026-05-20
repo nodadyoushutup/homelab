@@ -127,6 +127,34 @@ resolve_build_target() {
   DOCKERFILE=""
 
   case "${BUILD_TARGET}" in
+    cloud-image-repository)
+      IMAGE_NAME="cloud-image-repository"
+      DOCKER_CONTEXT="applications/cloud-image-repository"
+      BUILD_STRATEGY="direct"
+      ;;
+    gha-runner)
+      IMAGE_NAME="gha-runner"
+      DOCKER_CONTEXT="."
+      DOCKERFILE="applications/gha-runner/Dockerfile"
+      BUILD_STRATEGY="direct"
+      ;;
+    harbor-runtime-set)
+      IMAGE_NAME="harbor-runtime-set"
+      DOCKER_CONTEXT="applications/harbor"
+      BUILD_STRATEGY="harbor-runtime-set"
+      ;;
+    jenkins-agent)
+      IMAGE_NAME="jenkins-agent"
+      DOCKER_CONTEXT="."
+      DOCKERFILE="applications/jenkins-agent/Dockerfile"
+      BUILD_STRATEGY="direct"
+      ;;
+    jenkins-controller)
+      IMAGE_NAME="jenkins-controller"
+      DOCKER_CONTEXT="."
+      DOCKERFILE="applications/jenkins-controller/Dockerfile"
+      BUILD_STRATEGY="direct"
+      ;;
     langchain-agent-chat)
       IMAGE_NAME="langchain-agent-chat"
       DOCKER_CONTEXT="applications/langchain-agent-chat"
@@ -140,10 +168,10 @@ resolve_build_target() {
       SUPPORTED_PLATFORMS="linux/amd64"
       BUILD_STRATEGY="direct"
       ;;
-    harbor-runtime-set)
-      IMAGE_NAME="harbor-runtime-set"
-      DOCKER_CONTEXT="applications/harbor"
-      BUILD_STRATEGY="harbor-runtime-set"
+    mcp-atlassian)
+      IMAGE_NAME="mcp-atlassian"
+      DOCKER_CONTEXT="applications/mcp-atlassian"
+      BUILD_STRATEGY="direct"
       ;;
     mcp-bash-pipeline)
       IMAGE_NAME="mcp-bash-pipeline"
@@ -176,37 +204,24 @@ resolve_build_target() {
       DOCKER_CONTEXT="applications/mcp-google-workspace"
       BUILD_STRATEGY="direct"
       ;;
-    mcp-terraform)
-      IMAGE_NAME="mcp-terraform"
-      DOCKER_CONTEXT="applications/mcp-terraform"
-      BUILD_STRATEGY="direct"
-      ;;
     mcp-rag)
       IMAGE_NAME="mcp-rag"
       DOCKER_CONTEXT="applications/mcp-rag"
       BUILD_STRATEGY="direct"
       ;;
+    mcp-terraform)
+      IMAGE_NAME="mcp-terraform"
+      DOCKER_CONTEXT="applications/mcp-terraform"
+      BUILD_STRATEGY="direct"
+      ;;
+    qbittorrent-metrics-exporter)
+      IMAGE_NAME="qbittorrent-metrics-exporter"
+      DOCKER_CONTEXT="applications/qbittorrent-metrics-exporter"
+      BUILD_STRATEGY="direct"
+      ;;
     rag-engine)
       IMAGE_NAME="rag-engine"
       DOCKER_CONTEXT="applications/rag-engine"
-      BUILD_STRATEGY="direct"
-      ;;
-    gha-runner)
-      IMAGE_NAME="gha-runner"
-      DOCKER_CONTEXT="."
-      DOCKERFILE="applications/gha-runner/Dockerfile"
-      BUILD_STRATEGY="direct"
-      ;;
-    jenkins-agent)
-      IMAGE_NAME="jenkins-agent"
-      DOCKER_CONTEXT="."
-      DOCKERFILE="applications/jenkins-agent/Dockerfile"
-      BUILD_STRATEGY="direct"
-      ;;
-    jenkins-controller)
-      IMAGE_NAME="jenkins-controller"
-      DOCKER_CONTEXT="."
-      DOCKERFILE="applications/jenkins-controller/Dockerfile"
       BUILD_STRATEGY="direct"
       ;;
     *)
