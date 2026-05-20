@@ -1,6 +1,6 @@
 # Publish image first: workflow Docker - Build and Push Image, build_target cloud-image-repository.
 
-image_reference = "ghcr.io/nodadyoushutup/homelab/cloud-image-repository:0.0.1"
+image_reference = "ghcr.io/nodadyoushutup/cloud-image-repository:0.0.1"
 
 # placement = {
 #   constraints = ['node.labels.role==swarm-cp-0']

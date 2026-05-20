@@ -62,6 +62,9 @@ env:
 jobs:
   prepare:
     runs-on: [self-hosted, linux, homelab, amd64, build]
+    permissions:
+      contents: read
+      packages: write
     outputs:
       version: ${{ steps.prepare.outputs.version }}
       target_registry: ${{ steps.prepare.outputs.target_registry }}
@@ -83,6 +86,8 @@ jobs:
 
       - name: Prepare build parameters
         id: prepare
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           set -euo pipefail
@@ -100,15 +105,37 @@ jobs:
             exit 1
           fi
 
-          ghcr_image_name=""
-
           case "$build_target" in
             cloud-image-repository)
               image_name="cloud-image-repository"
-              # Repo-scoped GHCR path; flat cloud-image-repository package is not writable by homelab GITHUB_TOKEN.
-              ghcr_image_name="homelab/cloud-image-repository"
               docker_context="applications/cloud-image-repository"
               build_strategy="direct"
+              if [ "${target_registry}" = "github" ] || [ "${target_registry}" = "both" ]; then
+                echo "Ensuring flat GHCR package cloud-image-repository is writable from homelab..."
+                delete_status="$(
+                  curl -sS -o /tmp/ghcr-package-delete.json -w '%{http_code}' -X DELETE \
+                    -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+                    -H "Accept: application/vnd.github+json" \
+                    -H "X-GitHub-Api-Version: 2022-11-28" \
+                    "https://api.github.com/user/packages/container/cloud-image-repository" || true
+                )"
+                case "${delete_status}" in
+                  204|404)
+                    echo "GHCR package cleanup: HTTP ${delete_status} (deleted or not present)."
+                    ;;
+                  *)
+                    echo "GHCR package cleanup: HTTP ${delete_status}; attempting repository link..."
+                    link_status="$(
+                      curl -sS -o /tmp/ghcr-package-link.json -w '%{http_code}' -X POST \
+                        -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+                        -H "Accept: application/vnd.github+json" \
+                        -H "X-GitHub-Api-Version: 2022-11-28" \
+                        "https://api.github.com/user/packages/container/cloud-image-repository/repositories/${{ github.repository_id }}" || true
+                    )"
+                    echo "GHCR package link: HTTP ${link_status}"
+                    ;;
+                esac
+              fi
               ;;
             gha-runner)
               image_name="gha-runner"
@@ -240,7 +267,7 @@ jobs:
 
           if [ "${build_strategy}" = "direct" ]; then
             if [ "${publish_github}" = "true" ]; then
-              ghcr_image_base="${GHCR_NAMESPACE}/${ghcr_image_name:-${image_name}}"
+              ghcr_image_base="${GHCR_NAMESPACE}/${image_name}"
             fi
 
             if [ "${publish_harbor}" = "true" ]; then
