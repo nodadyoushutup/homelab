@@ -1,5 +1,7 @@
 FROM python:3.12.11-alpine3.22
 
+LABEL org.opencontainers.image.source=https://github.com/nodadyoushutup/homelab
+
 WORKDIR /srv/cloud-image-repository
 
 COPY server.py .

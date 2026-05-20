@@ -1,0 +1,40 @@
+name: GHCR - Link package to homelab
+
+on:
+  workflow_dispatch:
+    inputs:
+      package_name:
+        description: "Container package name (GHCR image name without registry prefix)"
+        required: true
+        default: cloud-image-repository
+        type: string
+
+permissions:
+  packages: write
+
+jobs:
+  link:
+    runs-on: [self-hosted, linux, homelab, amd64, build]
+    steps:
+      - name: Link package to nodadyoushutup/homelab
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GHCR_ADMIN_TOKEN: ${{ secrets.RUNNER_ADMIN_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          package_name="${{ github.event.inputs.package_name }}"
+          package_token="${GHCR_ADMIN_TOKEN:-${GITHUB_TOKEN}}"
+          link_status="$(
+            curl -sS -o /tmp/ghcr-package-link.json -w '%{http_code}' -X POST \
+              -H "Authorization: Bearer ${package_token}" \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              "https://api.github.com/user/packages/container/${package_name}/repositories/${{ github.repository_id }}" || true
+          )"
+          echo "Link ghcr.io/${{ github.repository_owner }}/${package_name} → ${{ github.repository }}: HTTP ${link_status}"
+          cat /tmp/ghcr-package-link.json || true
+          case "${link_status}" in
+            201|204|303|422) exit 0 ;;
+            *) exit 1 ;;
+          esac
