@@ -50,7 +50,7 @@ resource "docker_service" "chromadb" {
 
   mode {
     replicated {
-      replicas = var.replicas
+      replicas = 1
     }
   }
 

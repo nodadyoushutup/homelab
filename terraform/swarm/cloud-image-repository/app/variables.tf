@@ -1,3 +1,9 @@
+variable "image_reference" {
+  description = "Cloud image repository image (build via Docker - Build and Push Image, build_target cloud-image-repository)."
+  type        = string
+  default     = "ghcr.io/nodadyoushutup/cloud-image-repository:0.0.1"
+}
+
 variable "swarm_docker_provider_config" {
   description = <<-EOT
     Shared Docker SSH host and registry credentials (GHCR, Harbor, etc.).
@@ -91,15 +97,3 @@ variable "secret_files" {
   sensitive = true
 }
 
-variable "config_path" {
-  description = <<-EOT
-    Absolute path to stack config under CONFIG_DIR (nginx.conf for this service).
-    Validated at plan time; not mounted by this root yet—the Swarm service uses Python only.
-  EOT
-  type        = string
-
-  validation {
-    condition     = fileexists(var.config_path)
-    error_message = "config_path must be an existing absolute path (e.g. CONFIG_DIR/terraform/swarm/cloud-image-repository/nginx.conf)."
-  }
-}

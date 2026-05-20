@@ -6,35 +6,32 @@ locals {
   published_port    = 18088
   data_mount_target = "/srv/cloud-image-repository/data"
   ui_mount_target   = "/srv/cloud-image-repository/ui"
-  index_html        = file("${path.module}/index.html")
-  app_js            = file("${path.module}/app.js")
-  favicon_svg       = file("${path.module}/favicon.svg")
-  server_py         = file("${path.module}/server.py")
-  index_html_hash   = substr(sha256(local.index_html), 0, 12)
-  app_js_hash       = substr(sha256(local.app_js), 0, 12)
-  favicon_svg_hash  = substr(sha256(local.favicon_svg), 0, 12)
-  server_py_hash    = substr(sha256(local.server_py), 0, 12)
-  service_config_hash = substr(
-    sha256(
-      join(
-        "\n",
-        [
-          local.index_html,
-          local.app_js,
-          local.favicon_svg,
-          local.server_py,
-        ],
-      ),
-    ),
-    0,
-    12,
-  )
-  app_force_update = parseint(substr(local.service_config_hash, 0, 8), 16)
-  image_reference  = "python:3.12.11-alpine3.22"
 }
 
-
-
+locals {
+  pull_ref                      = var.image_reference
+  pull_at_stripped              = split("@", local.pull_ref)[0]
+  pull_colon_parts              = split(":", local.pull_at_stripped)
+  pull_image_repository         = length(local.pull_colon_parts) <= 1 ? local.pull_at_stripped : join(":", slice(local.pull_colon_parts, 0, length(local.pull_colon_parts) - 1))
+  pull_repo_slash_parts         = split("/", local.pull_image_repository)
+  pull_registry_host            = length(local.pull_repo_slash_parts) >= 2 && (strcontains(local.pull_repo_slash_parts[0], ".") || strcontains(local.pull_repo_slash_parts[0], ":") || lower(local.pull_repo_slash_parts[0]) == "localhost") ? local.pull_repo_slash_parts[0] : "docker.io"
+  pull_normalized_registry_host = lower(trimspace(local.pull_registry_host))
+  pull_auth_matches = [
+    for a in local.docker_registry_auths : a
+    if lower(trimspace(replace(replace(try(a.address, "ghcr.io"), "https://", ""), "http://", ""))) == local.pull_normalized_registry_host
+  ]
+  pull_selected_auth = length(local.pull_auth_matches) > 0 ? local.pull_auth_matches[0] : (
+    length(local.docker_registry_auths) == 1 ? local.docker_registry_auths[0] : null
+  )
+  pull_server_address = local.pull_selected_auth == null ? "" : trimspace(replace(replace(try(local.pull_selected_auth.address, "ghcr.io"), "https://", ""), "http://", ""))
+  docker_service_pull_auth_map = local.pull_selected_auth == null ? {} : {
+    pull = {
+      server_address = local.pull_server_address
+      username       = local.pull_selected_auth.username
+      password       = local.pull_selected_auth.password
+    }
+  }
+}
 
 locals {
   docker_registry_auths = coalesce(try(var.swarm_docker_provider_config.registry_auths, null), [])

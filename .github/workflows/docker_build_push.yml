@@ -46,6 +46,7 @@ on:
           - gha-runner
           - jenkins-agent
           - jenkins-controller
+          - cloud-image-repository
 
 permissions:
   contents: write
@@ -189,6 +190,11 @@ jobs:
               image_name="jenkins-controller"
               docker_context="."
               dockerfile="applications/jenkins-controller/Dockerfile"
+              build_strategy="direct"
+              ;;
+            cloud-image-repository)
+              image_name="cloud-image-repository"
+              docker_context="applications/cloud-image-repository"
               build_strategy="direct"
               ;;
             *)
