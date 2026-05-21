@@ -13,7 +13,7 @@ Publish the service behind TLS at **`https://mcp.cloudflare.nodadyoushutup.com/m
 
 ## Cursor
 
-Project **`.cursor/mcp.json`** can register **`mcp_cloudflare`** at your public MCP URL. No client API key — **`CLOUDFLARE_API_TOKEN`**, **`CLOUDFLARE_ZONE_ID`**, and related settings live in Swarm **`env`** on **`.config/terraform/swarm/mcp-cloudflare/app.tfvars`**. For all workspaces, add the same block to **User** MCP settings or **`~/.cursor/mcp.json`**.
+Project **`.cursor/mcp.json`** registers **`mcp_cloudflare`** at **`https://mcp.cloudflare.nodadyoushutup.com/mcp`** (Streamable HTTP — **`--transport streamablehttp`** in **`applications/mcp-cloudflare/entrypoint.sh`**). No client API key — **`CLOUDFLARE_*`** credentials live in Swarm **`env`** on **`.config/terraform/swarm/mcp-cloudflare/app.tfvars`**. The same URL is also in **`~/.cursor/mcp.json`** for all workspaces. After deploy or config edits, **reload MCP** in Cursor Settings if tools stay disconnected.
 
 ## LangGraph
 

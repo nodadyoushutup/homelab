@@ -15,7 +15,6 @@ Each page describes **how to use** one Model Context Protocol (MCP) server defin
 | **mcp-cloudflare** | [mcp-cloudflare.md](mcp-cloudflare.md) |
 | **mcp-google-workspace** | [mcp-google-workspace.md](mcp-google-workspace.md) |
 | **mcp-fortigate** | [mcp-fortigate.md](mcp-fortigate.md) |
-| **mcp-bash-pipeline** | [mcp-bash-pipeline.md](mcp-bash-pipeline.md) |
 
 For the pattern used when a service gets a new public name (DNS plus reverse proxy), see [edge-dns-and-nginx-proxy.md](../workflows/edge-dns-and-nginx-proxy.md).
 

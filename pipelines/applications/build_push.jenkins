@@ -17,7 +17,6 @@ pipeline {
       'langchain-agent-chat',
       'langgraph',
       'harbor-runtime-set',
-      'mcp-bash-pipeline',
       'mcp-cloudflare',
       'mcp-code',
       'mcp-fortigate',

@@ -173,11 +173,6 @@ resolve_build_target() {
       DOCKER_CONTEXT="applications/mcp-atlassian"
       BUILD_STRATEGY="direct"
       ;;
-    mcp-bash-pipeline)
-      IMAGE_NAME="mcp-bash-pipeline"
-      DOCKER_CONTEXT="applications/mcp-bash-pipeline"
-      BUILD_STRATEGY="direct"
-      ;;
     mcp-cloudflare)
       IMAGE_NAME="mcp-cloudflare"
       DOCKER_CONTEXT="applications/mcp-cloudflare"

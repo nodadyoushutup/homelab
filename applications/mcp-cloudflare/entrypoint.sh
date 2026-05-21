@@ -12,6 +12,7 @@ if [ -z "${CLOUDFLARE_ZONE_ID:-}" ]; then
 fi
 
 exec /app/.venv/bin/mcp-proxy \
+  --transport streamablehttp \
   --host "${MCP_CLOUDFLARE_HOST:-0.0.0.0}" \
   --port "${MCP_CLOUDFLARE_LISTEN_PORT:-8084}" \
   --stateless \

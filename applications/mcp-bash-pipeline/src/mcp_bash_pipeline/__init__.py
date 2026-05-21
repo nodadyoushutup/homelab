@@ -1,1 +1,0 @@
-"""mcp-bash-pipeline package."""

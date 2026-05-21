@@ -38,7 +38,6 @@ on:
           - langchain-agent-chat
           - langgraph
           - mcp-atlassian
-          - mcp-bash-pipeline
           - mcp-cloudflare
           - mcp-code
           - mcp-fortigate
@@ -145,11 +144,6 @@ jobs:
             mcp-atlassian)
               image_name="mcp-atlassian"
               docker_context="applications/mcp-atlassian"
-              build_strategy="direct"
-              ;;
-            mcp-bash-pipeline)
-              image_name="mcp-bash-pipeline"
-              docker_context="applications/mcp-bash-pipeline"
               build_strategy="direct"
               ;;
             mcp-cloudflare)
