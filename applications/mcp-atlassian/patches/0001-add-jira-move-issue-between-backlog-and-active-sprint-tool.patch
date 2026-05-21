@@ -14,7 +14,7 @@ index 1111111..2222222 100644
 +    },
 +)
 +@check_write_access
-+async def move_issue_between_backlog_and_active_sprint(
++async def move_backlog_sprint(
 +    ctx: Context,
 +    issue_key: Annotated[
 +        str,

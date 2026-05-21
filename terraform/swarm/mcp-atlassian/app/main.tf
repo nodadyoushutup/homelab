@@ -30,7 +30,7 @@ resource "docker_service" "mcp_atlassian" {
     }
 
     container_spec {
-      image = "ghcr.io/nodadyoushutup/mcp-atlassian:0.0.3"
+      image = "ghcr.io/nodadyoushutup/mcp-atlassian:0.0.4"
       env   = var.env
 
       dns_config {
