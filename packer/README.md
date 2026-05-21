@@ -97,8 +97,8 @@ packer/logs/build-<utc-timestamp>-v0.0.1.log
 Artifact upload destinations:
 
 ```text
-https://cloud-image-repository.image.nodadyoushutup.com/ubuntu-24.04-ndysu-0.0.1-amd64.qcow2
-https://cloud-image-repository.image.nodadyoushutup.com/ubuntu-24.04-ndysu-0.0.1-arm64.qcow2
+https://cloud-image-repository.nodadyoushutup.com/ubuntu-24.04-ndysu-0.0.1-amd64.qcow2
+https://cloud-image-repository.nodadyoushutup.com/ubuntu-24.04-ndysu-0.0.1-arm64.qcow2
 ```
 
 If the HTTPS proxy returns `413`, `build.sh` retries each artifact upload directly to:

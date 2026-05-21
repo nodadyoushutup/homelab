@@ -117,7 +117,7 @@ jobs:
           target="${{ github.event.inputs.target }}"
           case "$target" in
             cloud-image-repository)
-              upload_base_url="https://cloud-image-repository.image.nodadyoushutup.com"
+              upload_base_url="https://cloud-image-repository.nodadyoushutup.com"
               upload_fallback_base_url="http://192.168.1.120:18088"
               ;;
             *)

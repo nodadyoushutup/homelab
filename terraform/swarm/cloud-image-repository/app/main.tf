@@ -35,7 +35,7 @@ resource "docker_service" "cloud_image_repository" {
     }
 
     container_spec {
-      image = "ghcr.io/nodadyoushutup/cloud-image-repository:0.0.1"
+      image = "ghcr.io/nodadyoushutup/cloud-image-repository:0.0.2"
 
       dns_config {
         nameservers = var.dns_nameservers

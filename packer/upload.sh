@@ -91,7 +91,7 @@ done
 
 case "${TARGET}" in
   cloud-image-repository)
-    DEFAULT_UPLOAD_BASE_URL="https://cloud-image-repository.image.nodadyoushutup.com"
+    DEFAULT_UPLOAD_BASE_URL="https://cloud-image-repository.nodadyoushutup.com"
     DEFAULT_UPLOAD_FALLBACK_BASE_URL="http://192.168.1.120:18088"
     ;;
   *)
