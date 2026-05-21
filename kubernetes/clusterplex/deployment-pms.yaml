@@ -118,16 +118,9 @@ spec:
             httpGet:
               path: /identity
               port: plex
-            periodSeconds: 15
-            timeoutSeconds: 15
-            failureThreshold: 6
-          livenessProbe:
-            httpGet:
-              path: /identity
-              port: plex
             periodSeconds: 30
-            timeoutSeconds: 15
-            failureThreshold: 10
+            timeoutSeconds: 30
+            failureThreshold: 20
           resources:
             requests:
               cpu: "1"
