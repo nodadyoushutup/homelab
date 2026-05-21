@@ -18,10 +18,4 @@ RUN set -eux; \
 USER app
 
 ENTRYPOINT ["mcp-atlassian"]
-CMD [
-  "--transport", "streamable-http",
-  "--host", "0.0.0.0",
-  "--port", "8000",
-  "--path", "/mcp",
-  "--toolsets", "all",
-]
+CMD ["--transport", "streamable-http", "--host", "0.0.0.0", "--port", "8000", "--path", "/mcp", "--toolsets", "all"]
