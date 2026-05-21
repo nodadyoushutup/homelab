@@ -46,14 +46,6 @@ resource "docker_service" "cloud_image_repository" {
         source = docker_volume.cloud_image_repository_data.name
         target = "/data"
       }
-
-      healthcheck {
-        test         = ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/', timeout=5).read(1)"]
-        interval     = "15s"
-        timeout      = "5s"
-        retries      = 5
-        start_period = "20s"
-      }
     }
   }
 
@@ -61,6 +53,10 @@ resource "docker_service" "cloud_image_repository" {
     replicated {
       replicas = 1
     }
+  }
+
+  update_config {
+    order = "stop-first"
   }
 
   endpoint_spec {

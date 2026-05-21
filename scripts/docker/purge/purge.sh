@@ -7,7 +7,6 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BASE_LIB="${SCRIPT_DIR}/base.sh"
 KNOWN_SERVICES=(
-  docker_volume_backup
   dozzle
   gha-runner-amd64
   gha-runner-arm64
@@ -25,8 +24,6 @@ KNOWN_SERVICES=(
   cloud-image-repository
 )
 declare -A SERVICE_MAP=(
-  [docker-volume-backup]="docker_volume_backup"
-  [docker_volume_backup]="docker_volume_backup"
   [dozzle]="dozzle"
   [gha-runner]="gha-runner"
   [gha_runner]="gha-runner"
