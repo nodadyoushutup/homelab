@@ -60,7 +60,8 @@ env:
 
 jobs:
   prepare:
-    runs-on: [self-hosted, linux, homelab, amd64, build]
+    # Arch-agnostic: checkout + bash only. Use shared `build` label so arm64 can run when amd64 is down.
+    runs-on: [self-hosted, linux, homelab, build]
     outputs:
       version: ${{ steps.prepare.outputs.version }}
       target_registry: ${{ steps.prepare.outputs.target_registry }}
@@ -483,7 +484,7 @@ jobs:
       needs.build_direct_amd64.result != 'cancelled' &&
       needs.build_direct_arm64.result != 'failure' &&
       needs.build_direct_arm64.result != 'cancelled'
-    runs-on: [self-hosted, linux, homelab, amd64, build]
+    runs-on: [self-hosted, linux, homelab, build]
 
     steps:
       - name: Log in to GitHub Container Registry
@@ -739,7 +740,7 @@ jobs:
       needs.build_harbor_runtime_amd64.result != 'cancelled' &&
       needs.build_harbor_runtime_arm64.result != 'failure' &&
       needs.build_harbor_runtime_arm64.result != 'cancelled'
-    runs-on: [self-hosted, linux, homelab, amd64, build]
+    runs-on: [self-hosted, linux, homelab, build]
 
     steps:
       - name: Check out the code

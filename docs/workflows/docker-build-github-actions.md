@@ -65,6 +65,12 @@ Some `build_target` values only support **linux/amd64** in the workflow
 **`both`** anyway; the **prepare** job **filters** to supported platforms, so
 only amd64 is built. Do not treat that as an error.
 
+**Coordinator jobs** (`prepare`, `publish_direct_manifest`,
+`publish_harbor_runtime_manifest`) use `runs-on: [self-hosted, linux, homelab,
+build]`—no `amd64` / `arm64` label—so either runner pool can execute checkout,
+bash, or `docker manifest` work when one architecture pool is offline. Per-arch
+**build** jobs still require `amd64` or `arm64` as appropriate.
+
 ## Published tags (GHCR)
 
 For typical **direct** builds publishing to GitHub:
