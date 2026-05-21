@@ -1,23 +1,28 @@
 # mcp-argocd
 
-HTTP MCP for **Argo CD** visibility and operations from [argoproj-labs/mcp-for-argocd](https://github.com/argoproj-labs/mcp-for-argocd).
+Streamable HTTP MCP for **Argo CD** visibility and operations from [argoproj-labs/mcp-for-argocd](https://github.com/argoproj-labs/mcp-for-argocd), wrapped by **`applications/mcp-argocd/`**.
 
 ## URL and path
 
-Front the Swarm-published port with your reverse proxy and TLS. Clients use your **`https://<your-host>/mcp`** (or the path you configure that forwards to the container’s MCP route).
+Publish the service behind TLS at **`https://mcp.argocd.nodadyoushutup.com/mcp`** (or your hostname). The container listens on **3000** via **`applications/mcp-argocd/entrypoint.sh`** (`http --stateless`); Swarm publishes **18201** → **3000**.
 
 ## Usage
 
 - Use for **application health**, sync status, and other tools the server exposes.
-- The container entrypoint may honor **`ARGOCD_INSECURE_SKIP_VERIFY`** for TLS to the Argo CD API when set in the service env (see **`terraform/swarm/mcp-argocd/app/main.tf`**).
+- Set **`MCP_READ_ONLY=true`** in **`env`** to disable mutating tools (create/update/delete/sync).
+- Set **`ARGOCD_INSECURE_SKIP_VERIFY=true`** only when the Argo CD API uses a cert your task cannot trust (see **`applications/mcp-argocd/entrypoint.sh`**).
 
-## Cursor / LangGraph
+## Cursor
 
-Add an MCP server block in **`.cursor/mcp.json`** or LangGraph **`mcp.json`** when agents should use this stack.
+Project **`.cursor/mcp.json`** registers **`mcp_argocd`** at **`https://mcp.argocd.nodadyoushutup.com/mcp`**. No client API key — **`ARGOCD_*`** credentials live in Swarm **`env`** on **`.config/terraform/swarm/mcp-argocd/app.tfvars`**. Add the same block to **User** MCP settings or **`~/.cursor/mcp.json`** for all workspaces. After deploy or config edits, **reload MCP** in Cursor Settings if tools stay disconnected.
 
-## Secrets and Swarm
+## LangGraph
 
-- Swarm: **`terraform/swarm/mcp-argocd/app/`** — Argo CD base URL, auth token, and related env belong in **`env_file_path`** or **`env`** (never commit live tokens).
+Add a server block in the relevant **`mcp.json`** when a graph should call Argo CD through this stack.
+
+## Swarm
+
+- Stack: **`terraform/swarm/mcp-argocd/app/`** — all site credentials in the **`env`** map on **`.config/terraform/swarm/mcp-argocd/app.tfvars`** (flat keys such as **`ARGOCD_BASE_URL`**, **`ARGOCD_API_TOKEN`**; no Vault **`secrets`** block or **`env_file_path`**). Keep tokens out of git.
 
 ## Related
 

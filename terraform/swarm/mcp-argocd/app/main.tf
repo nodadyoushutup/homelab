@@ -1,19 +1,10 @@
 resource "docker_network" "mcp_argocd" {
-  name   = local.service_name
+  name   = "mcp-argocd"
   driver = "overlay"
 }
 
 resource "docker_service" "mcp_argocd" {
-  name = local.service_name
-
-  dynamic "auth" {
-    for_each = local.docker_service_pull_auth_map
-    content {
-      server_address = auth.value.server_address
-      username       = auth.value.username
-      password       = auth.value.password
-    }
-  }
+  name = "mcp-argocd"
 
   task_spec {
     dynamic "placement" {
@@ -32,45 +23,36 @@ resource "docker_service" "mcp_argocd" {
         }
       }
     }
+
     networks_advanced {
       name    = docker_network.mcp_argocd.id
-      aliases = [local.service_name]
+      aliases = ["mcp-argocd"]
     }
+
     container_spec {
-      image   = var.image_reference
-      env     = local.effective_env
-      command = ["sh", "-c"]
-      args = [
-        <<-EOT
-          if [ "$${ARGOCD_INSECURE_SKIP_VERIFY:-false}" = "true" ]; then
-            export NODE_TLS_REJECT_UNAUTHORIZED=0
-          fi
-          exec node dist/index.js http --port 3000
-        EOT
-      ]
+      image = "ghcr.io/nodadyoushutup/mcp-argocd:0.0.1"
+      env   = var.env
+
       dns_config {
         nameservers = var.dns_nameservers
       }
     }
-    restart_policy {
-      condition    = "on-failure"
-      delay        = "10s"
-      max_attempts = 3
-      window       = "2m"
-    }
   }
+
   mode {
     replicated {
       replicas = var.replicas
     }
   }
+
   update_config {
     order = "stop-first"
   }
+
   endpoint_spec {
     ports {
       target_port    = 3000
-      published_port = var.published_port
+      published_port = 18201
       protocol       = "tcp"
       publish_mode   = "ingress"
     }

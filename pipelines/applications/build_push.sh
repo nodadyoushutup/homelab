@@ -168,6 +168,11 @@ resolve_build_target() {
       SUPPORTED_PLATFORMS="linux/amd64"
       BUILD_STRATEGY="direct"
       ;;
+    mcp-argocd)
+      IMAGE_NAME="mcp-argocd"
+      DOCKER_CONTEXT="applications/mcp-argocd"
+      BUILD_STRATEGY="direct"
+      ;;
     mcp-atlassian)
       IMAGE_NAME="mcp-atlassian"
       DOCKER_CONTEXT="applications/mcp-atlassian"

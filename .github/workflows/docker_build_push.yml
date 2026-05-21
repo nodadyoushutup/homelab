@@ -37,6 +37,7 @@ on:
           - jenkins-controller
           - langchain-agent-chat
           - langgraph
+          - mcp-argocd
           - mcp-atlassian
           - mcp-cloudflare
           - mcp-code
@@ -139,6 +140,11 @@ jobs:
               docker_context="."
               dockerfile="applications/langgraph/docker/Dockerfile"
               supported_platforms="linux/amd64"
+              build_strategy="direct"
+              ;;
+            mcp-argocd)
+              image_name="mcp-argocd"
+              docker_context="applications/mcp-argocd"
               build_strategy="direct"
               ;;
             mcp-atlassian)
