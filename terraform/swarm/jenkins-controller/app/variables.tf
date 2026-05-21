@@ -1,26 +1,93 @@
-variable "casc_config_path" {
-  description = "Path to the Jenkins Configuration as Code YAML file shared through the tfvars/configuration mount."
-  type        = string
-  default     = "/mnt/eapp/code/homelab/.config/terraform/swarm/jenkins-controller/jenkins.yaml"
+variable "agent_published_port" {
+  description = "Published Swarm port for inbound Jenkins agent traffic."
+  type        = number
+  default     = 50000
 }
 
-variable "placement" {
-  description = "Swarm task placement (constraints and platforms). Omit in tfvars to skip placement in the task spec."
-  type = object({
-    constraints = optional(list(string))
-    platforms = optional(list(object({
-      os           = string
-      architecture = string
-    })))
-  })
-  default = null
+
+variable "agent_secrets_dir" {
+  description = "Shared path where the controller writes Jenkins inbound agent secret files."
+  type        = string
+  default     = "/mnt/eapp/code/homelab/.config/terraform/swarm/jenkins-controller/agent-secrets"
 }
+
+
+variable "agent_target_port" {
+  description = "Inbound agent TCP port exposed by the container."
+  type        = number
+  default     = 50000
+}
+
 
 variable "casc_config_container_path" {
   description = "In-container path used by JCasC to read the shared Jenkins Configuration as Code YAML file."
   type        = string
   default     = "/mnt/eapp/code/homelab/.config/terraform/swarm/jenkins-controller/jenkins.yaml"
 }
+
+
+variable "casc_config_path" {
+  description = "Path to the Jenkins Configuration as Code YAML file shared through the tfvars/configuration mount."
+  type        = string
+  default     = "/mnt/eapp/code/homelab/.config/terraform/swarm/jenkins-controller/jenkins.yaml"
+}
+
+
+variable "controller_image" {
+  description = "Jenkins controller image reference."
+  type        = string
+  default     = "ghcr.io/nodadyoushutup/jenkins-controller:0.0.16"
+}
+
+
+variable "controller_published_port" {
+  description = "Published Swarm port for Jenkins HTTP UI/API."
+  type        = number
+  default     = 18082
+}
+
+
+variable "controller_replicas" {
+  description = "Number of Jenkins controller replicas."
+  type        = number
+  default     = 1
+}
+
+
+variable "controller_target_port" {
+  description = "Controller HTTP port exposed by the container."
+  type        = number
+  default     = 8080
+}
+
+
+variable "enable_shared_tfvars_mount" {
+  description = "Whether to mount the shared tfvars/configuration root into the controller container."
+  type        = bool
+  default     = true
+}
+
+
+variable "env" {
+  description = "Container environment variables."
+  type        = map(string)
+  default     = {}
+}
+
+
+variable "home_mount_target" {
+  description = "Container path for Jenkins home volume mount."
+  type        = string
+  default     = "/var/jenkins_home"
+}
+
+
+variable "home_volume_name" {
+  description = "Docker volume name used for Jenkins home persistence."
+  type        = string
+  default     = "jenkins-controller-home"
+}
+
 
 variable "mounts" {
   description = "Optional extra mount definitions appended after the default Jenkins mounts."
@@ -34,45 +101,27 @@ variable "mounts" {
   default = []
 }
 
-variable "env" {
-  description = "Environment variables applied to the Jenkins controller container; merged over the default shared agent secret path."
-  type        = map(string)
-  default     = {}
-}
 
-variable "agent_secrets_dir" {
-  description = "Shared path where the controller writes Jenkins inbound agent secret files."
+variable "network_name" {
+  description = "Overlay network name for Jenkins services."
   type        = string
-  default     = "/mnt/eapp/code/homelab/.config/terraform/swarm/jenkins-controller/agent-secrets"
+  default     = "jenkins"
 }
 
-variable "enable_shared_tfvars_mount" {
-  description = "Whether to mount the shared tfvars/configuration root into the controller container."
-  type        = bool
-  default     = true
-}
 
-variable "shared_tfvars_volume_name" {
-  description = "Docker volume name used for the shared tfvars/configuration mount."
+variable "service_dns_alias" {
+  description = "Service DNS alias on the overlay network."
   type        = string
-  default     = "jenkins-controller-config"
+  default     = "jenkins"
 }
 
-variable "shared_tfvars_volume_driver" {
-  description = "Docker volume driver used for the shared tfvars/configuration mount."
+
+variable "service_name" {
+  description = "Docker Swarm service name for Jenkins controller."
   type        = string
-  default     = "local"
+  default     = "jenkins-controller"
 }
 
-variable "shared_tfvars_volume_driver_opts" {
-  description = <<-EOT
-    Override NFS volume driver opts for the shared tfvars mount. When null, derived from
-    terraform/providers/nfs.tfvars (swarm_nfs_volume_* and swarm_nfs_*_device).
-  EOT
-  type        = map(string)
-  default     = null
-  sensitive   = true
-}
 
 variable "shared_tfvars_mount_target" {
   description = "Container path where the shared tfvars/configuration root is mounted."
@@ -80,151 +129,72 @@ variable "shared_tfvars_mount_target" {
   default     = "/mnt/eapp/code/homelab/.config"
 }
 
-variable "controller_image" {
-  description = "Jenkins controller image reference"
+
+variable "shared_tfvars_volume_driver" {
+  description = "Docker volume driver used for the shared tfvars/configuration mount."
   type        = string
-  default     = "ghcr.io/nodadyoushutup/jenkins-controller:0.0.16"
+  default     = "local"
 }
 
-variable "service_name" {
-  description = "Docker Swarm service name for Jenkins controller"
+
+variable "shared_tfvars_volume_driver_opts" {
+  description = "Shared tfvars volume driver opts."
+  type        = map(string)
+  default     = null
+  sensitive   = true
+}
+
+
+variable "shared_tfvars_volume_name" {
+  description = "Docker volume name used for the shared tfvars/configuration mount."
   type        = string
-  default     = "jenkins-controller"
+  default     = "jenkins-controller-config"
 }
-
-variable "service_dns_alias" {
-  description = "Service DNS alias on the overlay network"
-  type        = string
-  default     = "jenkins"
-}
-
-variable "network_name" {
-  description = "Overlay network name for Jenkins services"
-  type        = string
-  default     = "jenkins"
-}
-
-variable "home_volume_name" {
-  description = "Docker volume name used for Jenkins home persistence"
-  type        = string
-  default     = "jenkins-controller-home"
-}
-
-variable "home_mount_target" {
-  description = "Container path for Jenkins home volume mount"
-  type        = string
-  default     = "/var/jenkins_home"
-}
-
-variable "controller_replicas" {
-  description = "Number of Jenkins controller replicas"
-  type        = number
-  default     = 1
-}
-
-variable "controller_target_port" {
-  description = "Controller HTTP port exposed by the container"
-  type        = number
-  default     = 8080
-}
-
-variable "controller_published_port" {
-  description = "Published Swarm port for Jenkins HTTP UI/API"
-  type        = number
-  default     = 18082
-}
-
-variable "agent_target_port" {
-  description = "Inbound agent TCP port exposed by the container"
-  type        = number
-  default     = 50000
-}
-
-variable "agent_published_port" {
-  description = "Published Swarm port for inbound Jenkins agent traffic"
-  type        = number
-  default     = 50000
-}
-
 
 
 variable "dns_nameservers" {
-  description = <<-EOT
-    DNS nameservers for Swarm task dns_config (and standalone runner dns). Set only in
-    CONFIG_DIR/terraform/providers/dns.tfvars (merged by swarm_pipeline.sh before stack tfvars).
-  EOT
+  description = "DNS nameservers for Swarm task dns_config."
   type        = list(string)
   sensitive   = true
 }
 
-variable "swarm_nfs_server" {
-  description = <<-EOT
-    Optional legacy; NFS mount options are swarm_nfs_volume_o_rw / swarm_nfs_volume_o_ro in nfs.tfvars.
-  EOT
-  type        = string
-  default     = ""
-  sensitive   = true
+
+variable "placement" {
+  description = "Optional Swarm placement constraints and platforms."
+  type = object({
+    constraints = optional(list(string))
+    platforms = optional(list(object({
+      os           = string
+      architecture = string
+    })))
+  })
+  default = null
 }
 
-variable "swarm_nfs_code_device" {
-  description = <<-EOT
-    NFS device/export for repo code (e.g. ":/mnt/eapp/code"). Set only in CONFIG_DIR/terraform/providers/nfs.tfvars.
-  EOT
-  type        = string
-  sensitive   = true
-}
 
 variable "swarm_nfs_config_device" {
-  description = <<-EOT
-    NFS device/export for shared config (e.g. ":/mnt/eapp/code/homelab/.config"). Set only in CONFIG_DIR/terraform/providers/nfs.tfvars.
-  EOT
+  description = "NFS export for homelab config (from nfs.tfvars)."
   type        = string
   sensitive   = true
 }
+
 
 variable "swarm_nfs_volume_type" {
-  description = <<-EOT
-    Docker local volume driver_opts.type for NFS-backed mounts (typically "nfs"). Set only in CONFIG_DIR/terraform/providers/nfs.tfvars.
-  EOT
+  description = "Docker volume driver type for NFS mounts (from nfs.tfvars)."
   type        = string
   sensitive   = true
 }
+
 
 variable "swarm_nfs_volume_o_rw" {
-  description = <<-EOT
-    Docker local volume driver_opts.o for read-write NFS (comma-separated options, e.g. addr=HOST,nfsvers=4.2,rw). Set only in CONFIG_DIR/terraform/providers/nfs.tfvars.
-  EOT
+  description = "Read-write NFS volume mount options (from nfs.tfvars)."
   type        = string
   sensitive   = true
 }
 
-variable "swarm_nfs_volume_o_ro" {
-  description = <<-EOT
-    Docker local volume driver_opts.o for read-only NFS (e.g. addr=HOST,nfsvers=4.2,ro). Set only in CONFIG_DIR/terraform/providers/nfs.tfvars.
-  EOT
-  type        = string
-  sensitive   = true
-}
 
 variable "swarm_docker_provider_config" {
-  description = <<-EOT
-    Shared Docker SSH host and registry credentials (GHCR, Harbor, etc.).
-    Set in /mnt/eapp/code/homelab/.config/terraform/providers/docker.tfvars; Swarm app pipelines source
-    scripts/terraform/swarm_docker_provider_tfvars_env.sh so terraform receives this file.
-  EOT
+  description = "Docker SSH host and registry_auths for the Swarm control plane."
   type        = any
-  default     = {}
 }
 
-# Vault KV fragments (parsed by scripts/terraform/vault_merge_config_secrets.py); unused by this module.
-variable "secrets" {
-  type      = any
-  default   = {}
-  sensitive = true
-}
-
-variable "secret_files" {
-  type      = any
-  default   = {}
-  sensitive = true
-}

@@ -23,7 +23,3 @@ locals {
   EOT
   vault_server_config_hash = substr(sha256(local.vault_server_config), 0, 12)
 }
-
-locals {
-  docker_registry_auths = coalesce(try(var.swarm_docker_provider_config.registry_auths, null), [])
-}

@@ -1,11 +1,68 @@
+variable "allowed_hosts" {
+  description = "Host headers accepted by the HTTP MCP server. Use [\"*\"] for internal-only wildcard access."
+  type        = list(string)
+  default     = ["*"]
+}
+
+
+variable "config_file" {
+  description = "Playwright MCP config JSON path inside the task (must be on the NFS code mount)."
+  type        = string
+  default     = "/mnt/eapp/code/homelab/terraform/swarm/mcp-playwright/app/config.json"
+}
+
+
+variable "endpoint_host" {
+  description = "Host name used for external URL reporting."
+  type        = string
+  default     = "192.168.1.120"
+}
+
+
 variable "image_reference" {
-  description = "Official Playwright MCP image to run."
+  description = "Container image reference to deploy."
   type        = string
   default     = "mcr.microsoft.com/playwright/mcp:latest"
 }
 
+
+variable "output_dir" {
+  description = "Container path where Playwright MCP writes snapshots, logs, and other non-screenshot output files."
+  type        = string
+  default     = "/mnt/eapp/code/homelab/data/playwright"
+}
+
+
+variable "published_port" {
+  description = "Swarm ingress published port."
+  type        = number
+  default     = 8931
+}
+
+
+variable "replicas" {
+  description = "Number of Swarm service replicas."
+  type        = number
+  default     = 1
+}
+
+
+variable "screenshot_dir" {
+  description = "Container path used as the working directory so relative screenshot filenames are written here."
+  type        = string
+  default     = "/mnt/eapp/code/homelab/data/screenshots"
+}
+
+
+variable "dns_nameservers" {
+  description = "DNS nameservers for Swarm task dns_config."
+  type        = list(string)
+  sensitive   = true
+}
+
+
 variable "placement" {
-  description = "Swarm task placement (constraints and platforms). Omit in tfvars to skip placement in the task spec."
+  description = "Optional Swarm placement constraints and platforms."
   type = object({
     constraints = optional(list(string))
     platforms = optional(list(object({
@@ -16,127 +73,44 @@ variable "placement" {
   default = null
 }
 
-variable "published_port" {
-  description = "Swarm ingress port exposed for the Playwright MCP HTTP endpoint."
-  type        = number
-  default     = 8931
-}
-
-variable "endpoint_host" {
-  description = "Host used when reporting the external MCP URL."
-  type        = string
-  default     = "192.168.1.120"
-}
-
-variable "replicas" {
-  description = "Number of Playwright MCP replicas to run."
-  type        = number
-  default     = 1
-}
-
-
-
-variable "allowed_hosts" {
-  description = "Host headers accepted by the HTTP MCP server. Use [\"*\"] for internal-only wildcard access."
-  type        = list(string)
-  default     = ["*"]
-}
-
-variable "output_dir" {
-  description = "Container path where Playwright MCP writes snapshots, logs, and other non-screenshot output files."
-  type        = string
-  default     = "/mnt/eapp/code/homelab/data/playwright"
-}
-
-variable "screenshot_dir" {
-  description = "Container path used as the working directory so relative screenshot filenames are written here."
-  type        = string
-  default     = "/mnt/eapp/code/homelab/data/screenshots"
-}
-
-variable "config_file" {
-  description = "Playwright MCP config JSON path inside the task (must be on the NFS code mount)."
-  type        = string
-  default     = "/mnt/eapp/code/homelab/terraform/swarm/mcp-playwright/app/config.json"
-}
-
-variable "dns_nameservers" {
-  description = <<-EOT
-    DNS nameservers for Swarm task dns_config (and standalone runner dns). Set only in
-    CONFIG_DIR/terraform/providers/dns.tfvars (merged by swarm_pipeline.sh before stack tfvars).
-  EOT
-  type        = list(string)
-  sensitive   = true
-}
-
-variable "swarm_nfs_server" {
-  description = <<-EOT
-    Optional legacy; NFS mount options are swarm_nfs_volume_o_rw / swarm_nfs_volume_o_ro in nfs.tfvars.
-  EOT
-  type        = string
-  default     = ""
-  sensitive   = true
-}
 
 variable "swarm_nfs_code_device" {
-  description = <<-EOT
-    NFS device/export for repo code (e.g. ":/mnt/eapp/code"). Set only in CONFIG_DIR/terraform/providers/nfs.tfvars.
-  EOT
+  description = "NFS export for homelab code (from nfs.tfvars)."
   type        = string
   sensitive   = true
 }
+
 
 variable "swarm_nfs_config_device" {
-  description = <<-EOT
-    NFS device/export for shared config (e.g. ":/mnt/eapp/code/homelab/.config"). Set only in CONFIG_DIR/terraform/providers/nfs.tfvars.
-  EOT
+  description = "NFS export for homelab config (from nfs.tfvars)."
   type        = string
   sensitive   = true
 }
+
 
 variable "swarm_nfs_volume_type" {
-  description = <<-EOT
-    Docker local volume driver_opts.type for NFS-backed mounts (typically "nfs"). Set only in CONFIG_DIR/terraform/providers/nfs.tfvars.
-  EOT
+  description = "Docker volume driver type for NFS mounts (from nfs.tfvars)."
   type        = string
   sensitive   = true
 }
+
 
 variable "swarm_nfs_volume_o_rw" {
-  description = <<-EOT
-    Docker local volume driver_opts.o for read-write NFS (comma-separated options, e.g. addr=HOST,nfsvers=4.2,rw). Set only in CONFIG_DIR/terraform/providers/nfs.tfvars.
-  EOT
+  description = "Read-write NFS volume mount options (from nfs.tfvars)."
   type        = string
   sensitive   = true
 }
+
 
 variable "swarm_nfs_volume_o_ro" {
-  description = <<-EOT
-    Docker local volume driver_opts.o for read-only NFS (e.g. addr=HOST,nfsvers=4.2,ro). Set only in CONFIG_DIR/terraform/providers/nfs.tfvars.
-  EOT
+  description = "Read-only NFS volume mount options (from nfs.tfvars)."
   type        = string
   sensitive   = true
 }
 
+
 variable "swarm_docker_provider_config" {
-  description = <<-EOT
-    Shared Docker SSH host and registry credentials (GHCR, Harbor, etc.).
-    Set in /mnt/eapp/code/homelab/.config/terraform/providers/docker_arm64.tfvars; Swarm app pipelines source
-    scripts/terraform/swarm_docker_provider_tfvars_env.sh so terraform receives this file.
-  EOT
+  description = "Docker SSH host and registry_auths for the Swarm control plane."
   type        = any
-  default     = {}
 }
 
-# Vault KV fragments (parsed by scripts/terraform/vault_merge_config_secrets.py); unused by this module.
-variable "secrets" {
-  type      = any
-  default   = {}
-  sensitive = true
-}
-
-variable "secret_files" {
-  type      = any
-  default   = {}
-  sensitive = true
-}

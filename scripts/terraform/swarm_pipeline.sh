@@ -194,14 +194,20 @@ else
   DOCKER_ARM64_POOL_PROVIDER_TFVARS_PATH=""
   export DOCKER_ARM64_POOL_PROVIDER_TFVARS_PATH
 fi
-if [[ ! -f "${SWARM_DNS_PROVIDER_TFVARS}" ]]; then
-  echo "[ERR] Missing Swarm DNS provider tfvars: ${SWARM_DNS_PROVIDER_TFVARS}" >&2
-  echo "[ERR] Add dns_nameservers there (see homelab terraform/providers/dns.tfvars.example)." >&2
-  exit 1
+if [[ "${SWARM_SKIP_DNS_PROVIDER_TFVARS:-0}" == "1" ]]; then
+  DNS_PROVIDER_TFVARS_PATH=""
+  export DNS_PROVIDER_TFVARS_PATH
+  echo "Swarm DNS provider tfvars: skipped (SWARM_SKIP_DNS_PROVIDER_TFVARS=1)"
+else
+  if [[ ! -f "${SWARM_DNS_PROVIDER_TFVARS}" ]]; then
+    echo "[ERR] Missing Swarm DNS provider tfvars: ${SWARM_DNS_PROVIDER_TFVARS}" >&2
+    echo "[ERR] Add dns_nameservers there (see homelab terraform/providers/dns.tfvars.example)." >&2
+    exit 1
+  fi
+  SWARM_SHARED_TFVARS_PREFIX+=(-var-file "${SWARM_DNS_PROVIDER_TFVARS}")
+  echo "Swarm DNS provider tfvars: ${SWARM_DNS_PROVIDER_TFVARS}"
+  export DNS_PROVIDER_TFVARS_PATH="${SWARM_DNS_PROVIDER_TFVARS}"
 fi
-SWARM_SHARED_TFVARS_PREFIX+=(-var-file "${SWARM_DNS_PROVIDER_TFVARS}")
-echo "Swarm DNS provider tfvars: ${SWARM_DNS_PROVIDER_TFVARS}"
-export DNS_PROVIDER_TFVARS_PATH="${SWARM_DNS_PROVIDER_TFVARS}"
 
 if [[ "${SWARM_SKIP_NFS_PROVIDER_TFVARS:-0}" == "1" ]]; then
   NFS_PROVIDER_TFVARS_PATH=""

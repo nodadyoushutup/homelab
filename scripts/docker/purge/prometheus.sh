@@ -13,9 +13,9 @@ if ! declare -f purge_main >/dev/null 2>&1; then
 fi
 
 APP_NAME="prometheus"
-SERVICE_REGEX="^(prometheus|victoriametrics)$"
-NETWORK_REGEX="^(prometheus|victoriametrics)$"
-VOLUME_REGEX="^(prometheus-data|victoriametrics-data)$"
+SERVICE_REGEX="^(prometheus|prometheus-victoriametrics)$"
+NETWORK_REGEX="^(prometheus|prometheus-victoriametrics)$"
+VOLUME_REGEX="^(prometheus-data|prometheus-victoriametrics-data)$"
 CONFIG_REGEX="^prometheus-"
 IMAGE_REGEX="(^prom/prometheus:|^victoriametrics/victoria-metrics:)"
 

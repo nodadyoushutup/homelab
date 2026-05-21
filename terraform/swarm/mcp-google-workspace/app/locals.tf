@@ -49,11 +49,11 @@ locals {
   pull_registry_host            = length(local.pull_repo_slash_parts) >= 2 && (strcontains(local.pull_repo_slash_parts[0], ".") || strcontains(local.pull_repo_slash_parts[0], ":") || lower(local.pull_repo_slash_parts[0]) == "localhost") ? local.pull_repo_slash_parts[0] : "docker.io"
   pull_normalized_registry_host = lower(trimspace(local.pull_registry_host))
   pull_auth_matches = [
-    for a in local.docker_registry_auths : a
+    for a in coalesce(try(var.swarm_docker_provider_config.registry_auths, null), []) : a
     if lower(trimspace(replace(replace(try(a.address, "ghcr.io"), "https://", ""), "http://", ""))) == local.pull_normalized_registry_host
   ]
   pull_selected_auth = length(local.pull_auth_matches) > 0 ? local.pull_auth_matches[0] : (
-    length(local.docker_registry_auths) == 1 ? local.docker_registry_auths[0] : null
+    length(coalesce(try(var.swarm_docker_provider_config.registry_auths, null), [])) == 1 ? coalesce(try(var.swarm_docker_provider_config.registry_auths, null), [])[0] : null
   )
   pull_server_address = local.pull_selected_auth == null ? "" : trimspace(replace(replace(try(local.pull_selected_auth.address, "ghcr.io"), "https://", ""), "http://", ""))
   docker_service_pull_auth_map = local.pull_selected_auth == null ? {} : {
@@ -63,8 +63,4 @@ locals {
       password       = local.pull_selected_auth.password
     }
   }
-}
-
-locals {
-  docker_registry_auths = coalesce(try(var.swarm_docker_provider_config.registry_auths, null), [])
 }

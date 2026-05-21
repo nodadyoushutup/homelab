@@ -8,6 +8,9 @@ source "${PIPELINE_SCRIPT_ROOT}/load_root_env.sh"
 
 SERVICE_NAME="prometheus"
 STAGE_NAME="Prometheus app"
+# No NFS mounts; skip nfs.tfvars so the stack need not declare swarm_nfs_* variables.
+SWARM_SKIP_NFS_PROVIDER_TFVARS=1
+export SWARM_SKIP_NFS_PROVIDER_TFVARS
 ENTRYPOINT_RELATIVE="pipelines/terraform/swarm/prometheus/app.sh"
 TERRAFORM_DIR="${ROOT_DIR}/terraform/swarm/prometheus/app"
 TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${CONFIG_DIR:-${ROOT_DIR}/.config}}"

@@ -14,9 +14,9 @@ fi
 
 APP_NAME="nginx_proxy_manager"
 APP_DESC="nginx_proxy_manager"
-SERVICE_REGEX="^(nginx-proxy-manager|mysql)$"
+SERVICE_REGEX="^(nginx-proxy-manager|nginx-proxy-manager-mysql)$"
 NETWORK_REGEX="^(nginx-proxy-manager|nginx-proxy-manager-mysql)$"
-VOLUME_REGEX="^(nginx-proxy-manager-data|nginx-proxy-manager-letsencrypt|mysql-data)$"
+VOLUME_REGEX="^(nginx-proxy-manager-data|nginx-proxy-manager-letsencrypt|nginx-proxy-manager-mysql-data)$"
 IMAGE_REGEX="(^jc21/nginx-proxy-manager:|^jc21/mariadb-aria:)"
 
 purge_main "$@"

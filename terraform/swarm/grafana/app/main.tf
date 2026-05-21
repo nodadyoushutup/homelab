@@ -1,5 +1,5 @@
-data "docker_network" "grafana_database" {
-  name = "grafana-database"
+data "docker_network" "grafana_postgres" {
+  name = "grafana-postgres"
 }
 
 resource "docker_network" "grafana_app" {
@@ -50,7 +50,7 @@ resource "docker_service" "grafana" {
     }
 
     networks_advanced {
-      name    = data.docker_network.grafana_database.id
+      name    = data.docker_network.grafana_postgres.id
       aliases = []
     }
 

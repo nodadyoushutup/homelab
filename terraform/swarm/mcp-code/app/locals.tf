@@ -53,12 +53,12 @@ locals {
   )
   pull_normalized_registry_host = lower(trimspace(local.pull_registry_host))
   pull_auth_matches = [
-    for a in local.docker_registry_auths : a
+    for a in coalesce(try(var.swarm_docker_provider_config.registry_auths, null), []) : a
     if lower(trimspace(replace(replace(try(a.address, "ghcr.io"), "https://", ""), "http://", ""))) == local.pull_normalized_registry_host
   ]
   pull_selected_auth = (
     length(local.pull_auth_matches) > 0 ? local.pull_auth_matches[0] : (
-      length(local.docker_registry_auths) == 1 ? local.docker_registry_auths[0] : null
+      length(coalesce(try(var.swarm_docker_provider_config.registry_auths, null), [])) == 1 ? coalesce(try(var.swarm_docker_provider_config.registry_auths, null), [])[0] : null
     )
   )
   pull_server_address = (
@@ -73,8 +73,4 @@ locals {
       }
     }
   )
-}
-
-locals {
-  docker_registry_auths = coalesce(try(var.swarm_docker_provider_config.registry_auths, null), [])
 }

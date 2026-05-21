@@ -1,5 +1,4 @@
 locals {
-  docker_registry_auths = coalesce(try(var.swarm_docker_provider_config.registry_auths, null), [])
 
   graylog_password_secret = var.env.GRAYLOG_PASSWORD_SECRET
   graylog_root_password   = var.env.GRAYLOG_ROOT_PASSWORD_SHA2

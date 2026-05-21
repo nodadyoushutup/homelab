@@ -73,19 +73,32 @@ Illustrative snapshot of how existing services split:
   `terraform/providers/docker_amd64.tfvars` for the AMD64 pool-host `swarm_docker_provider_config` only; the
   ARM64 runner pipeline merges `terraform/providers/docker_arm64_pool.tfvars` for the ARM64 pool host.
   Swarm DNS resolvers live at `terraform/providers/dns.tfvars`, and shared NFS export
-  targets at `terraform/providers/nfs.tfvars` (all required for `swarm_pipeline.sh`,
-  merged as docker_arm64, optional pool tfvars (`docker_arm64_pool`, `docker_amd64`, etc.) when set by that pipeline, then dns,
+  targets at `terraform/providers/nfs.tfvars` (required for `swarm_pipeline.sh` unless a
+  stage sets `SWARM_SKIP_DNS_PROVIDER_TFVARS` or `SWARM_SKIP_NFS_PROVIDER_TFVARS`;
+  merged as docker_arm64, optional pool tfvars when set by that pipeline, then dns,
   then nfs, then optional `terraform/providers/grafana.tfvars` when present, before each stack's slice tfvars).
+  **Bespoke app pipelines** (no `swarm_pipeline.sh`): `chromadb`, `cloud-image-repository`,
+  `dozzle`, and `node_exporter` each use `pipelines/terraform/swarm/<svc>/app.sh` with only
+  `docker_arm64.tfvars`, `dns.tfvars`, stack `app.tfvars`, and `minio.backend.hcl`.
   The Grafana file supplies `provider_config.grafana` for the Grafana `config/` root; other stacks ignore the extra map keys.
   Values are not defaulted in
   module code—set them only under CONFIG_DIR. Kubernetes app config under `kubernetes/<app>/`. Use
   `scripts/config/migrate_config_dir_to_repo_layout.py` to move an older flat
   `CONFIG_DIR/<name>/` tree (it also flattens legacy `*/<slice>/<slice>.tfvars`
   and `*/config/secrets.tfvars` when present).
-- **App + database:** `prometheus` (`database/` hosts the VictoriaMetrics-style
-  long-term store as its own Swarm service and state).
-- **App only:** majority of MCP stacks, runners, Chromadb, Rag-engine,
-  etc.
+- **App + database:** separate Swarm DB slices use **`{app}-{engine}`** names
+  (overlay, service, and `-{engine}-data` volume where applicable). Short **DNS
+  aliases** on the DB overlay match the engine (`postgres`, `mongodb`, `mysql`,
+  `victoriametrics`) for app connectivity:
+
+  | App slice | Database engine | Service / network | Data volume |
+  | --- | --- | --- | --- |
+  | `grafana` | Postgres | `grafana-postgres` | `grafana-postgres-data` |
+  | `graylog` | MongoDB | `graylog-mongodb` | `graylog-mongodb-data`, `graylog-mongodb-config` |
+  | `nginx_proxy_manager` | MySQL | `nginx-proxy-manager-mysql` | `nginx-proxy-manager-mysql-data` |
+  | `prometheus` | VictoriaMetrics | `prometheus-victoriametrics` | `prometheus-victoriametrics-data` |
+- **App only:** majority of MCP stacks, runners, Rag-engine, etc. Simple app-only stacks
+  with bespoke pipelines: `chromadb`, `cloud-image-repository`, `dozzle`, `node_exporter`.
 
 Legacy nested tfvars (`terraform/swarm/<svc>/app/app.tfvars`) may still exist on
 disk until flattened. **New work** should use the sibling naming above.

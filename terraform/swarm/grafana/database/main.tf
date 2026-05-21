@@ -1,15 +1,15 @@
-resource "docker_network" "grafana_database" {
-  name   = "grafana-database"
+resource "docker_network" "grafana_postgres" {
+  name   = "grafana-postgres"
   driver = "overlay"
 }
 
-resource "docker_volume" "grafana_database" {
-  name   = "grafana-database"
+resource "docker_volume" "grafana_postgres_data" {
+  name   = "grafana-postgres-data"
   driver = "local"
 }
 
-resource "docker_service" "grafana_database" {
-  name = "grafana-database"
+resource "docker_service" "grafana_postgres" {
+  name = "grafana-postgres"
 
   task_spec {
     dynamic "placement" {
@@ -30,8 +30,8 @@ resource "docker_service" "grafana_database" {
     }
 
     networks_advanced {
-      name    = docker_network.grafana_database.id
-      aliases = ["grafana"]
+      name    = docker_network.grafana_postgres.id
+      aliases = ["postgres"]
     }
 
     container_spec {
@@ -48,7 +48,7 @@ resource "docker_service" "grafana_database" {
 
       mounts {
         target = "/var/lib/postgresql"
-        source = docker_volume.grafana_database.name
+        source = docker_volume.grafana_postgres_data.name
         type   = "volume"
       }
     }

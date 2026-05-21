@@ -8,6 +8,12 @@ source "${PIPELINE_SCRIPT_ROOT}/load_root_env.sh"
 
 SERVICE_NAME="jenkins-controller"
 STAGE_NAME="Jenkins config"
+# No NFS mounts; skip nfs.tfvars so the stack need not declare swarm_nfs_* variables.
+SWARM_SKIP_NFS_PROVIDER_TFVARS=1
+export SWARM_SKIP_NFS_PROVIDER_TFVARS
+# No Swarm task dns_config; skip dns.tfvars so the stack need not declare dns_nameservers.
+SWARM_SKIP_DNS_PROVIDER_TFVARS=1
+export SWARM_SKIP_DNS_PROVIDER_TFVARS
 ENTRYPOINT_RELATIVE="pipelines/terraform/swarm/jenkins-controller/config.sh"
 TERRAFORM_DIR="${ROOT_DIR}/terraform/swarm/jenkins-controller/config"
 

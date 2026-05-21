@@ -29,11 +29,10 @@ locals {
 
 
 locals {
-  docker_registry_auths = coalesce(try(var.swarm_docker_provider_config.registry_auths, null), [])
   # docker_container uses provider-level registry_auth; pick the entry for this image's registry.
   runner_registry_host = split("/", local.runner_image)[0]
   runner_registry_matching_auths = [
-    for a in local.docker_registry_auths : a
+    for a in coalesce(try(var.swarm_docker_provider_config.registry_auths, null), []) : a
     if coalesce(try(a.address, null), "ghcr.io") == local.runner_registry_host
   ]
   docker_registry_auth_for_runner_image = (

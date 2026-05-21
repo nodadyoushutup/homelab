@@ -8,24 +8,14 @@ source "${PIPELINE_SCRIPT_ROOT}/load_root_env.sh"
 
 SERVICE_NAME="prometheus"
 STAGE_NAME="Prometheus database (VictoriaMetrics)"
+# No NFS mounts; skip nfs.tfvars so the stack need not declare swarm_nfs_* variables.
+SWARM_SKIP_NFS_PROVIDER_TFVARS=1
+export SWARM_SKIP_NFS_PROVIDER_TFVARS
 ENTRYPOINT_RELATIVE="pipelines/terraform/swarm/prometheus/database.sh"
 TERRAFORM_DIR="${ROOT_DIR}/terraform/swarm/prometheus/database"
 TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${CONFIG_DIR:-${ROOT_DIR}/.config}}"
 
-if [[ -z "${DEFAULT_TFVARS_FILE:-}" ]]; then
-  _db="${TFVARS_HOME_DIR}/terraform/swarm/prometheus/database.tfvars"
-  _vm_new="${TFVARS_HOME_DIR}/terraform/swarm/victoriametrics/app.tfvars"
-  _vm_old="${TFVARS_HOME_DIR}/victoriametrics/app.tfvars"
-  if [[ -f "${_db}" ]]; then
-    DEFAULT_TFVARS_FILE="${_db}"
-  elif [[ -f "${_vm_new}" ]]; then
-    DEFAULT_TFVARS_FILE="${_vm_new}"
-  elif [[ -f "${_vm_old}" ]]; then
-    DEFAULT_TFVARS_FILE="${_vm_old}"
-  else
-    DEFAULT_TFVARS_FILE="${_db}"
-  fi
-fi
+DEFAULT_TFVARS_FILE="${DEFAULT_TFVARS_FILE:-${TFVARS_HOME_DIR}/terraform/swarm/prometheus/database.tfvars}"
 
 DEFAULT_BACKEND_FILE="${DEFAULT_BACKEND_FILE:-${TFVARS_HOME_DIR}/minio.backend.hcl}"
 

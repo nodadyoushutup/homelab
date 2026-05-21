@@ -107,6 +107,9 @@ vault_post_deploy_health_check() {
 
 SERVICE_NAME="vault"
 STAGE_NAME="Vault app"
+# No NFS mounts; skip nfs.tfvars so the stack need not declare swarm_nfs_* variables.
+SWARM_SKIP_NFS_PROVIDER_TFVARS=1
+export SWARM_SKIP_NFS_PROVIDER_TFVARS
 ENTRYPOINT_RELATIVE="pipelines/terraform/swarm/vault/app.sh"
 TERRAFORM_DIR="${ROOT_DIR}/terraform/swarm/vault/app"
 TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${CONFIG_DIR:-${ROOT_DIR}/.config}}"

@@ -1,17 +1,15 @@
 resource "docker_network" "nginx_proxy_manager_mysql" {
-  # Keep network name distinct from service name. Using identical names causes
-  # Swarm DNS lookups for the service to return NXDOMAIN on this network.
   name   = "nginx-proxy-manager-mysql"
   driver = "overlay"
 }
 
-resource "docker_volume" "mysql" {
-  name   = "mysql-data"
+resource "docker_volume" "nginx_proxy_manager_mysql_data" {
+  name   = "nginx-proxy-manager-mysql-data"
   driver = "local"
 }
 
-resource "docker_service" "mysql" {
-  name = "mysql"
+resource "docker_service" "nginx_proxy_manager_mysql" {
+  name = "nginx-proxy-manager-mysql"
 
   task_spec {
     dynamic "placement" {
@@ -51,7 +49,7 @@ resource "docker_service" "mysql" {
 
       mounts {
         target = "/var/lib/mysql"
-        source = docker_volume.mysql.name
+        source = docker_volume.nginx_proxy_manager_mysql_data.name
         type   = "volume"
       }
     }

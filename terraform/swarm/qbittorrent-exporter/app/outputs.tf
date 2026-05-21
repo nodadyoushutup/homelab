@@ -24,6 +24,7 @@ output "prometheus_scrape_static_configs" {
       labels = {
         platform             = "docker"
         node_domain          = "swarm"
+        hostname             = "swarm-wk-0.local"
         component            = "qbittorrent-exporter"
         qbittorrent_instance = name
         qbittorrent_type     = local.qbittorrent_instance_types[name]

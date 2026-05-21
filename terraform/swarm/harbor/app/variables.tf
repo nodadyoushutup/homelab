@@ -1,26 +1,40 @@
-variable "placement" {
-  description = "Swarm task placement (constraints and platforms). Omit in tfvars to skip placement in the task spec."
+variable "env" {
+  description = "Container environment variables."
   type = object({
-    constraints = optional(list(string))
-    platforms = optional(list(object({
-      os           = string
-      architecture = string
-    })))
+    db          = map(string)
+    core        = map(string)
+    registryctl = map(string)
+    jobservice  = map(string)
+    trivy       = map(string)
   })
-  default = null
+  default = {
+    db          = {}
+    core        = {}
+    registryctl = {}
+    jobservice  = {}
+    trivy       = {}
+  }
 }
 
-variable "network_name" {
-  description = "Overlay network name for Harbor services."
-  type        = string
-  default     = "harbor"
+
+variable "env_file_paths" {
+  description = "Optional absolute local file paths on the Terraform runner for Harbor env files."
+  type = object({
+    db          = string
+    core        = string
+    registryctl = string
+    jobservice  = string
+    trivy       = string
+  })
+  default = {
+    db          = ""
+    core        = ""
+    registryctl = ""
+    jobservice  = ""
+    trivy       = ""
+  }
 }
 
-variable "harbor_install_path" {
-  description = "Absolute host path on the swarm node where Harbor install/config files exist."
-  type        = string
-  default     = "/mnt/eapp/harbor-manual/harbor"
-}
 
 variable "harbor_data_path" {
   description = "Absolute host path on the swarm node for Harbor persistent runtime data."
@@ -28,81 +42,20 @@ variable "harbor_data_path" {
   default     = "/mnt/eapp/harbor-manual/data"
 }
 
+
+variable "harbor_install_path" {
+  description = "Absolute host path on the swarm node where Harbor install/config files exist."
+  type        = string
+  default     = "/mnt/eapp/harbor-manual/harbor"
+}
+
+
 variable "harbor_log_path" {
   description = "Absolute host path on the swarm node for Harbor rsyslog log files."
   type        = string
   default     = "/mnt/eapp/harbor-manual/log"
 }
 
-variable "proxy_published_port" {
-  description = "Published Swarm port for Harbor HTTP ingress (nginx proxy target is 8080)."
-  type        = number
-  default     = 35080
-}
-
-variable "log_syslog_published_port" {
-  description = "Host-mode published port used by harbor-log syslog receiver (target 10514)."
-  type        = number
-  default     = 1514
-}
-
-variable "dns_nameservers" {
-  description = <<-EOT
-    DNS nameservers for Swarm task dns_config (and standalone runner dns). Set only in
-    CONFIG_DIR/terraform/providers/dns.tfvars (merged by swarm_pipeline.sh before stack tfvars).
-  EOT
-  type        = list(string)
-  sensitive   = true
-}
-
-variable "swarm_nfs_server" {
-  description = <<-EOT
-    Optional legacy; NFS mount options are swarm_nfs_volume_o_rw / swarm_nfs_volume_o_ro in nfs.tfvars.
-  EOT
-  type        = string
-  default     = ""
-  sensitive   = true
-}
-
-variable "swarm_nfs_code_device" {
-  description = <<-EOT
-    NFS device/export for repo code (e.g. ":/mnt/eapp/code"). Set only in CONFIG_DIR/terraform/providers/nfs.tfvars.
-  EOT
-  type        = string
-  sensitive   = true
-}
-
-variable "swarm_nfs_config_device" {
-  description = <<-EOT
-    NFS device/export for shared config (e.g. ":/mnt/eapp/code/homelab/.config"). Set only in CONFIG_DIR/terraform/providers/nfs.tfvars.
-  EOT
-  type        = string
-  sensitive   = true
-}
-
-variable "swarm_nfs_volume_type" {
-  description = <<-EOT
-    Docker local volume driver_opts.type for NFS-backed mounts (typically "nfs"). Set only in CONFIG_DIR/terraform/providers/nfs.tfvars.
-  EOT
-  type        = string
-  sensitive   = true
-}
-
-variable "swarm_nfs_volume_o_rw" {
-  description = <<-EOT
-    Docker local volume driver_opts.o for read-write NFS (comma-separated options, e.g. addr=HOST,nfsvers=4.2,rw). Set only in CONFIG_DIR/terraform/providers/nfs.tfvars.
-  EOT
-  type        = string
-  sensitive   = true
-}
-
-variable "swarm_nfs_volume_o_ro" {
-  description = <<-EOT
-    Docker local volume driver_opts.o for read-only NFS (e.g. addr=HOST,nfsvers=4.2,ro). Set only in CONFIG_DIR/terraform/providers/nfs.tfvars.
-  EOT
-  type        = string
-  sensitive   = true
-}
 
 variable "images" {
   description = "Container image references for Harbor runtime components."
@@ -132,61 +85,50 @@ variable "images" {
   }
 }
 
-variable "env" {
-  description = "Optional explicit env var maps per component (overrides env_file_paths for that component when non-empty)."
-  type = object({
-    db          = map(string)
-    core        = map(string)
-    registryctl = map(string)
-    jobservice  = map(string)
-    trivy       = map(string)
-  })
-  default = {
-    db          = {}
-    core        = {}
-    registryctl = {}
-    jobservice  = {}
-    trivy       = {}
-  }
+
+variable "log_syslog_published_port" {
+  description = "Host-mode published port used by harbor-log syslog receiver (target 10514)."
+  type        = number
+  default     = 1514
 }
 
-variable "env_file_paths" {
-  description = "Optional absolute local file paths on the Terraform runner for Harbor env files."
-  type = object({
-    db          = string
-    core        = string
-    registryctl = string
-    jobservice  = string
-    trivy       = string
-  })
-  default = {
-    db          = ""
-    core        = ""
-    registryctl = ""
-    jobservice  = ""
-    trivy       = ""
-  }
+
+variable "network_name" {
+  description = "Overlay network name for Harbor services."
+  type        = string
+  default     = "harbor"
 }
+
+
+variable "proxy_published_port" {
+  description = "Published Swarm port for Harbor HTTP ingress (nginx proxy target is 8080)."
+  type        = number
+  default     = 35080
+}
+
+
+variable "dns_nameservers" {
+  description = "DNS nameservers for Swarm task dns_config."
+  type        = list(string)
+  sensitive   = true
+}
+
+
+variable "placement" {
+  description = "Optional Swarm placement constraints and platforms."
+  type = object({
+    constraints = optional(list(string))
+    platforms = optional(list(object({
+      os           = string
+      architecture = string
+    })))
+  })
+  default = null
+}
+
 
 variable "swarm_docker_provider_config" {
-  description = <<-EOT
-    Shared Docker SSH host and registry credentials (GHCR, Harbor, etc.).
-    Set in /mnt/eapp/code/homelab/.config/terraform/providers/docker_arm64.tfvars; Swarm app pipelines source
-    scripts/terraform/swarm_docker_provider_tfvars_env.sh so terraform receives this file.
-  EOT
+  description = "Docker SSH host and registry_auths for the Swarm control plane."
   type        = any
-  default     = {}
 }
 
-# Vault KV fragments (parsed by scripts/terraform/vault_merge_config_secrets.py); unused by this module.
-variable "secrets" {
-  type      = any
-  default   = {}
-  sensitive = true
-}
-
-variable "secret_files" {
-  type      = any
-  default   = {}
-  sensitive = true
-}

@@ -26,6 +26,7 @@ output "prometheus_scrape_config_snippet" {
         labels = {
           platform    = "proxmox"
           node_domain = "hypervisor"
+          hostname    = "pve"
         }
       }
     ]

@@ -102,8 +102,7 @@ resolve_stage_tfvars() {
   case "${service_dir}/${stage_name}" in
     prometheus/database)
       candidates+=("${TFVARS_HOME_DIR}/terraform/swarm/prometheus/database.tfvars")
-      candidates+=("${TFVARS_HOME_DIR}/terraform/swarm/victoriametrics/app.tfvars")
-      candidates+=("${TFVARS_HOME_DIR}/victoriametrics/app.tfvars")
+      candidates+=("${TFVARS_HOME_DIR}/terraform/swarm/prometheus/database.tfvars")
       ;;
   esac
 

@@ -4,7 +4,7 @@ resource "docker_network" "chromadb" {
 }
 
 resource "docker_volume" "chromadb_data" {
-  name = "chromadb-data"
+  name   = "chromadb-data"
   driver = "local"
 }
 

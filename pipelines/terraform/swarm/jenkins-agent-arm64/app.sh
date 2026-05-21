@@ -95,7 +95,7 @@ load_registry_auth_from_terraform() {
   fi
   var_args+=(-var-file "${TFVARS_PATH}")
 
-  auths_json="$(printf '%s\n' 'jsonencode(local.docker_registry_auths)' | terraform -chdir="${TERRAFORM_DIR}" console "${var_args[@]}" 2>/dev/null || true)"
+  auths_json="$(printf '%s\n' 'jsonencode(coalesce(try(var.swarm_docker_provider_config.registry_auths, null), []))' | terraform -chdir="${TERRAFORM_DIR}" console "${var_args[@]}" 2>/dev/null || true)"
   if [[ -z "${auths_json}" ]]; then
     return 0
   fi

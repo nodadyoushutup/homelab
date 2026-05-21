@@ -1,5 +1,5 @@
-data "docker_network" "graylog_database" {
-  name = "graylog-database"
+data "docker_network" "graylog_mongodb" {
+  name = "graylog-mongodb"
 }
 
 resource "docker_network" "graylog_app" {
@@ -42,7 +42,7 @@ resource "docker_service" "graylog_datanode" {
     }
 
     networks_advanced {
-      name    = data.docker_network.graylog_database.id
+      name    = data.docker_network.graylog_mongodb.id
       aliases = []
     }
 
@@ -118,7 +118,7 @@ resource "docker_service" "graylog" {
     }
 
     networks_advanced {
-      name    = data.docker_network.graylog_database.id
+      name    = data.docker_network.graylog_mongodb.id
       aliases = []
     }
 

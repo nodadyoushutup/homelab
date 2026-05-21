@@ -1,13 +1,13 @@
-resource "docker_network" "graylog_database" {
-  name   = "graylog-database"
+resource "docker_network" "graylog_mongodb" {
+  name   = "graylog-mongodb"
   driver = "overlay"
 }
 
-resource "docker_volume" "mongodb_data" {
+resource "docker_volume" "graylog_mongodb_data" {
   name = "graylog-mongodb-data"
 }
 
-resource "docker_volume" "mongodb_config" {
+resource "docker_volume" "graylog_mongodb_config" {
   name = "graylog-mongodb-config"
 }
 
@@ -33,7 +33,7 @@ resource "docker_service" "graylog_mongodb" {
     }
 
     networks_advanced {
-      name    = docker_network.graylog_database.id
+      name    = docker_network.graylog_mongodb.id
       aliases = ["mongodb"]
     }
 
@@ -46,13 +46,13 @@ resource "docker_service" "graylog_mongodb" {
 
       mounts {
         target = "/data/db"
-        source = docker_volume.mongodb_data.name
+        source = docker_volume.graylog_mongodb_data.name
         type   = "volume"
       }
 
       mounts {
         target = "/data/configdb"
-        source = docker_volume.mongodb_config.name
+        source = docker_volume.graylog_mongodb_config.name
         type   = "volume"
       }
 

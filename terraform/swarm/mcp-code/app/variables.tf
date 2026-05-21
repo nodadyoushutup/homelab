@@ -1,11 +1,48 @@
+variable "env" {
+  description = "Container environment variables."
+  type        = map(string)
+  default     = {}
+  sensitive   = true
+}
+
+
 variable "image_reference" {
-  description = "mcp-code aggregate image to run."
+  description = "Container image reference to deploy."
   type        = string
   default     = "ghcr.io/nodadyoushutup/mcp-code:0.0.2"
 }
 
+
+variable "published_port" {
+  description = "Swarm ingress published port."
+  type        = number
+  default     = 18212
+}
+
+
+variable "replicas" {
+  description = "Number of Swarm service replicas."
+  type        = number
+  default     = 1
+}
+
+
+variable "timezone" {
+  description = "Container TZ environment value."
+  type        = string
+  default     = "America/New_York"
+}
+
+
+variable "dns_nameservers" {
+  description = "DNS nameservers for Swarm task dns_config."
+  type        = list(string)
+  sensitive   = true
+}
+
+
 variable "placement" {
-  description = "Swarm task placement (constraints and platforms). Omit in tfvars to skip placement in the task spec."
+  description = "Optional Swarm placement constraints and platforms."
   type = object({
     constraints = optional(list(string))
     platforms = optional(list(object({
@@ -16,116 +53,44 @@ variable "placement" {
   default = null
 }
 
-variable "env" {
-  description = "Additional environment variables to pass to the container."
-  type        = map(string)
-  default     = {}
-  sensitive   = true
-}
-
-variable "published_port" {
-  description = "Swarm ingress port exposed for the mcp-code HTTP endpoint."
-  type        = number
-  default     = 18212
-}
-
-variable "endpoint_host" {
-  description = "Host used when reporting the external MCP URL."
-  type        = string
-  default     = "192.168.1.120"
-}
-
-variable "timezone" {
-  description = "Container timezone."
-  type        = string
-  default     = "America/New_York"
-}
-
-variable "replicas" {
-  description = "Number of MCP replicas to run."
-  type        = number
-  default     = 1
-}
-
-
-
-variable "dns_nameservers" {
-  description = <<-EOT
-    DNS nameservers for Swarm task dns_config (and standalone runner dns). Set only in
-    CONFIG_DIR/terraform/providers/dns.tfvars (merged by swarm_pipeline.sh before stack tfvars).
-  EOT
-  type        = list(string)
-  sensitive   = true
-}
-
-variable "swarm_nfs_server" {
-  description = <<-EOT
-    Optional legacy; NFS mount options are swarm_nfs_volume_o_rw / swarm_nfs_volume_o_ro in nfs.tfvars.
-  EOT
-  type        = string
-  default     = ""
-  sensitive   = true
-}
 
 variable "swarm_nfs_code_device" {
-  description = <<-EOT
-    NFS device/export for repo code (e.g. ":/mnt/eapp/code"). Set only in CONFIG_DIR/terraform/providers/nfs.tfvars.
-  EOT
+  description = "NFS export for homelab code (from nfs.tfvars)."
   type        = string
   sensitive   = true
 }
+
 
 variable "swarm_nfs_config_device" {
-  description = <<-EOT
-    NFS device/export for shared config (e.g. ":/mnt/eapp/code/homelab/.config"). Set only in CONFIG_DIR/terraform/providers/nfs.tfvars.
-  EOT
+  description = "NFS export for homelab config (from nfs.tfvars)."
   type        = string
   sensitive   = true
 }
+
 
 variable "swarm_nfs_volume_type" {
-  description = <<-EOT
-    Docker local volume driver_opts.type for NFS-backed mounts (typically "nfs"). Set only in CONFIG_DIR/terraform/providers/nfs.tfvars.
-  EOT
+  description = "Docker volume driver type for NFS mounts (from nfs.tfvars)."
   type        = string
   sensitive   = true
 }
+
 
 variable "swarm_nfs_volume_o_rw" {
-  description = <<-EOT
-    Docker local volume driver_opts.o for read-write NFS (comma-separated options, e.g. addr=HOST,nfsvers=4.2,rw). Set only in CONFIG_DIR/terraform/providers/nfs.tfvars.
-  EOT
+  description = "Read-write NFS volume mount options (from nfs.tfvars)."
   type        = string
   sensitive   = true
 }
+
 
 variable "swarm_nfs_volume_o_ro" {
-  description = <<-EOT
-    Docker local volume driver_opts.o for read-only NFS (e.g. addr=HOST,nfsvers=4.2,ro). Set only in CONFIG_DIR/terraform/providers/nfs.tfvars.
-  EOT
+  description = "Read-only NFS volume mount options (from nfs.tfvars)."
   type        = string
   sensitive   = true
 }
 
+
 variable "swarm_docker_provider_config" {
-  description = <<-EOT
-    Shared Docker SSH host and registry credentials (GHCR, Harbor, etc.).
-    Set in /mnt/eapp/code/homelab/.config/terraform/providers/docker_arm64.tfvars; Swarm app pipelines source
-    scripts/terraform/swarm_docker_provider_tfvars_env.sh so terraform receives this file.
-  EOT
+  description = "Docker SSH host and registry_auths for the Swarm control plane."
   type        = any
-  default     = {}
 }
 
-# Vault KV fragments (parsed by scripts/terraform/vault_merge_config_secrets.py); unused by this module.
-variable "secrets" {
-  type      = any
-  default   = {}
-  sensitive = true
-}
-
-variable "secret_files" {
-  type      = any
-  default   = {}
-  sensitive = true
-}

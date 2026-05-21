@@ -54,7 +54,7 @@ When a project does not maintain a standalone docs site, this file links to the 
 | Graylog | `terraform/swarm/graylog/{database,app}` | [Graylog docs](https://go2docs.graylog.org/current/) |
 | Graphite | `terraform/swarm/graphite/app` | [Graphite docs](https://graphite.readthedocs.io/en/latest/) |
 | Telegraf | `terraform/swarm/telegraf_docker_metrics/app` | [Telegraf docs](https://docs.influxdata.com/telegraf/v1/configuration/) |
-| Dozzle | `terraform/swarm/dozzle/app` | [Dozzle docs](https://dozzle.dev/guide/what-is-dozzle) |
+| Dozzle | `terraform/swarm/dozzle/app` (`pipelines/terraform/swarm/dozzle/app.sh`, bespoke) | [Dozzle docs](https://dozzle.dev/guide/what-is-dozzle) |
 | Harbor | `terraform/swarm/harbor/{app,config}`, `applications/harbor/` | [Harbor docs](https://goharbor.io/docs/) |
 | Jenkins | `terraform/swarm/jenkins-agent-arm64/app`, `terraform/swarm/jenkins-agent-amd64/app`, `terraform/swarm/jenkins-controller/{app,config}`, `applications/jenkins-agent/`, `applications/jenkins-controller/` | [Jenkins docs](https://www.jenkins.io/doc/) |
 | Model Context Protocol (MCP) | `applications/mcp-*`, `terraform/swarm/mcp-*/app` | [MCP docs](https://modelcontextprotocol.io/docs/learn) |
@@ -63,7 +63,7 @@ When a project does not maintain a standalone docs site, this file links to the 
 
 | Technology | Repo evidence | Official docs |
 | --- | --- | --- |
-| ChromaDB | `terraform/swarm/chromadb/app` | [Chroma Docker docs](https://docs.trychroma.com/guides/deploy/docker) |
+| ChromaDB | `terraform/swarm/chromadb/app` (`pipelines/terraform/swarm/chromadb/app.sh`, bespoke) | [Chroma Docker docs](https://docs.trychroma.com/guides/deploy/docker) |
 | qBittorrent | `kubernetes/qbittorrent/base`, `kubernetes/qbittorrent/overlays` | [qBittorrent wiki](https://github.com/qbittorrent/qBittorrent/wiki) |
 | cross-seed | `kubernetes/cross-seed/base`, `kubernetes/cross-seed/overlays` | [cross-seed docs](https://www.cross-seed.org/docs/basics/getting-started) |
 | Plex / ClusterPlex | `kubernetes/clusterplex/` | [Plex support docs](https://support.plex.tv/) |
