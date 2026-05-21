@@ -25,9 +25,8 @@ resource "docker_service" "node_exporter" {
     }
 
     networks_advanced {
-      name        = docker_network.node_exporter.id
-      aliases     = []
-      driver_opts = []
+      name    = docker_network.node_exporter.id
+      aliases = ["node-exporter"]
     }
 
     container_spec {

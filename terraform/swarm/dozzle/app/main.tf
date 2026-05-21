@@ -25,9 +25,8 @@ resource "docker_service" "dozzle" {
     }
 
     networks_advanced {
-      name        = docker_network.dozzle.id
-      aliases     = []
-      driver_opts = []
+      name    = docker_network.dozzle.id
+      aliases = ["dozzle"]
     }
 
     container_spec {
@@ -45,14 +44,6 @@ resource "docker_service" "dozzle" {
         target = "/var/run/docker.sock"
         source = "/var/run/docker.sock"
         type   = "bind"
-      }
-
-      healthcheck {
-        test         = ["CMD", "/dozzle", "healthcheck"]
-        interval     = "10s"
-        timeout      = "5s"
-        retries      = 30
-        start_period = "1m"
       }
     }
   }
