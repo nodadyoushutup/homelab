@@ -31,14 +31,14 @@ resource "docker_service" "prometheus_victoriametrics" {
 
     networks_advanced {
       name    = docker_network.prometheus_victoriametrics.id
-      aliases = ["victoriametrics"]
+      aliases = ["prometheus-victoriametrics"]
     }
 
     container_spec {
       image = "victoriametrics/victoria-metrics:v1.137.0"
 
       args = [
-        "-storageDataPath=/victoria-metrics-data",
+        "-storageDataPath=/prometheus-victoriametrics-data",
       ]
 
       dns_config {
@@ -46,17 +46,9 @@ resource "docker_service" "prometheus_victoriametrics" {
       }
 
       mounts {
-        target = "/victoria-metrics-data"
+        target = "/prometheus-victoriametrics-data"
         source = docker_volume.prometheus_victoriametrics_data.name
         type   = "volume"
-      }
-
-      healthcheck {
-        test         = ["CMD", "wget", "--spider", "--quiet", "http://127.0.0.1:8428/health"]
-        interval     = "10s"
-        timeout      = "5s"
-        retries      = 6
-        start_period = "30s"
       }
     }
   }

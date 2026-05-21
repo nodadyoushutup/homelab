@@ -172,7 +172,7 @@
       },
       "targets": [
         {
-          "expr": "count(max by (hostname) (up{job=\"node_exporter\", platform=~\"$platform\"}) == 0)",
+          "expr": "count(max by (hostname) (up{job=\"node_exporter\", platform=~\"$platform\"}) == 0) or vector(0)",
           "instant": true,
           "legendFormat": "offline",
           "refId": "A"

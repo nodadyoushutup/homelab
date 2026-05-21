@@ -87,9 +87,9 @@ Illustrative snapshot of how existing services split:
   `CONFIG_DIR/<name>/` tree (it also flattens legacy `*/<slice>/<slice>.tfvars`
   and `*/config/secrets.tfvars` when present).
 - **App + database:** separate Swarm DB slices use **`{app}-{engine}`** names
-  (overlay, service, and `-{engine}-data` volume where applicable). Short **DNS
-  aliases** on the DB overlay match the engine (`postgres`, `mongodb`, `mysql`,
-  `victoriametrics`) for app connectivity:
+  (overlay, service, and `-{engine}-data` volume where applicable). On the DB
+  overlay, DNS alias **`prometheus-victoriametrics`** matches the VictoriaMetrics
+  service/network name (used by Prometheus `remote_write` and app connectivity):
 
   | App slice | Database engine | Service / network | Data volume |
   | --- | --- | --- | --- |
