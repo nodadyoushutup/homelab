@@ -4,7 +4,7 @@ services:
       context: ../..
       dockerfile: applications/gha-runner/Dockerfile
       args:
-        RUNNER_VERSION: "${RUNNER_VERSION:-2.332.0}"
+        RUNNER_VERSION: "${RUNNER_VERSION:-2.334.0}"
     user: "0:0"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock

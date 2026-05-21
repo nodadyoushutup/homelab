@@ -1,4 +1,4 @@
-# Copy to CONFIG_DIR/terraform/swarm/qbittorrent-metrics-exporter/app.tfvars
+# Copy to CONFIG_DIR/terraform/swarm/qbittorrent-exporter/app.tfvars
 #
 # One martabal/qbittorrent-exporter Swarm service per instance (ports from exporter_port_base).
 # Prometheus: CONFIG_DIR/terraform/swarm/prometheus/prometheus.yaml job qbittorrent_exporter

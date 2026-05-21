@@ -6,12 +6,12 @@ ROOT_DIR="$(cd "${SCRIPT_DIR}/../../../.." && pwd)"
 PIPELINE_SCRIPT_ROOT="${ROOT_DIR}/scripts/terraform"
 source "${PIPELINE_SCRIPT_ROOT}/load_root_env.sh"
 
-SERVICE_NAME="qbittorrent-metrics-exporter"
-STAGE_NAME="qBittorrent metrics exporter app"
-ENTRYPOINT_RELATIVE="pipelines/terraform/swarm/qbittorrent-metrics-exporter/app.sh"
-TERRAFORM_DIR="${ROOT_DIR}/terraform/swarm/qbittorrent-metrics-exporter/app"
+SERVICE_NAME="qbittorrent-exporter"
+STAGE_NAME="qBittorrent exporter app"
+ENTRYPOINT_RELATIVE="pipelines/terraform/swarm/qbittorrent-exporter/app.sh"
+TERRAFORM_DIR="${ROOT_DIR}/terraform/swarm/qbittorrent-exporter/app"
 TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${CONFIG_DIR:-${ROOT_DIR}/.config}}"
-DEFAULT_TFVARS_FILE="${TFVARS_HOME_DIR}/terraform/swarm/qbittorrent-metrics-exporter/app.tfvars"
+DEFAULT_TFVARS_FILE="${TFVARS_HOME_DIR}/terraform/swarm/qbittorrent-exporter/app.tfvars"
 DEFAULT_BACKEND_FILE="${DEFAULT_BACKEND_FILE:-${TFVARS_HOME_DIR}/minio.backend.hcl}"
 
 PLAN_ARGS_EXTRA=()

@@ -68,7 +68,7 @@ If `GH_RUNNER_URL` is unset, or no usable runner registration token can be resol
 - `GH_RUNNER_WORKDIR` (default: `_work`)
 - `GH_RUNNER_EPHEMERAL` (default: `false`)
 - `GH_RUNNER_DISABLEUPDATE` (default: `true`)
-- `RUNNER_VERSION` (build arg; default: `2.332.0`)
+- `RUNNER_VERSION` (build arg; default: `2.334.0`)
 
 ## Notes
 

@@ -76,10 +76,10 @@ assert_tfvars_path "remote config" \
 
 assert_tfvars_path "explicit override" \
   "${ROOT_DIR}" \
-  "${ROOT_DIR}/terraform/swarm/qbittorrent-metrics-exporter/app" \
-  "qbittorrent-metrics-exporter" \
-  "${TFVARS_HOME_DIR}/terraform/swarm/qbittorrent-metrics-exporter/app.tfvars" \
-  "${TFVARS_HOME_DIR}/terraform/swarm/qbittorrent-metrics-exporter/app.tfvars"
+  "${ROOT_DIR}/terraform/swarm/qbittorrent-exporter/app" \
+  "qbittorrent-exporter" \
+  "${TFVARS_HOME_DIR}/terraform/swarm/qbittorrent-exporter/app.tfvars" \
+  "${TFVARS_HOME_DIR}/terraform/swarm/qbittorrent-exporter/app.tfvars"
 
 assert_tfvars_path "prometheus-pve-exporter app" \
   "${ROOT_DIR}" \

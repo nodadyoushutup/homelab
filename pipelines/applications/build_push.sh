@@ -214,11 +214,6 @@ resolve_build_target() {
       DOCKER_CONTEXT="applications/mcp-terraform"
       BUILD_STRATEGY="direct"
       ;;
-    qbittorrent-metrics-exporter)
-      IMAGE_NAME="qbittorrent-metrics-exporter"
-      DOCKER_CONTEXT="applications/qbittorrent-metrics-exporter"
-      BUILD_STRATEGY="direct"
-      ;;
     rag-engine)
       IMAGE_NAME="rag-engine"
       DOCKER_CONTEXT="applications/rag-engine"

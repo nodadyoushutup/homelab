@@ -1,7 +1,6 @@
 terraform {
   backend "s3" {
-    # Unchanged object key so existing remote state keeps tracking this stack after the rename.
-    key = "webserver-image.tfstate"
+    key = "cloud-image-repository.tfstate"
   }
 
   required_providers {
@@ -17,7 +16,7 @@ provider "docker" {
   ssh_opts = var.swarm_docker_provider_config.docker.ssh_opts
 
   dynamic "registry_auth" {
-    for_each = local.docker_registry_auths
+    for_each = coalesce(try(var.swarm_docker_provider_config.registry_auths, null), [])
 
     content {
       address  = try(registry_auth.value.address, "ghcr.io")

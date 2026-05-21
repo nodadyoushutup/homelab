@@ -1,6 +1,6 @@
 terraform {
   backend "s3" {
-    key = "qbittorrent-metrics-exporter.tfstate"
+    key = "qbittorrent-exporter.tfstate"
   }
 
   required_providers {

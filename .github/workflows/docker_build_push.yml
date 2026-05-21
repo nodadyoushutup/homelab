@@ -46,7 +46,6 @@ on:
           - mcp-google-workspace
           - mcp-rag
           - mcp-terraform
-          - qbittorrent-metrics-exporter
           - rag-engine
 
 permissions:
@@ -186,11 +185,6 @@ jobs:
             mcp-terraform)
               image_name="mcp-terraform"
               docker_context="applications/mcp-terraform"
-              build_strategy="direct"
-              ;;
-            qbittorrent-metrics-exporter)
-              image_name="qbittorrent-metrics-exporter"
-              docker_context="applications/qbittorrent-metrics-exporter"
               build_strategy="direct"
               ;;
             rag-engine)

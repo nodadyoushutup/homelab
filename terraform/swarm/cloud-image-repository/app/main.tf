@@ -1,25 +1,15 @@
 resource "docker_network" "cloud_image_repository" {
-  name   = local.network_name
+  name   = "cloud-image-repository"
   driver = "overlay"
 }
 
 resource "docker_volume" "cloud_image_repository_data" {
-  name   = local.data_volume_name
+  name   = "cloud-image-repository-data"
   driver = "local"
 }
 
 resource "docker_service" "cloud_image_repository" {
-  name = local.service_name
-
-  dynamic "auth" {
-    for_each = local.docker_service_pull_auth_map
-
-    content {
-      server_address = auth.value.server_address
-      username       = auth.value.username
-      password       = auth.value.password
-    }
-  }
+  name = "cloud-image-repository"
 
   task_spec {
     dynamic "placement" {
@@ -41,17 +31,11 @@ resource "docker_service" "cloud_image_repository" {
 
     networks_advanced {
       name    = docker_network.cloud_image_repository.id
-      aliases = [local.service_name]
+      aliases = ["cloud-image-repository"]
     }
 
     container_spec {
       image = "ghcr.io/nodadyoushutup/cloud-image-repository:0.0.1"
-
-      env = {
-        CLOUD_IMAGE_REPOSITORY_DATA_ROOT = local.data_mount_target
-        CLOUD_IMAGE_REPOSITORY_UI_ROOT   = local.ui_mount_target
-        CLOUD_IMAGE_REPOSITORY_PORT      = tostring(local.internal_port)
-      }
 
       dns_config {
         nameservers = var.dns_nameservers
@@ -60,7 +44,7 @@ resource "docker_service" "cloud_image_repository" {
       mounts {
         type   = "volume"
         source = docker_volume.cloud_image_repository_data.name
-        target = local.data_mount_target
+        target = "/data"
       }
 
       healthcheck {
@@ -81,8 +65,8 @@ resource "docker_service" "cloud_image_repository" {
 
   endpoint_spec {
     ports {
-      target_port    = local.internal_port
-      published_port = local.published_port
+      target_port    = 8080
+      published_port = 18088
       protocol       = "tcp"
       publish_mode   = "ingress"
     }

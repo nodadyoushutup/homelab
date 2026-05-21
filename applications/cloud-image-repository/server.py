@@ -12,9 +12,9 @@ import urllib.parse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 
-DATA_ROOT = os.path.realpath(os.environ.get("CLOUD_IMAGE_REPOSITORY_DATA_ROOT", "/srv/cloud-image-repository/data"))
-UI_ROOT = os.path.realpath(os.environ.get("CLOUD_IMAGE_REPOSITORY_UI_ROOT", "/srv/cloud-image-repository/ui"))
-LISTEN_PORT = int(os.environ.get("CLOUD_IMAGE_REPOSITORY_PORT", "8080"))
+DATA_ROOT = os.path.realpath("/data")
+UI_ROOT = os.path.realpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "ui"))
+LISTEN_PORT = 8080
 READ_CHUNK_SIZE = 1024 * 1024
 WRITE_CHUNK_SIZE = 1024 * 1024
 API_PREFIX = "/api/files/"

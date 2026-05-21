@@ -1,6 +1,7 @@
-variable "swarm_docker_provider_config" {
-  description = "Docker SSH host and registry_auths for the Swarm control plane."
-  type        = any
+variable "dns_nameservers" {
+  description = "DNS nameservers for Swarm task dns_config."
+  type        = list(string)
+  sensitive   = true
 }
 
 variable "placement" {
@@ -15,8 +16,7 @@ variable "placement" {
   default = null
 }
 
-variable "dns_nameservers" {
-  description = "DNS nameservers for Swarm task dns_config."
-  type        = list(string)
-  sensitive   = true
+variable "swarm_docker_provider_config" {
+  description = "Docker SSH host and registry_auths for the Swarm control plane."
+  type        = any
 }

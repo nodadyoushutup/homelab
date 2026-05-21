@@ -203,14 +203,20 @@ SWARM_SHARED_TFVARS_PREFIX+=(-var-file "${SWARM_DNS_PROVIDER_TFVARS}")
 echo "Swarm DNS provider tfvars: ${SWARM_DNS_PROVIDER_TFVARS}"
 export DNS_PROVIDER_TFVARS_PATH="${SWARM_DNS_PROVIDER_TFVARS}"
 
-if [[ ! -f "${SWARM_NFS_PROVIDER_TFVARS}" ]]; then
-  echo "[ERR] Missing Swarm NFS provider tfvars: ${SWARM_NFS_PROVIDER_TFVARS}" >&2
-  echo "[ERR] Add swarm_nfs_* there (see homelab terraform/providers/nfs.tfvars.example)." >&2
-  exit 1
+if [[ "${SWARM_SKIP_NFS_PROVIDER_TFVARS:-0}" == "1" ]]; then
+  NFS_PROVIDER_TFVARS_PATH=""
+  export NFS_PROVIDER_TFVARS_PATH
+  echo "Swarm NFS provider tfvars: skipped (SWARM_SKIP_NFS_PROVIDER_TFVARS=1)"
+else
+  if [[ ! -f "${SWARM_NFS_PROVIDER_TFVARS}" ]]; then
+    echo "[ERR] Missing Swarm NFS provider tfvars: ${SWARM_NFS_PROVIDER_TFVARS}" >&2
+    echo "[ERR] Add swarm_nfs_* there (see homelab terraform/providers/nfs.tfvars.example)." >&2
+    exit 1
+  fi
+  SWARM_SHARED_TFVARS_PREFIX+=(-var-file "${SWARM_NFS_PROVIDER_TFVARS}")
+  echo "Swarm NFS provider tfvars: ${SWARM_NFS_PROVIDER_TFVARS}"
+  export NFS_PROVIDER_TFVARS_PATH="${SWARM_NFS_PROVIDER_TFVARS}"
 fi
-SWARM_SHARED_TFVARS_PREFIX+=(-var-file "${SWARM_NFS_PROVIDER_TFVARS}")
-echo "Swarm NFS provider tfvars: ${SWARM_NFS_PROVIDER_TFVARS}"
-export NFS_PROVIDER_TFVARS_PATH="${SWARM_NFS_PROVIDER_TFVARS}"
 
 # grafana.tfvars (provider_config.grafana) is merged only by grafana/config pipelines
 # via scripts/terraform/swarm_grafana_provider_tfvars_env.sh — not here. Last-wins
