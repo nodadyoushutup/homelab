@@ -30,7 +30,7 @@ resource "docker_service" "mcp_argocd" {
     }
 
     container_spec {
-      image = "ghcr.io/nodadyoushutup/mcp-argocd:0.0.1"
+      image = "ghcr.io/nodadyoushutup/mcp-argocd:0.0.2"
       env   = var.env
 
       dns_config {
