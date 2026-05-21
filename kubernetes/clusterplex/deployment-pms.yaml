@@ -111,25 +111,23 @@ spec:
             httpGet:
               path: /identity
               port: plex
-            periodSeconds: 10
-            timeoutSeconds: 1
-            failureThreshold: 30
+            periodSeconds: 15
+            timeoutSeconds: 15
+            failureThreshold: 80
           readinessProbe:
             httpGet:
               path: /identity
               port: plex
-            initialDelaySeconds: 30
-            periodSeconds: 10
-            timeoutSeconds: 5
-            failureThreshold: 30
+            periodSeconds: 15
+            timeoutSeconds: 15
+            failureThreshold: 6
           livenessProbe:
             httpGet:
               path: /identity
               port: plex
-            initialDelaySeconds: 120
-            periodSeconds: 10
-            timeoutSeconds: 5
-            failureThreshold: 6
+            periodSeconds: 30
+            timeoutSeconds: 15
+            failureThreshold: 10
           resources:
             requests:
               cpu: "1"
