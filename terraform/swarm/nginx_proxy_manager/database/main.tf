@@ -36,12 +36,7 @@ resource "docker_service" "nginx_proxy_manager_mysql" {
 
     container_spec {
       image = "jc21/mariadb-aria:10.11.5"
-      env = {
-        MYSQL_DATABASE       = var.env.MYSQL_DATABASE
-        MYSQL_USER           = var.env.MYSQL_USER
-        MYSQL_PASSWORD       = var.env.MYSQL_PASSWORD
-        MARIADB_AUTO_UPGRADE = var.env.MARIADB_AUTO_UPGRADE
-      }
+      env   = var.env
 
       dns_config {
         nameservers = var.dns_nameservers

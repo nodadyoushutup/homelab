@@ -8,10 +8,12 @@ source "${PIPELINE_SCRIPT_ROOT}/load_root_env.sh"
 
 SERVICE_NAME="mcp-atlassian"
 STAGE_NAME="MCP Atlassian app"
+# No NFS mounts; skip nfs.tfvars so the stack need not declare swarm_nfs_* variables.
+SWARM_SKIP_NFS_PROVIDER_TFVARS=1
+export SWARM_SKIP_NFS_PROVIDER_TFVARS
 ENTRYPOINT_RELATIVE="pipelines/terraform/swarm/mcp-atlassian/app.sh"
 TERRAFORM_DIR="${ROOT_DIR}/terraform/swarm/mcp-atlassian/app"
 TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${CONFIG_DIR:-${ROOT_DIR}/.config}}"
-DEFAULT_BACKEND_FILE="${DEFAULT_BACKEND_FILE:-${TFVARS_HOME_DIR}/minio.backend.hcl}"
 
 PLAN_ARGS_EXTRA=()
 APPLY_ARGS_EXTRA=()

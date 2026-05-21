@@ -100,15 +100,7 @@ resource "docker_service" "jenkins_controller" {
             }
           }
         }
-      }
-      healthcheck {
-        test         = ["CMD-SHELL", "curl --silent --show-error --fail http://127.0.0.1:8080/login > /dev/null || exit 1"]
-        interval     = "30s"
-        timeout      = "5s"
-        retries      = 6
-        start_period = "1m"
-      }
-    }
+      }    }
 
     restart_policy {
       condition    = "on-failure"

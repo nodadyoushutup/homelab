@@ -1,7 +1,7 @@
 # Copy to CONFIG_DIR/terraform/swarm/prometheus/app.tfvars (not committed).
-# prometheus_config_path is required (see pipelines/terraform/swarm/prometheus/app.sh).
+# config_path is required (see pipelines/terraform/swarm/prometheus/app.sh).
 
-# prometheus_config_path = "/path/to/prometheus.yaml"
+# config_path = "/path/to/prometheus.yaml"
 
 # Default: monitoring stack on swarm-wk-0. Node must be Ready and labeled:
 #   docker node update --label-add role=swarm-wk-0 <node-id>

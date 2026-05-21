@@ -11,14 +11,15 @@ STAGE_NAME="GitHub Actions AMD64 runner app"
 ENTRYPOINT_RELATIVE="pipelines/terraform/swarm/gha-runner-amd64/app.sh"
 TERRAFORM_DIR="${ROOT_DIR}/terraform/swarm/gha-runner-amd64/app"
 TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${CONFIG_DIR:-${ROOT_DIR}/.config}}"
-DEFAULT_BACKEND_FILE="${DEFAULT_BACKEND_FILE:-${TFVARS_HOME_DIR}/minio.backend.hcl}"
 
 PLAN_ARGS_EXTRA=()
 APPLY_ARGS_EXTRA=()
 
 PIPELINE_ARGS=("$@")
 
-SWARM_DOCKER_AMD64_PROVIDER_TFVARS="${SWARM_DOCKER_AMD64_PROVIDER_TFVARS:-${TFVARS_HOME_DIR}/terraform/providers/docker_amd64.tfvars}"
+# shellcheck source=../../../scripts/terraform/resolve_config_by_id.sh
+source "${PIPELINE_SCRIPT_ROOT}/resolve_config_by_id.sh"
+SWARM_DOCKER_AMD64_PROVIDER_TFVARS="${SWARM_DOCKER_AMD64_PROVIDER_TFVARS:-$(homelab_resolve_config_path "${TFVARS_HOME_DIR}" "terraform/providers/docker_amd64")}"
 export SWARM_DOCKER_AMD64_PROVIDER_TFVARS
 
 # Pool-host Docker provider: docker_amd64.tfvars sets `swarm_docker_provider_config` last

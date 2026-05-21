@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
 # Optional Grafana API credentials for terraform/swarm/grafana/config only.
-# Source from pipelines/terraform/swarm/grafana/config.sh before swarm_pipeline.sh.
-# Do NOT add to the global swarm_pipeline shared prefix: grafana.tfvars sets
-# provider_config.grafana and would collide with other stacks' provider_config
-# (e.g. nginx_proxy_manager) when var-files are merged by last-wins semantics.
+# Tag: terraform/providers/grafana
 set -euo pipefail
 
+_script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=resolve_config_by_id.sh
+source "${_script_dir}/resolve_config_by_id.sh"
+
 TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${CONFIG_DIR:-${ROOT_DIR}/.config}}"
-SWARM_GRAFANA_PROVIDER_TFVARS="${SWARM_GRAFANA_PROVIDER_TFVARS:-${TFVARS_HOME_DIR}/terraform/providers/grafana.tfvars}"
+SWARM_GRAFANA_PROVIDER_TFVARS="${SWARM_GRAFANA_PROVIDER_TFVARS:-$(homelab_resolve_config_path "${TFVARS_HOME_DIR}" "terraform/providers/grafana")}"
 export SWARM_GRAFANA_PROVIDER_TFVARS
 
 if [[ -f "${SWARM_GRAFANA_PROVIDER_TFVARS}" ]]; then

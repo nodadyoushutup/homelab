@@ -15,10 +15,10 @@ if [[ -f "${SITE_ENV}" ]]; then
 fi
 CONFIG_DIR="${CONFIG_DIR:-${ROOT_DIR}/.config}"
 export CONFIG_DIR
-DEFAULT_DOCKER_TFVARS="${CONFIG_DIR}/terraform/providers/docker_arm64.tfvars"
-DEFAULT_DNS_TFVARS="${CONFIG_DIR}/terraform/providers/dns.tfvars"
-DEFAULT_APP_TFVARS="${CONFIG_DIR}/terraform/swarm/dozzle/app.tfvars"
-DEFAULT_BACKEND="${CONFIG_DIR}/minio.backend.hcl"
+# shellcheck source=../../../scripts/terraform/bespoke_swarm_defaults.sh
+source "${ROOT_DIR}/scripts/terraform/bespoke_swarm_defaults.sh"
+homelab_bespoke_swarm_set_defaults "${CONFIG_DIR}" "${TERRAFORM_DIR}" "${ROOT_DIR}"
+DEFAULT_APP_TFVARS="${DEFAULT_SLICE_TFVARS}"
 
 DOCKER_TFVARS="${SWARM_DOCKER_PROVIDER_TFVARS:-${DOZZLE_DOCKER_TFVARS:-${DEFAULT_DOCKER_TFVARS}}}"
 DNS_TFVARS="${SWARM_DNS_PROVIDER_TFVARS:-${DOZZLE_DNS_TFVARS:-${DEFAULT_DNS_TFVARS}}}"

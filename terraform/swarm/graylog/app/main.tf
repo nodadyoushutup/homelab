@@ -146,14 +146,6 @@ resource "docker_service" "graylog" {
         source = docker_volume.graylog_server.name
         type   = "volume"
       }
-
-      healthcheck {
-        test         = ["CMD-SHELL", "wget -q -O- http://127.0.0.1:9000/api/system/lbstatus | grep -q ALIVE || wget -q -O- http://127.0.0.1:9000/api | grep -q graylog"]
-        interval     = "20s"
-        timeout      = "10s"
-        retries      = 15
-        start_period = "120s"
-      }
     }
   }
 

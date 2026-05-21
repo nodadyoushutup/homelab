@@ -65,6 +65,11 @@ Illustrative snapshot of how existing services split:
   Terraform slice root such as `terraform/swarm/grafana/app/`, live tfvars sit
   **one level up**, named for the slice: `terraform/swarm/grafana/app.tfvars`,
   `terraform/swarm/grafana/config.tfvars`, `terraform/swarm/grafana/database.tfvars`.
+  Each file (and `minio.backend.hcl`, provider tfvars, live `docker/*.env`) must
+  start with **`# homelab-config: <id>`** where `<id>` matches the mirrored path
+  without suffix (for example `terraform/swarm/grafana/app`). Pipelines resolve by
+  tag via `scripts/terraform/resolve_config_by_id.sh`; canonical paths are fallback
+  only. Stamp tags with `scripts/config/stamp_homelab_config_ids.py` (see `.config/README.md`).
   Optional `secrets` / `secret_files` blocks in those files are **Vault-only**
   (declared as ignored variables on each slice root). The same rule applies under
   `terraform/cluster/...`, `terraform/remote/...`, and `terraform/network/...`.
@@ -77,9 +82,14 @@ Illustrative snapshot of how existing services split:
   stage sets `SWARM_SKIP_DNS_PROVIDER_TFVARS` or `SWARM_SKIP_NFS_PROVIDER_TFVARS`;
   merged as docker_arm64, optional pool tfvars when set by that pipeline, then dns,
   then nfs, then optional `terraform/providers/grafana.tfvars` when present, before each stack's slice tfvars).
-  **Bespoke app pipelines** (no `swarm_pipeline.sh`): `chromadb`, `cloud-image-repository`,
-  `dozzle`, and `node_exporter` each use `pipelines/terraform/swarm/<svc>/app.sh` with only
-  `docker_arm64.tfvars`, `dns.tfvars`, stack `app.tfvars`, and `minio.backend.hcl`.
+  **Bespoke pipelines** (no `swarm_pipeline.sh`): app stacks `chromadb`,
+  `cloud-image-repository`, `dozzle`, `node_exporter`, and `prometheus` use
+  `pipelines/terraform/swarm/<svc>/app.sh`; VictoriaMetrics uses
+  `pipelines/terraform/swarm/prometheus/database.sh`. The full
+  `nginx_proxy_manager` trio (`database.sh`, `app.sh`, `config.sh`) is bespoke:
+  database and app merge `docker_arm64.tfvars`, `dns.tfvars`, slice tfvars, and
+  `minio.backend.hcl` (no NFS or Grafana provider tfvars); config merges only
+  slice tfvars and the backend (NPM API credentials live in config tfvars).
   The Grafana file supplies `provider_config.grafana` for the Grafana `config/` root; other stacks ignore the extra map keys.
   Values are not defaulted in
   module code—set them only under CONFIG_DIR. Kubernetes app config under `kubernetes/<app>/`. Use
@@ -98,7 +108,9 @@ Illustrative snapshot of how existing services split:
   | `nginx_proxy_manager` | MySQL | `nginx-proxy-manager-mysql` | `nginx-proxy-manager-mysql-data` |
   | `prometheus` | VictoriaMetrics | `prometheus-victoriametrics` | `prometheus-victoriametrics-data` |
 - **App only:** majority of MCP stacks, runners, Rag-engine, etc. Simple app-only stacks
-  with bespoke pipelines: `chromadb`, `cloud-image-repository`, `dozzle`, `node_exporter`.
+  with bespoke pipelines: `chromadb`, `cloud-image-repository`, `dozzle`, `node_exporter`,
+  `prometheus` (app and VictoriaMetrics database slices both bespoke). The
+  `nginx_proxy_manager` database, app, and config slices all use bespoke pipelines.
 
 Legacy nested tfvars (`terraform/swarm/<svc>/app/app.tfvars`) may still exist on
 disk until flattened. **New work** should use the sibling naming above.

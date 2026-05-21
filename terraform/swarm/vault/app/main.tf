@@ -65,14 +65,6 @@ resource "docker_service" "vault" {
         config_name = docker_config.vault_server.name
         file_name   = "/vault/config/vault.hcl"
       }
-
-      healthcheck {
-        test         = ["CMD-SHELL", "VAULT_ADDR=http://127.0.0.1:8200 vault status >/dev/null 2>&1; code=$?; [ \"$code\" -eq 0 ] || [ \"$code\" -eq 1 ] || [ \"$code\" -eq 2 ]"]
-        interval     = "15s"
-        timeout      = "5s"
-        retries      = 10
-        start_period = "30s"
-      }
     }
   }
 

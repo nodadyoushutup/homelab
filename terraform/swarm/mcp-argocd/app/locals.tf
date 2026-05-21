@@ -11,19 +11,6 @@ locals {
     TZ = var.timezone
   }
   effective_env = merge(local.default_env, local.parsed_env, var.env)
-
-  argocd_healthcheck = {
-    test = [
-      "CMD",
-      "node",
-      "-e",
-      "fetch('http://127.0.0.1:3000/mcp',{headers:{'mcp-session-id':'healthcheck'}}).then(r=>process.exit(r.status<500?0:1)).catch(()=>process.exit(1))",
-    ]
-    interval     = "15s"
-    timeout      = "5s"
-    retries      = 10
-    start_period = "30s"
-  }
 }
 
 

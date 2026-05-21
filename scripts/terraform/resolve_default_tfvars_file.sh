@@ -1,11 +1,16 @@
 #!/usr/bin/env bash
-# Resolve DEFAULT_TFVARS_FILE from repo Terraform layout (shared by swarm_pipeline.sh).
+# Resolve DEFAULT_TFVARS_FILE from homelab-config tag or repo Terraform layout.
 #
-# Layout: <CONFIG_DIR>/terraform/.../<slice>.tfvars mirrors
-#         <repo>/terraform/.../<slice>/ (slice = basename of TERRAFORM_DIR).
-#
-# Bash quirk: do not assign `${path#"${root}/"}` inside a `case` arm when `root`
-# also appears in the case pattern — use a separate prefix variable (see tests).
+# Tag (first line): # homelab-config: terraform/swarm/grafana/app
+# Canonical fallback: <CONFIG_DIR>/terraform/swarm/grafana/app.tfvars
+
+_homelab_resolve_default_tfvars_loaded=0
+if [[ "${_homelab_resolve_default_tfvars_loaded}" != "1" ]]; then
+  _homelab_resolve_default_tfvars_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  # shellcheck source=resolve_config_by_id.sh
+  source "${_homelab_resolve_default_tfvars_dir}/resolve_config_by_id.sh"
+  _homelab_resolve_default_tfvars_loaded=1
+fi
 
 homelab_resolve_default_tfvars_file() {
   local root_dir="${1:-}"
@@ -19,20 +24,14 @@ homelab_resolve_default_tfvars_file() {
     return 0
   fi
 
-  if [[ -n "${terraform_dir}" && -n "${root_dir}" ]]; then
-    local root_prefix="${root_dir}/"
-    if [[ "${terraform_dir}" == "${root_prefix}"* ]]; then
-      local rel="${terraform_dir#"${root_prefix}"}"
-      local slice parent_rel
-      slice="$(basename "${terraform_dir}")"
-      parent_rel="$(dirname "${rel}")"
-      printf '%s\n' "${tfvars_home_dir}/${parent_rel}/${slice}.tfvars"
-      return 0
-    fi
+  local config_id=""
+  if config_id="$(homelab_config_id_from_terraform_dir "${root_dir}" "${terraform_dir}" 2>/dev/null)"; then
+    homelab_resolve_config_path "${tfvars_home_dir}" "${config_id}"
+    return 0
   fi
 
   if [[ -n "${default_basename}" ]]; then
-    printf '%s\n' "${tfvars_home_dir}/${default_basename}.tfvars"
+    homelab_resolve_config_path "${tfvars_home_dir}" "${default_basename}"
     return 0
   fi
 

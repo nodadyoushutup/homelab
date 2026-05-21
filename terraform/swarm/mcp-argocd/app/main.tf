@@ -51,16 +51,6 @@ resource "docker_service" "mcp_argocd" {
       dns_config {
         nameservers = var.dns_nameservers
       }
-      dynamic "healthcheck" {
-        for_each = [local.argocd_healthcheck]
-        content {
-          test         = healthcheck.value.test
-          interval     = try(healthcheck.value.interval, "15s")
-          timeout      = try(healthcheck.value.timeout, "5s")
-          retries      = try(healthcheck.value.retries, 10)
-          start_period = try(healthcheck.value.start_period, "30s")
-        }
-      }
     }
     restart_policy {
       condition    = "on-failure"

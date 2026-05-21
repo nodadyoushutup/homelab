@@ -37,16 +37,12 @@ resource "docker_service" "prometheus_victoriametrics" {
     container_spec {
       image = "victoriametrics/victoria-metrics:v1.137.0"
 
-      args = [
-        "-storageDataPath=/prometheus-victoriametrics-data",
-      ]
-
       dns_config {
         nameservers = var.dns_nameservers
       }
 
       mounts {
-        target = "/prometheus-victoriametrics-data"
+        target = "/victoria-metrics-data"
         source = docker_volume.prometheus_victoriametrics_data.name
         type   = "volume"
       }

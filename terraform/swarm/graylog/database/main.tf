@@ -55,14 +55,6 @@ resource "docker_service" "graylog_mongodb" {
         source = docker_volume.graylog_mongodb_config.name
         type   = "volume"
       }
-
-      healthcheck {
-        test         = ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
-        interval     = "15s"
-        timeout      = "5s"
-        retries      = 10
-        start_period = "30s"
-      }
     }
   }
 

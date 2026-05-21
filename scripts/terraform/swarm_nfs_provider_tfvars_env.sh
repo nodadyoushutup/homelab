@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
-# Optional: export path to shared Swarm NFS tfvars (swarm_nfs_*).
-# swarm_pipeline.sh requires this file to exist (see homelab terraform/providers/nfs.tfvars.example).
+# Export path to shared Swarm NFS tfvars (tag: terraform/providers/nfs).
 set -euo pipefail
 
+_script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=resolve_config_by_id.sh
+source "${_script_dir}/resolve_config_by_id.sh"
+
 TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${CONFIG_DIR:-${ROOT_DIR}/.config}}"
-SWARM_NFS_PROVIDER_TFVARS="${SWARM_NFS_PROVIDER_TFVARS:-${TFVARS_HOME_DIR}/terraform/providers/nfs.tfvars}"
+SWARM_NFS_PROVIDER_TFVARS="${SWARM_NFS_PROVIDER_TFVARS:-$(homelab_resolve_config_path "${TFVARS_HOME_DIR}" "terraform/providers/nfs")}"
 export SWARM_NFS_PROVIDER_TFVARS

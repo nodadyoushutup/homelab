@@ -12,7 +12,7 @@ terraform {
 }
 
 provider "nginxproxymanager" {
-  url      = var.provider_config.nginx_proxy_manager.url
-  username = var.provider_config.nginx_proxy_manager.username
-  password = var.provider_config.nginx_proxy_manager.password
+  url      = var.provider_config.url
+  username = var.provider_config.username
+  password = var.provider_config.password
 }

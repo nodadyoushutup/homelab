@@ -1,10 +1,3 @@
-variable "db_mysql_host" {
-  description = "Internal MySQL hostname for NPM (defaults to Swarm service DNS name)."
-  type        = string
-  default     = "mysql"
-}
-
-
 variable "env" {
   description = "Container environment variables."
   type        = map(string)

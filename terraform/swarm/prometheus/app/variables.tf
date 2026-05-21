@@ -1,4 +1,4 @@
-variable "prometheus_config_path" {
+variable "config_path" {
   description = "Host path to prometheus.yml bind-mounted into the service."
   type        = string
 }

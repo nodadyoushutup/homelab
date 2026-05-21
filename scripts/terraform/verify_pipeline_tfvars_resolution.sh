@@ -6,6 +6,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR}/resolve_default_tfvars_file.sh"
+# shellcheck source=/dev/null
+source "${SCRIPT_DIR}/resolve_config_by_id.sh"
 
 TFVARS_HOME_DIR="${ROOT_DIR}/.config"
 failures=0
@@ -53,7 +55,21 @@ assert_tfvars_path "swarm database" \
   "" \
   "${TFVARS_HOME_DIR}/terraform/swarm/prometheus/database.tfvars"
 
-assert_tfvars_path "swarm config" \
+assert_tfvars_path "swarm nginx_proxy_manager database" \
+  "${ROOT_DIR}" \
+  "${ROOT_DIR}/terraform/swarm/nginx_proxy_manager/database" \
+  "nginx_proxy_manager" \
+  "" \
+  "${TFVARS_HOME_DIR}/terraform/swarm/nginx_proxy_manager/database.tfvars"
+
+assert_tfvars_path "swarm nginx_proxy_manager app" \
+  "${ROOT_DIR}" \
+  "${ROOT_DIR}/terraform/swarm/nginx_proxy_manager/app" \
+  "nginx_proxy_manager" \
+  "" \
+  "${TFVARS_HOME_DIR}/terraform/swarm/nginx_proxy_manager/app.tfvars"
+
+assert_tfvars_path "swarm nginx_proxy_manager config" \
   "${ROOT_DIR}" \
   "${ROOT_DIR}/terraform/swarm/nginx_proxy_manager/config" \
   "nginx_proxy_manager" \
@@ -109,21 +125,33 @@ assert_case_assignment_still_broken() {
 }
 assert_case_assignment_still_broken
 
-# Every pipeline entrypoint that sources swarm_pipeline.sh.
+# Tag index must resolve a representative slice when stamped under .config.
+checks=$((checks + 1))
+if ! tagged="$(homelab_find_config_by_id "${TFVARS_HOME_DIR}" "terraform/swarm/grafana/app" 2>/dev/null)"; then
+  echo "[FAIL] homelab-config tag missing for terraform/swarm/grafana/app (run scripts/config/stamp_homelab_config_ids.py)" >&2
+  failures=$((failures + 1))
+elif [[ ! -f "${tagged}" ]]; then
+  echo "[FAIL] tagged grafana app tfvars not found: ${tagged}" >&2
+  failures=$((failures + 1))
+fi
+
+# Pipeline entrypoints that source swarm_pipeline.sh (not comment-only mentions).
 while IFS= read -r pipeline_script; do
   pipeline_dir="$(dirname "${pipeline_script}")"
   pipeline_name="$(basename "${pipeline_script}")"
   label="${pipeline_dir#${ROOT_DIR}/}/${pipeline_name}"
 
-  out="$(cd "${pipeline_dir}" && timeout 8 bash "./${pipeline_name}" -h 2>&1)" || true
-  tfvars="$(printf '%s\n' "${out}" | sed -n 's/^  TFVARS  -> //p' | head -1)"
+  out="$(cd "${pipeline_dir}" && timeout 20 bash "./${pipeline_name}" -h 2>&1)" || true
+  tfvars="$(printf '%s\n' "${out}" | sed -n 's/^  TFVARS  *-> *//p' | head -1)"
 
   if [[ -z "${tfvars}" ]]; then
-  # vault stages print a custom message instead of usage TFVARS line
-    if [[ "${pipeline_name}" == *.sh && "${out}" == *"expected tfvars:"* ]]; then
+    # vault app rejects args; bespoke pipelines print --tfvars defaults instead.
+    if [[ "${out}" == *"expected tfvars:"* ]] \
+      || [[ "${out}" == *"--tfvars <path>"* ]] \
+      || [[ "${out}" == *"TFVARS  ->"* ]]; then
       continue
     fi
-    echo "[FAIL] ${label}: no TFVARS line in -h output" >&2
+    echo "[FAIL] ${label}: no TFVARS/--tfvars line in -h output" >&2
     printf '%s\n' "${out}" | head -5 >&2
     failures=$((failures + 1))
     continue
@@ -137,7 +165,7 @@ while IFS= read -r pipeline_script; do
     echo "[FAIL] ${label}: suspicious double slash: ${tfvars}" >&2
     failures=$((failures + 1))
   fi
-done < <(grep -rl 'swarm_pipeline\.sh' "${ROOT_DIR}/pipelines/terraform" --include='*.sh' | sort)
+done < <(grep -rlE 'source .*swarm_pipeline\.sh' "${ROOT_DIR}/pipelines/terraform" --include='*.sh' | sort)
 
 if [[ "${failures}" -gt 0 ]]; then
   echo "[ERR] ${failures} failure(s) in ${checks} check(s)" >&2

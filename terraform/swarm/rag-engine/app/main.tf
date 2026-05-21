@@ -72,14 +72,6 @@ resource "docker_service" "rag_engine" {
           }
         }
       }
-
-      healthcheck {
-        test         = ["CMD", "rag-engine-healthcheck"]
-        interval     = "15s"
-        timeout      = "5s"
-        retries      = 10
-        start_period = "30s"
-      }
     }
 
     restart_policy {

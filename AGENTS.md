@@ -14,6 +14,10 @@ docs to check before doing substantive work.
 
 Agents and humans must treat “support both for now” as **out of scope** unless the user explicitly requests a temporary bridge for a named migration window.
 
+## Do not add `*.tfvars.example` files
+
+**Do not create, restore, or expand checked-in `*.tfvars.example` (or similar placeholder tfvars) anywhere in the repo** unless the user explicitly asks for that file in the task. Live operator config belongs under **`<repo>/.config/terraform/**`** (and slice docs should point there—not at example copies in `terraform/`).
+
 ## Where To Look
 
 - `docs/workflows/`: execution workflows

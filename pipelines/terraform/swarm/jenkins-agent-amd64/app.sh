@@ -247,7 +247,10 @@ pipeline_pre_terraform() {
 
 PIPELINE_ARGS=("$@")
 
-SWARM_DOCKER_AMD64_PROVIDER_TFVARS="${SWARM_DOCKER_AMD64_PROVIDER_TFVARS:-${TFVARS_HOME_DIR:-${CONFIG_DIR:-${ROOT_DIR}/.config}}/terraform/providers/docker_amd64.tfvars}"
+# shellcheck source=../../../scripts/terraform/resolve_config_by_id.sh
+source "${PIPELINE_SCRIPT_ROOT}/resolve_config_by_id.sh"
+_jenkins_agent_tfvars_home="${TFVARS_HOME_DIR:-${CONFIG_DIR:-${ROOT_DIR}/.config}}"
+SWARM_DOCKER_AMD64_PROVIDER_TFVARS="${SWARM_DOCKER_AMD64_PROVIDER_TFVARS:-$(homelab_resolve_config_path "${_jenkins_agent_tfvars_home}" "terraform/providers/docker_amd64")}"
 export SWARM_DOCKER_AMD64_PROVIDER_TFVARS
 
 if [[ -f "${SWARM_DOCKER_AMD64_PROVIDER_TFVARS}" ]]; then

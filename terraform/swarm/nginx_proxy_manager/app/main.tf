@@ -49,16 +49,8 @@ resource "docker_service" "nginx_proxy_manager" {
     }
 
     container_spec {
-      image = local.image_reference
-      env = {
-        INITIAL_ADMIN_EMAIL    = var.env.INITIAL_ADMIN_EMAIL
-        INITIAL_ADMIN_PASSWORD = var.env.INITIAL_ADMIN_PASSWORD
-        DB_MYSQL_HOST          = var.db_mysql_host
-        DB_MYSQL_NAME          = var.env.DB_MYSQL_NAME
-        DB_MYSQL_PORT          = var.env.DB_MYSQL_PORT
-        DB_MYSQL_USER          = var.env.DB_MYSQL_USER
-        DB_MYSQL_PASSWORD      = var.env.DB_MYSQL_PASSWORD
-      }
+      image = "jc21/nginx-proxy-manager:2.12.6"
+      env   = var.env
 
       dns_config {
         nameservers = var.dns_nameservers
@@ -74,14 +66,6 @@ resource "docker_service" "nginx_proxy_manager" {
         type   = "volume"
         source = docker_volume.nginx_proxy_manager_letsencrypt.name
         target = "/etc/letsencrypt"
-      }
-
-      healthcheck {
-        test         = ["CMD", "/usr/bin/check-health"]
-        interval     = "15s"
-        timeout      = "5s"
-        retries      = 5
-        start_period = "30s"
       }
     }
   }

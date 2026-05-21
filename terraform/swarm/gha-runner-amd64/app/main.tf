@@ -73,12 +73,4 @@ resource "docker_container" "gha_runner" {
       target = lookup(local.gha_runner_nfs_container_targets, mounts.key)
     }
   }
-
-  healthcheck {
-    test         = ["CMD", "test", "-f", "/tmp/gha-runner-ready"]
-    interval     = "30s"
-    timeout      = "10s"
-    retries      = 5
-    start_period = "30s"
-  }
 }

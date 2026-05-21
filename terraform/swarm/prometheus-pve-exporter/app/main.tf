@@ -55,14 +55,6 @@ resource "docker_service" "prometheus_pve_exporter" {
       dns_config {
         nameservers = var.dns_nameservers
       }
-
-      healthcheck {
-        test         = ["CMD", "wget", "--spider", "--quiet", "http://127.0.0.1:${local.internal_port}/metrics"]
-        interval     = "30s"
-        timeout      = "10s"
-        retries      = 6
-        start_period = "60s"
-      }
     }
 
     restart_policy {

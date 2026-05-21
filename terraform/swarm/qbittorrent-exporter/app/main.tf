@@ -57,14 +57,6 @@ resource "docker_service" "qbittorrent_exporter" {
       dns_config {
         nameservers = var.dns_nameservers
       }
-
-      healthcheck {
-        test         = ["CMD", "wget", "--spider", "--quiet", "http://127.0.0.1:${local.internal_port}/metrics"]
-        interval     = "30s"
-        timeout      = "10s"
-        retries      = 10
-        start_period = "120s"
-      }
     }
 
     restart_policy {

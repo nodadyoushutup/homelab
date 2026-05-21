@@ -1,36 +1,155 @@
 #!/usr/bin/env bash
-# Nginx Proxy Manager database stage deployment
+# Bespoke Nginx Proxy Manager database (MySQL) Swarm deploy — no shared swarm_pipeline.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/../../../.." && pwd)"
-PIPELINE_SCRIPT_ROOT="${ROOT_DIR}/scripts/terraform"
-source "${PIPELINE_SCRIPT_ROOT}/load_root_env.sh"
-
-SERVICE_NAME="nginx_proxy_manager"
-STAGE_NAME="Nginx Proxy Manager database"
-# No NFS mounts; skip nfs.tfvars so the stack need not declare swarm_nfs_* variables.
-SWARM_SKIP_NFS_PROVIDER_TFVARS=1
-export SWARM_SKIP_NFS_PROVIDER_TFVARS
-ENTRYPOINT_RELATIVE="pipelines/terraform/swarm/nginx_proxy_manager/database.sh"
 TERRAFORM_DIR="${ROOT_DIR}/terraform/swarm/nginx_proxy_manager/database"
 
-TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${CONFIG_DIR:-${ROOT_DIR}/.config}}"
-DEFAULT_BACKEND_FILE="${DEFAULT_BACKEND_FILE:-${TFVARS_HOME_DIR}/minio.backend.hcl}"
+SITE_ENV="${ROOT_DIR}/.config/docker/site.env"
+if [[ -f "${SITE_ENV}" ]]; then
+  set -a
+  # shellcheck source=/dev/null
+  source "${SITE_ENV}"
+  set +a
+fi
+CONFIG_DIR="${CONFIG_DIR:-${ROOT_DIR}/.config}"
+export CONFIG_DIR
+# shellcheck source=../../../scripts/terraform/bespoke_swarm_defaults.sh
+source "${ROOT_DIR}/scripts/terraform/bespoke_swarm_defaults.sh"
+homelab_bespoke_swarm_set_defaults "${CONFIG_DIR}" "${TERRAFORM_DIR}" "${ROOT_DIR}"
+DEFAULT_DATABASE_TFVARS="${DEFAULT_SLICE_TFVARS}"
 
-PLAN_ARGS_EXTRA=()
-APPLY_ARGS_EXTRA=("-parallelism=1")
+DOCKER_TFVARS="${SWARM_DOCKER_PROVIDER_TFVARS:-${NPM_DATABASE_DOCKER_TFVARS:-${DEFAULT_DOCKER_TFVARS}}}"
+DNS_TFVARS="${SWARM_DNS_PROVIDER_TFVARS:-${NPM_DATABASE_DNS_TFVARS:-${DEFAULT_DNS_TFVARS}}}"
+DATABASE_TFVARS="${NPM_DATABASE_TFVARS:-${DEFAULT_DATABASE_TFVARS}}"
+BACKEND_CONFIG="${NPM_DATABASE_BACKEND:-${DEFAULT_BACKEND}}"
 
-PIPELINE_ARGS=("$@")
+usage() {
+  cat <<USAGE
+Usage: pipelines/terraform/swarm/nginx_proxy_manager/database.sh [options] [database_tfvars] [backend_config]
 
-terraform_init_with_migration() {
-  local tf_dir="$1"
-  shift
-  local init_args=("$@")
+Deploy Nginx Proxy Manager MySQL on Docker Swarm (terraform init, plan, apply).
+
+Options:
+  --docker-tfvars <path>    Swarm Docker provider (default: ${DEFAULT_DOCKER_TFVARS})
+  --dns-tfvars <path>       Shared dns_nameservers (default: ${DEFAULT_DNS_TFVARS})
+  --tfvars <path>           Stack settings (default: ${DEFAULT_DATABASE_TFVARS})
+  --backend <path>          S3 backend config (default: ${DEFAULT_BACKEND})
+  -h, --help                Show this help
+
+Environment overrides: SWARM_DOCKER_PROVIDER_TFVARS, SWARM_DNS_PROVIDER_TFVARS, NPM_DATABASE_TFVARS, NPM_DATABASE_BACKEND, CONFIG_DIR (from .config/docker/site.env)
+USAGE
+}
+
+require_file() {
+  local label="$1"
+  local path="$2"
+  if [[ -z "${path}" || ! -f "${path}" ]]; then
+    echo "[ERR] Missing ${label}: ${path}" >&2
+    exit 1
+  fi
+}
+
+require_terraform() {
+  if ! command -v terraform >/dev/null 2>&1; then
+    echo "[ERR] terraform not found on PATH" >&2
+    exit 1
+  fi
+}
+
+ARGS=("$@")
+while [[ ${#ARGS[@]} -gt 0 ]]; do
+  case "${ARGS[0]}" in
+    --docker-tfvars)
+      [[ ${#ARGS[@]} -ge 2 ]] || {
+        echo "[ERR] --docker-tfvars requires a path" >&2
+        exit 2
+      }
+      DOCKER_TFVARS="${ARGS[1]}"
+      ARGS=("${ARGS[@]:2}")
+      ;;
+    --dns-tfvars)
+      [[ ${#ARGS[@]} -ge 2 ]] || {
+        echo "[ERR] --dns-tfvars requires a path" >&2
+        exit 2
+      }
+      DNS_TFVARS="${ARGS[1]}"
+      ARGS=("${ARGS[@]:2}")
+      ;;
+    --tfvars)
+      [[ ${#ARGS[@]} -ge 2 ]] || {
+        echo "[ERR] --tfvars requires a path" >&2
+        exit 2
+      }
+      DATABASE_TFVARS="${ARGS[1]}"
+      ARGS=("${ARGS[@]:2}")
+      ;;
+    --backend)
+      [[ ${#ARGS[@]} -ge 2 ]] || {
+        echo "[ERR] --backend requires a path" >&2
+        exit 2
+      }
+      BACKEND_CONFIG="${ARGS[1]}"
+      ARGS=("${ARGS[@]:2}")
+      ;;
+    -h | --help)
+      usage
+      exit 0
+      ;;
+    *)
+      if [[ "${ARGS[0]}" == --* ]]; then
+        echo "[ERR] Unknown option: ${ARGS[0]}" >&2
+        usage >&2
+        exit 2
+      fi
+      if [[ -z "${POSITIONAL_DATABASE_TFVARS:-}" ]]; then
+        POSITIONAL_DATABASE_TFVARS="${ARGS[0]}"
+      elif [[ -z "${POSITIONAL_BACKEND:-}" ]]; then
+        POSITIONAL_BACKEND="${ARGS[0]}"
+      else
+        echo "[ERR] Unexpected argument: ${ARGS[0]}" >&2
+        usage >&2
+        exit 2
+      fi
+      ARGS=("${ARGS[@]:1}")
+      ;;
+  esac
+done
+
+if [[ -n "${POSITIONAL_DATABASE_TFVARS:-}" ]]; then
+  DATABASE_TFVARS="${POSITIONAL_DATABASE_TFVARS}"
+fi
+if [[ -n "${POSITIONAL_BACKEND:-}" ]]; then
+  BACKEND_CONFIG="${POSITIONAL_BACKEND}"
+fi
+
+if [[ -n "${TFVARS_FILE:-}" ]]; then
+  DATABASE_TFVARS="${TFVARS_FILE}"
+fi
+if [[ -n "${BACKEND_FILE:-}" ]]; then
+  BACKEND_CONFIG="${BACKEND_FILE}"
+fi
+
+require_terraform
+require_file "docker provider tfvars" "${DOCKER_TFVARS}"
+require_file "dns provider tfvars" "${DNS_TFVARS}"
+require_file "database tfvars" "${DATABASE_TFVARS}"
+require_file "backend config" "${BACKEND_CONFIG}"
+
+echo "Terraform dir:     ${TERRAFORM_DIR}"
+echo "Docker tfvars:     ${DOCKER_TFVARS}"
+echo "DNS tfvars:        ${DNS_TFVARS}"
+echo "Database tfvars:   ${DATABASE_TFVARS}"
+echo "Backend config:    ${BACKEND_CONFIG}"
+
+cd "${TERRAFORM_DIR}"
+
+run_terraform_init() {
   local init_log
+  init_log="$(mktemp -t npm-database-terraform-init-XXXXXX)"
 
-  init_log="$(mktemp -t terraform-init-app-XXXXXX)"
-  if "${PIPELINE_SCRIPT_ROOT}/terraform_exec.sh" -chdir="${tf_dir}" init "${init_args[@]}" \
+  if terraform init -backend-config="${BACKEND_CONFIG}" "$@" \
     > >(tee "${init_log}") \
     2> >(tee -a "${init_log}" >&2); then
     rm -f "${init_log}"
@@ -38,14 +157,15 @@ terraform_init_with_migration() {
   fi
 
   if grep -q "Backend configuration changed" "${init_log}"; then
-    echo "[WARN] App backend change detected; attempting automatic migration"
-    if "${PIPELINE_SCRIPT_ROOT}/terraform_exec.sh" -chdir="${tf_dir}" init -force-copy -migrate-state "${init_args[@]}"; then
-      rm -f "${init_log}"
-      return 0
+    if [[ -f ".terraform/terraform.tfstate" ]]; then
+      echo "[WARN] Backend change detected; attempting state migration"
+      if terraform init -force-copy -migrate-state -backend-config="${BACKEND_CONFIG}" "$@"; then
+        rm -f "${init_log}"
+        return 0
+      fi
     fi
-
-    echo "[WARN] App backend change still failing; retrying with -reconfigure"
-    if "${PIPELINE_SCRIPT_ROOT}/terraform_exec.sh" -chdir="${tf_dir}" init -reconfigure "${init_args[@]}"; then
+    echo "[WARN] Backend change detected; re-running terraform init -reconfigure"
+    if terraform init -reconfigure -backend-config="${BACKEND_CONFIG}" "$@"; then
       rm -f "${init_log}"
       return 0
     fi
@@ -55,109 +175,29 @@ terraform_init_with_migration() {
   return 1
 }
 
-set_remote_state_backend_var() {
-  if [[ -z "${BACKEND_CONFIG_PATH:-}" || ! -f "${BACKEND_CONFIG_PATH}" ]]; then
-    echo "[ERR] Backend config path unavailable; cannot derive remote_state_backend" >&2
-    exit 1
-  fi
+echo "[STEP] terraform init (Nginx Proxy Manager database)"
+if ! run_terraform_init; then
+  echo "[ERR] terraform init failed" >&2
+  exit 1
+fi
 
-  local python_bin="${PYTHON_CMD:-python3}"
-  if ! command -v "${python_bin}" >/dev/null 2>&1; then
-    echo "[ERR] python3 is required to render remote_state_backend for config stage" >&2
-    exit 1
-  fi
+PLAN_ARGS=(
+  -input=false
+  -var-file "${DOCKER_TFVARS}"
+  -var-file "${DNS_TFVARS}"
+  -var-file "${DATABASE_TFVARS}"
+)
 
-  local json_output
-  if ! json_output="$(
-    BACKEND_FILE="${BACKEND_CONFIG_PATH}" "${python_bin}" <<'PY'
-import json
-import os
-import re
-import sys
+echo "[STEP] terraform plan (Nginx Proxy Manager database)"
+if ! terraform plan "${PLAN_ARGS[@]}"; then
+  echo "[ERR] terraform plan failed" >&2
+  exit 1
+fi
 
-path = os.environ.get("BACKEND_FILE")
-if not path or not os.path.exists(path):
-    sys.stderr.write("Backend file not found\n")
-    sys.exit(1)
+echo "[STEP] terraform apply (Nginx Proxy Manager database)"
+if ! terraform apply -input=false -auto-approve -parallelism=1 "${PLAN_ARGS[@]}"; then
+  echo "[ERR] terraform apply failed" >&2
+  exit 1
+fi
 
-token_re = re.compile(r'([A-Za-z0-9_-]+)\s*=\s*(".*?"|\{[^{}]*\}|[^,#\s]+)')
-
-def parse_value(raw):
-    val = raw.strip().rstrip(",")
-    if val.startswith("{") and val.endswith("}"):
-        inner = val[1:-1].strip()
-        nested = {}
-        if inner:
-            for key, inner_val in token_re.findall(inner):
-                nested[key] = parse_value(inner_val)
-        return nested
-    if val.startswith('"') and val.endswith('"'):
-        return val[1:-1]
-    if val.lower() in ("true", "false"):
-        return val.lower() == "true"
-    try:
-        if "." in val:
-            return float(val)
-        return int(val)
-    except ValueError:
-        return val
-
-data = {}
-stack = [data]
-with open(path, "r", encoding="utf-8") as handle:
-    for raw_line in handle:
-        line = raw_line.strip()
-        if not line or line.startswith("#"):
-            continue
-        if line.endswith("{") and "=" not in line:
-            block = line[:-1].strip()
-            new_map = {}
-            stack[-1][block] = new_map
-            stack.append(new_map)
-            continue
-        if line == "}":
-            if len(stack) == 1:
-                sys.stderr.write("Unexpected closing brace in backend file\n")
-                sys.exit(1)
-            stack.pop()
-            continue
-        if "=" not in line:
-            continue
-        key, raw_val = [part.strip() for part in line.split("=", 1)]
-        stack[-1][key] = parse_value(raw_val)
-
-print(json.dumps(data))
-PY
-  )"; then
-    echo "[ERR] Failed to render remote_state_backend map from ${BACKEND_CONFIG_PATH}" >&2
-    exit 1
-  fi
-
-  export TF_VAR_remote_state_backend="${json_output}"
-}
-
-ensure_app_state_exists() {
-  local app_tf_dir="${ROOT_DIR}/terraform/swarm/nginx_proxy_manager/app"
-  local init_args=(-input=false -backend-config "${BACKEND_CONFIG_PATH}")
-
-  echo "[INFO] Verifying app remote state exists before running config stage"
-  if ! terraform_init_with_migration "${app_tf_dir}" "${init_args[@]}"; then
-    echo "[ERR] Unable to initialize app Terraform state. Run the app stage before config." >&2
-    exit 1
-  fi
-
-  if ! "${PIPELINE_SCRIPT_ROOT}/terraform_exec.sh" -chdir="${app_tf_dir}" state pull >/dev/null; then
-    echo "[ERR] Failed to pull app state; ensure the app stage has been applied successfully." >&2
-    exit 1
-  fi
-}
-
-pipeline_pre_terraform() {
-  set_remote_state_backend_var
-  ensure_app_state_exists
-}
-
-
-# shellcheck source=/dev/null
-source "${PIPELINE_SCRIPT_ROOT}/swarm_docker_provider_tfvars_env.sh"
-source "${PIPELINE_SCRIPT_ROOT}/swarm_pipeline.sh"
+echo "[DONE] Nginx Proxy Manager database apply complete."

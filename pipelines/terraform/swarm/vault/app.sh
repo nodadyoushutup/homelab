@@ -8,8 +8,8 @@ source "${PIPELINE_SCRIPT_ROOT}/load_root_env.sh"
 
 if [[ $# -gt 0 ]]; then
   echo "[ERR] vault app pipeline uses fixed input paths and does not accept override arguments." >&2
-  echo "      expected tfvars:  <TFVARS_HOME>/terraform/swarm/vault/app.tfvars" >&2
-  echo "      expected backend: <TFVARS_HOME>/minio.backend.hcl (default: <repo>/.config/minio.backend.hcl)" >&2
+  echo "      expected tfvars:  first line # homelab-config: terraform/swarm/vault/app" >&2
+  echo "      expected backend: first line # homelab-config: minio.backend" >&2
   exit 2
 fi
 
@@ -113,7 +113,6 @@ export SWARM_SKIP_NFS_PROVIDER_TFVARS
 ENTRYPOINT_RELATIVE="pipelines/terraform/swarm/vault/app.sh"
 TERRAFORM_DIR="${ROOT_DIR}/terraform/swarm/vault/app"
 TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${CONFIG_DIR:-${ROOT_DIR}/.config}}"
-DEFAULT_BACKEND_FILE="${TFVARS_HOME_DIR}/minio.backend.hcl"
 
 PLAN_ARGS_EXTRA=()
 APPLY_ARGS_EXTRA=()

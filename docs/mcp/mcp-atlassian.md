@@ -1,10 +1,10 @@
 # mcp-atlassian
 
-Streamable HTTP MCP for **Atlassian Cloud** operations (Jira issues, boards, Confluence where exposed by the server). The Swarm stack can mount your **code** volume so tools see the same tree as other agents.
+Streamable HTTP MCP for **Atlassian Cloud** operations (Jira issues, boards, Confluence where exposed by the server).
 
 ## URL and path
 
-Publish the service behind HTTPS; clients call the Streamable MCP URL your proxy forwards to the task (path **`/mcp`** on the upstream in **`terraform/swarm/mcp-atlassian/app/main.tf`**).
+Publish the service behind HTTPS; clients call the Streamable MCP URL your proxy forwards to the task (path **`/mcp`** — default **`CMD`** in **`applications/mcp-atlassian/Dockerfile`**; override via Swarm **`args`** if needed).
 
 ## Usage
 
@@ -17,7 +17,7 @@ Publish the service behind HTTPS; clients call the Streamable MCP URL your proxy
 
 ## Secrets and Swarm
 
-- Swarm stack: **`terraform/swarm/mcp-atlassian/app/`** — credentials and site settings via **`env_file_path`** or **`env`** (see **`variables.tf`**). Keep tokens out of git.
+- Swarm stack: **`terraform/swarm/mcp-atlassian/app/`** — credentials and site settings in **`env`** on **`.config/terraform/swarm/mcp-atlassian/app.tfvars`** (see **`variables.tf`**). Keep tokens out of git.
 
 ## Related
 

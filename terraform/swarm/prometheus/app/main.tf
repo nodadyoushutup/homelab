@@ -12,8 +12,8 @@ resource "docker_volume" "prometheus_data" {
 }
 
 resource "docker_config" "prometheus" {
-  name = "prometheus-${local.prometheus_config_hash}"
-  data = filebase64(var.prometheus_config_path)
+  name = "prometheus-${local.config_hash}"
+  data = filebase64(var.config_path)
 
   lifecycle {
     create_before_destroy = true
@@ -24,7 +24,7 @@ resource "docker_service" "prometheus" {
   name = "prometheus"
 
   task_spec {
-    force_update = local.prometheus_force_update
+    force_update = local.force_update
 
     dynamic "placement" {
       for_each = var.placement == null ? [] : [var.placement]
@@ -78,14 +78,6 @@ resource "docker_service" "prometheus" {
         config_id   = docker_config.prometheus.id
         config_name = docker_config.prometheus.name
         file_name   = "/etc/prometheus/prometheus.yml"
-      }
-
-      healthcheck {
-        test         = ["CMD", "wget", "--spider", "--quiet", "http://localhost:9090/-/healthy"]
-        interval     = "10s"
-        timeout      = "5s"
-        retries      = 6
-        start_period = "30s"
       }
     }
   }

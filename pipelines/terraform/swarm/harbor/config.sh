@@ -17,7 +17,6 @@ export SWARM_SKIP_DNS_PROVIDER_TFVARS
 ENTRYPOINT_RELATIVE="pipelines/terraform/swarm/harbor/config.sh"
 TERRAFORM_DIR="${ROOT_DIR}/terraform/swarm/harbor/config"
 TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${CONFIG_DIR:-${ROOT_DIR}/.config}}"
-DEFAULT_BACKEND_FILE="${DEFAULT_BACKEND_FILE:-${TFVARS_HOME_DIR}/minio.backend.hcl}"
 
 PLAN_ARGS_EXTRA=()
 APPLY_ARGS_EXTRA=()

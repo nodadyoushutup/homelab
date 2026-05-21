@@ -66,19 +66,6 @@ resource "docker_service" "mcp_playwright" {
           }
         }
       }
-
-      healthcheck {
-        test = [
-          "CMD",
-          "node",
-          "-e",
-          "const net=require('net');const s=net.connect(${local.internal_port},'127.0.0.1',()=>{s.end();process.exit(0)});s.on('error',()=>process.exit(1));setTimeout(()=>process.exit(1),3000);",
-        ]
-        interval     = "15s"
-        timeout      = "5s"
-        retries      = 10
-        start_period = "45s"
-      }
     }
   }
 

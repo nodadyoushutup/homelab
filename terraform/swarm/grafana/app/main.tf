@@ -69,14 +69,6 @@ resource "docker_service" "grafana" {
         config_name = docker_config.grafana_app.name
         file_name   = "/etc/grafana/grafana.ini"
       }
-
-      healthcheck {
-        test         = ["CMD", "wget", "--spider", "--quiet", "http://localhost:3000/api/health"]
-        interval     = "15s"
-        timeout      = "5s"
-        retries      = 5
-        start_period = "30s"
-      }
     }
 
   }

@@ -45,14 +45,6 @@ resource "docker_service" "mcp_rag" {
       dns_config {
         nameservers = var.dns_nameservers
       }
-
-      healthcheck {
-        test         = ["CMD", "mcp-rag", "healthcheck"]
-        interval     = "15s"
-        timeout      = "5s"
-        retries      = 10
-        start_period = "30s"
-      }
     }
 
     restart_policy {

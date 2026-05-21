@@ -7,6 +7,8 @@ ROOT_DIR="$(cd "${PIPELINE_DIR}/.." && pwd)"
 
 # shellcheck source=/dev/null
 source "${SCRIPT_DIR}/load_root_env.sh"
+# shellcheck source=resolve_config_by_id.sh
+source "${SCRIPT_DIR}/resolve_config_by_id.sh"
 
 TFVARS_ARG="${TFVARS_ARG:-}"
 BACKEND_ARG="${BACKEND_ARG:-}"
@@ -29,52 +31,48 @@ resolve_tfvars() {
   local default_file="$3"
   local default_basename="$4"
   local home_dir="$5"
-  local candidate
+  local candidate=""
+  local config_id=""
+  local root_dir="${ROOT_DIR:-}"
 
   if [[ -n "${provided_path}" ]]; then
     candidate="${provided_path}"
     if [[ -f "${candidate}" ]]; then
       realpath "${candidate}"
       return 0
-    else
-      echo "[WARN] Provided TFVARS file not found: ${candidate}" >&2
     fi
+    echo "[WARN] Provided TFVARS file not found: ${candidate}" >&2
   fi
 
-  if [[ -n "${default_file}" ]]; then
-    candidate="${default_file}"
+  if [[ -n "${default_file}" && -f "${default_file}" ]]; then
+    realpath "${default_file}"
+    return 0
+  fi
+
+  if config_id="$(homelab_config_id_from_terraform_dir "${root_dir}" "${terraform_dir}" 2>/dev/null)"; then
+    if candidate="$(homelab_find_config_by_id "${home_dir}" "${config_id}" 2>/dev/null)"; then
+      realpath "${candidate}"
+      return 0
+    fi
+    candidate="$(homelab_resolve_config_path "${home_dir}" "${config_id}")"
     if [[ -f "${candidate}" ]]; then
       realpath "${candidate}"
       return 0
-    else
-      echo "[WARN] Default TFVARS file override not found: ${candidate}" >&2
     fi
   fi
 
   if [[ -n "${default_basename}" ]]; then
-    candidate="${home_dir}/${default_basename}"
-    if [[ "${candidate}" != *.tfvars ]]; then
-      candidate="${candidate}.tfvars"
-    fi
+    candidate="$(homelab_resolve_config_path "${home_dir}" "${default_basename}")"
     if [[ -f "${candidate}" ]]; then
       realpath "${candidate}"
       return 0
     fi
   fi
 
-  if [[ -d "${home_dir}" ]]; then
-    candidate="$(find "${home_dir}" -maxdepth 1 -type f -name '*.tfvars' | sort | head -n 1 || true)"
-    if [[ -n "${candidate}" && -f "${candidate}" ]]; then
-      realpath "${candidate}"
-      return 0
-    fi
-  fi
-
-  if [[ -d "${terraform_dir}" ]]; then
-    candidate="$(find "${terraform_dir}" -maxdepth 1 -type f -name '*.tfvars' | sort | head -n 1 || true)"
-    if [[ -n "${candidate}" && -f "${candidate}" ]]; then
-      realpath "${candidate}"
-      return 0
+  if [[ -n "${default_file}" ]]; then
+    echo "[WARN] Default TFVARS path not found: ${default_file}" >&2
+    if [[ -n "${config_id}" ]]; then
+      echo "[WARN] Expected first line: $(homelab_config_tag_line "${config_id}" | tr -d '\n')" >&2
     fi
   fi
 
@@ -85,35 +83,37 @@ resolve_backend() {
   local provided_path="$1"
   local default_path="$2"
   local home_dir="$3"
-  local candidate
+  local candidate=""
 
   if [[ -n "${provided_path}" ]]; then
     candidate="${provided_path}"
     if [[ -f "${candidate}" ]]; then
       realpath "${candidate}"
       return 0
-    else
-      echo "[ERR] Provided backend config not found: ${candidate}" >&2
-      return 2
     fi
+    echo "[ERR] Provided backend config not found: ${candidate}" >&2
+    return 2
+  fi
+
+  if [[ -n "${default_path}" && -f "${default_path}" ]]; then
+    realpath "${default_path}"
+    return 0
+  fi
+
+  if candidate="$(homelab_find_config_by_id "${home_dir}" "minio.backend" 2>/dev/null)"; then
+    realpath "${candidate}"
+    return 0
+  fi
+
+  candidate="$(homelab_resolve_config_path "${home_dir}" "minio.backend")"
+  if [[ -f "${candidate}" ]]; then
+    realpath "${candidate}"
+    return 0
   fi
 
   if [[ -n "${default_path}" ]]; then
-    candidate="${default_path}"
-    if [[ -f "${candidate}" ]]; then
-      realpath "${candidate}"
-      return 0
-    else
-      echo "[WARN] Default backend config override not found: ${candidate}" >&2
-    fi
-  fi
-
-  if [[ -d "${home_dir}" ]]; then
-    candidate="$(find "${home_dir}" -maxdepth 1 -type f \( -name '*.backend.hcl' -o -name 'backend.hcl' \) | sort | head -n 1 || true)"
-    if [[ -n "${candidate}" && -f "${candidate}" ]]; then
-      realpath "${candidate}"
-      return 0
-    fi
+    echo "[WARN] Default backend config not found: ${default_path}" >&2
+    echo "[WARN] Expected first line: $(homelab_config_tag_line "minio.backend" | tr -d '\n')" >&2
   fi
 
   return 1

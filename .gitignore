@@ -31,12 +31,17 @@ Desktop.ini
 # Build artifacts
 # =============================================================================
 
-data/exports/**
-data/playwright/**
-data/screenshots/**
-
 packer/output/**
 packer/logs/*.log
+
+# =============================================================================
+# Data
+# =============================================================================
+# Local/runtime outputs under data/; track directory layout only (.gitkeep).
+
+data/**
+!data/**/
+!data/**/.gitkeep
 
 **/.next/
 

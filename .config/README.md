@@ -2,6 +2,34 @@
 
 This directory is the single site-local source of truth: Terraform/Kubernetes tfvars, backends, keys, and split Docker dotenv files under **`docker/`**. It mirrors the layout that used to live under a separate `CONFIG_DIR` on disk (for example `/mnt/eapp/config`). **Terraform pipelines and `scripts/terraform/load_root_env.sh` default `CONFIG_DIR` and `TFVARS_HOME_DIR` to `<repo>/.config`** when they are unset after loading **`.config/docker/*.env`**.
 
+## homelab-config tags (required)
+
+Every Terraform tfvars file, shared provider tfvars, `minio.backend.hcl`, and live `docker/*.env` under this tree must start with a **first-line** tag:
+
+```hcl
+# homelab-config: <config-id>
+```
+
+**`<config-id>`** is the path relative to `.config` without the file suffix:
+
+| File | Tag id |
+| --- | --- |
+| `terraform/swarm/grafana/app.tfvars` | `terraform/swarm/grafana/app` |
+| `terraform/providers/dns.tfvars` | `terraform/providers/dns` |
+| `minio.backend.hcl` | `minio.backend` |
+| `docker/langgraph.env` | `docker/langgraph` |
+
+Pipelines resolve inputs by id (indexed once per run), so you can rename or relocate files under `.config` as long as the tag stays correct. Overrides still win: `--tfvars`, Jenkins `TFVARS_FILE`, and env vars such as `SWARM_DNS_PROVIDER_TFVARS`.
+
+Stamp or verify tags:
+
+```bash
+python3 scripts/config/stamp_homelab_config_ids.py --config-dir .config
+python3 scripts/config/stamp_homelab_config_ids.py --config-dir .config --check
+```
+
+Canonical mirrored paths (for example `terraform/swarm/<svc>/app.tfvars`) remain the fallback when no tagged file exists.
+
 ## Layout (typical)
 
 - `docker/` — split `*.env` for Compose, LangGraph, and host scripts (see `docker/README.md` and `docker/*.env.example`)

@@ -20,8 +20,10 @@ pipeline {
           label: 'swarm/prometheus/app',
           script: '''#!/usr/bin/env bash
 set -euo pipefail
-
-./scripts/terraform/jenkins_stage_runner.sh ./pipelines/terraform/swarm/prometheus/app.sh
+args=()
+[[ -n "${TFVARS_FILE:-}" ]] && args+=(--tfvars "${TFVARS_FILE}")
+[[ -n "${BACKEND_FILE:-}" ]] && args+=(--backend "${BACKEND_FILE}")
+./pipelines/terraform/swarm/prometheus/app.sh "${args[@]}"
 '''
         )
       }
