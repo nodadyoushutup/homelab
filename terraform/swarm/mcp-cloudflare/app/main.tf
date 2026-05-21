@@ -1,19 +1,10 @@
 resource "docker_network" "mcp_cloudflare" {
-  name   = local.service_name
+  name   = "mcp-cloudflare"
   driver = "overlay"
 }
 
 resource "docker_service" "mcp_cloudflare" {
-  name = local.service_name
-
-  dynamic "auth" {
-    for_each = local.docker_service_pull_auth_map
-    content {
-      server_address = auth.value.server_address
-      username       = auth.value.username
-      password       = auth.value.password
-    }
-  }
+  name = "mcp-cloudflare"
 
   task_spec {
     dynamic "placement" {
@@ -32,38 +23,36 @@ resource "docker_service" "mcp_cloudflare" {
         }
       }
     }
+
     networks_advanced {
       name    = docker_network.mcp_cloudflare.id
-      aliases = [local.service_name]
+      aliases = ["mcp-cloudflare"]
     }
+
     container_spec {
-      image    = var.image_reference
-      env      = local.effective_env
-      user     = "1000:1000"
-      cap_drop = ["ALL"]
+      image = "ghcr.io/nodadyoushutup/mcp-cloudflare:0.0.1"
+      env   = var.env
+
       dns_config {
         nameservers = var.dns_nameservers
       }
     }
-    restart_policy {
-      condition    = "on-failure"
-      delay        = "10s"
-      max_attempts = 3
-      window       = "2m"
-    }
   }
+
   mode {
     replicated {
       replicas = var.replicas
     }
   }
+
   update_config {
     order = "stop-first"
   }
+
   endpoint_spec {
     ports {
       target_port    = 8084
-      published_port = var.published_port
+      published_port = 18204
       protocol       = "tcp"
       publish_mode   = "ingress"
     }

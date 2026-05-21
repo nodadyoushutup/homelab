@@ -30,7 +30,7 @@ resource "docker_service" "mcp_atlassian" {
     }
 
     container_spec {
-      image = "ghcr.io/nodadyoushutup/mcp-atlassian:0.0.2"
+      image = "ghcr.io/nodadyoushutup/mcp-atlassian:0.0.3"
       env   = var.env
 
       dns_config {
@@ -52,7 +52,7 @@ resource "docker_service" "mcp_atlassian" {
   endpoint_spec {
     ports {
       target_port    = 8000
-      published_port = var.published_port
+      published_port = 18200
       protocol       = "tcp"
       publish_mode   = "ingress"
     }

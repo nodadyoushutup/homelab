@@ -4,7 +4,8 @@
 # This repo tracks a few shared defaults; ignore everything else under these dirs.
 # Tracked: .cursor/mcp.json, .codex/config.toml, .vscode/homelab.code-workspace
 
-.cursor/
+.cursor/*
+!.cursor/mcp.json
 .codex/
 .vscode
 

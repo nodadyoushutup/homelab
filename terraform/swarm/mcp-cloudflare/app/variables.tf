@@ -6,38 +6,10 @@ variable "env" {
 }
 
 
-variable "env_file_path" {
-  description = "Optional dotenv file path for container secrets and settings."
-  type        = string
-  default     = ""
-}
-
-
-variable "image_reference" {
-  description = "Container image reference to deploy."
-  type        = string
-  default     = "homelab/mcp-cloudflare:0.0.1"
-}
-
-
-variable "published_port" {
-  description = "Swarm ingress published port."
-  type        = number
-  default     = 18204
-}
-
-
 variable "replicas" {
   description = "Number of Swarm service replicas."
   type        = number
   default     = 1
-}
-
-
-variable "timezone" {
-  description = "Container TZ environment value."
-  type        = string
-  default     = "America/New_York"
 }
 
 
@@ -66,3 +38,16 @@ variable "swarm_docker_provider_config" {
   type        = any
 }
 
+
+# Vault KV fragments (parsed by scripts/terraform/vault_merge_config_secrets.py); unused by this module.
+variable "secrets" {
+  type      = any
+  default   = {}
+  sensitive = true
+}
+
+variable "secret_files" {
+  type      = any
+  default   = {}
+  sensitive = true
+}

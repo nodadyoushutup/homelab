@@ -11,6 +11,10 @@ Publish the service behind HTTPS; clients call the Streamable MCP URL your proxy
 - Use for **Jira discovery**, transitions, comments, and Confluence reads/writes that the tool surface supports.
 - Jira agent policy in this repo: [docs/subagents/jira/01-runtime.md](../subagents/jira/01-runtime.md) and framework prompts under **`applications/langgraph/framework/agents/system_prompts/`**.
 
+## Cursor
+
+Project **`.cursor/mcp.json`** registers **`mcp_atlassian`** at **`https://mcp.atlassian.nodadyoushutup.com/mcp`**. No client API key — Jira/Confluence credentials live in Swarm **`env`** on **`.config/terraform/swarm/mcp-atlassian/app.tfvars`**. For the same URL across all workspaces, add the same block to **User** MCP settings or **`~/.cursor/mcp.json`** (alongside **`mcp_github`**, **`mcp_rag`**, etc.).
+
 ## LangGraph
 
 **`applications/langgraph/subagents/jira/mcp.json`** registers the Atlassian server (key **`atlassian`**) with optional override **`HOMELAB_MCP_ATLASSIAN_URL`**.

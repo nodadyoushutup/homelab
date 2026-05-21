@@ -6,13 +6,6 @@ variable "env" {
 }
 
 
-variable "published_port" {
-  description = "Swarm ingress published port."
-  type        = number
-  default     = 18200
-}
-
-
 variable "replicas" {
   description = "Number of Swarm service replicas."
   type        = number
