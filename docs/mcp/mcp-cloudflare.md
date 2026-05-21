@@ -21,7 +21,7 @@ Add a server block in the relevant **`mcp.json`** when a graph should call Cloud
 
 ## Swarm
 
-- Stack: **`terraform/swarm/mcp-cloudflare/app/`** — credentials and settings in **`env`** on **`.config/terraform/swarm/mcp-cloudflare/app.tfvars`** (see **`variables.tf`**). Keep tokens out of git.
+- Stack: **`terraform/swarm/mcp-cloudflare/app/`** — all site credentials in the **`env`** map on **`.config/terraform/swarm/mcp-cloudflare/app.tfvars`** (flat keys such as **`CLOUDFLARE_*`**; no Vault **`secrets`** block). The task uses **`CLOUDFLARE_*`** for the MCP server; keep tokens out of git.
 
 ## Related
 

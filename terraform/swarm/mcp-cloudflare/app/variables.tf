@@ -37,17 +37,3 @@ variable "swarm_docker_provider_config" {
   description = "Docker SSH host and registry_auths for the Swarm control plane."
   type        = any
 }
-
-
-# Vault KV fragments (parsed by scripts/terraform/vault_merge_config_secrets.py); unused by this module.
-variable "secrets" {
-  type      = any
-  default   = {}
-  sensitive = true
-}
-
-variable "secret_files" {
-  type      = any
-  default   = {}
-  sensitive = true
-}
