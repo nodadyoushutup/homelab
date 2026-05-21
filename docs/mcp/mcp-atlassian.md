@@ -13,7 +13,7 @@ Publish the service behind HTTPS; clients call the Streamable MCP URL your proxy
 
 ## Cursor
 
-Project **`.cursor/mcp.json`** registers **`mcp_atlassian`** at **`https://mcp.atlassian.nodadyoushutup.com/mcp`**. No client API key — Jira/Confluence credentials live in Swarm **`env`** on **`.config/terraform/swarm/mcp-atlassian/app.tfvars`**. For the same URL across all workspaces, add the same block to **User** MCP settings or **`~/.cursor/mcp.json`** (alongside **`mcp_github`**, **`mcp_rag`**, etc.).
+Project **`.cursor/mcp.json`** registers **`mcp_atlassian`** at **`https://mcp.atlassian.nodadyoushutup.com/mcp`**. No client API key — Jira/Confluence credentials live in Swarm **`env`** on **`.config/terraform/swarm/mcp-atlassian/app.tfvars`**. After deploy or config edits, **reload MCP** in Cursor Settings if tools stay disconnected.
 
 ## LangGraph
 

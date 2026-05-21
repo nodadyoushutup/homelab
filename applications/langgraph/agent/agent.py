@@ -25,7 +25,7 @@ agent = HomelabSupervisorAgent(
     local_subagents=[
         {
             "name": "code",
-            "description": "Code specialist for repository-backed source code, configuration, filesystem, local git (when exposed by mcp-code), path, and implementation work. Always returns findings, changed files, risks, and next actions to the supervisor.",
+            "description": "Code specialist for repository-backed source code, configuration, paths, RAG-backed repo context, and implementation guidance. Local git and filesystem edits are out of band (IDE/shell). Always returns findings, changed files, risks, and next actions to the supervisor.",
             "runnable": _code,
         },
         {

@@ -12,8 +12,3 @@ output "published_port" {
   description = "Published Swarm ingress port."
   value       = var.published_port
 }
-
-output "network_name" {
-  description = "Overlay network shared by RAG engine clients."
-  value       = docker_network.rag_engine.name
-}

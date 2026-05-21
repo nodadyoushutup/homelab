@@ -40,7 +40,6 @@ on:
           - mcp-argocd
           - mcp-atlassian
           - mcp-cloudflare
-          - mcp-code
           - mcp-fortigate
           - mcp-github
           - mcp-google-workspace
@@ -155,12 +154,6 @@ jobs:
             mcp-cloudflare)
               image_name="mcp-cloudflare"
               docker_context="applications/mcp-cloudflare"
-              build_strategy="direct"
-              ;;
-            mcp-code)
-              image_name="mcp-code"
-              docker_context="."
-              dockerfile="applications/mcp-code/Dockerfile"
               build_strategy="direct"
               ;;
             mcp-fortigate)

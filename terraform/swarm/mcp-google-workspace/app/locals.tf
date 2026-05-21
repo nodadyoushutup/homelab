@@ -8,35 +8,10 @@ locals {
     if trimspace(raw_line) != "" && !startswith(trimspace(raw_line), "#") && length(split("=", trimspace(raw_line))) > 1
   }
   default_env = {
-    TZ                                 = var.timezone
-    MCP_GOOGLE_WORKSPACE_LISTEN_PORT   = "8086"
-    WORKSPACE_MCP_SERVICE_ACCOUNT_FILE = var.service_account_container_path
+    TZ                               = var.timezone
+    MCP_GOOGLE_WORKSPACE_LISTEN_PORT = "8086"
   }
   effective_env = merge(local.default_env, local.parsed_env, var.env)
-
-  swarm_nfs_ready = (
-    trimspace(var.swarm_nfs_code_device) != "" &&
-    trimspace(var.swarm_nfs_config_device) != "" &&
-    trimspace(var.swarm_nfs_volume_type) != "" &&
-    trimspace(var.swarm_nfs_volume_o_rw) != "" &&
-    trimspace(var.swarm_nfs_volume_o_ro) != ""
-  )
-  swarm_nfs_config_target = trimspace(element(split(":", trimspace(var.swarm_nfs_config_device)), length(split(":", trimspace(var.swarm_nfs_config_device))) - 1))
-  swarm_nfs_config_mounts = local.swarm_nfs_ready ? [{
-    type      = "volume"
-    source    = "${local.service_name}-mnt-eapp-config"
-    target    = local.swarm_nfs_config_target
-    read_only = true
-    volume_options = {
-      driver_name = "local"
-      driver_options = {
-        type   = trimspace(var.swarm_nfs_volume_type)
-        o      = trimspace(var.swarm_nfs_volume_o_ro)
-        device = trimspace(var.swarm_nfs_config_device)
-      }
-      no_copy = false
-    }
-  }] : []
 }
 
 

@@ -1,14 +1,14 @@
 data "docker_network" "chromadb" {
-  name = var.chromadb_network_name
+  name = "chromadb"
 }
 
 resource "docker_network" "rag_engine" {
-  name   = var.rag_engine_network_name
+  name   = "rag-engine"
   driver = "overlay"
 }
 
 resource "docker_service" "rag_engine" {
-  name = local.service_name
+  name = "rag-engine"
 
   dynamic "auth" {
     for_each = local.docker_service_pull_auth_map
@@ -40,7 +40,7 @@ resource "docker_service" "rag_engine" {
 
     networks_advanced {
       name    = docker_network.rag_engine.id
-      aliases = [local.service_name]
+      aliases = ["rag-engine"]
     }
 
     networks_advanced {
@@ -94,7 +94,7 @@ resource "docker_service" "rag_engine" {
 
   endpoint_spec {
     ports {
-      target_port    = local.internal_port
+      target_port    = 8080
       published_port = var.published_port
       protocol       = "tcp"
       publish_mode   = "ingress"

@@ -1,19 +1,10 @@
 resource "docker_network" "mcp_github" {
-  name   = local.service_name
+  name   = "mcp-github"
   driver = "overlay"
 }
 
 resource "docker_service" "mcp_github" {
-  name = local.service_name
-
-  dynamic "auth" {
-    for_each = local.docker_service_pull_auth_map
-    content {
-      server_address = auth.value.server_address
-      username       = auth.value.username
-      password       = auth.value.password
-    }
-  }
+  name = "mcp-github"
 
   task_spec {
     dynamic "placement" {
@@ -32,36 +23,36 @@ resource "docker_service" "mcp_github" {
         }
       }
     }
+
     networks_advanced {
       name    = docker_network.mcp_github.id
-      aliases = [local.service_name]
+      aliases = ["mcp-github"]
     }
+
     container_spec {
-      image = var.image_reference
-      env   = local.effective_env
+      image = "ghcr.io/nodadyoushutup/mcp-github:0.0.2"
+      env   = var.env
+
       dns_config {
         nameservers = var.dns_nameservers
       }
     }
-    restart_policy {
-      condition    = "on-failure"
-      delay        = "10s"
-      max_attempts = 3
-      window       = "2m"
-    }
   }
+
   mode {
     replicated {
       replicas = var.replicas
     }
   }
+
   update_config {
     order = "stop-first"
   }
+
   endpoint_spec {
     ports {
       target_port    = 8082
-      published_port = var.published_port
+      published_port = 18208
       protocol       = "tcp"
       publish_mode   = "ingress"
     }

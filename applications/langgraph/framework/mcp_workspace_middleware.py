@@ -1,4 +1,4 @@
-"""Bind mcp-code routing from LangGraph ``configurable`` for each tool call."""
+"""Bind repository-root routing from LangGraph ``configurable`` for each tool call."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ from framework.mcp_workspace_context import reset_tokens
 
 
 class McpWorkspaceBindingMiddleware(AgentMiddleware[Any, ContextT, ResponseT]):
-    """Set mcp-code URL / repo root contextvars from ``runtime.config`` before tools run."""
+    """Set repo-root contextvars from ``runtime.config`` before tools run."""
 
     def wrap_tool_call(
         self,

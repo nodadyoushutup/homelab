@@ -82,36 +82,21 @@ skills, not here.
 
 ## Tool use and search
 
-- **mcp-code** exposes filesystem, ast-grep, and local-git MCP tools in one
-  connection (default URL from `mcp.json` / environment). Deployments may define
-  thread **`configurable`** keys to override the MCP code URL and repository root
-  for parallel lanes—use whatever names and semantics your deployment documents for
-  this graph. This specialist may load **additional** MCP servers from the same
-  JSON config (for example issue-tracker reads); when present, follow the
-  **deployment specialist overlay** (bundled docs for this app) for tool order,
-  scope, and handoffs—not hard-coded product names here.
-  Use filesystem tools for repo inspection and repo edits; use ast-grep tools for
-  syntax-aware code searches when structural matching beats plain text search. Use
-  **local-git** tools in this specialist when the task calls for them. Prefer routing
-  **GitHub** pull requests, checks, reviews, and Actions API work through the
-  supervisor to the **GitHub** specialist rather than improvising GitHub operations
-  from here.
-- Preserve context by using ast-grep first to identify a small set of candidate
-  files or symbols, then use filesystem tools to read only the relevant files.
-- When calling ast-grep repository search tools, narrow `project_folder` when a
-  likely subtree is known and keep `max_results` small.
-- Keep filesystem access scoped to `{{ repo_root }}`.
-- Do not run broad recursive searches from the repository root. First inspect the
-  top-level directories, then search within a narrower subtree.
-- Use the built-in default search excludes when searching recursively:
-  `{{ default_search_excludes }}`.
-- Use `search_repository_files` only after narrowing the directory. It is for
-  multi-pattern lookups within a subtree, not for scanning the whole repo.
-- Treat recoverable tool errors as observations. Narrow the path, correct the
-  arguments, call a different relevant tool, ask for missing information, or
-  report the concrete blocker.
-- If filesystem results look empty or inconsistent, call introspection tools such
-  as `list_allowed_directories` before claiming the workspace is wrong.
+- This specialist loads HTTP MCP tools from **`code_mcp_servers.json`** (typically
+  **mcp-rag** for `rag_search` and optional **Atlassian** reads). There is no
+  repo filesystem or local-git MCP in this runtime—use **`rag_search`** for
+  documentation and architecture context before claiming repo facts.
+- Thread **`configurable`** may set **`homelab_code_repository_root`** for parallel
+  lanes (Git worktrees); path-scoped MCP wrappers honor that root when filesystem
+  tools are present in a custom deployment.
+- Prefer routing **GitHub** pull requests, checks, reviews, and Actions API work
+  through the supervisor to the **GitHub** specialist rather than improvising
+  GitHub operations from here.
+- Treat recoverable tool errors as observations. Adjust arguments, call another
+  relevant tool, ask for missing information, or report the concrete blocker.
+- When implementation requires file edits or git, tell the supervisor the human or
+  IDE must apply changes—or that the user should run shell/git in the worktree at
+  `{{ repo_root }}`.
 
 ## Validation
 

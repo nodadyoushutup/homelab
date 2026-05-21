@@ -1,10 +1,5 @@
 {
   "mcpServers": {
-    "mcp-code": {
-      "transport": "http",
-      "url": "https://mcp.code.nodadyoushutup.com/mcp",
-      "url_from_env": "HOMELAB_MCP_CODE_URL"
-    },
     "mcp-rag": {
       "transport": "http",
       "url": "https://mcp.rag.nodadyoushutup.com/mcp",

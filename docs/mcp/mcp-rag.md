@@ -22,7 +22,7 @@ Retrieval-first and read-before-write rules are enforced in code for the supervi
 
 ## Cursor
 
-Project **`.cursor/mcp.json`** may list **`mcp_rag.url`** only. Cursor does not reliably expand env vars inside MCP **`headers`** in JSON. If the server requires a key, add **`x-api-key`** in **User** MCP settings or **`~/.cursor/mcp.json`**, or omit **`MCP_RAG_API_KEY`** on the server only in trusted, isolated environments.
+Project **`.cursor/mcp.json`** lists **`mcp_rag.url`** only (no secrets in git). Cursor does not reliably expand env vars inside MCP **`headers`** in JSON. If the server requires a key, add header **`x-api-key`** with the same value as **`MCP_RAG_API_KEY`** in **`.config/docker/mcp.env`** via **Cursor Settings → MCP** for the project **`mcp_rag`** server, or omit **`MCP_RAG_API_KEY`** on the server only in trusted, isolated environments.
 
 ## Deploy
 

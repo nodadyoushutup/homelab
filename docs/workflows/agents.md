@@ -220,7 +220,8 @@ Required steps:
   paths, filesystem state, MCP workspace visibility, and implementation work to the
   `Code` specialist when it is wired into the runtime.
 - In the default runtime, route **local git** (branch, fetch, pull, commit, push) to
-  the `Code` specialist when **mcp-code** exposes git tools. Route **GitHub** pull
+  the `Code` specialist when the deployment enables it (IDE/shell or worktree-scoped
+  tooling). Route **GitHub** pull
   request / check / review / Actions API work to the `GitHub` specialist when it is
   wired into the runtime.
 - In the default runtime, route technical soundness review, architecture review,

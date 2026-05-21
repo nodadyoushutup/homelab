@@ -71,8 +71,7 @@ class HomelabSupervisorAgent(BaseAgent):
             "code_git_delegate_instruction": (
                 "You must use the `task` tool to delegate every explicit **local repository git** "
                 "request (status, fetch, pull, branch, checkout, commit, push) to the `code` "
-                "specialist before answering directly, because git tools are exposed on mcp-code "
-                "with filesystem work."
+                "specialist before answering directly when the task needs repository or git work."
             ),
             "handoff_contract": "Every specialist call must return to this supervisor. A specialist may recommend another specialist, but it must not directly hand off, transfer, or continue the task outside its own response. After each specialist response, decide at the supervisor layer whether to call another specialist, call a tool, ask the user, or produce the final answer.",
         }

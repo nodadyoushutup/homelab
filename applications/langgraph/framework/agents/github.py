@@ -22,7 +22,7 @@ class GithubAgent(BaseAgent):
                 "MCP: pull requests, checks and CI, reviews, repository queries, and "
                 "related API operations. It does not edit source files; route patches "
                 "to `code`. Local git (branch, fetch, pull, commit, push) is handled by "
-                "`code` when mcp-code exposes git tools. Follow the concrete GitHub "
+                "`code` for local git and repo work when needed. Follow the concrete GitHub "
                 "runtime docs for this deployment."
             )
 

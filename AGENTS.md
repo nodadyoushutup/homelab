@@ -24,7 +24,6 @@ Agents and humans must treat “support both for now” as **out of scope** unle
 - `docs/architecture/`: repository and Terraform layout (topic-per-file index in `README.md`)
 - `docs/workflows/edge-dns-and-nginx-proxy.md`: new public hostnames → Cloudflare tfvars + Nginx Proxy Manager tfvars (Swarm edge) vs cluster ingress
 - `docs/workflows/docker-build-github-actions.md`: Docker image publishes via GHA (dispatch, semver, Terraform/Argo CD/Swarm rollout, live health, CI)
-- `docs/workflows/mcp-code-worktrees-and-multi-agent.md`: mcp-code single-root model, Git worktrees, and isolating concurrent agents (one MCP backend per worktree)
 - `docs/mcp/README.md`: MCP servers in this repo—naming, URL shape, client wiring (`mcp-*.md`, including **`mcp-playwright.md`** for the **`mcp-playwright`** stack)
 - `docs/resources/README.md`: curated technology reference shelf
 - `docs/workflows/langgraph.md`: LangGraph implementation workflow
@@ -72,12 +71,13 @@ Agents and humans must treat “support both for now” as **out of scope** unle
   overlays under `docs/subagents/`, with `docs/workflows/agents.md` as the index.
 - Do not reference removed legacy wiki paths until replacement docs exist in
   `docs/`.
-- For this workspace, repo filesystem / ast-grep / local-git MCP access is
-  **`mcp-code`** (`https://mcp.code.nodadyoushutup.com/mcp`) once it is available
-  in project config. Use direct shell or local file-edit access only to bootstrap,
-  repair, or validate that MCP path.
-- Repo RAG MCP URL is `https://mcp.rag.nodadyoushutup.com/mcp`. Cursor project
-  `.cursor/mcp.json` includes the URL; set `x-api-key` matching `MCP_RAG_API_KEY`
-  via User-level Cursor MCP/`~/.cursor/mcp.json` when the Swarm service enforces auth.
-  LangGraph fills the header from `.config/docker/mcp.env`; Codex uses `env_http_headers` in `.codex/config.toml`.
+- For this workspace, use **Cursor shell** and local file-edit tools for repository
+  filesystem, git, and search work. LangGraph **Code** / **Tech Lead** specialists use
+  **mcp-rag** and other HTTP MCPs from their JSON configs—not a repo filesystem MCP.
+- Repo RAG MCP URL is `https://mcp.rag.nodadyoushutup.com/mcp`. Cursor uses project-only
+  `.cursor/mcp.json` for all MCP servers (no `~/.cursor/mcp.json` entries). That file lists
+  `mcp_rag` URL only; when Swarm enforces auth, add header `x-api-key` matching
+  `MCP_RAG_API_KEY` from `.config/docker/mcp.env` in Cursor Settings → MCP for the project
+  server (do not commit the key). LangGraph fills the header from `.config/docker/mcp.env`;
+  Codex uses `env_http_headers` in `.codex/config.toml`.
 - LangGraph Homelab runtime enforces **docs `rag_search` before every specialist delegation**, a second **code-location `rag_search` before `code` and `tech_lead` delegation**, and **read/search before writes** on the Code specialist; see `docs/workflows/rag-agent-mcp-integration-roadmap.md`. Break-glass: **`HOMELAB_DISABLE_WORKFLOW_GATES=1`** on the agent process only.

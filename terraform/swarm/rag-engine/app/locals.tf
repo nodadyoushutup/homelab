@@ -1,7 +1,4 @@
 locals {
-  service_name  = "rag-engine"
-  internal_port = 8080
-
   env_file_contents = trimspace(var.env_file_path) != "" ? try(file(var.env_file_path), "") : ""
   env_file_pairs = [
     for raw_line in split("\n", replace(local.env_file_contents, "\r\n", "\n")) : {
@@ -82,14 +79,10 @@ locals {
     if contains(local.env_passthrough_keys, pair.key)
   }
   default_env = {
-    TZ                              = var.timezone
-    RAG_CHROMA_HOST                 = var.chroma_host
-    RAG_CHROMA_PORT                 = tostring(var.chroma_port)
-    RAG_CHROMA_COLLECTION           = var.chroma_collection
-    RAG_EMBEDDING_PROVIDER          = lower(var.embedding_provider)
-    RAG_EMBEDDING_MODEL             = var.embedding_model
-    RAG_OPENAI_EMBEDDING_DIMENSIONS = var.openai_embedding_dimensions
-    RAG_WORKSPACE_MOUNT             = var.workspace_mount
+    TZ                    = "America/New_York"
+    RAG_CHROMA_HOST       = "chromadb"
+    RAG_CHROMA_PORT       = "8000"
+    RAG_WORKSPACE_MOUNT   = local.swarm_nfs_code_target
   }
   effective_env = merge(local.default_env, local.parsed_env, var.env)
 
@@ -103,7 +96,7 @@ locals {
   swarm_nfs_code_target = trimspace(element(split(":", trimspace(var.swarm_nfs_code_device)), length(split(":", trimspace(var.swarm_nfs_code_device))) - 1))
   swarm_nfs_code_mounts = local.swarm_nfs_ready ? [{
     type      = "volume"
-    source    = "${local.service_name}-mnt-eapp-code"
+    source    = "rag-engine-mnt-eapp-code"
     target    = local.swarm_nfs_code_target
     read_only = true
     volume_options = {
@@ -129,12 +122,12 @@ locals {
   pull_normalized_registry_host = lower(trimspace(local.pull_registry_host))
   pull_auth_matches = [
     for a in coalesce(try(var.swarm_docker_provider_config.registry_auths, null), []) : a
-    if lower(trimspace(replace(replace(try(a.address, "ghcr.io"), "https://", ""), "http://", ""))) == local.pull_normalized_registry_host
+    if lower(trimspace(replace(replace(try(a.address, "harbor.nodadyoushutup.com"), "https://", ""), "http://", ""))) == local.pull_normalized_registry_host
   ]
   pull_selected_auth = length(local.pull_auth_matches) > 0 ? local.pull_auth_matches[0] : (
     length(coalesce(try(var.swarm_docker_provider_config.registry_auths, null), [])) == 1 ? coalesce(try(var.swarm_docker_provider_config.registry_auths, null), [])[0] : null
   )
-  pull_server_address = local.pull_selected_auth == null ? "" : trimspace(replace(replace(try(local.pull_selected_auth.address, "ghcr.io"), "https://", ""), "http://", ""))
+  pull_server_address = local.pull_selected_auth == null ? "" : trimspace(replace(replace(try(local.pull_selected_auth.address, "harbor.nodadyoushutup.com"), "https://", ""), "http://", ""))
   docker_service_pull_auth_map = local.pull_selected_auth == null ? {} : {
     pull = {
       server_address = local.pull_server_address

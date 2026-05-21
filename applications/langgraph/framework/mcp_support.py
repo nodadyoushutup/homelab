@@ -58,7 +58,7 @@ AST_GREP_SEARCH_TOOL_NAMES = {
 DEFAULT_AST_GREP_MAX_RESULTS = 25
 MAX_AST_GREP_MAX_RESULTS = 50
 
-# Tech Lead MCP server list (mcp-code + mcp-rag).
+# Tech Lead MCP server list (mcp-rag + optional extras from JSON).
 CODE_TECH_LEAD_MCP_SERVERS_PATH = Path(__file__).resolve().parent / "code_tech_lead_mcp_servers.json"
 # Code MCP server list: same baseline plus optional extra HTTP MCP entries from JSON.
 CODE_MCP_SERVERS_PATH = Path(__file__).resolve().parent / "code_mcp_servers.json"
@@ -245,22 +245,12 @@ _mcp_toolset_cache: dict[tuple[str, str, str], list[Any]] = {}
 
 
 def build_normalized_servers_for_session(config_path: Path) -> dict[str, Any]:
-    """Resolve MCP server dict from ``mcp.json``, applying optional mcp-code URL override."""
+    """Resolve MCP server dict from ``mcp.json``."""
     if not config_path.exists():
         return {}
     config = json.loads(config_path.read_text())
     raw_servers = config.get("mcpServers", {})
-    normalized = _normalize_server_config(raw_servers)
-    if not normalized:
-        return {}
-
-    from framework.mcp_workspace_context import effective_mcp_code_url
-
-    override = effective_mcp_code_url()
-    if override and "mcp-code" in normalized:
-        normalized = deepcopy(normalized)
-        normalized["mcp-code"] = {**normalized["mcp-code"], "url": override}
-    return normalized
+    return _normalize_server_config(raw_servers)
 
 
 async def _cached_wrapped_toolset(
@@ -316,7 +306,7 @@ def load_workspace_routed_mcp_tools(
     wrap_profile: str,
     static_repo: Path,
 ) -> list[Any]:
-    """Load MCP tools; resolve mcp-code URL and repo root on each invocation (parallel lanes)."""
+    """Load MCP tools; resolve repo root on each invocation (parallel lanes)."""
     if not config_path.exists():
         return []
 

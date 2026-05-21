@@ -14,7 +14,7 @@ Publish the service behind TLS at **`https://mcp.argocd.nodadyoushutup.com/mcp`*
 
 ## Cursor
 
-Project **`.cursor/mcp.json`** registers **`mcp_argocd`** at **`https://mcp.argocd.nodadyoushutup.com/mcp`**. No client API key — **`ARGOCD_*`** credentials live in Swarm **`env`** on **`.config/terraform/swarm/mcp-argocd/app.tfvars`**. Add the same block to **User** MCP settings or **`~/.cursor/mcp.json`** for all workspaces. After deploy or config edits, **reload MCP** in Cursor Settings if tools stay disconnected.
+Project **`.cursor/mcp.json`** registers **`mcp_argocd`** at **`https://mcp.argocd.nodadyoushutup.com/mcp`**. No client API key — **`ARGOCD_*`** credentials live in Swarm **`env`** on **`.config/terraform/swarm/mcp-argocd/app.tfvars`**. After deploy or config edits, **reload MCP** in Cursor Settings if tools stay disconnected.
 
 ## LangGraph
 

@@ -13,7 +13,7 @@ the detailed checklist.
 
 | Domain | Typical contents |
 | --- | --- |
-| `terraform/swarm/` | One directory per **Swarm-deployed** service or family (`harbor/`, `nginx_proxy_manager/`, `mcp-code/`, observability stacks, runners, …). Most stacks use an `app/` slice; some add `config/` and/or `database/`. |
+| `terraform/swarm/` | One directory per **Swarm-deployed** service or family (`harbor/`, `nginx_proxy_manager/`, `mcp-rag/`, observability stacks, runners, …). Most stacks use an `app/` slice; some add `config/` and/or `database/`. |
 | `terraform/cluster/` | Cluster-oriented roots: for example **Talos** app slice, **Proxmox** app slice, **Argo CD** `config/` slice for post-install Argo configuration. |
 | `terraform/network/` | Network appliances and integrations that are not Swarm services themselves—for example **FortiGate** `config/` against the live firewall API. |
 | `terraform/remote/` | SaaS or remote APIs decoupled from on-prem engines—for example **Cloudflare** `config/` for DNS and zone objects. |
@@ -31,7 +31,7 @@ applied independently.
 
 | Slice | Purpose | Example in repo |
 | --- | --- | --- |
-| **`app/`** | Core **runtime infrastructure**: overlay networks, `docker_service` resources, published ports, volumes, secrets wiring—everything needed for the containers to run. | `terraform/swarm/harbor/app/`, `terraform/swarm/mcp-code/app/` |
+| **`app/`** | Core **runtime infrastructure**: overlay networks, `docker_service` resources, published ports, volumes, secrets wiring—everything needed for the containers to run. | `terraform/swarm/harbor/app/`, `terraform/swarm/mcp-rag/app/` |
 | **`config/`** | **Post-deploy configuration** using a provider that targets an *already running* system (Harbor projects, Jenkins init scripts, Grafana folders/datasources, Vault policies, NPM proxy hosts, etc.). | `terraform/swarm/harbor/config/`, `terraform/cluster/argocd/config/` |
 | **`database/`** | **Dedicated data plane** for the app when it is modeled as its own Swarm service (MariaDB, Postgres sidecars, etc.) with its own lifecycle and state. | `terraform/swarm/nginx_proxy_manager/database/`, `terraform/swarm/grafana/database/` |
 

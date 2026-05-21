@@ -37,9 +37,8 @@ class CodeAgent(BaseAgent):
             """Describe what the Code agent is responsible for."""
             return (
                 "The Code agent owns repository-backed analysis and implementation "
-                "support for source code, configuration, paths, filesystem state, "
-                "local git operations exposed by mcp-code when requested, plus any "
-                "additional MCP tools configured for this runtime (for example "
+                "support for source code, configuration, paths, and any "
+                "MCP tools configured for this runtime (for example RAG search or "
                 "issue-tracker reads when the deployment enables them), and "
                 "behavior. It should stay scoped to the repository root "
                 f"`{self.repo_root}`, inspect source-of-truth files before acting, "

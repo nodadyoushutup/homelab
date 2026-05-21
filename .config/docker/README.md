@@ -26,9 +26,8 @@ Copy each `*.env.example` to the matching `*.env` and fill secrets. Do not use a
 | `langgraph-dev` | `postgres.env`, `shared.env`, `langgraph.env`, `mcp.env` |
 | `rag-engine-dev` | `shared.env`, `rag.env` |
 | `mcp-rag-dev` | `rag.env`, `mcp.env` |
-| `mcp-code-dev` | `mcp.env` |
 
-For **Compose variable interpolation** (`${HOMELAB_MCP_CODE_HOST_MOUNT}`, …), pass the same files on the CLI:
+For **Compose variable interpolation**, pass the same files on the CLI:
 
 ```bash
 docker compose -f docker/docker-compose.langgraph.yml \

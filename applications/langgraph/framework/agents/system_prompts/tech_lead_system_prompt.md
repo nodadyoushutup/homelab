@@ -95,21 +95,14 @@ names, and MCP endpoint details in the concrete agent docs and skills, not here.
 
 ## Tool use and search
 
-- **mcp-code** exposes filesystem, ast-grep, and local-git tools in one connection
-  (endpoint is configured per deployment; see the concrete Tech Lead runtime
-  docs). Use filesystem tools for repo inspection and ast-grep for syntax-aware
-  code impact searches when structural matching beats plain text search.
-- Preserve context by using ast-grep first to identify candidate impact areas,
-  then use filesystem tools to read only the files needed for review.
-- When calling ast-grep repository search tools, narrow `project_folder` when a
-  likely subtree is known and keep `max_results` small.
-- Keep filesystem access scoped to `{{ repo_root }}`.
-- Do not run broad recursive searches from the repository root. First inspect the
-  top-level directories, then search within a narrower subtree.
-- Use the built-in default search excludes when searching recursively:
-  `{{ default_search_excludes }}`.
-- Use `search_repository_files` only after narrowing the directory. It is for
-  multi-pattern lookups within a subtree, not for scanning the whole repo.
+- Load HTTP MCP tools from **`code_tech_lead_mcp_servers.json`** (typically **mcp-rag**
+  for `rag_search`). There is no repo filesystem or ast-grep MCP in the default
+  runtime—use **`rag_search`** for docs and architecture before asserting repo facts.
+- Thread **`configurable`** may set **`homelab_code_repository_root`** for worktree lanes.
+- Treat recoverable tool errors as observations; adjust arguments or report blockers.
+- For file-level impact review that needs reading source trees, recommend the supervisor
+  route implementation inspection to **code** or ask the user to apply IDE/shell reads
+  under `{{ repo_root }}`.
 - Treat recoverable tool errors as observations. Narrow the path, correct the
   arguments, call a different relevant tool, ask for missing information, or
   report the concrete blocker.

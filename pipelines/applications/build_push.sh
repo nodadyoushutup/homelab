@@ -183,12 +183,6 @@ resolve_build_target() {
       DOCKER_CONTEXT="applications/mcp-cloudflare"
       BUILD_STRATEGY="direct"
       ;;
-    mcp-code)
-      IMAGE_NAME="mcp-code"
-      DOCKER_CONTEXT="."
-      DOCKERFILE="applications/mcp-code/Dockerfile"
-      BUILD_STRATEGY="direct"
-      ;;
     mcp-fortigate)
       IMAGE_NAME="mcp-fortigate"
       DOCKER_CONTEXT="applications/mcp-fortigate"

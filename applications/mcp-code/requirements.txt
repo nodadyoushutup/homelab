@@ -1,4 +1,0 @@
-# Keep aligned with LangGraph / langchain_mcp_adapters client (see applications/langgraph lock).
-mcp[cli]==1.27.1
-mcp-server-git==2026.1.14
-pyyaml==6.0.3

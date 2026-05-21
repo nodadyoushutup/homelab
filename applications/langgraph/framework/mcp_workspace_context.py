@@ -1,9 +1,9 @@
-"""Per-invocation mcp-code URL and repository root for parallel agent lanes.
+"""Per-invocation repository root for parallel agent lanes.
 
-LangGraph clients pass ``homelab_mcp_code_url`` and ``homelab_code_repository_root``
-in ``RunnableConfig["configurable"]``. Middleware copies them into contextvars
-before MCP-backed tools run so each thread can target its own Git worktree and
-mcp-code backend without separate LangGraph deployments.
+LangGraph clients pass ``homelab_code_repository_root`` in
+``RunnableConfig["configurable"]``. Middleware copies it into a contextvar before
+MCP-backed tools run so each thread can target its own Git worktree without
+separate LangGraph deployments.
 """
 
 from __future__ import annotations
@@ -14,20 +14,9 @@ from typing import Any
 
 from framework.configuration import default_repo_root
 
-_mcp_code_url_var: contextvars.ContextVar[str | None] = contextvars.ContextVar(
-    "homelab_mcp_code_url", default=None
-)
 _code_repository_root_var: contextvars.ContextVar[str | None] = contextvars.ContextVar(
     "homelab_code_repository_root", default=None
 )
-
-
-def effective_mcp_code_url() -> str | None:
-    """Return override URL for the mcp-code server, or None to use mcp.json / env."""
-    v = _mcp_code_url_var.get(None)
-    if v and str(v).strip():
-        return str(v).strip()
-    return None
 
 
 def effective_code_repository_root(static_fallback: Path) -> Path:
@@ -47,10 +36,6 @@ def bind_from_configurable(configurable: dict[str, Any] | None) -> list[tuple[co
     if not configurable:
         return []
     tokens: list[tuple[contextvars.Token[Any], contextvars.ContextVar[Any]]] = []
-
-    url = configurable.get("homelab_mcp_code_url") or configurable.get("HOMELAB_MCP_CODE_URL")
-    if url is not None and str(url).strip():
-        tokens.append((_mcp_code_url_var.set(str(url).strip()), _mcp_code_url_var))
 
     root = configurable.get("homelab_code_repository_root") or configurable.get(
         "HOMELAB_CODE_REPOSITORY_ROOT"

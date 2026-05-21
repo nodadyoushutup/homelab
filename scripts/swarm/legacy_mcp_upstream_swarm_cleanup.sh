@@ -1,20 +1,12 @@
 #!/usr/bin/env bash
-# Remove standalone Swarm MCPs superseded by the mcp-code aggregate (filesystem + git + ast-grep).
+# Remove retired Swarm MCPs: standalone filesystem/git/ast-grep stacks and mcp-code.
 #
 # Safe to re-run: services/volumes that are already gone are skipped or no-op.
 #
 # Swarm manager SSH (example):
 #   ssh swarm-cp-0.local 'bash -s' < scripts/swarm/legacy_mcp_upstream_swarm_cleanup.sh
 #
-# After services are gone, prune dead task containers if volumes still show "in use":
-#   docker container prune -f
-#   docker volume rm mcp-ast-grep-mnt-eapp-code mcp-filesystem-mnt-eapp-code mcp-git-mnt-eapp-code
-#
-# Do NOT remove mcp-code-mnt-eapp-code (still used by mcp-code).
-#
-# Terraform: if you still have remote state workspaces for mcp-filesystem / mcp-git / mcp-ast-grep,
-# destroy or drop them from your backend (e.g. terraform state rm … after terraform state list,
-# or remove the workspace object in your state store). This repo no longer ships those stacks.
+# mcp-code only: scripts/swarm/mcp_code_swarm_cleanup.sh
 
 set -eu
 
@@ -24,12 +16,14 @@ SERVICES=(
   mcp-filesystem-homelab
   mcp-git
   mcp-git-homelab
+  mcp-code
 )
 
 VOLUMES=(
   mcp-ast-grep-mnt-eapp-code
   mcp-filesystem-mnt-eapp-code
   mcp-git-mnt-eapp-code
+  mcp-code-mnt-eapp-code
 )
 
 for s in "${SERVICES[@]}"; do

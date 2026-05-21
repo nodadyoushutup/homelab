@@ -126,8 +126,9 @@ implementation, commit, push) → `github` (open/update PR, checks, Actions)**. 
 a **pull request** unless the user explicitly asks for a local-only or non-PR
 outcome. Do **not** merge to the default branch; the human approves via PR.
 Parallel tickets use **separate** LangGraph threads each with its own
-**`configurable`** worktree + mcp-code lane (see
-`docs/workflows/mcp-code-worktrees-and-multi-agent.md`).
+**`configurable`** **`homelab_code_repository_root`** (Git worktree path). Use
+`scripts/agents/homelab_jira_issue_worktree.sh` to create worktrees and print the
+configurable fragment.
 
 ## Delegation rules
 

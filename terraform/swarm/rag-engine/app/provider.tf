@@ -19,7 +19,7 @@ provider "docker" {
     for_each = coalesce(try(var.swarm_docker_provider_config.registry_auths, null), [])
 
     content {
-      address  = try(registry_auth.value.address, "ghcr.io")
+      address  = try(registry_auth.value.address, "harbor.nodadyoushutup.com")
       username = registry_auth.value.username
       password = registry_auth.value.password
     }

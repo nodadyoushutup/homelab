@@ -7,8 +7,9 @@ if [ -z "${GITHUB_PERSONAL_ACCESS_TOKEN:-}" ]; then
 fi
 
 exec /app/.venv/bin/mcp-proxy \
-  --host "${MCP_GITHUB_HOST:-${MCP_BRIDGE_HOST:-0.0.0.0}}" \
-  --port "${MCP_GITHUB_LISTEN_PORT:-${MCP_BRIDGE_LISTEN_PORT:-8082}}" \
+  --transport streamablehttp \
+  --host "${MCP_GITHUB_HOST:-0.0.0.0}" \
+  --port "${MCP_GITHUB_LISTEN_PORT:-8082}" \
   --stateless \
   --pass-environment \
   -- \

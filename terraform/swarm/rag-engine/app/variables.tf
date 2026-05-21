@@ -1,50 +1,3 @@
-variable "chroma_collection" {
-  description = "Chroma collection used for repository RAG chunks."
-  type        = string
-  default     = "homelab"
-}
-
-
-variable "chroma_host" {
-  description = "ChromaDB hostname visible from the RAG engine task."
-  type        = string
-  default     = "chromadb"
-}
-
-
-variable "chroma_port" {
-  description = "ChromaDB HTTP port visible from the RAG engine task."
-  type        = number
-  default     = 8000
-}
-
-
-variable "chromadb_network_name" {
-  description = "Existing ChromaDB overlay network name."
-  type        = string
-  default     = "chromadb"
-}
-
-
-variable "embedding_model" {
-  description = "Embedding model id used for ingest and query. Empty uses the provider default."
-  type        = string
-  default     = ""
-}
-
-
-variable "embedding_provider" {
-  description = "Embedding provider used for ingest and query: openai (default), google, or anthropic (Voyage via VOYAGE_API_KEY)."
-  type        = string
-  default     = "openai"
-
-  validation {
-    condition     = contains(["google", "openai", "anthropic"], lower(var.embedding_provider))
-    error_message = "embedding_provider must be google, openai, or anthropic."
-  }
-}
-
-
 variable "endpoint_host" {
   description = "Host name used for external URL reporting."
   type        = string
@@ -74,13 +27,6 @@ variable "image_reference" {
 }
 
 
-variable "openai_embedding_dimensions" {
-  description = "Optional dimensions override for OpenAI text-embedding-3 models. Empty uses the model default."
-  type        = string
-  default     = ""
-}
-
-
 variable "published_port" {
   description = "Swarm ingress published port."
   type        = number
@@ -88,31 +34,10 @@ variable "published_port" {
 }
 
 
-variable "rag_engine_network_name" {
-  description = "Overlay network name shared by RAG engine clients."
-  type        = string
-  default     = "rag-engine"
-}
-
-
 variable "replicas" {
   description = "Number of Swarm service replicas."
   type        = number
   default     = 1
-}
-
-
-variable "timezone" {
-  description = "Container TZ environment value."
-  type        = string
-  default     = "America/New_York"
-}
-
-
-variable "workspace_mount" {
-  description = "Container path for repository ingest (path under the NFS code mount)."
-  type        = string
-  default     = "/mnt/eapp/code/homelab"
 }
 
 
@@ -175,4 +100,3 @@ variable "swarm_docker_provider_config" {
   description = "Docker SSH host and registry_auths for the Swarm control plane."
   type        = any
 }
-

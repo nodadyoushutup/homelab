@@ -11,8 +11,6 @@ x-env-rag-engine: &env_rag_engine
 x-env-mcp-rag: &env_mcp_rag
   - ../.config/docker/rag.env
   - ../.config/docker/mcp.env
-x-env-mcp-code: &env_mcp_code
-  - ../.config/docker/mcp.env
 x-env-langgraph-dev: &env_langgraph_dev
   - ../.config/docker/postgres.env
   - ../.config/docker/shared.env
@@ -85,44 +83,6 @@ services:
       retries: 6
       start_period: 15s
 
-  # mcp-code: HTTP aggregate on :8100; server.py merges three stdio MCP children (opt-in native: MCP_CODE_USE_NATIVE=1; opt-in http+mcp-proxy: MCP_CODE_UPSTREAM_TRANSPORT=http).
-  # Mount the homelab tree at the same path as Swarm/NFS (/mnt/eapp/code/homelab) so filesystem, git, and ast-grep agree on roots.
-  # Set HOMELAB_MCP_CODE_HOST_MOUNT in mcp.env; pass --env-file .config/docker/mcp.env for Compose interpolation.
-  mcp-code-dev:
-    image: homelab/mcp-code:latest
-    pull_policy: never
-    build:
-      context: ..
-      dockerfile: applications/mcp-code/Dockerfile
-    env_file: *env_mcp_code
-    environment:
-      PYTHONDONTWRITEBYTECODE: "1"
-      PYTHONUNBUFFERED: "1"
-      MCP_CODE_WORKSPACE_ROOT: /mnt/eapp/code/homelab
-      MCP_CODE_HOST: 0.0.0.0
-      MCP_CODE_PORT: "8100"
-      MCP_HTTP_PATH: /mcp
-      AST_GREP_CONFIG: /opt/ast-grep-config/sgconfig.yml
-      AST_GREP_DEFAULT_PROJECT_ROOT: /mnt/eapp/code/homelab
-      AST_GREP_ALLOWED_ROOTS: /mnt/eapp/code/homelab
-    user: "1000:1000"
-    ports:
-      - "${MCP_CODE_DEV_PUBLISH_PORT:-9017}:8100"
-    volumes:
-      - ${HOMELAB_MCP_CODE_HOST_MOUNT:-/mnt/eapp/code/homelab}:/mnt/eapp/code/homelab:rw
-      - ../applications/mcp-code/src/mcp_code:/opt/mcp-code/mcp_code:ro
-    healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "/opt/mcp-code-venv/bin/python -c \"import socket; s=socket.create_connection(('127.0.0.1',8100),2); s.close()\"",
-        ]
-      interval: 10s
-      timeout: 5s
-      retries: 8
-      # Outer listener binds immediately; upstream merge warms in background.
-      start_period: 15s
-
   langgraph-postgres:
     image: postgres:17-alpine
     env_file: *env_postgres
@@ -150,21 +110,17 @@ services:
         condition: service_healthy
       mcp-rag-dev:
         condition: service_healthy
-      mcp-code-dev:
-        condition: service_healthy
     environment:
       HOMELAB_REPO_ROOT: /app
       PYTHONDONTWRITEBYTECODE: "1"
       PYTHONUNBUFFERED: "1"
       PIP_NO_CACHE_DIR: "1"
-      # Same homelab tree as mcp-code-dev (NFS path inside the container) for MCP path normalization.
       CODE_REPOSITORY_ROOT: /mnt/eapp/code/homelab
       TECH_LEAD_REPOSITORY_ROOT: /mnt/eapp/code/homelab
       # Split dotenv dir for `framework.configuration.merged_settings` (see .config/docker/README.md).
       HOMELAB_CONFIG_ENV_DIR: ${HOMELAB_CONFIG_ENV_DIR:-/mnt/eapp/code/homelab/.config/docker}
       # MCP HTTP URLs: mcp.env (+ defaults below) for LangGraph `mcp.json` `url_from_env`.
       HOMELAB_MCP_RAG_URL: ${HOMELAB_MCP_RAG_URL:-http://mcp-rag-dev:8080/mcp}
-      HOMELAB_MCP_CODE_URL: ${HOMELAB_MCP_CODE_URL:-http://mcp-code-dev:8100/mcp}
       HOMELAB_MCP_GITHUB_URL: ${HOMELAB_MCP_GITHUB_URL:-http://192.168.1.120:18208/mcp}
       HOMELAB_MCP_ATLASSIAN_URL: ${HOMELAB_MCP_ATLASSIAN_URL:-http://192.168.1.120:18200/mcp}
     ports:
@@ -175,7 +131,6 @@ services:
       # Named volume: in-memory runtime persists pickle checkpoints; bind mounts often deny writes
       # when the repo is on NFS (root_squash) or host uid does not match the container process.
       - langgraph_state:/app/langgraph/agent/.langgraph_api
-      - ${HOMELAB_MCP_CODE_HOST_MOUNT:-/mnt/eapp/code/homelab}:/mnt/eapp/code/homelab:rw
     # Deep probe (DB + assistants + schemas + threads); first boot can be minutes on cold CPU / NFS.
     # start_period 360s: slow graph/MCP imports do not fail the service during this window.
     healthcheck:

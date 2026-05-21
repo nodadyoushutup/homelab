@@ -1,16 +1,16 @@
 {
   "mcpServers": {
+    "mcp_argocd": {
+      "url": "https://mcp.argocd.nodadyoushutup.com/mcp"
+    },
     "mcp_atlassian": {
       "url": "https://mcp.atlassian.nodadyoushutup.com/mcp"
     },
-    "mcp_playwright": {
-      "url": "https://mcp.playwright.nodadyoushutup.com/mcp"
-    },
-    "mcp_code": {
-      "url": "http://127.0.0.1:9017/mcp"
-    },
     "mcp_cloudflare": {
       "url": "https://mcp.cloudflare.nodadyoushutup.com/mcp"
+    },
+    "mcp_github": {
+      "url": "https://mcp.github.nodadyoushutup.com/mcp"
     }
   }
 }

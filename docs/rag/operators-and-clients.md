@@ -10,7 +10,7 @@
 | RAG engine | **`terraform/swarm/rag-engine/app`** | **`pipelines/terraform/swarm/rag-engine/app.sh`** |
 | MCP RAG | **`terraform/swarm/mcp-rag/app`** | **`pipelines/terraform/swarm/mcp-rag/app.sh`** |
 
-Tfvars typically live under **`<repo>/.config/terraform/swarm/<stack>/app.tfvars`** (same pattern as other Swarm apps).
+Tfvars typically live under **`<repo>/.config/terraform/swarm/<stack>/app.tfvars`** (same pattern as other Swarm apps). For **`rag-engine`**, set **`image_reference`**, **`published_port`**, **`endpoint_host`**, **`env_file_path`**, **`env`** (secrets such as **`RAG_ENGINE_API_KEY`**), and **`placement`** only; Chroma, embedding, and ingest tunables belong in **`.config/docker/rag.env`** (merged via **`env_file_path`**), not duplicate Terraform variables.
 
 **Published ports (Terraform defaults on the Swarm host):** ChromaDB HTTP **8000** (fixed in **`terraform/swarm/chromadb/app/main.tf`**), **`rag-engine` → 9015**, **`mcp-rag` → 9016**. Adjust in tfvars if your host uses different ingress ports for rag/mcp stacks.
 

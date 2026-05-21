@@ -20,7 +20,6 @@ pipeline {
       'mcp-argocd',
       'mcp-atlassian',
       'mcp-cloudflare',
-      'mcp-code',
       'mcp-fortigate',
       'mcp-github',
       'mcp-google-workspace',
