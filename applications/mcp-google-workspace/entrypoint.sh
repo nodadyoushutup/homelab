@@ -23,10 +23,9 @@ mkdir -p "${CREDENTIALS_DIR}"
 export PORT="${LISTEN_PORT}"
 export WORKSPACE_MCP_PORT="${LISTEN_PORT}"
 export WORKSPACE_MCP_HOST="${WORKSPACE_MCP_HOST:-0.0.0.0}"
-export MCP_ENABLE_OAUTH21="${MCP_ENABLE_OAUTH21:-true}"
 export WORKSPACE_MCP_CREDENTIALS_DIR="${CREDENTIALS_DIR}"
 
-set -- workspace-mcp --transport streamable-http
+set -- workspace-mcp --transport streamable-http --single-user
 
 TOOL_TIER="${GOOGLE_WORKSPACE_MCP_TOOL_TIER:-core}"
 if [ -n "${TOOL_TIER}" ]; then

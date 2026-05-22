@@ -1,6 +1,6 @@
 # mcp-google-workspace
 
-Streamable HTTP MCP for **Google Workspace** (Gmail, Calendar, Drive, and other tools from upstream [`workspace-mcp`](https://pypi.org/project/workspace-mcp/)), using **native OAuth 2.1** (no service account).
+Streamable HTTP MCP for **Google Workspace** (Gmail, Calendar, Drive, and other tools from upstream [`workspace-mcp`](https://pypi.org/project/workspace-mcp/)), using **single-user legacy OAuth** on the server (no MCP OAuth 2.1, no service account). Same client model as **mcp-github**: Cursor connects to `/mcp` with no Bearer token; Google sign-in and tokens live in the container.
 
 ## URL and path
 
@@ -11,8 +11,9 @@ NPM must forward the **entire hostname** (not only `/mcp`) so OAuth paths reach 
 ## Usage
 
 - Prefer **`GOOGLE_WORKSPACE_MCP_TOOL_TIER=core`** (default in the image entrypoint) unless you need more tools; smaller scope simplifies consent.
-- First authenticated MCP use opens Google sign-in/consent in the browser.
+- First tool use that needs Google APIs opens sign-in/consent in the browser (server `/oauth2callback` flow).
 - OAuth tokens live in the container under `WORKSPACE_MCP_CREDENTIALS_DIR`; redeploy clears them and may require re-consent.
+- **`/mcp` is not protected by MCP OAuth 2.1** — treat the hostname like other homelab MCPs (TLS + network trust). Do not expose it on the public internet without accepting that risk.
 
 ## Cursor
 
@@ -28,7 +29,7 @@ Add to project **`.cursor/mcp.json`** when you want Workspace access:
 }
 ```
 
-Reload MCP in Cursor Settings after deploy or config changes.
+No Cursor MCP OAuth step (no “Waiting for callback…”). Reload MCP in Cursor Settings after deploy or config changes.
 
 ## Swarm
 
@@ -43,7 +44,9 @@ Required keys:
 | `GOOGLE_OAUTH_CLIENT_SECRET` | Matching client secret |
 | `WORKSPACE_EXTERNAL_URL` | Public HTTPS origin, no trailing slash (e.g. `https://mcp.google-workspace.nodadyoushutup.com`) |
 
-Optional: `GOOGLE_WORKSPACE_MCP_TOOL_TIER` (`core` / `extended` / `complete`), `GOOGLE_WORKSPACE_MCP_READ_ONLY=true`, `GOOGLE_WORKSPACE_MCP_TOOLS` (space-separated list).
+Optional: `USER_GOOGLE_EMAIL` (default Workspace account for tool calls), `GOOGLE_WORKSPACE_MCP_TOOL_TIER` (`core` / `extended` / `complete`), `GOOGLE_WORKSPACE_MCP_READ_ONLY=true`, `GOOGLE_WORKSPACE_MCP_TOOLS` (space-separated list).
+
+**Breaking:** Remove `MCP_ENABLE_OAUTH21` from `app.tfvars` if present. The image runs `--single-user` and does not enable OAuth 2.1. Rebuild/push the image and redeploy Swarm after changing the entrypoint.
 
 ## Google Cloud OAuth setup
 
@@ -70,7 +73,7 @@ Use a **Google Cloud project** you control (personal or Workspace org).
 2. Add Cloudflare `A` record + NPM proxy host (`forward_port` **18209**) per [edge-dns-and-nginx-proxy.md](../workflows/edge-dns-and-nginx-proxy.md).
 3. Set **`app.tfvars`** `env` with OAuth client ID, secret, and `WORKSPACE_EXTERNAL_URL`.
 4. Run Terraform app pipeline for **`mcp-google-workspace`**.
-5. Register MCP in Cursor and complete browser consent on first use.
+5. Register MCP in Cursor (no MCP client OAuth). Complete Google browser consent on first tool use if credentials are not already in the container.
 
 ## Related
 

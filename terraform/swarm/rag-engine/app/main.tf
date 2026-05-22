@@ -39,7 +39,7 @@ resource "docker_service" "rag_engine" {
     }
 
     container_spec {
-      image = "harbor.nodadyoushutup.com/homelab/rag-engine:0.0.7"
+      image = "ghcr.io/nodadyoushutup/rag-engine:0.0.9"
       env   = var.env
 
       dns_config {
