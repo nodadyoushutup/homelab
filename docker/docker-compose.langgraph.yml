@@ -21,9 +21,9 @@ services:
   # RAG dev pair: bind-mounted application code (like langgraph-dev). Agent Chat is the baked `runner`
   # image (no source bind mount); rebuild when UI changes.
   # Restart rag-engine-dev / mcp-rag-dev after edits; rebuild images only when Dockerfile or requirements change.
-  # Chroma stays on Swarm — `environment` overrides RAG_CHROMA_* from rag.env so a Swarm hostname like
-  # `chromadb` does not break Compose (see docs/rag/operators-and-clients.md).
-  # Override: export HOMELAB_DEV_CHROMA_HOST=... HOMELAB_DEV_CHROMA_PORT=... before `docker compose up`.
+  # Chroma stays on Swarm — `environment` overrides RAG_CHROMA_HOSTNAME from rag.env so a Swarm hostname like
+  # `chromadb:8000` does not break Compose (see docs/rag/operators-and-clients.md).
+  # Override: export HOMELAB_DEV_CHROMA_HOSTNAME=192.168.1.120:8000 before `docker compose up`.
   rag-engine-dev:
     image: homelab/rag-engine:latest
     pull_policy: never
@@ -34,8 +34,7 @@ services:
     environment:
       PYTHONDONTWRITEBYTECODE: "1"
       PYTHONUNBUFFERED: "1"
-      RAG_CHROMA_HOST: ${HOMELAB_DEV_CHROMA_HOST:-192.168.1.120}
-      RAG_CHROMA_PORT: ${HOMELAB_DEV_CHROMA_PORT:-8000}
+      RAG_CHROMA_HOSTNAME: ${HOMELAB_DEV_CHROMA_HOSTNAME:-192.168.1.120:8000}
     # Pin entrypoint so a stale local image (old CMD like `rag_engine.server:app`) still matches current src.
     command:
       [

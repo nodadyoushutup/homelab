@@ -126,9 +126,9 @@ def _validate_save(
 
 
 def _chroma_client() -> chromadb.HttpClient:
-    host = (os.getenv("RAG_CHROMA_HOST") or "chromadb").strip()
-    port = int((os.getenv("RAG_CHROMA_PORT") or "8000").strip())
-    return chromadb.HttpClient(host=host, port=port)
+    from chroma_config import chroma_http_client
+
+    return chroma_http_client()
 
 
 def chroma_memory_episodic_collection() -> Any:

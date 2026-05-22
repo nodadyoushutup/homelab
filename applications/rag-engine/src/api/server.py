@@ -10,6 +10,7 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse
 from starlette.routing import Route
 
+from chroma_config import chroma_hostname_display, parse_chroma_hostname
 from embeddings import build_embedding_client, embedding_model
 from memory import (
     forget_memory,
@@ -38,14 +39,13 @@ _configure_logging()
 if not (os.getenv("RAG_ENGINE_API_KEY") or "").strip():
     log.warning("RAG_ENGINE_API_KEY is empty; POST /v1/embed-commit accepts unauthenticated requests")
 
-_chroma_host = (os.getenv("RAG_CHROMA_HOST") or "chromadb").strip()
-_chroma_port = (os.getenv("RAG_CHROMA_PORT") or "8000").strip()
-log.info("Chroma HTTP target %s:%s (RAG_CHROMA_HOST / RAG_CHROMA_PORT)", _chroma_host, _chroma_port)
-if _chroma_host == "chromadb":
+_chroma_target = chroma_hostname_display()
+log.info("Chroma HTTP target %s (RAG_CHROMA_HOSTNAME)", _chroma_target)
+if parse_chroma_hostname()[0] == "chromadb":
     log.warning(
-        "RAG_CHROMA_HOST=chromadb only resolves on the Swarm overlay; for Docker Compose rag-engine-dev "
-        "(or any client not on that network), set RAG_CHROMA_HOST to the Swarm node's LAN IP and "
-        "RAG_CHROMA_PORT to the published Chroma HTTP port."
+        "RAG_CHROMA_HOSTNAME chromadb (or chromadb:8000) only resolves on the Swarm overlay; "
+        "for Docker Compose rag-engine-dev (or any client not on that network), set "
+        "RAG_CHROMA_HOSTNAME to the Swarm node's LAN IP and port, e.g. 192.168.1.120:8000."
     )
 
 

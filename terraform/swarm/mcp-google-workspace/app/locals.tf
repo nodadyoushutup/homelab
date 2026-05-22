@@ -1,22 +1,17 @@
 locals {
   service_name = "mcp-google-workspace"
+  image        = "ghcr.io/nodadyoushutup/mcp-google-workspace:0.0.1"
 
-  env_file_contents = trimspace(var.env_file_path) != "" ? try(file(var.env_file_path), "") : ""
-  parsed_env = {
-    for raw_line in split("\n", replace(local.env_file_contents, "\r\n", "\n")) :
-    trimspace(split("=", trimspace(raw_line))[0]) => join("=", slice(split("=", trimspace(raw_line)), 1, length(split("=", trimspace(raw_line)))))
-    if trimspace(raw_line) != "" && !startswith(trimspace(raw_line), "#") && length(split("=", trimspace(raw_line))) > 1
-  }
   default_env = {
-    TZ                               = var.timezone
+    TZ                               = "America/New_York"
     MCP_GOOGLE_WORKSPACE_LISTEN_PORT = "8086"
   }
-  effective_env = merge(local.default_env, local.parsed_env, var.env)
+  effective_env = merge(local.default_env, var.env)
 }
 
 
 locals {
-  pull_ref                      = var.image_reference
+  pull_ref                      = local.image
   pull_at_stripped              = split("@", local.pull_ref)[0]
   pull_colon_parts              = split(":", local.pull_at_stripped)
   pull_image_repository         = length(local.pull_colon_parts) <= 1 ? local.pull_at_stripped : join(":", slice(local.pull_colon_parts, 0, length(local.pull_colon_parts) - 1))

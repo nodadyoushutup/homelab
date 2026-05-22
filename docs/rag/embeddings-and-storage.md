@@ -14,7 +14,7 @@ When switching provider/model/dimensions, use a new Chroma collection (for examp
 
 ## Chroma
 
-- Client: **HTTP** to Chroma (`RAG_CHROMA_HOST`, `RAG_CHROMA_PORT`). In the Swarm layout, point the engine at the Chroma service hostname/IP and the published HTTP port (**8000** on the Swarm host; see **`terraform/swarm/chromadb/app/main.tf`**).
+- Client: **HTTP** to Chroma (`RAG_CHROMA_HOSTNAME`, e.g. `chromadb:8000` on the Swarm overlay or `192.168.1.120:8000` from the LAN). Omit `:port` to use **8000**. See **`applications/rag-engine/src/chroma_config.py`** and **`terraform/swarm/chromadb/app/main.tf`**.
 - **Distance:** collections are created with **`hnsw:space` = `cosine`** (see `ingest/pipeline.py` `_collection()` and `memory/__init__.py` `_open_collection`).
 
 ## Collections (defaults)

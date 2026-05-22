@@ -21,7 +21,7 @@ When you change either, update **`.config/docker/rag.env`** and **`.config/docke
 
 ## Excludes and path rules
 
-Binary glob rules, sensitive paths, and other skips are centralized in engine path logic (e.g. `path_rules.py`, `.githooks/rag_path_excludes.py`). If something never appears in the index, check allowlist **and** excludes before debugging embeddings.
+Binary glob rules, sensitive paths, and other skips are centralized in engine path logic (`applications/rag-engine/src/ingest/path_rules.py`, mirrored in `.githooks/rag_path_excludes.py`). Defaults apply when `RAG_EXCLUDE_PATH_SEGMENTS` / `RAG_EXCLUDE_FILE_SUFFIXES` are unset; set those env vars only to override. If something never appears in the index, check allowlist **and** excludes before debugging embeddings.
 
 ## Chunking strategies
 

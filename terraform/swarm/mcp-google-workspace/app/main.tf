@@ -1,19 +1,10 @@
 resource "docker_network" "mcp_google_workspace" {
-  name   = local.service_name
+  name   = "mcp-google-workspace"
   driver = "overlay"
 }
 
 resource "docker_service" "mcp_google_workspace" {
-  name = local.service_name
-
-  dynamic "auth" {
-    for_each = local.docker_service_pull_auth_map
-    content {
-      server_address = auth.value.server_address
-      username       = auth.value.username
-      password       = auth.value.password
-    }
-  }
+  name = "mcp-google-workspace"
 
   task_spec {
     dynamic "placement" {
@@ -32,19 +23,24 @@ resource "docker_service" "mcp_google_workspace" {
         }
       }
     }
+
     networks_advanced {
       name    = docker_network.mcp_google_workspace.id
-      aliases = [local.service_name]
+      aliases = ["mcp-google-workspace"]
     }
+
     container_spec {
-      image    = var.image_reference
-      env      = local.effective_env
-      user     = "1000:1000"
+      image = "ghcr.io/nodadyoushutup/mcp-google-workspace:0.0.1"
+      env   = var.env
+      user  = "1000:1000"
+
       cap_drop = ["ALL"]
+
       dns_config {
         nameservers = var.dns_nameservers
       }
     }
+
     restart_policy {
       condition    = "on-failure"
       delay        = "10s"
@@ -52,18 +48,21 @@ resource "docker_service" "mcp_google_workspace" {
       window       = "2m"
     }
   }
+
   mode {
     replicated {
       replicas = var.replicas
     }
   }
+
   update_config {
     order = "stop-first"
   }
+
   endpoint_spec {
     ports {
       target_port    = 8086
-      published_port = var.published_port
+      published_port = 18209
       protocol       = "tcp"
       publish_mode   = "ingress"
     }

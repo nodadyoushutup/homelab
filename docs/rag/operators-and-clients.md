@@ -2,7 +2,7 @@
 
 ## Docker Swarm (Terraform)
 
-**`chromadb`**, **`rag-engine`**, and **`mcp-rag`** are **Swarm services** for the shared stack. The repo’s **`docker/docker-compose.yml`** can run **LangGraph dev**, **Agent Chat**, and optionally **local `rag-engine-dev` + `mcp-rag-dev`** (bind-mounted code); **Chroma is not duplicated in Compose** — dev engine containers use **`RAG_CHROMA_HOST` / `RAG_CHROMA_PORT`** in **`.config/docker/rag.env`** to reach Swarm Chroma on the LAN.
+**`chromadb`**, **`rag-engine`**, and **`mcp-rag`** are **Swarm services** for the shared stack. The repo’s **`docker/docker-compose.yml`** can run **LangGraph dev**, **Agent Chat**, and optionally **local `rag-engine-dev` + `mcp-rag-dev`** (bind-mounted code); **Chroma is not duplicated in Compose** — dev engine containers use **`RAG_CHROMA_HOSTNAME`** (e.g. **`192.168.1.120:8000`**) to reach Swarm Chroma on the LAN.
 
 | Stack | Terraform | Wrapper script |
 | --- | --- | --- |
@@ -10,11 +10,11 @@
 | RAG engine | **`terraform/swarm/rag-engine/app`** | **`pipelines/terraform/swarm/rag-engine/app.sh`** |
 | MCP RAG | **`terraform/swarm/mcp-rag/app`** | **`pipelines/terraform/swarm/mcp-rag/app.sh`** |
 
-Tfvars typically live under **`<repo>/.config/terraform/swarm/<stack>/app.tfvars`** (same pattern as other Swarm apps). For **`rag-engine`**, set **`image_reference`**, **`published_port`**, **`endpoint_host`**, **`env_file_path`**, **`env`** (secrets such as **`RAG_ENGINE_API_KEY`**), and **`placement`** only; Chroma, embedding, and ingest tunables belong in **`.config/docker/rag.env`** (merged via **`env_file_path`**), not duplicate Terraform variables.
+Tfvars typically live under **`<repo>/.config/terraform/swarm/<stack>/app.tfvars`** (same pattern as other Swarm apps). For **`rag-engine`**, set **`env`** (all container settings and secrets, including Chroma and embedding keys) and **`placement`** only; image and ingress port **9015** are fixed in **`terraform/swarm/rag-engine/app/main.tf`**. Bump the image tag in **`main.tf`** after publish, then re-apply.
 
-**Published ports (Terraform defaults on the Swarm host):** ChromaDB HTTP **8000** (fixed in **`terraform/swarm/chromadb/app/main.tf`**), **`rag-engine` → 9015**, **`mcp-rag` → 9016**. Adjust in tfvars if your host uses different ingress ports for rag/mcp stacks.
+**Published ports (fixed in Terraform `main.tf` on the Swarm host):** ChromaDB HTTP **8000**, **`rag-engine` → 9015**, **`mcp-rag` → 9016** (adjust **`mcp-rag`** in tfvars if needed).
 
-**Images:** publish with **`.github/workflows/docker_build_push.yml`** (`build_target` **`rag-engine`** or **`mcp-rag`**; **`target_registry`** **`github`** or **`both`** for GHCR under your GitHub username; **`arm64`** when possible). Point **`image_reference`** in tfvars at the tag you pushed (for example **`ghcr.io/nodadyoushutup/rag-engine:latest`**). Private registry pulls: set **`registry_auths`** under **`swarm_docker_provider_config`** in **`<repo>/.config/terraform/providers/docker_arm64.tfvars`** (or **`docker_amd64.tfvars`** on amd64 sites; GHCR + Harbor supported together).
+**Images:** publish with **`.github/workflows/docker_build_push.yml`** (`build_target` **`rag-engine`** or **`mcp-rag`**; **`target_registry`** **`github`** or **`both`** for GHCR under your GitHub username; **`arm64`** when possible). **`rag-engine`** image tag is pinned in **`terraform/swarm/rag-engine/app/main.tf`** (Harbor). Private registry pulls: set **`registry_auths`** under **`swarm_docker_provider_config`** in **`<repo>/.config/terraform/providers/docker_arm64.tfvars`**.
 
 Operational note: `tree-sitter-dockerfile` is not installed as a runtime dependency because it does not publish usable wheels on **linux/arm64**; Dockerfile ingestion falls back to other chunking strategies when the grammar is unavailable.
 
@@ -22,7 +22,7 @@ DNS/TLS parity with **`chromadb`**: **`terraform/remote/cloudflare/config`** (`<
 
 ## Docker Compose in this repo
 
-**`docker/docker-compose.yml`** (`homelab-dev`) runs **LangGraph dev**, **Postgres**, **LangChain Agent Chat**, and **local `rag-engine-dev` + `mcp-rag-dev`** for fast iteration on engine/MCP code without Swarm image deploys. **Chroma remains the Swarm service**. For **`rag-engine-dev`**, Compose **overrides** **`RAG_CHROMA_HOST` / `RAG_CHROMA_PORT`** to **`192.168.1.120` / `8000`** by default (same assumptions as **`terraform/swarm/chromadb`**), so **`.config/docker/rag.env`** may still say **`chromadb`** for Swarm without breaking local dev. Override with **`HOMELAB_DEV_CHROMA_HOST`** / **`HOMELAB_DEV_CHROMA_PORT`** in the shell when your LAN differs. **Postgres** and **LangGraph API state** (`.langgraph_api` checkpoints) use **Docker named volumes** so the containers can write reliably (bind mounts under the repo often hit **NFS `root_squash`** / uid mismatches). **LangChain Agent Chat** in Compose is the **baked `runner` image** (no source bind mount); run **`docker compose build langchain-agent-chat-dev`** after UI changes, then **`up`**.
+**`docker/docker-compose.yml`** (`homelab-dev`) runs **LangGraph dev**, **Postgres**, **LangChain Agent Chat**, and **local `rag-engine-dev` + `mcp-rag-dev`** for fast iteration on engine/MCP code without Swarm image deploys. **Chroma remains the Swarm service**. For **`rag-engine-dev`**, Compose **overrides** **`RAG_CHROMA_HOSTNAME`** to **`192.168.1.120:8000`** by default (same assumptions as **`terraform/swarm/chromadb`**), so **`.config/docker/rag.env`** may still say **`chromadb:8000`** for Swarm without breaking local dev. Override with **`HOMELAB_DEV_CHROMA_HOSTNAME`** in the shell when your LAN differs. **Postgres** and **LangGraph API state** (`.langgraph_api` checkpoints) use **Docker named volumes** so the containers can write reliably (bind mounts under the repo often hit **NFS `root_squash`** / uid mismatches). **LangChain Agent Chat** in Compose is the **baked `runner` image** (no source bind mount); run **`docker compose build langchain-agent-chat-dev`** after UI changes, then **`up`**.
 
 | Compose service | Role | Host ports (defaults) |
 | --- | --- | --- |
@@ -46,9 +46,9 @@ Swarm/Terraform RAG (including **`chromadb-data`** on Swarm) remains the persist
 
 ## Environment variables
 
-Use **`.config/docker/rag.env`** (and **`.config/docker/rag.env.example`**) for the canonical key list. **Git hooks**, **`scripts/terraform/load_root_env.sh`** (Swarm/terraform pipelines), and other **local scripts** read that file. **Swarm** services take the same variables via Terraform (`env_file_path` / `env` on the **`rag-engine`** and **`mcp-rag`** modules — see their **`main.tf`**).
+Use **`.config/docker/rag.env`** (and **`.config/docker/rag.env.example`**) for the canonical key list. **Git hooks**, **`scripts/terraform/load_root_env.sh`** (Swarm/terraform pipelines), and other **local scripts** read that file. **Swarm `rag-engine`** takes container variables from **`env`** in **`.config/terraform/swarm/rag-engine/app.tfvars`**. **`mcp-rag`** may still use **`env_file_path`** until aligned — see its **`main.tf`**.
 
-**Engine / Chroma / embed:** `RAG_CHROMA_HOST`, `RAG_CHROMA_PORT`, `RAG_CHROMA_COLLECTION`, `RAG_EMBEDDING_PROVIDER`, `RAG_EMBEDDING_MODEL`, `RAG_ENGINE_API_KEY`, memory collection names, memory TTL and scoring tunables (`RAG_MEMORY_*` — see `.config/docker/rag.env.example` and the engine’s `server.py` / `memory.py`).
+**Engine / Chroma / embed:** `RAG_CHROMA_HOSTNAME` (default `chromadb:8000`; host-only uses port **8000**), `RAG_CHROMA_COLLECTION`, `RAG_EMBEDDING_PROVIDER`, `RAG_EMBEDDING_MODEL`, `RAG_ENGINE_API_KEY`, memory collection names, memory TTL and scoring tunables (`RAG_MEMORY_*` — see `.config/docker/rag.env.example`, `chroma_config.py`, `server.py` / `memory.py`).
 
 **OpenAI** is the default provider: set `OPENAI_API_KEY` and optionally `RAG_EMBEDDING_MODEL` (default `text-embedding-3-small`) plus `RAG_OPENAI_EMBEDDING_DIMENSIONS`. For **Google**, set `RAG_EMBEDDING_PROVIDER=google` and `GOOGLE_API_KEY`. For **`anthropic`** (Voyage-backed; see `docs/rag/embeddings-and-storage.md`), set `RAG_EMBEDDING_PROVIDER=anthropic`, `VOYAGE_API_KEY`, and optionally `RAG_EMBEDDING_MODEL` (default `voyage-3.5`) plus `RAG_ANTHROPIC_EMBEDDING_DIMENSIONS`. Use a separate Chroma collection or rebuild when changing provider/model/dimensions.
 

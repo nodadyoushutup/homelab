@@ -25,6 +25,7 @@ DEFAULT_RAG_EXCLUDE_FILE_SUFFIXES = (
 
 
 def load_exclude_segments() -> frozenset[str]:
+    """Excluded path segment names; override with RAG_EXCLUDE_PATH_SEGMENTS when needed."""
     raw = (os.getenv("RAG_EXCLUDE_PATH_SEGMENTS") or DEFAULT_RAG_EXCLUDE_PATH_SEGMENTS).strip()
     parts = [x.strip() for x in raw.split(",") if x.strip()]
     return frozenset(parts)
@@ -43,6 +44,7 @@ def path_has_excluded_segment(rel_norm: str, segments: frozenset[str] | None = N
 
 
 def load_exclude_suffixes() -> tuple[str, ...]:
+    """Excluded file suffixes; override with RAG_EXCLUDE_FILE_SUFFIXES when needed."""
     raw = (os.getenv("RAG_EXCLUDE_FILE_SUFFIXES") or DEFAULT_RAG_EXCLUDE_FILE_SUFFIXES).strip()
     out: list[str] = []
     for p in raw.split(","):

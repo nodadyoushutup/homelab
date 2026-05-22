@@ -52,9 +52,9 @@ Agents and humans must treat “support both for now” as **out of scope** unle
   (bind-mounted source, host ports **9015** / **9016**) for fast RAG iteration;
   **`langgraph-dev`** sets **`HOMELAB_MCP_RAG_URL`** so in-container agents use
   that MCP. **Chroma stays on Swarm**; **`rag-engine-dev`** defaults Chroma to
-  **`192.168.1.120:8000`** via Compose (overriding **`chromadb`** in
-  **`rag.env`**). Adjust with **`HOMELAB_DEV_CHROMA_HOST`** /
-  **`HOMELAB_DEV_CHROMA_PORT`** if needed. Swarm RAG deploys are unchanged. The Kubernetes pair is
+  **`192.168.1.120:8000`** via Compose (`RAG_CHROMA_HOSTNAME`, overriding
+  **`chromadb:8000`** in **`rag.env`**). Adjust with **`HOMELAB_DEV_CHROMA_HOSTNAME`**
+  if needed. Swarm RAG deploys are unchanged. The Kubernetes pair is
   production only: `kubernetes/langgraph` and `kubernetes/langchain-agent-chat`.
   Do not point Docker dev chat at Kubernetes/prod LangGraph, and do not point
   Kubernetes/prod chat at Docker dev LangGraph.

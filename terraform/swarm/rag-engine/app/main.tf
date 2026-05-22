@@ -10,16 +10,6 @@ resource "docker_network" "rag_engine" {
 resource "docker_service" "rag_engine" {
   name = "rag-engine"
 
-  dynamic "auth" {
-    for_each = local.docker_service_pull_auth_map
-
-    content {
-      server_address = auth.value.server_address
-      username       = auth.value.username
-      password       = auth.value.password
-    }
-  }
-
   task_spec {
     dynamic "placement" {
       for_each = var.placement == null ? [] : [var.placement]
@@ -49,36 +39,39 @@ resource "docker_service" "rag_engine" {
     }
 
     container_spec {
-      image = var.image_reference
-      env   = local.effective_env
+      image = "harbor.nodadyoushutup.com/homelab/rag-engine:0.0.7"
+      env   = var.env
 
       dns_config {
         nameservers = var.dns_nameservers
       }
 
       dynamic "mounts" {
-        for_each = local.swarm_nfs_code_mounts
+        for_each = (
+          trimspace(var.swarm_nfs_code_device) != "" &&
+          trimspace(var.swarm_nfs_config_device) != "" &&
+          trimspace(var.swarm_nfs_volume_type) != "" &&
+          trimspace(var.swarm_nfs_volume_o_rw) != "" &&
+          trimspace(var.swarm_nfs_volume_o_ro) != ""
+        ) ? [1] : []
 
         content {
-          type      = mounts.value.type
-          source    = mounts.value.source
-          target    = mounts.value.target
-          read_only = mounts.value.read_only
+          type      = "volume"
+          source    = "rag-engine-mnt-eapp-code"
+          target    = trimspace(element(split(":", trimspace(var.swarm_nfs_code_device)), length(split(":", trimspace(var.swarm_nfs_code_device))) - 1))
+          read_only = true
 
           volume_options {
-            driver_name    = mounts.value.volume_options.driver_name
-            driver_options = mounts.value.volume_options.driver_options
-            no_copy        = mounts.value.volume_options.no_copy
+            driver_name = "local"
+            driver_options = {
+              type   = trimspace(var.swarm_nfs_volume_type)
+              o      = trimspace(var.swarm_nfs_volume_o_ro)
+              device = trimspace(var.swarm_nfs_code_device)
+            }
+            no_copy = false
           }
         }
       }
-    }
-
-    restart_policy {
-      condition    = "on-failure"
-      delay        = "10s"
-      max_attempts = 3
-      window       = "2m"
     }
   }
 
@@ -95,7 +88,7 @@ resource "docker_service" "rag_engine" {
   endpoint_spec {
     ports {
       target_port    = 8080
-      published_port = var.published_port
+      published_port = 9015
       protocol       = "tcp"
       publish_mode   = "ingress"
     }

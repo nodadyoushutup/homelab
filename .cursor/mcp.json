@@ -11,6 +11,9 @@
     },
     "mcp_github": {
       "url": "https://mcp.github.nodadyoushutup.com/mcp"
+    },
+    "mcp_google_workspace": {
+      "url": "https://mcp.google-workspace.nodadyoushutup.com/mcp"
     }
   }
 }

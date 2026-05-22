@@ -1,36 +1,8 @@
-variable "endpoint_host" {
-  description = "Host name used for external URL reporting."
-  type        = string
-  default     = "192.168.1.120"
-}
-
-
 variable "env" {
   description = "Container environment variables."
   type        = map(string)
   default     = {}
   sensitive   = true
-}
-
-
-variable "env_file_path" {
-  description = "Optional dotenv file path for container secrets and settings."
-  type        = string
-  default     = ""
-}
-
-
-variable "image_reference" {
-  description = "Container image reference to deploy."
-  type        = string
-  default     = "harbor.nodadyoushutup.com/homelab/rag-engine:0.0.7"
-}
-
-
-variable "published_port" {
-  description = "Swarm ingress published port."
-  type        = number
-  default     = 9015
 }
 
 

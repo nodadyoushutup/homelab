@@ -7,7 +7,7 @@ Run inside the rag-engine image (same env as the HTTP server), e.g.:
   ./scripts/rag/clear.sh --dry-run          # show what would be deleted, do nothing
   ./scripts/rag/clear.sh --yes              # skip the interactive confirm
 
-Targets the Chroma server defined by ``RAG_CHROMA_HOST`` / ``RAG_CHROMA_PORT``
+Targets the Chroma server defined by ``RAG_CHROMA_HOSTNAME`` (default ``chromadb:8000``)
 and the collection named ``RAG_CHROMA_COLLECTION`` (default ``homelab``).
 """
 from __future__ import annotations
@@ -32,9 +32,9 @@ def _configure_logging() -> None:
 
 
 def _client() -> chromadb.api.client.Client:
-    host = (os.getenv("RAG_CHROMA_HOST") or "chromadb").strip()
-    port = int((os.getenv("RAG_CHROMA_PORT") or "8000").strip())
-    return chromadb.HttpClient(host=host, port=port)
+    from chroma_config import chroma_http_client
+
+    return chroma_http_client()
 
 
 def _collection_name() -> str:
@@ -57,11 +57,11 @@ def _collection_count(client: chromadb.api.client.Client, name: str) -> int | No
         return None
 
 
-def _print_plan(targets: list[tuple[str, int | None]], host: str, port: int, all_mode: bool) -> None:
+def _print_plan(targets: list[tuple[str, int | None]], chroma_target: str, all_mode: bool) -> None:
     out = sys.stderr
     print("", file=out)
     label = "ALL collections" if all_mode else "collection"
-    print(f"RAG clear — Chroma at http://{host}:{port} ({label}):", file=out)
+    print(f"RAG clear — Chroma at http://{chroma_target} ({label}):", file=out)
     if not targets:
         print("  (no collections found)", file=out)
     else:
@@ -134,8 +134,10 @@ def main(argv: list[str] | None = None) -> int:
     _configure_logging()
     log = logging.getLogger("ingest.clear")
 
-    host = (os.getenv("RAG_CHROMA_HOST") or "chromadb").strip()
-    port = int((os.getenv("RAG_CHROMA_PORT") or "8000").strip())
+    from chroma_config import chroma_hostname_display, parse_chroma_hostname
+
+    target = chroma_hostname_display()
+    host, port = parse_chroma_hostname()
     client = _client()
 
     if args.all_collections:
@@ -145,10 +147,10 @@ def main(argv: list[str] | None = None) -> int:
         existing = set(_list_collection_names(client))
         names = [configured] if configured in existing else []
         if not names:
-            log.info("collection %r not present on %s:%s — nothing to delete", configured, host, port)
+            log.info("collection %r not present on %s — nothing to delete", configured, target)
 
     targets = [(n, _collection_count(client, n)) for n in names]
-    _print_plan(targets, host, port, args.all_collections)
+    _print_plan(targets, target, args.all_collections)
 
     if args.dry_run:
         if args.json_summary:
@@ -173,6 +175,7 @@ def main(argv: list[str] | None = None) -> int:
 
     result = _delete_collections(client, names)
     summary = {
+        "chroma_hostname": target,
         "host": host,
         "port": port,
         "deleted": result["deleted"],

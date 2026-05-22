@@ -66,7 +66,7 @@ Use a **Google Cloud project** you control (personal or Workspace org).
 
 ## Deploy order
 
-1. Build and push **`mcp-google-workspace`** image (new tag; update `image_reference` in tfvars to match).
+1. Build and push **`ghcr.io/nodadyoushutup/mcp-google-workspace:0.0.1`** (tag hardcoded in **`terraform/swarm/mcp-google-workspace/app/main.tf`**; bump there after publish).
 2. Add Cloudflare `A` record + NPM proxy host (`forward_port` **18209**) per [edge-dns-and-nginx-proxy.md](../workflows/edge-dns-and-nginx-proxy.md).
 3. Set **`app.tfvars`** `env` with OAuth client ID, secret, and `WORKSPACE_EXTERNAL_URL`.
 4. Run Terraform app pipeline for **`mcp-google-workspace`**.
