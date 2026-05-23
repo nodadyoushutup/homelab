@@ -29,13 +29,13 @@ top-level directory.
 | `terraform/` | IaC roots: Swarm services, cluster provisioning helpers, remote DNS (Cloudflare), FortiGate config slices, and shared **`terraform/modules/`** helpers. |
 | `docker/` | Compose-based local development; not the production Swarm definition. |
 | `docs/` | Human source of truth: workflows, architecture (this folder), RAG notes, subagent overlays, resources shelf. |
-| `scripts/` | Shell and Python helpers grouped by domain (`swarm/`, `terraform/`, `agents/`, `vault/`, etc.). |
+| `scripts/` | Shell and Python helpers grouped by domain (`swarm/`, `terraform/`, `agents/`, `vault/`, `rag/`, etc.). |
 | `packer/` | Machine and cloud image definitions (for example Ubuntu base images) used upstream of Swarm or cluster nodes. |
 | `pipelines/` | Jenkins (or related) pipeline definitions organized by technology (`applications/`, `packer/`, `terraform/`). |
 | `data/` | Local or exported operational data (screenshots, exports, dev artifacts). Treat as **not** authoritative for infra state; Git usually ignores most of it. |
 | `.github/` | GitHub Actions workflows (image builds, Packer, validation). |
 | `.config/` | Site-local tfvars, backends, keys, and dotenv (see `.config/docker/README.md`); never commit real secrets or live tfvars. |
-| `.cursor/`, `.vscode/`, `.githooks/` | Editor and hook configuration for contributors. |
+| `.cursor/`, `.vscode/`, `.githooks/` | Editor config and thin git hook stubs (RAG embed logic in `scripts/rag/`). |
 
 ## Swarm versus Kubernetes
 
