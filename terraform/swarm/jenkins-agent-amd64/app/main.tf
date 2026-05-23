@@ -8,17 +8,13 @@ resource "docker_volume" "agent_home" {
   driver = "local"
 }
 
-resource "docker_volume" "agent_nfs" {
-  for_each = local.jenkins_agent_nfs_volume_keys
+resource "docker_volume" "agent_repo" {
+  count = local.repo_mount_enabled ? 1 : 0
 
-  name = "${var.service_name_prefix}-nfs-${each.key}"
+  name = "${var.service_name_prefix}-nfs-homelab"
 
-  driver = "local"
-  driver_opts = {
-    type   = trimspace(var.swarm_nfs_volume_type)
-    o      = trimspace(var.swarm_nfs_volume_o_rw)
-    device = local.jenkins_agent_nfs_devices[each.key]
-  }
+  driver      = "local"
+  driver_opts = local.nfs_driver_opts
 }
 
 resource "docker_volume" "extra_mounts" {
@@ -73,12 +69,12 @@ resource "docker_container" "jenkins_agent" {
   }
 
   dynamic "mounts" {
-    for_each = local.jenkins_agent_nfs_volume_keys
+    for_each = local.repo_mount_enabled ? [1] : []
 
     content {
       type   = "volume"
-      source = docker_volume.agent_nfs[mounts.key].name
-      target = lookup(local.jenkins_agent_nfs_container_targets, mounts.key)
+      source = docker_volume.agent_repo[0].name
+      target = local.repo_mount_target
     }
   }
 

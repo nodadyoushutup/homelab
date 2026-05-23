@@ -33,15 +33,8 @@ variable "default_remote_fs" {
 }
 
 
-variable "enable_shared_code_mount" {
-  description = "Whether to mount the shared code NFS export (swarm_nfs_code_device from nfs.tfvars) into each agent container."
-  type        = bool
-  default     = true
-}
-
-
-variable "enable_shared_tfvars_mount" {
-  description = "Whether to mount the shared tfvars/configuration root into each agent container."
+variable "enable_shared_repo_mount" {
+  description = "Whether to mount the homelab repo NFS export (nfs.device from nfs.tfvars) into each agent container."
   type        = bool
   default     = true
 }
@@ -83,7 +76,7 @@ variable "kvm_supplementary_groups" {
 
 
 variable "mounts" {
-  description = "Optional extra mount definitions appended after the default shared tfvars/configuration mount."
+  description = "Optional extra mount definitions appended after the default homelab repo mount."
   type = list(object({
     name        = string
     target      = string
@@ -102,10 +95,10 @@ variable "service_name_prefix" {
 }
 
 
-variable "shared_tfvars_mount_target" {
-  description = "Container path where the shared tfvars/configuration root is mounted."
+variable "shared_repo_mount_target" {
+  description = "Container path where the homelab repo NFS export is mounted."
   type        = string
-  default     = "/mnt/eapp/code/homelab/.config"
+  default     = "/mnt/eapp/code/homelab"
 }
 
 
@@ -131,31 +124,16 @@ variable "dns_nameservers" {
 }
 
 
-variable "swarm_nfs_code_device" {
-  description = "NFS export for homelab code (from nfs.tfvars)."
-  type        = string
-  sensitive   = true
-}
-
-
-variable "swarm_nfs_config_device" {
-  description = "NFS export for homelab config (from nfs.tfvars)."
-  type        = string
-  sensitive   = true
-}
-
-
-variable "swarm_nfs_volume_type" {
-  description = "Docker volume driver type for NFS mounts (from nfs.tfvars)."
-  type        = string
-  sensitive   = true
-}
-
-
-variable "swarm_nfs_volume_o_rw" {
-  description = "Read-write NFS volume mount options (from nfs.tfvars)."
-  type        = string
-  sensitive   = true
+variable "nfs" {
+  description = "Shared Swarm NFS homelab repo export and volume driver_opts (providers/nfs.tfvars)."
+  type = object({
+    device = string
+    volume = object({
+      type = string
+      opts = string
+    })
+  })
+  sensitive = true
 }
 
 

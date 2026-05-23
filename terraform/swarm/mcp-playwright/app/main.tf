@@ -1,10 +1,10 @@
 resource "docker_network" "mcp_playwright" {
-  name   = local.service_name
+  name   = "mcp-playwright"
   driver = "overlay"
 }
 
 resource "docker_service" "mcp_playwright" {
-  name = local.service_name
+  name = "mcp-playwright"
 
   task_spec {
     dynamic "placement" {
@@ -26,45 +26,25 @@ resource "docker_service" "mcp_playwright" {
 
     networks_advanced {
       name    = docker_network.mcp_playwright.id
-      aliases = [local.service_name]
+      aliases = ["mcp-playwright"]
     }
 
     container_spec {
-      image = var.image_reference
-      dir   = var.screenshot_dir
+      image = "mcr.microsoft.com/playwright/mcp:latest"
+      env   = var.env
 
       args = [
-        "--port",
-        tostring(local.internal_port),
-        "--host",
-        "0.0.0.0",
-        "--allowed-hosts",
-        join(",", var.allowed_hosts),
-        "--output-dir",
-        var.output_dir,
-        "--config",
-        var.config_file,
+        "--headless",
+        "--browser", "chromium",
+        "--no-sandbox",
+        "--port", "8931",
+        "--host", "0.0.0.0",
+        "--allowed-hosts", "*",
+        "--output-dir", "/tmp/playwright",
       ]
 
       dns_config {
         nameservers = var.dns_nameservers
-      }
-
-      dynamic "mounts" {
-        for_each = local.swarm_nfs_code_mounts
-
-        content {
-          type      = mounts.value.type
-          source    = mounts.value.source
-          target    = mounts.value.target
-          read_only = mounts.value.read_only
-
-          volume_options {
-            driver_name    = mounts.value.volume_options.driver_name
-            driver_options = mounts.value.volume_options.driver_options
-            no_copy        = mounts.value.volume_options.no_copy
-          }
-        }
       }
     }
   }
@@ -81,8 +61,8 @@ resource "docker_service" "mcp_playwright" {
 
   endpoint_spec {
     ports {
-      target_port    = local.internal_port
-      published_port = var.published_port
+      target_port    = 8931
+      published_port = 18211
       protocol       = "tcp"
       publish_mode   = "ingress"
     }

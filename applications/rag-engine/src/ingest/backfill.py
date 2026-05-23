@@ -27,7 +27,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from embeddings import build_embedding_client
-from ingest.path_rules import load_exclude_segments
+from ingest.path_rules import load_disallowed_segments
 from ingest.pipeline import (
     _allowed_prefixes,
     _collection,
@@ -56,16 +56,16 @@ def _print_prune_plan() -> None:
 
 def _print_index_plan(paths_count: int) -> None:
     roots = _allowed_prefixes()
-    segs = sorted(load_exclude_segments())
+    segs = sorted(load_disallowed_segments())
     max_b = os.getenv("RAG_BACKFILL_MAX_FILE_BYTES", "5242880")
     out = sys.stderr
     print("", file=out)
-    print("RAG backfill — paths to index (RAG_ALLOWED_PATH_PREFIXES):", file=out)
+    print("RAG backfill — paths to index (RAG_PATHS_ALLOWED):", file=out)
     for r in roots:
         print(f"  • {r}", file=out)
     print("", file=out)
     print(
-        f"Excluded directory segments ({len(segs)}): {', '.join(segs[:24])}"
+        f"Disallowed path segments ({len(segs)}): {', '.join(segs[:24])}"
         + (f", … (+{len(segs) - 24} more)" if len(segs) > 24 else ""),
         file=out,
     )
@@ -246,7 +246,7 @@ def run_backfill(
         return (0, {"dry_run": True, "files_matched": len(paths)})
 
     if not paths:
-        log.warning("backfill: no paths matched; check RAG_ALLOWED_PATH_PREFIXES and mounts")
+        log.warning("backfill: no paths matched; check RAG_PATHS_ALLOWED and mounts")
         if not opts.prune_orphans:
             return (0, {"files_seen": 0, "note": "no_paths_matched"})
         log.info("backfill: continuing with --prune-orphans only (no files to index)")

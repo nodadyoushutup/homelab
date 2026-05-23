@@ -11,19 +11,27 @@ locals {
     for mount in var.mounts : mount.name => mount
   }
 
-  swarm_nfs_config_ready = (
-    trimspace(var.swarm_nfs_config_device) != "" &&
-    trimspace(var.swarm_nfs_volume_type) != "" &&
-    trimspace(var.swarm_nfs_volume_o_rw) != ""
+  nfs_device       = trimspace(var.nfs.device)
+  nfs_volume_type  = trimspace(var.nfs.volume.type)
+  nfs_volume_opts  = trimspace(var.nfs.volume.opts)
+  nfs_mount_target = local.nfs_device != "" ? trimspace(element(split(":", local.nfs_device), length(split(":", local.nfs_device)) - 1)) : ""
+  nfs_driver_opts = merge({
+    type = local.nfs_volume_type
+    o    = local.nfs_volume_opts
+  }, local.nfs_device != "" ? { device = local.nfs_device } : {})
+  nfs_ready = nonsensitive(
+    local.nfs_device != "" &&
+    local.nfs_volume_type != "" &&
+    local.nfs_volume_opts != ""
   )
-  shared_config_nfs_target = local.swarm_nfs_config_ready ? trimspace(element(split(":", trimspace(var.swarm_nfs_config_device)), length(split(":", trimspace(var.swarm_nfs_config_device))) - 1)) : var.shared_tfvars_mount_target
-  shared_tfvars_nfs_driver_opts_default = local.swarm_nfs_config_ready ? {
-    type   = trimspace(var.swarm_nfs_volume_type)
-    o      = trimspace(var.swarm_nfs_volume_o_rw)
-    device = trimspace(var.swarm_nfs_config_device)
-  } : null
-  shared_tfvars_volume_driver_opts_effective = coalesce(var.shared_tfvars_volume_driver_opts, local.shared_tfvars_nfs_driver_opts_default)
-  enable_shared_tfvars_mount_effective       = var.enable_shared_tfvars_mount && local.shared_tfvars_volume_driver_opts_effective != null
+
+  repo_mount_enabled = local.nfs_ready && var.enable_shared_repo_mount
+  repo_mount_target  = local.repo_mount_enabled ? local.nfs_mount_target : var.shared_repo_mount_target
+  shared_repo_volume_driver_opts_effective = coalesce(
+    var.shared_tfvars_volume_driver_opts,
+    local.repo_mount_enabled ? local.nfs_driver_opts : null
+  )
+  enable_shared_repo_mount_effective = var.enable_shared_repo_mount && local.shared_repo_volume_driver_opts_effective != null
 
   pull_ref                      = var.controller_image
   pull_at_stripped              = split("@", local.pull_ref)[0]

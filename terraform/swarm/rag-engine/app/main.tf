@@ -46,30 +46,15 @@ resource "docker_service" "rag_engine" {
         nameservers = var.dns_nameservers
       }
 
-      dynamic "mounts" {
-        for_each = (
-          trimspace(var.swarm_nfs_code_device) != "" &&
-          trimspace(var.swarm_nfs_config_device) != "" &&
-          trimspace(var.swarm_nfs_volume_type) != "" &&
-          trimspace(var.swarm_nfs_volume_o_rw) != "" &&
-          trimspace(var.swarm_nfs_volume_o_ro) != ""
-        ) ? [1] : []
+      mounts {
+        type   = "volume"
+        source = "rag-engine-nfs"
+        target = var.nfs.target
 
-        content {
-          type      = "volume"
-          source    = "rag-engine-mnt-eapp-code"
-          target    = trimspace(element(split(":", trimspace(var.swarm_nfs_code_device)), length(split(":", trimspace(var.swarm_nfs_code_device))) - 1))
-          read_only = true
-
-          volume_options {
-            driver_name = "local"
-            driver_options = {
-              type   = trimspace(var.swarm_nfs_volume_type)
-              o      = trimspace(var.swarm_nfs_volume_o_ro)
-              device = trimspace(var.swarm_nfs_code_device)
-            }
-            no_copy = false
-          }
+        volume_options {
+          driver_name    = "local"
+          driver_options = var.nfs.driver_options
+          no_copy        = false
         }
       }
     }

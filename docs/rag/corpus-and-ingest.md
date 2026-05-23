@@ -10,10 +10,16 @@ Repo workflow docs, code under allowed prefixes, and other text sources can also
 
 Ingest eligibility is driven by **repo-relative path prefixes**:
 
-- **`RAG_ALLOWED_PATH_PREFIXES`** — engine ingest allowlist (see `applications/rag-engine/src/ingest/pipeline.py`, `_allowed_prefixes`; defaults include **`docs/`** among others).
+- **`RAG_PATHS_ALLOWED`** — engine ingest allowlist (see `applications/rag-engine/src/ingest/pipeline.py`, `_allowed_prefixes`). Set in Swarm **`env`** / **`.config/docker/rag.env`**; no in-app default.
 - **`RAG_HOOK_INCLUDE_PREFIXES`** — git hook filtering should stay aligned (see `.githooks/rag_hook_common.py`).
 
 When you change either, update **`.config/docker/rag.env`** and **`.config/docker/rag.env.example`** together per repository rules.
+
+## Disallowed path segments
+
+Even when a file is under **`RAG_PATHS_ALLOWED`**, ingest skips it if any **directory component** of the repo-relative path matches **`RAG_PATHS_DISALLOWED`** (comma-separated segment names, case-insensitive). Examples: `applications/foo/node_modules/bar.py` is skipped because `node_modules` appears in the path; `applications/foo/.venv/lib/x.py` is skipped for `.venv`.
+
+Set the list in Swarm **`env`** / **`.config/docker/rag.env`**. When unset locally, the engine falls back to built-in defaults (virtualenvs, package caches, build output, `.terraform`, etc.) — see **`applications/rag-engine/src/ingest/path_rules.py`**.
 
 ## What is not auto-ingested
 
@@ -21,7 +27,7 @@ When you change either, update **`.config/docker/rag.env`** and **`.config/docke
 
 ## Excludes and path rules
 
-Binary glob rules, sensitive paths, and other skips are centralized in engine path logic (`applications/rag-engine/src/ingest/path_rules.py`, mirrored in `.githooks/rag_path_excludes.py`). Defaults apply when `RAG_EXCLUDE_PATH_SEGMENTS` / `RAG_EXCLUDE_FILE_SUFFIXES` are unset; set those env vars only to override. If something never appears in the index, check allowlist **and** excludes before debugging embeddings.
+Binary glob rules, sensitive paths, and other skips are centralized in engine path logic (`applications/rag-engine/src/ingest/path_rules.py`, mirrored in `.githooks/rag_path_excludes.py`). Set **`RAG_EXTENSIONS_IGNORE`** (comma-separated file suffixes) in Swarm **`env`** / **`.config/docker/rag.env`** for extension skips; there is no in-app default list. Set **`RAG_PATHS_DISALLOWED`** (comma-separated directory segment names such as `node_modules`, `.venv`, `__pycache__`) to skip paths even when they sit under **`RAG_PATHS_ALLOWED`**; when unset, the engine uses built-in defaults (same list in **`app.tfvars`**). If something never appears in the index, check allowlist **and** disallowed segments before debugging embeddings.
 
 ## Chunking strategies
 

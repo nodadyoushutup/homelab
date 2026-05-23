@@ -1,19 +1,9 @@
 data "docker_network" "rag_engine" {
-  name = var.rag_engine_network_name
+  name = "rag-engine"
 }
 
 resource "docker_service" "mcp_rag" {
-  name = local.service_name
-
-  dynamic "auth" {
-    for_each = local.docker_service_pull_auth_map
-
-    content {
-      server_address = auth.value.server_address
-      username       = auth.value.username
-      password       = auth.value.password
-    }
-  }
+  name = "mcp-rag"
 
   task_spec {
     dynamic "placement" {
@@ -35,23 +25,16 @@ resource "docker_service" "mcp_rag" {
 
     networks_advanced {
       name    = data.docker_network.rag_engine.id
-      aliases = [local.service_name]
+      aliases = ["mcp-rag"]
     }
 
     container_spec {
-      image = var.image_reference
-      env   = local.effective_env
+      image = "ghcr.io/nodadyoushutup/mcp-rag:0.0.3"
+      env   = var.env
 
       dns_config {
         nameservers = var.dns_nameservers
       }
-    }
-
-    restart_policy {
-      condition    = "on-failure"
-      delay        = "10s"
-      max_attempts = 3
-      window       = "2m"
     }
   }
 
@@ -67,8 +50,8 @@ resource "docker_service" "mcp_rag" {
 
   endpoint_spec {
     ports {
-      target_port    = local.internal_port
-      published_port = var.published_port
+      target_port    = 8080
+      published_port = 9016
       protocol       = "tcp"
       publish_mode   = "ingress"
     }

@@ -69,16 +69,16 @@ resource "docker_service" "jenkins_controller" {
       }
 
       dynamic "mounts" {
-        for_each = local.enable_shared_tfvars_mount_effective ? [var.shared_tfvars_volume_name] : []
+        for_each = local.enable_shared_repo_mount_effective ? [var.shared_tfvars_volume_name] : []
 
         content {
           type   = "volume"
           source = mounts.value
-          target = var.shared_tfvars_mount_target
+          target = local.repo_mount_target
 
           volume_options {
             driver_name    = var.shared_tfvars_volume_driver
-            driver_options = local.shared_tfvars_volume_driver_opts_effective
+            driver_options = local.shared_repo_volume_driver_opts_effective
             no_copy        = false
           }
         }
@@ -100,7 +100,8 @@ resource "docker_service" "jenkins_controller" {
             }
           }
         }
-      }    }
+      }
+    }
 
     restart_policy {
       condition    = "on-failure"

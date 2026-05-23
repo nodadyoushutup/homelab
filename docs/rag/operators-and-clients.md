@@ -10,9 +10,9 @@
 | RAG engine | **`terraform/swarm/rag-engine/app`** | **`pipelines/terraform/swarm/rag-engine/app.sh`** |
 | MCP RAG | **`terraform/swarm/mcp-rag/app`** | **`pipelines/terraform/swarm/mcp-rag/app.sh`** |
 
-Tfvars typically live under **`<repo>/.config/terraform/swarm/<stack>/app.tfvars`** (same pattern as other Swarm apps). For **`rag-engine`**, set **`env`** (all container settings and secrets, including Chroma and embedding keys) and **`placement`** only; image and ingress port **9015** are fixed in **`terraform/swarm/rag-engine/app/main.tf`**. Bump the image tag in **`main.tf`** after publish, then re-apply.
+Tfvars typically live under **`<repo>/.config/terraform/swarm/<stack>/app.tfvars`** (same pattern as other Swarm apps). For **`rag-engine`** and **`mcp-rag`**, set **`env`** (all container settings and secrets) and **`placement`** only; image and ingress ports are fixed in each stack’s **`main.tf`**. Bump the image tag in **`main.tf`** after publish, then re-apply.
 
-**Published ports (fixed in Terraform `main.tf` on the Swarm host):** ChromaDB HTTP **8000**, **`rag-engine` → 9015**, **`mcp-rag` → 9016** (adjust **`mcp-rag`** in tfvars if needed).
+**Published ports (fixed in Terraform `main.tf` on the Swarm host):** ChromaDB HTTP **8000**, **`rag-engine` → 9015**, **`mcp-rag` → 9016**.
 
 **Images:** publish with **`.github/workflows/docker_build_push.yml`** (`build_target` **`rag-engine`** or **`mcp-rag`**; **`target_registry`** **`github`** or **`both`** for GHCR under your GitHub username; **`arm64`** when possible). **`rag-engine`** image tag is pinned in **`terraform/swarm/rag-engine/app/main.tf`** (Harbor). Private registry pulls: set **`registry_auths`** under **`swarm_docker_provider_config`** in **`<repo>/.config/terraform/providers/docker_arm64.tfvars`**.
 
@@ -46,15 +46,15 @@ Swarm/Terraform RAG (including **`chromadb-data`** on Swarm) remains the persist
 
 ## Environment variables
 
-Use **`.config/docker/rag.env`** (and **`.config/docker/rag.env.example`**) for the canonical key list. **Git hooks**, **`scripts/terraform/load_root_env.sh`** (Swarm/terraform pipelines), and other **local scripts** read that file. **Swarm `rag-engine`** takes container variables from **`env`** in **`.config/terraform/swarm/rag-engine/app.tfvars`**. **`mcp-rag`** may still use **`env_file_path`** until aligned — see its **`main.tf`**.
+Use **`.config/docker/rag.env`** (and **`.config/docker/rag.env.example`**) for the canonical key list. **Git hooks**, **`scripts/terraform/load_root_env.sh`** (Swarm/terraform pipelines), and other **local scripts** read that file. **Swarm `rag-engine`** and **`mcp-rag`** take container variables from **`env`** in **`.config/terraform/swarm/rag-engine/app.tfvars`** and **`.config/terraform/swarm/mcp-rag/app.tfvars`** respectively.
 
-**Engine / Chroma / embed:** `RAG_CHROMA_HOSTNAME` (default `chromadb:8000`; host-only uses port **8000**), `RAG_CHROMA_COLLECTION`, `RAG_EMBEDDING_PROVIDER`, `RAG_EMBEDDING_MODEL`, `RAG_ENGINE_API_KEY`, memory collection names, memory TTL and scoring tunables (`RAG_MEMORY_*` — see `.config/docker/rag.env.example`, `chroma_config.py`, `server.py` / `memory.py`).
+**Engine / Chroma / embed:** `RAG_CHROMA_HOSTNAME` (default `chromadb:8000`; host-only uses port **8000**), `RAG_CHROMA_COLLECTION`, `RAG_TOP_K` (repo query nearest-neighbor count; default **20**), `RAG_EMBEDDING_PROVIDER`, `RAG_EMBEDDING_MODEL`, `RAG_ENGINE_API_KEY`, memory collection names, memory TTL and scoring tunables (`RAG_MEMORY_*` — see `.config/docker/rag.env.example`, `chroma_config.py`, `server.py` / `memory.py`).
 
 **OpenAI** is the default provider: set `OPENAI_API_KEY` and optionally `RAG_EMBEDDING_MODEL` (default `text-embedding-3-small`) plus `RAG_OPENAI_EMBEDDING_DIMENSIONS`. For **Google**, set `RAG_EMBEDDING_PROVIDER=google` and `GOOGLE_API_KEY`. For **`anthropic`** (Voyage-backed; see `docs/rag/embeddings-and-storage.md`), set `RAG_EMBEDDING_PROVIDER=anthropic`, `VOYAGE_API_KEY`, and optionally `RAG_EMBEDDING_MODEL` (default `voyage-3.5`) plus `RAG_ANTHROPIC_EMBEDDING_DIMENSIONS`. Use a separate Chroma collection or rebuild when changing provider/model/dimensions.
 
-**Ingest scope:** `RAG_ALLOWED_PATH_PREFIXES`, and hook alignment `RAG_HOOK_INCLUDE_PREFIXES`.
+**Ingest scope:** `RAG_PATHS_ALLOWED` (required for indexing — set in Swarm **`env`** / **`.config/docker/rag.env`**), optional hook override `RAG_HOOK_INCLUDE_PREFIXES`, **`RAG_PATHS_DISALLOWED`** (comma-separated path segment names skipped even under allowed prefixes — e.g. `node_modules`, `.venv`), and **`RAG_EXTENSIONS_IGNORE`** (comma-separated file suffixes to skip; no in-app default).
 
-**MCP (`mcp-rag`):** `RAG_ENGINE_BASE_URL`, `RAG_ENGINE_API_KEY`, `MCP_RAG_API_KEY`, `MCP_RAG_LOG_LEVEL`, `MCP_RAG_ENGINE_TIMEOUT_SEC`.
+**MCP (`mcp-rag`):** `RAG_ENGINE_BASE_URL`, `RAG_ENGINE_API_KEY`, `MCP_RAG_API_KEY`, `MCP_RAG_LOG_LEVEL`, `MCP_RAG_ENGINE_TIMEOUT_SEC`. Corpus **`rag_search`** breadth is **`RAG_TOP_K`** on **rag-engine** only (not on mcp-rag).
 
 ## Cursor and other MCP clients
 

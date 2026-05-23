@@ -25,7 +25,7 @@ DEFAULT_VAULT_ADDR="${DEFAULT_VAULT_ADDR:-http://swarm-cp-0.local:8200}"
 
 SERVICE_NAME="vault"
 STAGE_NAME="Vault config"
-# No NFS mounts; skip nfs.tfvars so the stack need not declare swarm_nfs_* variables.
+# No NFS mounts; skip nfs.tfvars so the stack need not declare `nfs` variable.
 SWARM_SKIP_NFS_PROVIDER_TFVARS=1
 export SWARM_SKIP_NFS_PROVIDER_TFVARS
 # No Swarm task dns_config; skip dns.tfvars so the stack need not declare dns_nameservers.

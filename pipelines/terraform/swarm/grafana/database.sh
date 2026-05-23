@@ -9,7 +9,7 @@ source "${PIPELINE_SCRIPT_ROOT}/load_root_env.sh"
 
 SERVICE_NAME="grafana"
 STAGE_NAME="Grafana database"
-# No NFS mounts; skip nfs.tfvars so the stack need not declare swarm_nfs_* variables.
+# No NFS mounts; skip nfs.tfvars so the stack need not declare `nfs` variable.
 SWARM_SKIP_NFS_PROVIDER_TFVARS=1
 export SWARM_SKIP_NFS_PROVIDER_TFVARS
 ENTRYPOINT_RELATIVE="pipelines/terraform/swarm/grafana/database.sh"

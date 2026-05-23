@@ -75,9 +75,10 @@ Agents and humans must treat “support both for now” as **out of scope** unle
   filesystem, git, and search work. LangGraph **Code** / **Tech Lead** specialists use
   **mcp-rag** and other HTTP MCPs from their JSON configs—not a repo filesystem MCP.
 - Repo RAG MCP URL is `https://mcp.rag.nodadyoushutup.com/mcp`. Cursor uses project-only
-  `.cursor/mcp.json` for all MCP servers (no `~/.cursor/mcp.json` entries). That file lists
-  `mcp_rag` URL only; when Swarm enforces auth, add header `x-api-key` matching
-  `MCP_RAG_API_KEY` from `.config/docker/mcp.env` in Cursor Settings → MCP for the project
-  server (do not commit the key). LangGraph fills the header from `.config/docker/mcp.env`;
-  Codex uses `env_http_headers` in `.codex/config.toml`.
+  `.cursor/mcp.json` for all MCP servers (no `~/.cursor/mcp.json` entries). **`mcp_rag`**
+  uses Streamable HTTP with header **`x-api-key: ${env:MCP_RAG_API_KEY}`** — export
+  **`MCP_RAG_API_KEY`** from **`.config/docker/mcp.env`** into the environment Cursor
+  inherits (do not commit the key). LangGraph fills the header from the same file via
+  **`x_api_key_from_env`** in agent **`mcp.json`**; Codex uses **`env_http_headers`** in
+  **`.codex/config.toml`**.
 - LangGraph Homelab runtime enforces **docs `rag_search` before every specialist delegation**, a second **code-location `rag_search` before `code` and `tech_lead` delegation**, and **read/search before writes** on the Code specialist; see `docs/workflows/rag-agent-mcp-integration-roadmap.md`. Break-glass: **`HOMELAB_DISABLE_WORKFLOW_GATES=1`** on the agent process only.

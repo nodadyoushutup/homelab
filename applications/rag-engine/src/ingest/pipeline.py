@@ -20,7 +20,7 @@ from embeddings import (
     embedding_provider,
 )
 from memory import mark_memories_stale_for_paths
-from ingest.path_rules import file_has_excluded_suffix, path_has_excluded_segment
+from ingest.path_rules import file_has_excluded_suffix, path_has_disallowed_segment
 from chunks.office import (
     build_docx_chunks,
     build_odt_chunks,
@@ -143,10 +143,7 @@ def _workspace_root() -> Path:
 
 
 def _allowed_prefixes() -> list[str]:
-    raw = (
-        os.getenv("RAG_ALLOWED_PATH_PREFIXES")
-        or "docs/,applications/,kubernetes/,terraform/,scripts/,pipelines/,packer/,AGENTS.md"
-    ).strip()
+    raw = (os.getenv("RAG_PATHS_ALLOWED") or "").strip()
     out: list[str] = []
     for p in raw.split(","):
         p = p.strip().replace("\\", "/").lstrip("/")
@@ -169,10 +166,10 @@ def _matches_allowed_prefix(rel_norm: str) -> bool:
 
 
 def _should_index_path(rel_norm: str) -> bool:
-    """Prefix allowlist and not under excluded segments (venv, node_modules, …)."""
+    """Prefix allowlist and not under disallowed segments (venv, node_modules, …)."""
     if not _matches_allowed_prefix(rel_norm):
         return False
-    if path_has_excluded_segment(rel_norm):
+    if path_has_disallowed_segment(rel_norm):
         return False
     if file_has_excluded_suffix(rel_norm):
         return False
@@ -330,7 +327,7 @@ def prune_orphan_paths(collection, *, dry_run: bool = False) -> dict[str, Any]:
     """Remove Chroma rows whose ``path`` is not in the current backfill-eligible file set.
 
     Safe: only deletes by exact ``path`` metadata (same as ``delete_paths``). Paths outside
-    ``RAG_ALLOWED_PATH_PREFIXES`` are reported but not deleted.
+    ``RAG_PATHS_ALLOWED`` are reported but not deleted.
     """
     desired = set(collect_backfill_relative_paths())
     indexed = collect_indexed_paths(collection)
@@ -551,7 +548,7 @@ def run_embed_job(commit: str, paths: list[str], removed_paths: list[str]) -> di
 
 
 def collect_backfill_relative_paths() -> list[str]:
-    """All indexable files under ``RAG_ALLOWED_PATH_PREFIXES`` (respects exclude segments)."""
+    """All indexable files under ``RAG_PATHS_ALLOWED`` (respects exclude segments)."""
     root = _workspace_root()
     max_bytes = int(os.getenv("RAG_BACKFILL_MAX_FILE_BYTES", str(5 * 1024 * 1024)))
     seen: set[str] = set()

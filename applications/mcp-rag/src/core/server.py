@@ -231,11 +231,11 @@ def create_mcp() -> FastMCP:
             "- rag_search: semantic search over INDEXED REPO CODE/DOCS. Use for orientation "
             "(where code or docs likely live, workflow context) before narrowing with filesystem "
             "or ast-grep. Concrete anchors win: path fragments, class/method names, exact error "
-            "text, Odoo technical model names (e.g. purchase.order). `where` uses Chroma metadata "
-            "keys documented in docs/workflows/rag-agent-mcp-integration-roadmap.md "
-            "(path, xml_model, language, chunk_strategy). The metadata key `model` is the "
-            "EMBEDDING model id — do not confuse with Odoo `ir.model`; use `xml_model` to filter "
-            "Odoo XML records.\n"
+            "text, Odoo technical model names (e.g. purchase.order). Result count is engine-driven "
+            "(RAG_TOP_K on rag-engine). `where` uses Chroma metadata keys documented in "
+            "docs/workflows/rag-agent-mcp-integration-roadmap.md (path, xml_model, language, "
+            "chunk_strategy). The metadata key `model` is the EMBEDDING model id — do not confuse "
+            "with Odoo `ir.model`; use `xml_model` to filter Odoo XML records.\n"
             "- memory_recall: retrieve previously-saved long-term memories (failure→solution "
             "pairs and user-asserted facts). Use BEFORE deep failure diagnosis or at the start "
             "of a topical task. NOT a substitute for rag_search; memories are HINTS to verify, "
@@ -260,7 +260,6 @@ def create_mcp() -> FastMCP:
     @mcp.tool()
     def rag_search(
         query: str,
-        n_results: int = 20,
         where: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Semantic search over the indexed repository via rag-engine (shared embeddings + Chroma).
@@ -268,17 +267,12 @@ def create_mcp() -> FastMCP:
         Use specific anchors (paths, symbols, Odoo model names like purchase.order, error strings).
         Use `where` only when narrowing by known metadata (see rag-agent-mcp-integration-roadmap).
         Issue multiple tool calls for unrelated sub-questions (workflow vs code location).
+        Hit count is set by RAG_TOP_K on rag-engine (not a tool argument).
         """
         q = (query or "").strip()
         if not q:
             return {"error": "query_empty", "message": "query must be non-empty"}
-        try:
-            n = int(n_results)
-        except (TypeError, ValueError):
-            return {"error": "n_results_invalid", "message": "n_results must be an integer"}
-        if n < 1:
-            return {"error": "n_results_invalid", "message": "n_results must be >= 1"}
-        body: dict[str, Any] = {"query": q, "n_results": n}
+        body: dict[str, Any] = {"query": q}
         if where is not None:
             body["where"] = where
         return _post_engine(path=ENGINE_QUERY_PATH, body=body)

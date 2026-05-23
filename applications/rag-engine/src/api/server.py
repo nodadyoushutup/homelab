@@ -66,10 +66,6 @@ async def rag_query(request: Request) -> JSONResponse:
     q = (body.get("query") or "").strip()
     if not q:
         return JSONResponse({"error": "query is required"}, status_code=400)
-    try:
-        n_results = int(body.get("n_results", 20))
-    except (TypeError, ValueError):
-        return JSONResponse({"error": "n_results must be an integer"}, status_code=400)
     where = body.get("where")
     if where is not None and not isinstance(where, dict):
         return JSONResponse({"error": "where must be a JSON object"}, status_code=400)
@@ -82,7 +78,6 @@ async def rag_query(request: Request) -> JSONResponse:
             coll,
             client,
             query_text=q,
-            n_results=n_results,
             embedding_model=model,
             where=where,
         )

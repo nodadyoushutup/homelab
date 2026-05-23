@@ -219,7 +219,7 @@ if [[ "${SWARM_SKIP_NFS_PROVIDER_TFVARS:-0}" == "1" ]]; then
 else
   if [[ ! -f "${SWARM_NFS_PROVIDER_TFVARS}" ]]; then
     echo "[ERR] Missing Swarm NFS provider tfvars: ${SWARM_NFS_PROVIDER_TFVARS}" >&2
-    echo "[ERR] Add swarm_nfs_* there (see homelab terraform/providers/nfs.tfvars.example)." >&2
+    echo "[ERR] Add nfs there (see homelab terraform/providers/nfs.tfvars.example)." >&2
     exit 1
   fi
   SWARM_SHARED_TFVARS_PREFIX+=(-var-file "${SWARM_NFS_PROVIDER_TFVARS}")

@@ -61,8 +61,8 @@ variable "controller_target_port" {
 }
 
 
-variable "enable_shared_tfvars_mount" {
-  description = "Whether to mount the shared tfvars/configuration root into the controller container."
+variable "enable_shared_repo_mount" {
+  description = "Whether to mount the homelab repo NFS export (nfs.device from nfs.tfvars) into the controller container."
   type        = bool
   default     = true
 }
@@ -123,10 +123,10 @@ variable "service_name" {
 }
 
 
-variable "shared_tfvars_mount_target" {
-  description = "Container path where the shared tfvars/configuration root is mounted."
+variable "shared_repo_mount_target" {
+  description = "Container path where the homelab repo NFS export is mounted."
   type        = string
-  default     = "/mnt/eapp/code/homelab/.config"
+  default     = "/mnt/eapp/code/homelab"
 }
 
 
@@ -172,24 +172,16 @@ variable "placement" {
 }
 
 
-variable "swarm_nfs_config_device" {
-  description = "NFS export for homelab config (from nfs.tfvars)."
-  type        = string
-  sensitive   = true
-}
-
-
-variable "swarm_nfs_volume_type" {
-  description = "Docker volume driver type for NFS mounts (from nfs.tfvars)."
-  type        = string
-  sensitive   = true
-}
-
-
-variable "swarm_nfs_volume_o_rw" {
-  description = "Read-write NFS volume mount options (from nfs.tfvars)."
-  type        = string
-  sensitive   = true
+variable "nfs" {
+  description = "Shared Swarm NFS homelab repo export and volume driver_opts (providers/nfs.tfvars)."
+  type = object({
+    device = string
+    volume = object({
+      type = string
+      opts = string
+    })
+  })
+  sensitive = true
 }
 
 

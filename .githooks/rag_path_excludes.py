@@ -1,34 +1,28 @@
-"""Path exclude defaults for RAG git hooks — keep in sync with ``path_rules.py``."""
+"""Path exclude defaults for RAG git hooks — keep segment defaults in sync with ``path_rules.py``."""
 from __future__ import annotations
 
 import os
 from pathlib import Path
 
-DEFAULT_RAG_EXCLUDE_PATH_SEGMENTS = (
+DEFAULT_RAG_PATHS_DISALLOWED = (
     "node_modules,.venv,venv,virtualenv,pipenv,__pycache__,.pytest_cache,.mypy_cache,"
     ".ruff_cache,.tox,.nox,site-packages,.adk,dist,build,.next,.nuxt,target,vendor,"
     "htmlcov,.eggs,.npm,.yarn,.pnpm-store,__MACOSX,.cache,coverage,"
-    "odoo-base,.tx,i18n,.terraform,output,keys"
-)
-
-DEFAULT_RAG_EXCLUDE_FILE_SUFFIXES = (
-    ".min.js,.map,.deb,.woff,.woff2,.ttf,.eot,.ico,.dll,.so,.dylib,"
-    ".png,.jpg,.jpeg,.gif,.webp,.bmp,.tif,.tiff,.heic,.heif,.avif,.jxl,.jfif,.apng,"
-    ".ppm,.pgm,.pbm,.dds,.exr,.hdr,.ktx,.ktx2,"
-    ".mp4,.m4v,.mov,.avi,.mkv,.webm,.wmv,.flv,.f4v,.ogv,.mpeg,.mpg,.m2ts,.mts,.ts,.3gp,.3g2,.asf,"
-    ".mp3,.wav,.flac,.aac,.m4a,.ogg,.oga,.opus,.wma,.aiff,.aif,.alac,.mid,.midi,.amr,"
-    ".tfstate,.tfstate.backup,.tfplan"
+    "odoo-base,.tx,i18n,.terraform,output,keys,"
+    ".langgraph_api,.runtime,.config,.vite,.git,.direnv,.cursor,.vscode,.codex,.secrets,"
+    ".github,.idea,.claude,.continue,.specstory,.fleet,.zed,"
+    "playwright-report,test-results,blob-report"
 )
 
 
-def load_exclude_segments() -> frozenset[str]:
-    raw = (os.getenv("RAG_EXCLUDE_PATH_SEGMENTS") or DEFAULT_RAG_EXCLUDE_PATH_SEGMENTS).strip()
+def load_disallowed_segments() -> frozenset[str]:
+    raw = (os.getenv("RAG_PATHS_DISALLOWED") or DEFAULT_RAG_PATHS_DISALLOWED).strip()
     parts = [x.strip() for x in raw.split(",") if x.strip()]
     return frozenset(parts)
 
 
-def path_has_excluded_segment(rel_norm: str, segments: frozenset[str] | None = None) -> bool:
-    segs = segments if segments is not None else load_exclude_segments()
+def path_has_disallowed_segment(rel_norm: str, segments: frozenset[str] | None = None) -> bool:
+    segs = segments if segments is not None else load_disallowed_segments()
     lowered = {s.lower() for s in segs}
     for part in Path(rel_norm).parts:
         if part.lower() in lowered:
@@ -38,8 +32,8 @@ def path_has_excluded_segment(rel_norm: str, segments: frozenset[str] | None = N
     return False
 
 
-def load_exclude_suffixes() -> tuple[str, ...]:
-    raw = (os.getenv("RAG_EXCLUDE_FILE_SUFFIXES") or DEFAULT_RAG_EXCLUDE_FILE_SUFFIXES).strip()
+def load_ignored_extensions() -> tuple[str, ...]:
+    raw = (os.getenv("RAG_EXTENSIONS_IGNORE") or "").strip()
     out: list[str] = []
     for p in raw.split(","):
         p = p.strip().lower()
@@ -53,7 +47,7 @@ def load_exclude_suffixes() -> tuple[str, ...]:
 
 def file_has_excluded_suffix(rel_norm: str, suffixes: tuple[str, ...] | None = None) -> bool:
     low = rel_norm.lower()
-    for suf in suffixes if suffixes is not None else load_exclude_suffixes():
+    for suf in suffixes if suffixes is not None else load_ignored_extensions():
         if low.endswith(suf):
             return True
     return False

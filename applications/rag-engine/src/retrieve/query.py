@@ -16,12 +16,16 @@ def _env_int(name: str, default: int) -> int:
         return default
 
 
+def top_k() -> int:
+    """Number of nearest-neighbor chunks to retrieve (``RAG_TOP_K``)."""
+    return max(1, _env_int("RAG_TOP_K", 20))
+
+
 def run_query(
     collection: Any,
     genai_client: Any,
     *,
     query_text: str,
-    n_results: int,
     embedding_model: str,
     where: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
@@ -29,8 +33,7 @@ def run_query(
     text = (query_text or "").strip()
     if not text:
         return {"error": "query is empty", "results": []}
-    cap = max(1, _env_int("RAG_QUERY_MAX_N_RESULTS", 50))
-    n = max(1, min(int(n_results), cap))
+    k = top_k()
     provider = embedding_provider()
     vec = embed_batch(
         genai_client,
@@ -43,7 +46,7 @@ def run_query(
         return {"error": "embedding failed", "results": []}
     kwargs: dict[str, Any] = {
         "query_embeddings": [vec[0]],
-        "n_results": n,
+        "n_results": k,
         "include": ["documents", "metadatas", "distances"],
     }
     if where:
@@ -72,4 +75,4 @@ def run_query(
                 "distance": row_dists[i] if i < len(row_dists) else None,
             }
         )
-    return {"results": results, "n_results": len(results)}
+    return {"results": results, "top_k": len(results)}

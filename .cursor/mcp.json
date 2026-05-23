@@ -1,5 +1,11 @@
 {
   "mcpServers": {
+    "mcp_rag": {
+      "url": "https://mcp.rag.nodadyoushutup.com/mcp",
+      "headers": {
+        "x-api-key": "${env:MCP_RAG_API_KEY}"
+      }
+    },
     "mcp_argocd": {
       "url": "https://mcp.argocd.nodadyoushutup.com/mcp"
     },

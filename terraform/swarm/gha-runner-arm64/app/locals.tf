@@ -1,21 +1,21 @@
 locals {
-  # Booleans only (no secret strings): required so derived toset() is not marked sensitive — for_each cannot use sensitive collections.
-  swarm_nfs_ready = nonsensitive(
-    length(trimspace(var.swarm_nfs_code_device)) > 0 &&
-    length(trimspace(var.swarm_nfs_config_device)) > 0 &&
-    length(trimspace(var.swarm_nfs_volume_type)) > 0 &&
-    length(trimspace(var.swarm_nfs_volume_o_rw)) > 0
+  nfs_device       = trimspace(var.nfs.device)
+  nfs_volume_type  = trimspace(var.nfs.volume.type)
+  nfs_volume_opts  = trimspace(var.nfs.volume.opts)
+  nfs_mount_target = local.nfs_device != "" ? trimspace(element(split(":", local.nfs_device), length(split(":", local.nfs_device)) - 1)) : ""
+  nfs_driver_opts = merge({
+    type = local.nfs_volume_type
+    o    = local.nfs_volume_opts
+  }, local.nfs_device != "" ? { device = local.nfs_device } : {})
+  nfs_ready = nonsensitive(
+    local.nfs_device != "" &&
+    local.nfs_volume_type != "" &&
+    local.nfs_volume_opts != ""
   )
 
-  # Literal keys only: for_each cannot use a map keyed/valued from sensitive nfs.tfvars vars.
-  gha_runner_nfs_volume_keys = local.swarm_nfs_ready ? toset(["code", "config"]) : toset([])
-
-  # Mount path inside the container: last segment of device (e.g. ":/mnt/eapp/code" -> "/mnt/eapp/code").
-  gha_runner_nfs_container_targets = local.swarm_nfs_ready ? {
-    code   = trimspace(element(split(":", trimspace(var.swarm_nfs_code_device)), length(split(":", trimspace(var.swarm_nfs_code_device))) - 1))
-    config = trimspace(element(split(":", trimspace(var.swarm_nfs_config_device)), length(split(":", trimspace(var.swarm_nfs_config_device))) - 1))
-  } : {}
+  gha_runner_repo_mount = local.nfs_ready
 }
+
 locals {
   runner_image         = "ghcr.io/nodadyoushutup/gha-runner:0.1.1"
   runner_name          = "homelab-gha-runner-arm64"
@@ -24,9 +24,6 @@ locals {
   runner_ephemeral     = true
   runner_disableupdate = true
 }
-
-
-
 
 locals {
   # docker_container uses provider-level registry_auth; pick the entry for this image's registry.

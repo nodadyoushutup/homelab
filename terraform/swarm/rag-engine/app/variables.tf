@@ -33,38 +33,13 @@ variable "placement" {
 }
 
 
-variable "swarm_nfs_code_device" {
-  description = "NFS export for homelab code (from nfs.tfvars)."
-  type        = string
-  sensitive   = true
-}
-
-
-variable "swarm_nfs_config_device" {
-  description = "NFS export for homelab config (from nfs.tfvars)."
-  type        = string
-  sensitive   = true
-}
-
-
-variable "swarm_nfs_volume_type" {
-  description = "Docker volume driver type for NFS mounts (from nfs.tfvars)."
-  type        = string
-  sensitive   = true
-}
-
-
-variable "swarm_nfs_volume_o_rw" {
-  description = "Read-write NFS volume mount options (from nfs.tfvars)."
-  type        = string
-  sensitive   = true
-}
-
-
-variable "swarm_nfs_volume_o_ro" {
-  description = "Read-only NFS volume mount options (from nfs.tfvars)."
-  type        = string
-  sensitive   = true
+variable "nfs" {
+  description = "Homelab repo NFS mount (providers/nfs.tfvars)."
+  type = object({
+    target         = string
+    driver_options = map(string)
+  })
+  sensitive = true
 }
 
 

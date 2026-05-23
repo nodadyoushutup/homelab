@@ -41,47 +41,22 @@ locals {
     for mount in var.mounts : mount.name => mount
   }
 
-  swarm_nfs_ready = nonsensitive(
-    length(trimspace(var.swarm_nfs_code_device)) > 0 &&
-    length(trimspace(var.swarm_nfs_config_device)) > 0 &&
-    length(trimspace(var.swarm_nfs_volume_type)) > 0 &&
-    length(trimspace(var.swarm_nfs_volume_o_rw)) > 0
+  nfs_device       = trimspace(var.nfs.device)
+  nfs_volume_type  = trimspace(var.nfs.volume.type)
+  nfs_volume_opts  = trimspace(var.nfs.volume.opts)
+  nfs_mount_target = local.nfs_device != "" ? trimspace(element(split(":", local.nfs_device), length(split(":", local.nfs_device)) - 1)) : ""
+  nfs_driver_opts = merge({
+    type = local.nfs_volume_type
+    o    = local.nfs_volume_opts
+  }, local.nfs_device != "" ? { device = local.nfs_device } : {})
+  nfs_ready = nonsensitive(
+    local.nfs_device != "" &&
+    local.nfs_volume_type != "" &&
+    local.nfs_volume_opts != ""
   )
-  swarm_nfs_code_target   = local.swarm_nfs_ready ? trimspace(element(split(":", trimspace(var.swarm_nfs_code_device)), length(split(":", trimspace(var.swarm_nfs_code_device))) - 1)) : var.shared_tfvars_mount_target
-  swarm_nfs_config_target = local.swarm_nfs_ready ? trimspace(element(split(":", trimspace(var.swarm_nfs_config_device)), length(split(":", trimspace(var.swarm_nfs_config_device))) - 1)) : var.shared_tfvars_mount_target
-  shared_tfvars_nfs_driver_opts_default = local.swarm_nfs_ready ? {
-    type   = trimspace(var.swarm_nfs_volume_type)
-    o      = trimspace(var.swarm_nfs_volume_o_rw)
-    device = trimspace(var.swarm_nfs_config_device)
-  } : null
-  shared_tfvars_volume_driver_opts_effective = coalesce(var.shared_tfvars_volume_driver_opts, local.shared_tfvars_nfs_driver_opts_default)
-  enable_shared_tfvars_mount_effective       = var.enable_shared_tfvars_mount && local.shared_tfvars_volume_driver_opts_effective != null
-  jenkins_agent_nfs_volume_keys = local.swarm_nfs_ready ? toset(compact([
-    var.enable_shared_tfvars_mount ? "config" : "",
-    var.enable_shared_code_mount ? "code" : "",
-  ])) : toset([])
-  jenkins_agent_nfs_container_targets = {
-    config = local.swarm_nfs_config_target
-    code   = local.swarm_nfs_code_target
-  }
-  jenkins_agent_nfs_devices = {
-    config = trimspace(var.swarm_nfs_config_device)
-    code   = trimspace(var.swarm_nfs_code_device)
-  }
-  swarm_nfs_code_mounts = var.enable_shared_code_mount && local.swarm_nfs_ready ? [{
-    type   = "volume"
-    source = "${var.service_name_prefix}-mnt-eapp-code"
-    target = local.swarm_nfs_code_target
-    volume_options = {
-      driver_name = var.shared_tfvars_volume_driver
-      driver_options = {
-        type   = trimspace(var.swarm_nfs_volume_type)
-        o      = trimspace(var.swarm_nfs_volume_o_rw)
-        device = trimspace(var.swarm_nfs_code_device)
-      }
-      no_copy = false
-    }
-  }] : []
+
+  repo_mount_enabled = local.nfs_ready && var.enable_shared_repo_mount
+  repo_mount_target  = local.repo_mount_enabled ? local.nfs_mount_target : var.shared_repo_mount_target
 
   pull_ref                      = var.agent_image
   pull_at_stripped              = split("@", local.pull_ref)[0]

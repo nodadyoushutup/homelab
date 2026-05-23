@@ -2,22 +2,13 @@
 # merged after docker_arm64.tfvars by pipelines/terraform/swarm/gha-runner-amd64/app.sh).
 # Uses `docker_container` + `devices` so `/dev/kvm` gets proper cgroup permissions (unlike Swarm services).
 
-moved {
-  from = docker_volume.gha_runner_config
-  to   = docker_volume.gha_runner_nfs["config"]
-}
+resource "docker_volume" "gha_runner_repo" {
+  count = local.gha_runner_repo_mount ? 1 : 0
 
-resource "docker_volume" "gha_runner_nfs" {
-  for_each = local.gha_runner_nfs_volume_keys
+  name = "${replace(local.runner_name, "_", "-")}-nfs-homelab"
 
-  name = "${replace(local.runner_name, "_", "-")}-nfs-${each.key}"
-
-  driver = "local"
-  driver_opts = {
-    type   = trimspace(var.swarm_nfs_volume_type)
-    o      = trimspace(var.swarm_nfs_volume_o_rw)
-    device = each.key == "code" ? trimspace(var.swarm_nfs_code_device) : trimspace(var.swarm_nfs_config_device)
-  }
+  driver      = "local"
+  driver_opts = local.nfs_driver_opts
 }
 
 resource "docker_container" "gha_runner" {
@@ -65,12 +56,12 @@ resource "docker_container" "gha_runner" {
   }
 
   dynamic "mounts" {
-    for_each = local.gha_runner_nfs_volume_keys
+    for_each = local.gha_runner_repo_mount ? [1] : []
 
     content {
       type   = "volume"
-      source = docker_volume.gha_runner_nfs[mounts.key].name
-      target = lookup(local.gha_runner_nfs_container_targets, mounts.key)
+      source = docker_volume.gha_runner_repo[0].name
+      target = local.nfs_mount_target
     }
   }
 }

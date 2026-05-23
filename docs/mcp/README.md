@@ -17,4 +17,4 @@ Each page describes **how to use** one Model Context Protocol (MCP) server defin
 
 For the pattern used when a service gets a new public name (DNS plus reverse proxy), see [edge-dns-and-nginx-proxy.md](../workflows/edge-dns-and-nginx-proxy.md).
 
-All Cursor MCP servers for this repo live in **`.cursor/mcp.json`** (project scope only—do not duplicate in **`~/.cursor/mcp.json`**). URLs are environment-specific; **`mcp_rag`** may need an **`x-api-key`** header in Cursor MCP settings (see [mcp-rag.md](mcp-rag.md)). Per-server guides use **`mcp-*.md`** filenames aligned with Swarm stack names (**`mcp-rag`**, **`mcp-playwright`**, etc.).
+All Cursor MCP servers for this repo live in **`.cursor/mcp.json`** (project scope only—do not duplicate in **`~/.cursor/mcp.json`**). **`mcp_rag`** uses **`${env:MCP_RAG_API_KEY}`** for **`x-api-key`** (see [mcp-rag.md](mcp-rag.md)). Per-server guides use **`mcp-*.md`** filenames aligned with Swarm stack names (**`mcp-rag`**, **`mcp-playwright`**, etc.).

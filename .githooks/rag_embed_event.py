@@ -31,9 +31,6 @@ if str(_HOOK_DIR) not in sys.path:
 
 import rag_path_excludes as rpe  # noqa: E402
 
-# Default allowlist must match ``pipeline._allowed_prefixes`` when env unset.
-_DEFAULT_ALLOWED = "docs/,applications/,kubernetes/,terraform/,scripts/,pipelines/,packer/,AGENTS.md"
-
 
 def _log(msg: str) -> None:
     print(f"[rag-hook] {msg}", file=sys.stderr)
@@ -66,8 +63,8 @@ def _load_dotenv(repo_root: Path) -> None:
 def _allowed_prefixes() -> list[str]:
     raw = (
         os.getenv("RAG_HOOK_INCLUDE_PREFIXES")
-        or os.getenv("RAG_ALLOWED_PATH_PREFIXES")
-        or _DEFAULT_ALLOWED
+        or os.getenv("RAG_PATHS_ALLOWED")
+        or ""
     ).strip()
     out: list[str] = []
     for p in raw.split(","):
@@ -94,7 +91,7 @@ def _should_send(rel_norm: str) -> bool:
     rel_norm = rel_norm.strip().replace("\\", "/").lstrip("/")
     if not _matches_allowed_prefix(rel_norm):
         return False
-    if rpe.path_has_excluded_segment(rel_norm):
+    if rpe.path_has_disallowed_segment(rel_norm):
         return False
     if rpe.file_has_excluded_suffix(rel_norm):
         return False

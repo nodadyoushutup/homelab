@@ -6,7 +6,7 @@ Index of MCP docs in this folder: [README.md](README.md).
 
 ## URL and path
 
-Point MCP clients at the HTTPS (or local HTTP) URL where your deployment exposes the server. Stacks in this repo terminate Streamable MCP on path **`/mcp`** on the upstream process; your reverse proxy should forward that path unchanged unless you intentionally remap it.
+Publish the service behind TLS at **`https://mcp.rag.nodadyoushutup.com/mcp`** (or your hostname). The container listens on **8080**; Swarm publishes **9016** → **8080**.
 
 When **`MCP_RAG_API_KEY`** is set on the **mcp-rag** container, clients must send header **`x-api-key`** with the same value. If that env is unset, **`/mcp`** may accept unauthenticated requests (avoid on shared networks).
 
@@ -22,9 +22,19 @@ Retrieval-first and read-before-write rules are enforced in code for the supervi
 
 ## Cursor
 
-Project **`.cursor/mcp.json`** lists **`mcp_rag.url`** only (no secrets in git). Cursor does not reliably expand env vars inside MCP **`headers`** in JSON. If the server requires a key, add header **`x-api-key`** with the same value as **`MCP_RAG_API_KEY`** in **`.config/docker/mcp.env`** via **Cursor Settings → MCP** for the project **`mcp_rag`** server, or omit **`MCP_RAG_API_KEY`** on the server only in trusted, isolated environments.
+Project **`.cursor/mcp.json`** registers **`mcp_rag`** at **`https://mcp.rag.nodadyoushutup.com/mcp`** (Streamable HTTP — same path as LangGraph **`mcp.json`**). When Swarm sets **`MCP_RAG_API_KEY`**, the checked-in config sends **`x-api-key`** via **`${env:MCP_RAG_API_KEY}`** (no secret in git).
+
+Export the key from **`.config/docker/mcp.env`** into the environment Cursor inherits (for example `set -a && source .config/docker/mcp.env && set +a` in the shell before launching Cursor, or your desktop/session env). After deploy or config edits, **reload MCP** in Cursor Settings if tools stay disconnected. If interpolation fails on your build, add header **`x-api-key`** manually under **Cursor Settings → MCP** for **`mcp_rag`**.
+
+Native tool calling exposes **`rag_search`**, **`memory_recall`**, **`memory_save`**, and **`memory_forget`** once the server connects. **`rag_search`** accepts **`query`** and optional **`where`** only; nearest-neighbor count is **`RAG_TOP_K`** on **rag-engine** (default **20**).
+
+## Swarm
+
+- Stack: **`terraform/swarm/mcp-rag/app/`** — all site credentials in the **`env`** map on **`.config/terraform/swarm/mcp-rag/app.tfvars`** (flat keys such as **`RAG_ENGINE_BASE_URL`**, **`RAG_ENGINE_API_KEY`**, **`MCP_RAG_API_KEY`**; no Vault **`secrets`** block or **`env_file_path`**). Keep keys out of git.
+- Image tag and ingress port **9016** are pinned in **`terraform/swarm/mcp-rag/app/main.tf`**. Bump the tag after publish, then re-apply.
+- The service joins the existing **`rag-engine`** overlay network (created by the **rag-engine** stack) so it can reach **`http://rag-engine:8080`**.
 
 ## Deploy
 
 - Application: **`applications/mcp-rag/README.md`**
-- Swarm Terraform: **`terraform/swarm/mcp-rag/app/`**
+- RAG stack operators: [operators-and-clients.md](../rag/operators-and-clients.md)

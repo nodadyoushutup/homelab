@@ -61,7 +61,7 @@ Options
                              SSH / docker ps filter (only with --ssh-exec).
   -h, --help
 
-Path allowlists / excludes are defined on the rag-engine service (e.g. RAG_ALLOWED_PATH_PREFIXES
+Path allowlists / excludes are defined on the rag-engine service (e.g. RAG_PATHS_ALLOWED
 in rag.env on the rag-engine service after redeploy). This script does not need the repo mounted locally for the
 HTTP default.
 EOF
