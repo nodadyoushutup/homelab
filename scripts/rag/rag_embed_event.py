@@ -6,7 +6,7 @@ Events:
   merge    — ``ORIG_HEAD..HEAD`` (fast-forward and merge pulls).
   rewrite  — after amend/rebase; prefers ``ORIG_HEAD..HEAD``, else stdin ``old new`` pairs.
 
-Git invokes ``.githooks/run_embed_hook.sh``, which starts this script in a detached
+Git invokes ``scripts/rag/run_embed_hook.sh`` (via ``.githooks/post-*`` stubs) in a detached
 session (``setsid`` for commit/merge when available) so the hook exits without waiting
 for HTTP; output is appended to ``.git/rag-hook.log``.
 
@@ -24,10 +24,10 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-# Same directory imports (``core.hooksPath=.githooks``)
-_HOOK_DIR = Path(__file__).resolve().parent
-if str(_HOOK_DIR) not in sys.path:
-    sys.path.insert(0, str(_HOOK_DIR))
+# Same directory imports (``scripts/rag/``)
+_SCRIPT_DIR = Path(__file__).resolve().parent
+if str(_SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(_SCRIPT_DIR))
 
 import rag_path_excludes as rpe  # noqa: E402
 
@@ -294,7 +294,7 @@ def main(argv: list[str]) -> int:
     if os.getenv("RAG_GIT_HOOKS_DISABLED", "").strip() in ("1", "true", "yes"):
         return 0
 
-    repo = Path(__file__).resolve().parent.parent
+    repo = Path(__file__).resolve().parents[2]
     _load_dotenv(repo)
     os.chdir(repo)
 

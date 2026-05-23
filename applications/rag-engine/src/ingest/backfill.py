@@ -3,17 +3,14 @@
 Run inside the rag-engine image (same env as the HTTP server), e.g.:
 
   ./scripts/rag/backfill.sh
-  ./scripts/rag/backfill.sh --dry-run
-  ./scripts/rag/backfill.sh --max-files 100
-  ./scripts/rag/backfill.sh --yes   # skip interactive confirm (automation)
-  ./scripts/rag/backfill.sh --yes --prune-orphans              # index then delete stale Chroma paths
-  ./scripts/rag/backfill.sh --yes --prune-orphans-only          # only reconcile Chroma vs disk
-  ./scripts/rag/backfill.sh --yes --prune-orphans-only --prune-dry-run
+  python -m ingest.backfill --yes
+  python -m ingest.backfill --yes --prune-orphans-only
+  python -m ingest.backfill --yes --prune-orphans-only --prune-dry-run
 
 Requires ``chromadb`` service up and ``RAG_WORKSPACE_MOUNT`` matching the repo mount.
-Operators may trigger the same logic via ``POST /v1/backfill`` on rag-engine (see ``api/server.py``).
-Interactive runs print index roots and file count, then ask ``Proceed? [Y/n]`` (default Y).
-During indexing, Ctrl+C prompts for pause, stop (summary), or continue; a second Ctrl+C stops immediately.
+Operators start backfill via ``POST /v1/backfill`` (async job), ``GET /v1/backfill/status``,
+and ``POST /v1/backfill/stop`` (see ``api/server.py`` and ``ingest/backfill_job.py``).
+Mutating backfills always orphan-prune after indexing (unless stopped early).
 """
 from __future__ import annotations
 
@@ -23,8 +20,9 @@ import logging
 import os
 import subprocess
 import sys
+import threading
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Callable
 
 from embeddings import build_embedding_client
 from ingest.path_rules import load_disallowed_segments
@@ -172,7 +170,6 @@ class BackfillOptions:
     json_summary: bool = False
     yes: bool = False
     force: bool = False
-    prune_orphans: bool = False
     prune_orphans_only: bool = False
     prune_dry_run: bool = False
 
@@ -181,17 +178,17 @@ def run_backfill(
     opts: BackfillOptions,
     *,
     interactive: bool,
+    cancel_event: threading.Event | None = None,
+    on_progress: Callable[[dict[str, Any]], None] | None = None,
 ) -> tuple[int, dict[str, Any]]:
-    """Run backfill; used by CLI and ``POST /v1/backfill``.
+    """Run backfill; used by CLI and the async HTTP job worker.
 
     When ``interactive`` is False (HTTP API), mutating operations require ``opts.yes``.
+    ``cancel_event`` is polled between files (HTTP ``POST /v1/backfill/stop``).
     Returns ``(exit_code, payload)`` where ``payload`` is JSON-serializable.
     """
     _configure_logging()
     log = logging.getLogger("ingest.backfill")
-
-    if opts.prune_orphans_only and opts.prune_orphans:
-        log.warning("backfill: --prune-orphans-only wins over --prune-orphans")
 
     prune_dry = bool(opts.prune_dry_run) or (bool(opts.dry_run) and bool(opts.prune_orphans_only))
 
@@ -247,38 +244,6 @@ def run_backfill(
 
     if not paths:
         log.warning("backfill: no paths matched; check RAG_PATHS_ALLOWED and mounts")
-        if not opts.prune_orphans:
-            return (0, {"files_seen": 0, "note": "no_paths_matched"})
-        log.info("backfill: continuing with --prune-orphans only (no files to index)")
-        _print_index_plan(0)
-        _print_prune_plan()
-        if not opts.prune_dry_run and not opts.yes:
-            if not interactive:
-                return _reject_no_confirm("orphan prune (no indexable files)")
-            line = input("Proceed with orphan prune? [Y/n]: ").strip().lower()
-            if line in ("n", "no"):
-                print("backfill: cancelled.", file=sys.stderr)
-                return (0, {"cancelled": True})
-        collection = _collection()
-        pr = prune_orphan_paths(collection, dry_run=bool(opts.prune_dry_run))
-        summary = {
-            "commit": (opts.commit or "").strip() or _default_commit_label(),
-            "files_seen": 0,
-            "files_completed": 0,
-            "indexed": 0,
-            "chunks": 0,
-            "skipped": 0,
-            "unchanged": 0,
-            "errors": [],
-            "user_stopped": False,
-            "prune": pr,
-        }
-        if opts.json_summary:
-            print(json.dumps(summary))
-        else:
-            log.info("orphan prune: %s", json.dumps(pr, indent=2))
-            log.info("backfill done: %s", json.dumps(summary, indent=2))
-        return (0, summary)
 
     _print_index_plan(len(paths))
     if not opts.yes:
@@ -297,10 +262,25 @@ def run_backfill(
     skip_unchanged = not opts.force
     totals: dict[str, Any] = {"indexed": 0, "chunks": 0, "skipped": 0, "unchanged": 0, "errors": []}
     user_stopped = False
+
+    def _report_progress(i: int, rel: str) -> None:
+        if on_progress is not None:
+            on_progress(
+                {
+                    "files_seen": len(paths),
+                    "files_completed": i,
+                    "last_path": rel,
+                }
+            )
+
     with tqdm(total=len(paths), unit="file", desc="RAG backfill", file=sys.stderr) as bar:
         i = 0
         while i < len(paths):
+            if cancel_event is not None and cancel_event.is_set():
+                user_stopped = True
+                break
             rel = paths[i]
+            _report_progress(i, rel)
             bar.set_postfix(last=(rel[-48:] if len(rel) > 48 else rel), refresh=False)
             try:
                 one = upsert_paths(
@@ -316,6 +296,7 @@ def run_backfill(
                 totals["unchanged"] += int(one.get("unchanged", 0))
                 totals["errors"].extend(one["errors"])
                 i += 1
+                _report_progress(i, rel)
                 bar.update(1)
             except KeyboardInterrupt:
                 bar.clear()
@@ -342,14 +323,14 @@ def run_backfill(
         "errors": totals["errors"],
         "user_stopped": user_stopped,
     }
-    if opts.prune_orphans and not user_stopped:
+    if not user_stopped:
         _print_prune_plan()
         pr = prune_orphan_paths(collection, dry_run=bool(opts.prune_dry_run))
         summary["prune"] = pr
         if not opts.json_summary:
             log.info("orphan prune: %s", json.dumps(pr, indent=2))
-    elif opts.prune_orphans and user_stopped:
-        log.warning("backfill: skipping --prune-orphans because indexing was stopped early")
+    else:
+        log.warning("backfill: skipping orphan prune because indexing was stopped early")
 
     if opts.json_summary:
         print(json.dumps(summary))
@@ -392,7 +373,6 @@ def options_from_api_body(body: dict[str, Any]) -> tuple[BackfillOptions | None,
             json_summary=_bool("json_summary"),
             yes=_bool("confirm") or _bool("yes"),
             force=_bool("force"),
-            prune_orphans=_bool("prune_orphans"),
             prune_orphans_only=_bool("prune_orphans_only"),
             prune_dry_run=_bool("prune_dry_run"),
         ),
@@ -436,11 +416,6 @@ def main(argv: list[str] | None = None) -> int:
         help="Re-embed every file even when content hash and chunk settings match Chroma.",
     )
     parser.add_argument(
-        "--prune-orphans",
-        action="store_true",
-        help="After indexing, delete Chroma rows for paths that no longer exist on disk under current rules.",
-    )
-    parser.add_argument(
         "--prune-orphans-only",
         action="store_true",
         help="Skip indexing; only run orphan prune (same path rules as backfill).",
@@ -458,7 +433,6 @@ def main(argv: list[str] | None = None) -> int:
         json_summary=args.json_summary,
         yes=args.yes,
         force=args.force,
-        prune_orphans=args.prune_orphans,
         prune_orphans_only=args.prune_orphans_only,
         prune_dry_run=args.prune_dry_run,
     )

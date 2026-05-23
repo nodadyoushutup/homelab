@@ -4,4 +4,4 @@ set -euo pipefail
 [[ -n "${RAG_GIT_HOOKS_DISABLED:-}" ]] && exit 0
 ROOT="$(git rev-parse --show-toplevel)"
 cd "$ROOT"
-exec "$ROOT/.githooks/run_embed_hook.sh" merge
+exec "$ROOT/scripts/rag/run_embed_hook.sh" merge

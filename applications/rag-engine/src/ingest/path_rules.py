@@ -4,7 +4,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-# Keep in sync with `.githooks/rag_path_excludes.py` defaults.
+# Keep in sync with ``scripts/rag/rag_path_excludes.py`` defaults.
 DEFAULT_RAG_PATHS_DISALLOWED = (
     "node_modules,.venv,venv,virtualenv,pipenv,__pycache__,.pytest_cache,.mypy_cache,"
     ".ruff_cache,.tox,.nox,site-packages,.adk,dist,build,.next,.nuxt,target,vendor,"

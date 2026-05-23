@@ -20,7 +20,7 @@ EVENT="${1:?usage: run_embed_hook.sh commit|merge|rewrite}"
 [[ -n "${RAG_GIT_HOOKS_DISABLED:-}" ]] && exit 0
 
 LOG="$ROOT/.git/rag-hook.log"
-PY="$ROOT/.githooks/rag_embed_event.py"
+PY="$ROOT/scripts/rag/rag_embed_event.py"
 
 stdin_data=""
 if [[ "$EVENT" == "rewrite" ]]; then

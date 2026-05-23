@@ -19,7 +19,8 @@ from memory import (
     save_memory,
     sweep_expired,
 )
-from ingest.backfill import options_from_api_body, run_backfill
+from ingest.backfill import options_from_api_body
+from ingest.backfill_job import backfill_job_manager
 from ingest.pipeline import chroma_repo_collection, prune_orphan_paths, run_embed_job
 from retrieve.query import run_query
 
@@ -120,20 +121,17 @@ async def embed_commit(request: Request) -> JSONResponse:
 
 
 async def backfill_route(request: Request) -> JSONResponse:
-    """Run workspace backfill inside the service (same as ``python -m ingest.backfill``).
+    """Start an async backfill job (``202``) or run a fast dry-run synchronously (``200``).
 
-    Long-running: ensure reverse-proxy/read timeouts are high enough. JSON body mirrors CLI flags;
-    use ``"confirm": true`` instead of ``--yes`` for mutating runs.
+    JSON body mirrors CLI flags; use ``"confirm": true`` for mutating runs.
+    Progress and final summary: ``GET /v1/backfill/status`` and service logs.
     """
-    expected = (os.getenv("RAG_ENGINE_API_KEY") or "").strip()
-    if expected:
-        got = (request.headers.get("x-api-key") or "").strip()
-        if not hmac.compare_digest(got, expected):
-            return JSONResponse({"error": "Unauthorized"}, status_code=401)
+    if (resp := _check_api_key(request)) is not None:
+        return resp
     try:
         body = await request.json()
     except Exception:
-        return JSONResponse({"error": "Invalid JSON"}, status_code=400)
+        body = {}
     if not isinstance(body, dict):
         return JSONResponse({"error": "JSON body must be an object"}, status_code=400)
 
@@ -142,19 +140,29 @@ async def backfill_route(request: Request) -> JSONResponse:
         return JSONResponse({"error": parse_err}, status_code=400)
     assert opts is not None
 
-    def _run():
-        return run_backfill(opts, interactive=False)
-
     try:
-        code, payload = await run_in_threadpool(_run)
+        status_code, payload = backfill_job_manager().start(opts)
     except Exception as exc:
-        log.exception("backfill failed")
+        log.exception("backfill start failed")
         return JSONResponse({"error": str(exc)}, status_code=500)
+    return JSONResponse(payload, status_code=status_code)
 
-    out = {"exit_code": code, **payload}
-    if code == 2:
-        return JSONResponse(out, status_code=400)
-    return JSONResponse(out, status_code=200)
+
+async def backfill_status_route(_: Request) -> JSONResponse:
+    if (resp := _check_api_key(_)) is not None:
+        return resp
+    return JSONResponse(backfill_job_manager().snapshot())
+
+
+async def backfill_stop_route(_: Request) -> JSONResponse:
+    if (resp := _check_api_key(_)) is not None:
+        return resp
+    try:
+        status_code, payload = backfill_job_manager().stop()
+    except Exception as exc:
+        log.exception("backfill stop failed")
+        return JSONResponse({"error": str(exc)}, status_code=500)
+    return JSONResponse(payload, status_code=status_code)
 
 
 async def reconcile_orphans(request: Request) -> JSONResponse:
@@ -396,6 +404,8 @@ app = Starlette(
         Route("/v1/query", endpoint=rag_query, methods=["POST"]),
         Route("/v1/embed-commit", endpoint=embed_commit, methods=["POST"]),
         Route("/v1/backfill", endpoint=backfill_route, methods=["POST"]),
+        Route("/v1/backfill/status", endpoint=backfill_status_route, methods=["GET"]),
+        Route("/v1/backfill/stop", endpoint=backfill_stop_route, methods=["POST"]),
         Route("/v1/reconcile-orphans", endpoint=reconcile_orphans, methods=["POST"]),
         Route("/v1/memory/save", endpoint=memory_save_route, methods=["POST"]),
         Route("/v1/memory/recall", endpoint=memory_recall_route, methods=["POST"]),

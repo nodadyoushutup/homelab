@@ -18,6 +18,7 @@ Every Terraform tfvars file, shared provider tfvars, `minio.backend.hcl`, and li
 | `terraform/providers/dns.tfvars` | `terraform/providers/dns` |
 | `minio.backend.hcl` | `minio.backend` |
 | `docker/langgraph.env` | `docker/langgraph` |
+| `scripts/rag.env` | `scripts/rag` |
 
 Pipelines resolve inputs by id (indexed once per run), so you can rename or relocate files under `.config` as long as the tag stays correct. Overrides still win: `--tfvars`, Jenkins `TFVARS_FILE`, and env vars such as `SWARM_DNS_PROVIDER_TFVARS`.
 
@@ -33,10 +34,11 @@ Canonical mirrored paths (for example `terraform/swarm/<svc>/app.tfvars`) remain
 ## Layout (typical)
 
 - `docker/` — split `*.env` for Compose, LangGraph, and host scripts (see `docker/README.md` and `docker/*.env.example`)
+- `scripts/` — host-only script dotenv (see `scripts/rag.env.example` for `scripts/rag/backfill.sh`); RAG hook/backfill code lives under **`scripts/rag/`**
 - `minio.backend.hcl` — shared remote state backend config for Swarm/remote Terraform stages
 - `terraform/` — merged tfvars, per-stack `app.tfvars` / `config.tfvars`, providers (`terraform/providers/*.tfvars`), secrets slices where used
 - `kubernetes/` — optional cluster tfvars if your site keeps them here
-- `.ssh/` — keys and `known_hosts` for scripts that sync or repair state over SSH (for example `scripts/misc/rag_backfill.sh`)
+- `.ssh/` — keys and `known_hosts` for optional SSH workflows
 
 ## Overrides
 

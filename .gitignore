@@ -175,6 +175,7 @@ kubeconfig
 !.config/README.md
 !.config/docker/README.md
 !.config/docker/*.env.example
+!.config/scripts/*.env.example
 
 # =============================================================================
 # Docs

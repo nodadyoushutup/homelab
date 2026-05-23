@@ -66,6 +66,8 @@ Step-by-step MCP config, authentication headers, and troubleshooting table:
 
 `rag-engine` exposes JSON endpoints (e.g. `POST /v1/query`) for parity checks without MCP. Use the same API key rules as production (`x-api-key` when `RAG_ENGINE_API_KEY` is set).
 
+**Backfill (async):** `POST /v1/backfill` starts a background job (`202`); indexing is followed automatically by orphan prune unless the job is stopped early. `GET /v1/backfill/status` for progress/summary; `POST /v1/backfill/stop` to cancel between files. Dry-run stays synchronous (`200`). Operator script: **`scripts/rag/backfill.sh`** — reads **`.config/scripts/rag.env`** when present, otherwise requires **`--base-url`** and **`--api-key`**. Git hooks: **`scripts/rag/install_githooks.sh`** (stubs in **`.githooks/`** → **`scripts/rag/run_embed_hook.sh`**). Watch progress in service logs (Dozzle/Graylog).
+
 ## Application-level doc
 
 Short pointer to the engine package layout:
