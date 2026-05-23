@@ -37,6 +37,7 @@ resource "docker_service" "mcp_playwright" {
         "--headless",
         "--browser", "chromium",
         "--no-sandbox",
+        "--viewport-size", "1920x1080",
         "--port", "8931",
         "--host", "0.0.0.0",
         "--allowed-hosts", "*",
