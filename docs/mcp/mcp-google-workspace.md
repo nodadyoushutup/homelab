@@ -1,40 +1,31 @@
 # mcp-google-workspace
 
-Streamable HTTP MCP for **Google Workspace** (Gmail, Calendar, Drive, and other tools from upstream [`workspace-mcp`](https://pypi.org/project/workspace-mcp/)), using **single-user legacy OAuth** on the server (no MCP OAuth 2.1, no service account). Same client model as **mcp-github**: Cursor connects to `/mcp` with no Bearer token; Google sign-in and tokens live in the container.
+Streamable HTTP MCP for **Google Workspace** (Gmail, Calendar, Drive, and other tools from upstream [`workspace-mcp`](https://pypi.org/project/workspace-mcp/)), wrapped by **`applications/mcp-google-workspace/`**. Uses **single-user legacy OAuth** on the server (no MCP OAuth 2.1, no service account). Same client model as **mcp-github**: Cursor connects to `/mcp` with no Bearer token; Google sign-in and tokens live in the container.
 
 ## URL and path
 
-Publish the service behind TLS at **`https://mcp.google-workspace.nodadyoushutup.com/mcp`** (or your hostname). The container listens on **8086**; Swarm publishes **18209** → **8086**.
+Publish the service behind TLS at **`https://mcp.google-workspace.nodadyoushutup.com/mcp`** (or your hostname). The container listens on **8086** via **`applications/mcp-google-workspace/entrypoint.sh`** defaults (`MCP_GOOGLE_WORKSPACE_LISTEN_PORT`); Swarm publishes **18209** → **8086**.
 
 NPM must forward the **entire hostname** (not only `/mcp`) so OAuth paths reach the container: `/oauth2callback`, `/oauth2/*`, `/.well-known/*`, and `/mcp`. See [edge-dns-and-nginx-proxy.md](../workflows/edge-dns-and-nginx-proxy.md).
 
 ## Usage
 
-- Prefer **`GOOGLE_WORKSPACE_MCP_TOOL_TIER=core`** (default in the image entrypoint) unless you need more tools; smaller scope simplifies consent.
+- Prefer **`GOOGLE_WORKSPACE_MCP_TOOL_TIER=core`** (default in **`applications/mcp-google-workspace/entrypoint.sh`**) unless you need more tools; smaller scope simplifies consent.
 - First tool use that needs Google APIs opens sign-in/consent in the browser (server `/oauth2callback` flow).
-- OAuth tokens live in the container under `WORKSPACE_MCP_CREDENTIALS_DIR`; redeploy clears them and may require re-consent.
+- OAuth tokens live in the container under **`WORKSPACE_MCP_CREDENTIALS_DIR`**; redeploy clears them and may require re-consent.
 - **`/mcp` is not protected by MCP OAuth 2.1** — treat the hostname like other homelab MCPs (TLS + network trust). Do not expose it on the public internet without accepting that risk.
 
 ## Cursor
 
-Add to project **`.cursor/mcp.json`** when you want Workspace access:
+Project **`.cursor/mcp.json`** registers **`mcp_google_workspace`** at **`https://mcp.google-workspace.nodadyoushutup.com/mcp`** (Streamable HTTP — **`--transport streamable-http`** in **`applications/mcp-google-workspace/entrypoint.sh`**). No client API key — **`GOOGLE_OAUTH_*`** and **`WORKSPACE_EXTERNAL_URL`** live in Swarm **`env`** on **`.config/terraform/swarm/mcp-google-workspace/app.tfvars`**. After deploy or config edits, **reload MCP** in Cursor Settings if tools stay disconnected.
 
-```json
-{
-  "mcpServers": {
-    "mcp_google_workspace": {
-      "url": "https://mcp.google-workspace.nodadyoushutup.com/mcp"
-    }
-  }
-}
-```
+## LangGraph
 
-No Cursor MCP OAuth step (no “Waiting for callback…”). Reload MCP in Cursor Settings after deploy or config changes.
+Add a server block in the relevant **`mcp.json`** when a graph should call Google Workspace through this stack.
 
 ## Swarm
 
-- Stack: **`terraform/swarm/mcp-google-workspace/app/`**
-- Credentials: flat **`env`** map on **`.config/terraform/swarm/mcp-google-workspace/app.tfvars`** (no NFS config mount, no service account JSON).
+- Stack: **`terraform/swarm/mcp-google-workspace/app/`** — all site credentials in the **`env`** map on **`.config/terraform/swarm/mcp-google-workspace/app.tfvars`** (flat keys such as **`GOOGLE_OAUTH_CLIENT_ID`**, **`GOOGLE_OAUTH_CLIENT_SECRET`**, **`WORKSPACE_EXTERNAL_URL`**; no Vault **`secrets`** block or **`env_file_path`**). Keep tokens out of git.
 
 Required keys:
 
@@ -44,9 +35,7 @@ Required keys:
 | `GOOGLE_OAUTH_CLIENT_SECRET` | Matching client secret |
 | `WORKSPACE_EXTERNAL_URL` | Public HTTPS origin, no trailing slash (e.g. `https://mcp.google-workspace.nodadyoushutup.com`) |
 
-Optional: `USER_GOOGLE_EMAIL` (default Workspace account for tool calls), `GOOGLE_WORKSPACE_MCP_TOOL_TIER` (`core` / `extended` / `complete`), `GOOGLE_WORKSPACE_MCP_READ_ONLY=true`, `GOOGLE_WORKSPACE_MCP_TOOLS` (space-separated list).
-
-**Breaking:** Remove `MCP_ENABLE_OAUTH21` from `app.tfvars` if present. The image runs `--single-user` and does not enable OAuth 2.1. Rebuild/push the image and redeploy Swarm after changing the entrypoint.
+Optional: `USER_GOOGLE_EMAIL` (default Workspace account for tool calls), `MCP_GOOGLE_WORKSPACE_LISTEN_PORT`, `MCP_GOOGLE_WORKSPACE_HOST`, `GOOGLE_WORKSPACE_MCP_TOOL_TIER` (`core` / `extended` / `complete`), `GOOGLE_WORKSPACE_MCP_READ_ONLY=true`, `GOOGLE_WORKSPACE_MCP_TOOLS` (space-separated list).
 
 ## Google Cloud OAuth setup
 
@@ -66,14 +55,6 @@ Use a **Google Cloud project** you control (personal or Workspace org).
    - Copy **Client ID** and **Client secret** into Swarm `env` (never commit secrets).
 6. **Workspace auth overview** (background): [Authentication and authorization](https://developers.google.com/workspace/guides/auth-overview)
 7. **Upstream FAQ** (redirect URI troubleshooting): [workspacemcp.com FAQ — OAuth](https://workspacemcp.com/welcome/faq#oauth-google-cloud-setup)
-
-## Deploy order
-
-1. Build and push **`ghcr.io/nodadyoushutup/mcp-google-workspace:0.0.1`** (tag hardcoded in **`terraform/swarm/mcp-google-workspace/app/main.tf`**; bump there after publish).
-2. Add Cloudflare `A` record + NPM proxy host (`forward_port` **18209**) per [edge-dns-and-nginx-proxy.md](../workflows/edge-dns-and-nginx-proxy.md).
-3. Set **`app.tfvars`** `env` with OAuth client ID, secret, and `WORKSPACE_EXTERNAL_URL`.
-4. Run Terraform app pipeline for **`mcp-google-workspace`**.
-5. Register MCP in Cursor (no MCP client OAuth). Complete Google browser consent on first tool use if credentials are not already in the container.
 
 ## Related
 

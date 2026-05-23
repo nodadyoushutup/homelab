@@ -32,20 +32,10 @@ resource "docker_service" "mcp_google_workspace" {
     container_spec {
       image = "ghcr.io/nodadyoushutup/mcp-google-workspace:0.0.1"
       env   = var.env
-      user  = "1000:1000"
-
-      cap_drop = ["ALL"]
 
       dns_config {
         nameservers = var.dns_nameservers
       }
-    }
-
-    restart_policy {
-      condition    = "on-failure"
-      delay        = "10s"
-      max_attempts = 3
-      window       = "2m"
     }
   }
 
