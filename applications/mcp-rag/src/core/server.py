@@ -231,11 +231,13 @@ def create_mcp() -> FastMCP:
             "- rag_search: semantic search over INDEXED REPO CODE/DOCS. Use for orientation "
             "(where code or docs likely live, workflow context) before narrowing with filesystem "
             "or ast-grep. Concrete anchors win: path fragments, class/method names, exact error "
-            "text, Odoo technical model names (e.g. purchase.order). Result count is engine-driven "
-            "(RAG_TOP_K on rag-engine). `where` uses Chroma metadata keys documented in "
-            "docs/workflows/rag-agent-mcp-integration-roadmap.md (path, xml_model, language, "
-            "chunk_strategy). The metadata key `model` is the EMBEDDING model id — do not confuse "
-            "with Odoo `ir.model`; use `xml_model` to filter Odoo XML records.\n"
+            "text, Odoo technical model names (e.g. purchase.order). Omit `path_prefix` for "
+            "corpus-wide search. Set `path_prefix` when scoping to a directory (e.g. "
+            "docs/subagents/code/). Default hit count is RAG_TOP_K on rag-engine; optional `k` "
+            "requests more (capped by RAG_QUERY_K_MAX). `where` uses Chroma metadata keys "
+            "documented in docs/workflows/rag-agent-mcp-integration-roadmap.md (path, xml_model, "
+            "language, chunk_strategy). The metadata key `model` is the EMBEDDING model id — do "
+            "not confuse with Odoo `ir.model`; use `xml_model` to filter Odoo XML records.\n"
             "- memory_recall: retrieve previously-saved long-term memories (failure→solution "
             "pairs and user-asserted facts). Use BEFORE deep failure diagnosis or at the start "
             "of a topical task. NOT a substitute for rag_search; memories are HINTS to verify, "
@@ -261,20 +263,35 @@ def create_mcp() -> FastMCP:
     def rag_search(
         query: str,
         where: dict[str, Any] | None = None,
+        path_prefix: str | None = None,
+        k: int | None = None,
     ) -> dict[str, Any]:
         """Semantic search over the indexed repository via rag-engine (shared embeddings + Chroma).
 
         Use specific anchors (paths, symbols, Odoo model names like purchase.order, error strings).
+        Omit `path_prefix` for corpus-wide search. Set `path_prefix` when the task or user already
+        names a repo directory (e.g. supervisor preflight: docs/subagents/jira/).
         Use `where` only when narrowing by known metadata (see rag-agent-mcp-integration-roadmap).
         Issue multiple tool calls for unrelated sub-questions (workflow vs code location).
-        Hit count is set by RAG_TOP_K on rag-engine (not a tool argument).
+        Default hit count is RAG_TOP_K on rag-engine; optional `k` requests more hits (engine-capped).
         """
         q = (query or "").strip()
         if not q:
             return {"error": "query_empty", "message": "query must be non-empty"}
+        prefix_clean = (path_prefix or "").strip() or None
         body: dict[str, Any] = {"query": q}
         if where is not None:
             body["where"] = where
+        if prefix_clean is not None:
+            body["path_prefix"] = prefix_clean
+        if k is not None:
+            try:
+                k_int = int(k)
+            except (TypeError, ValueError):
+                return {"error": "k_invalid", "message": "k must be an integer"}
+            if k_int < 1:
+                return {"error": "k_invalid", "message": "k must be >= 1"}
+            body["k"] = k_int
         return _post_engine(path=ENGINE_QUERY_PATH, body=body)
 
     @mcp.tool()

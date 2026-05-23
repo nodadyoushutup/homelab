@@ -26,7 +26,7 @@ Project **`.cursor/mcp.json`** registers **`mcp_rag`** at **`https://mcp.rag.nod
 
 Export the key from **`.config/docker/mcp.env`** into the environment Cursor inherits (for example `set -a && source .config/docker/mcp.env && set +a` in the shell before launching Cursor, or your desktop/session env). After deploy or config edits, **reload MCP** in Cursor Settings if tools stay disconnected. If interpolation fails on your build, add header **`x-api-key`** manually under **Cursor Settings → MCP** for **`mcp_rag`**.
 
-Native tool calling exposes **`rag_search`**, **`memory_recall`**, **`memory_save`**, and **`memory_forget`** once the server connects. **`rag_search`** accepts **`query`** and optional **`where`** only; nearest-neighbor count is **`RAG_TOP_K`** on **rag-engine** (default **20**).
+Native tool calling exposes **`rag_search`**, **`memory_recall`**, **`memory_save`**, and **`memory_forget`** once the server connects. **`rag_search`** accepts **`query`**, optional **`where`**, optional **`path_prefix`** (repo directory scope), and optional **`k`** (per-request hit count capped by **`RAG_QUERY_K_MAX`** on **rag-engine**). Default breadth remains **`RAG_TOP_K`** (default **20**).
 
 ## Swarm
 

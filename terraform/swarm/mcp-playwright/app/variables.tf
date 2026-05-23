@@ -33,6 +33,16 @@ variable "placement" {
 }
 
 
+variable "nfs" {
+  description = "Homelab repo NFS mount (providers/nfs.tfvars)."
+  type = object({
+    target         = string
+    driver_options = map(string)
+  })
+  sensitive = true
+}
+
+
 variable "swarm_docker_provider_config" {
   description = "Docker SSH host and registry_auths for the Swarm control plane."
   type        = any

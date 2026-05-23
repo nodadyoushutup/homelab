@@ -32,7 +32,7 @@ OpenAI Codex use the same HTTPS MCP endpoint and tools.
 
 | Tool | Role |
 | --- | --- |
-| `rag_search` | Semantic search over the indexed corpus via `rag-engine`. |
+| `rag_search` | Semantic search over the indexed corpus via `rag-engine`. Optional `path_prefix` scopes to a repo directory; optional `k` overrides hit count up to `RAG_QUERY_K_MAX` (default breadth remains `RAG_TOP_K`). |
 | `memory_recall` | Retrieve prior episodic/declarative memories (hints only). |
 | `memory_save` | Persist memory through **strict gates** (see below). |
 | `memory_forget` | Delete by id when the user asks to forget. |

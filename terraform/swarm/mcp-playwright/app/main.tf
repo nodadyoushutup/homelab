@@ -3,6 +3,10 @@ resource "docker_network" "mcp_playwright" {
   driver = "overlay"
 }
 
+locals {
+  playwright_output_dir = "${var.nfs.target}/data/playwright"
+}
+
 resource "docker_service" "mcp_playwright" {
   name = "mcp-playwright"
 
@@ -31,7 +35,9 @@ resource "docker_service" "mcp_playwright" {
 
     container_spec {
       image = "mcr.microsoft.com/playwright/mcp:latest"
-      env   = var.env
+      env = merge(var.env, {
+        PLAYWRIGHT_MCP_OUTPUT_DIR = local.playwright_output_dir
+      })
 
       args = [
         "--headless",
@@ -40,11 +46,23 @@ resource "docker_service" "mcp_playwright" {
         "--port", "8931",
         "--host", "0.0.0.0",
         "--allowed-hosts", "*",
-        "--output-dir", "/tmp/playwright",
+        "--output-dir", local.playwright_output_dir,
       ]
 
       dns_config {
         nameservers = var.dns_nameservers
+      }
+
+      mounts {
+        type   = "volume"
+        source = "mcp-playwright-nfs"
+        target = var.nfs.target
+
+        volume_options {
+          driver_name    = "local"
+          driver_options = var.nfs.driver_options
+          no_copy        = false
+        }
       }
     }
   }

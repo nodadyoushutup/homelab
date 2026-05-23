@@ -19,7 +19,7 @@ Downstream clients (**`mcp-rag`**, LangGraph agents, Cursor, Codex, or direct HT
 
 **Ingest (index update):** eligible file changes → `rag-engine` pipeline (`ingest/pipeline.py`) → chunk strategies (`chunks/structured.py`, sibling modules under `chunks/`) → provider dispatcher (`embeddings/providers.py`) → vectors + metadata → Chroma collection (default name **`homelab`**, overridable via `RAG_CHROMA_COLLECTION`).
 
-**Query:** client → `POST /v1/query` on `rag-engine` (or `rag_search` via `mcp-rag`) → embed query text → Chroma query with optional `where` metadata filter → up to **`RAG_TOP_K`** ranked chunks returned to the client.
+**Query:** client → `POST /v1/query` on `rag-engine` (or `rag_search` via `mcp-rag`) → embed query text → Chroma query with optional `where` metadata filter and optional `path_prefix` directory scope → up to **`RAG_TOP_K`** ranked chunks by default (optional per-request **`k`**, capped by **`RAG_QUERY_K_MAX`**) returned to the client.
 
 **Long-term memory (separate collections):** `mcp-rag` memory tools call `rag-engine` memory routes; vectors live in dedicated Chroma collections (`memories_episodic`, `memories_declarative` by default). Storage reuses the same embedding stack as repo RAG. **Promotion gates and agent responsibilities** are documented in [rag-agent-mcp-integration-roadmap.md](../workflows/rag-agent-mcp-integration-roadmap.md).
 

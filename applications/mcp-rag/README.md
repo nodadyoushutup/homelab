@@ -1,6 +1,6 @@
 # mcp-rag
 
-Thin MCP server: forwards **`rag_search`** (corpus query) and **memory** tools to `rag-engine` over HTTP so clients use the same embedding provider/model as ingest. Corpus hit count is **not** a tool argument — set **`RAG_TOP_K`** on **rag-engine** (see [operators-and-clients.md](../../../docs/rag/operators-and-clients.md)).
+Thin MCP server: forwards **`rag_search`** (corpus query) and **memory** tools to `rag-engine` over HTTP so clients use the same embedding provider/model as ingest. Default hit count is **`RAG_TOP_K`** on **rag-engine**; optional per-request **`k`** is capped by **`RAG_QUERY_K_MAX`**. See [operators-and-clients.md](../../../docs/rag/operators-and-clients.md).
 
 ## Environment
 

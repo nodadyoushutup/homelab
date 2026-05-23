@@ -70,6 +70,19 @@ async def rag_query(request: Request) -> JSONResponse:
     where = body.get("where")
     if where is not None and not isinstance(where, dict):
         return JSONResponse({"error": "where must be a JSON object"}, status_code=400)
+    path_prefix_raw = body.get("path_prefix")
+    path_prefix: str | None = None
+    if path_prefix_raw is not None:
+        if not isinstance(path_prefix_raw, str):
+            return JSONResponse({"error": "path_prefix must be a string"}, status_code=400)
+        path_prefix = path_prefix_raw.strip() or None
+    k_raw = body.get("k")
+    k: int | None = None
+    if k_raw is not None:
+        try:
+            k = int(k_raw)
+        except (TypeError, ValueError):
+            return JSONResponse({"error": "k must be an integer"}, status_code=400)
     model = embedding_model()
 
     def _sync():
@@ -81,6 +94,8 @@ async def rag_query(request: Request) -> JSONResponse:
             query_text=q,
             embedding_model=model,
             where=where,
+            path_prefix=path_prefix,
+            k=k,
         )
 
     try:

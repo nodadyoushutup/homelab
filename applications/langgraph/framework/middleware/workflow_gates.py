@@ -220,17 +220,18 @@ def _task_delegation_denial(request: ToolCallRequest) -> ToolMessage | None:
         detail = (
             f"{missing_phrase} after the user's latest "
             "message before delegating. First run a docs-oriented query scoped to "
-            f"`{docs_path}/` and relevant workflow docs, then "
-            "pass those doc anchors into the task description."
+            f"`{docs_path}/` (use `path_prefix` or include the path in the query) "
+            "and relevant workflow docs, then pass those doc anchors into the task "
+            "description."
         )
         if required_rag_searches > 1:
             detail = (
                 f"{missing_phrase} after the user's latest "
                 "message before delegating. First run a docs-oriented query scoped "
-                f"to `{docs_path}/` and relevant workflow docs; then run a "
-                "code-location query to identify likely repository files, services, "
-                "manifests, or configuration. Pass both result sets into the task "
-                "description."
+                f"to `{docs_path}/` (use `path_prefix` or include the path in the "
+                "query) and relevant workflow docs; then run a code-location query to "
+                "identify likely repository files, services, manifests, or "
+                "configuration. Pass both result sets into the task description."
             )
         return ToolMessage(
             content=_gate_error_payload(
