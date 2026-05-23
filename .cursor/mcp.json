@@ -23,6 +23,9 @@
     },
     "mcp_kubernetes": {
       "url": "https://mcp.kubernetes.nodadyoushutup.com/mcp"
+    },
+    "mcp_fortigate": {
+      "url": "https://mcp.fortigate.nodadyoushutup.com/mcp"
     }
   }
 }

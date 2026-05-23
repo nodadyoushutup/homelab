@@ -1,8 +1,0 @@
-#!/usr/bin/env bash
-# After amend / rebase / filter-branch. Stdin is old-sha new-sha lines; we prefer
-# ORIG_HEAD..HEAD when that ref exists (one diff for the whole rewrite).
-set -euo pipefail
-[[ -n "${RAG_GIT_HOOKS_DISABLED:-}" ]] && exit 0
-ROOT="$(git rev-parse --show-toplevel)"
-cd "$ROOT"
-exec "$ROOT/scripts/rag/run_embed_hook.sh" rewrite

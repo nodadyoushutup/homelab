@@ -25,7 +25,7 @@ OpenAI Codex use the same HTTPS MCP endpoint and tools.
 - **Migrating an existing index:** after backfill completes, either point
   `RAG_CHROMA_COLLECTION` at the new collection and re-ingest into `homelab`, or
   use Chroma’s collection management to rename/copy data, then align env vars
-  across `rag-engine`, hooks, and backfill scripts. Mixed names across
+  across `rag-engine` and backfill scripts. Mixed names across
   environments are fine as long as each stack is internally consistent.
 
 ## `mcp-rag` tools

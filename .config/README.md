@@ -34,7 +34,7 @@ Canonical mirrored paths (for example `terraform/swarm/<svc>/app.tfvars`) remain
 ## Layout (typical)
 
 - `docker/` — split `*.env` for Compose, LangGraph, and host scripts (see `docker/README.md` and `docker/*.env.example`)
-- `scripts/` — host-only script dotenv (see `scripts/rag.env.example` for `scripts/rag/backfill.sh`); RAG hook/backfill code lives under **`scripts/rag/`**
+- `scripts/` — host-only script dotenv (see `scripts/rag.env.example` for `scripts/rag/backfill.sh`); RAG backfill script lives under **`scripts/rag/`**
 - `minio.backend.hcl` — shared remote state backend config for Swarm/remote Terraform stages
 - `terraform/` — merged tfvars, per-stack `app.tfvars` / `config.tfvars`, providers (`terraform/providers/*.tfvars`), secrets slices where used
 - `kubernetes/` — optional cluster tfvars if your site keeps them here

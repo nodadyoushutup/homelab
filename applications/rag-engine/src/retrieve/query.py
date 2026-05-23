@@ -32,7 +32,7 @@ def run_query(
     """Semantic search over Chroma with the same embedding model used for indexing."""
     text = (query_text or "").strip()
     if not text:
-        return {"error": "query is empty", "results": []}
+        return {"error": "query is empty", "results": [], "top_k": 0}
     k = top_k()
     provider = embedding_provider()
     vec = embed_batch(
@@ -43,7 +43,7 @@ def run_query(
         input_type="query",
     )
     if not vec:
-        return {"error": "embedding failed", "results": []}
+        return {"error": "embedding failed", "results": [], "top_k": 0}
     kwargs: dict[str, Any] = {
         "query_embeddings": [vec[0]],
         "n_results": k,
@@ -55,7 +55,7 @@ def run_query(
         raw = collection.query(**kwargs)
     except Exception as exc:
         log.exception("chroma query failed")
-        return {"error": str(exc), "results": []}
+        return {"error": str(exc), "results": [], "top_k": 0}
 
     ids = raw.get("ids") or [[]]
     docs = raw.get("documents") or [[]]

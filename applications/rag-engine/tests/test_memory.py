@@ -337,7 +337,7 @@ class CollectionInteractionTests(unittest.TestCase):
             k=2,
             kind=memory.KIND_EPISODIC,
         )
-        self.assertGreaterEqual(result["n_results"], 1)
+        self.assertGreaterEqual(result["top_k"], 1)
         hit = result["results"][0]
         for required in ("id", "kind", "source", "title", "body", "score", "age_days", "recall_count", "verified", "cited_paths"):
             self.assertIn(required, hit)

@@ -21,7 +21,7 @@ from memory import (
 )
 from ingest.backfill import options_from_api_body
 from ingest.backfill_job import backfill_job_manager
-from ingest.pipeline import chroma_repo_collection, prune_orphan_paths, run_embed_job
+from ingest.pipeline import chroma_repo_collection, prune_orphan_paths
 from retrieve.query import run_query
 
 log = logging.getLogger(__name__)
@@ -38,7 +38,7 @@ def _configure_logging() -> None:
 _configure_logging()
 
 if not (os.getenv("RAG_ENGINE_API_KEY") or "").strip():
-    log.warning("RAG_ENGINE_API_KEY is empty; POST /v1/embed-commit accepts unauthenticated requests")
+    log.warning("RAG_ENGINE_API_KEY is empty; mutating POST endpoints accept unauthenticated requests")
 
 _chroma_target = chroma_hostname_display()
 log.info("Chroma HTTP target %s (RAG_CHROMA_HOSTNAME)", _chroma_target)
@@ -91,33 +91,6 @@ async def rag_query(request: Request) -> JSONResponse:
     if result.get("error"):
         return JSONResponse(result, status_code=400)
     return JSONResponse(result)
-
-
-async def embed_commit(request: Request) -> JSONResponse:
-    expected = (os.getenv("RAG_ENGINE_API_KEY") or "").strip()
-    if expected:
-        got = (request.headers.get("x-api-key") or "").strip()
-        if not hmac.compare_digest(got, expected):
-            return JSONResponse({"error": "Unauthorized"}, status_code=401)
-    try:
-        body = await request.json()
-    except Exception:
-        return JSONResponse({"error": "Invalid JSON"}, status_code=400)
-    commit = (body.get("commit") or "").strip()
-    paths = body.get("paths") or []
-    removed_paths = body.get("removed_paths") or []
-    if not commit:
-        return JSONResponse({"error": "commit is required"}, status_code=400)
-    if not isinstance(paths, list) or not isinstance(removed_paths, list):
-        return JSONResponse({"error": "paths and removed_paths must be arrays"}, status_code=400)
-    paths_s = [str(p) for p in paths]
-    removed_s = [str(p) for p in removed_paths]
-    try:
-        result = run_embed_job(commit, paths_s, removed_s)
-        return JSONResponse(result)
-    except Exception as exc:
-        log.exception("embed-commit failed")
-        return JSONResponse({"error": str(exc)}, status_code=500)
 
 
 async def backfill_route(request: Request) -> JSONResponse:
@@ -402,7 +375,6 @@ app = Starlette(
     routes=[
         Route("/healthz", endpoint=healthz, methods=["GET"]),
         Route("/v1/query", endpoint=rag_query, methods=["POST"]),
-        Route("/v1/embed-commit", endpoint=embed_commit, methods=["POST"]),
         Route("/v1/backfill", endpoint=backfill_route, methods=["POST"]),
         Route("/v1/backfill/status", endpoint=backfill_status_route, methods=["GET"]),
         Route("/v1/backfill/stop", endpoint=backfill_stop_route, methods=["POST"]),

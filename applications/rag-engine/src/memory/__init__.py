@@ -326,7 +326,7 @@ def recall_memory(
 ) -> dict[str, Any]:
     text = (query_text or "").strip()
     if not text:
-        return {"error": "query is empty", "results": [], "n_results": 0}
+        return {"error": "query is empty", "results": [], "top_k": 0}
 
     model = embedding_model().strip()
     provider = embedding_provider()
@@ -338,7 +338,7 @@ def recall_memory(
         input_type="query",
     )
     if not vec:
-        return {"error": "embedding_failed", "results": [], "n_results": 0}
+        return {"error": "embedding_failed", "results": [], "top_k": 0}
 
     cap = min(max(1, k), _recall_cap())
     kinds_to_query: list[str]
@@ -349,7 +349,7 @@ def recall_memory(
     elif kind == KIND_DECLARATIVE:
         kinds_to_query = [KIND_DECLARATIVE]
     else:
-        return {"error": f"invalid kind {kind!r}", "results": [], "n_results": 0}
+        return {"error": f"invalid kind {kind!r}", "results": [], "top_k": 0}
 
     now = _now_ts()
     merged: list[tuple[float, str, str, str, dict[str, Any]]] = []
@@ -391,7 +391,7 @@ def recall_memory(
         except Exception as exc:
             log.warning("recall increment failed id=%s: %s", rid, exc)
 
-    return {"results": results, "n_results": len(results)}
+    return {"results": results, "top_k": len(results)}
 
 
 def forget_memory(

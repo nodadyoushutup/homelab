@@ -42,7 +42,7 @@ The authoritative table of keys for Chroma filters is maintained in the integrat
 | Concern | Location |
 | --- | --- |
 | Collection handles | `ingest/pipeline.py` (`chroma_repo_collection`), `memory/__init__.py` |
-| Ingest / embed jobs | `ingest/pipeline.py` (`run_embed_job`, path allowlists) |
+| Ingest / embed jobs | `ingest/pipeline.py` (path allowlists, `upsert_paths`) |
 | Provider dispatch | `embeddings/providers.py` (`google_genai.py`, `openai_client.py`, `anthropic_client.py`) |
 | Query embedding + Chroma | `retrieve/query.py` |
-| HTTP API | `api/server.py` (`rag_query`, `embed_commit`, memory routes) |
+| HTTP API | `api/server.py` (`rag_query`, backfill, memory routes) |

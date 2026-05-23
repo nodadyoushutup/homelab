@@ -46,13 +46,13 @@ Swarm/Terraform RAG (including **`chromadb-data`** on Swarm) remains the persist
 
 ## Environment variables
 
-Use **`.config/docker/rag.env`** (and **`.config/docker/rag.env.example`**) for the canonical key list. **Git hooks**, **`scripts/terraform/load_root_env.sh`** (Swarm/terraform pipelines), and other **local scripts** read that file. **Swarm `rag-engine`** and **`mcp-rag`** take container variables from **`env`** in **`.config/terraform/swarm/rag-engine/app.tfvars`** and **`.config/terraform/swarm/mcp-rag/app.tfvars`** respectively.
+Use **`.config/docker/rag.env`** (and **`.config/docker/rag.env.example`**) for the canonical key list. **`scripts/terraform/load_root_env.sh`** (Swarm/terraform pipelines) and other **local scripts** read that file. **Swarm `rag-engine`** and **`mcp-rag`** take container variables from **`env`** in **`.config/terraform/swarm/rag-engine/app.tfvars`** and **`.config/terraform/swarm/mcp-rag/app.tfvars`** respectively.
 
 **Engine / Chroma / embed:** `RAG_CHROMA_HOSTNAME` (default `chromadb:8000`; host-only uses port **8000**), `RAG_CHROMA_COLLECTION`, `RAG_TOP_K` (repo query nearest-neighbor count; default **20**), `RAG_EMBEDDING_PROVIDER`, `RAG_EMBEDDING_MODEL`, `RAG_ENGINE_API_KEY`, memory collection names, memory TTL and scoring tunables (`RAG_MEMORY_*` — see `.config/docker/rag.env.example`, `chroma_config.py`, `server.py` / `memory.py`).
 
 **OpenAI** is the default provider: set `OPENAI_API_KEY` and optionally `RAG_EMBEDDING_MODEL` (default `text-embedding-3-small`) plus `RAG_OPENAI_EMBEDDING_DIMENSIONS`. For **Google**, set `RAG_EMBEDDING_PROVIDER=google` and `GOOGLE_API_KEY`. For **`anthropic`** (Voyage-backed; see `docs/rag/embeddings-and-storage.md`), set `RAG_EMBEDDING_PROVIDER=anthropic`, `VOYAGE_API_KEY`, and optionally `RAG_EMBEDDING_MODEL` (default `voyage-3.5`) plus `RAG_ANTHROPIC_EMBEDDING_DIMENSIONS`. Use a separate Chroma collection or rebuild when changing provider/model/dimensions.
 
-**Ingest scope:** `RAG_PATHS_ALLOWED` (required for indexing — set in Swarm **`env`** / **`.config/docker/rag.env`**), optional hook override `RAG_HOOK_INCLUDE_PREFIXES`, **`RAG_PATHS_DISALLOWED`** (comma-separated path segment names skipped even under allowed prefixes — e.g. `node_modules`, `.venv`), and **`RAG_EXTENSIONS_IGNORE`** (comma-separated file suffixes to skip; no in-app default).
+**Ingest scope:** `RAG_PATHS_ALLOWED` (required for indexing — set in Swarm **`env`** / **`.config/docker/rag.env`**), **`RAG_PATHS_DISALLOWED`** (comma-separated path segment names skipped even under allowed prefixes — e.g. `node_modules`, `.venv`), and **`RAG_EXTENSIONS_IGNORE`** (comma-separated file suffixes to skip; no in-app default).
 
 **MCP (`mcp-rag`):** `RAG_ENGINE_BASE_URL`, `RAG_ENGINE_API_KEY`, `MCP_RAG_API_KEY`, `MCP_RAG_LOG_LEVEL`, `MCP_RAG_ENGINE_TIMEOUT_SEC`. Corpus **`rag_search`** breadth is **`RAG_TOP_K`** on **rag-engine** only (not on mcp-rag).
 
@@ -66,7 +66,7 @@ Step-by-step MCP config, authentication headers, and troubleshooting table:
 
 `rag-engine` exposes JSON endpoints (e.g. `POST /v1/query`) for parity checks without MCP. Use the same API key rules as production (`x-api-key` when `RAG_ENGINE_API_KEY` is set).
 
-**Backfill (async):** `POST /v1/backfill` starts a background job (`202`); indexing is followed automatically by orphan prune unless the job is stopped early. `GET /v1/backfill/status` for progress/summary; `POST /v1/backfill/stop` to cancel between files. Dry-run stays synchronous (`200`). Operator script: **`scripts/rag/backfill.sh`** — reads **`.config/scripts/rag.env`** when present, otherwise requires **`--base-url`** and **`--api-key`**. Git hooks: **`scripts/rag/install_githooks.sh`** (stubs in **`.githooks/`** → **`scripts/rag/run_embed_hook.sh`**). Watch progress in service logs (Dozzle/Graylog).
+**Backfill (async):** `POST /v1/backfill` starts a background job (`202`); indexing is followed automatically by orphan prune unless the job is stopped early. `GET /v1/backfill/status` for progress/summary; `POST /v1/backfill/stop` to cancel between files. Dry-run stays synchronous (`200`). Operator script: **`scripts/rag/backfill.sh`** — reads **`.config/scripts/rag.env`** when present, otherwise requires **`--base-url`** and **`--api-key`**. Watch progress in service logs (Dozzle/Graylog).
 
 ## Application-level doc
 

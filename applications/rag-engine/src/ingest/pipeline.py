@@ -19,7 +19,6 @@ from embeddings import (
     embedding_model,
     embedding_provider,
 )
-from memory import mark_memories_stale_for_paths
 from ingest.path_rules import file_has_excluded_suffix, path_has_disallowed_segment
 from chunks.office import (
     build_docx_chunks,
@@ -531,20 +530,6 @@ def upsert_paths(
         stats["chunks"] += len(documents)
         stats["indexed"] += 1
     return stats
-
-
-def run_embed_job(commit: str, paths: list[str], removed_paths: list[str]) -> dict:
-    collection = _collection()
-    genai_client = build_embedding_client()
-    deleted = delete_paths(collection, removed_paths)
-    up = upsert_paths(collection, genai_client, paths, commit, skip_unchanged=False)
-    touched = list(set(paths) | set(removed_paths))
-    try:
-        stale = mark_memories_stale_for_paths(paths=touched, commit_sha=commit)
-    except Exception as exc:
-        log.warning("memory stale marking failed for commit=%s: %s", commit, exc)
-        stale = {"error": "stale_marking_failed", "message": str(exc)}
-    return {"commit": commit, "removed": deleted, **up, "stale_memories": stale}
 
 
 def collect_backfill_relative_paths() -> list[str]:
