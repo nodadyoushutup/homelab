@@ -65,18 +65,6 @@ resource "docker_service" "graylog_datanode" {
         source = docker_volume.graylog_datanode.name
         type   = "volume"
       }
-
-      ulimits {
-        name = "memlock"
-        soft = -1
-        hard = -1
-      }
-
-      ulimits {
-        name = "nofile"
-        soft = 65536
-        hard = 65536
-      }
     }
   }
 
@@ -135,6 +123,7 @@ resource "docker_service" "graylog" {
         GRAYLOG_HTTP_BIND_ADDRESS  = local.graylog_http_bind
         GRAYLOG_HTTP_EXTERNAL_URI  = local.graylog_http_external
         GRAYLOG_MONGODB_URI        = local.graylog_mongodb_uri
+        GRAYLOG_SELFSIGNED_STARTUP = "true"
       }
 
       dns_config {

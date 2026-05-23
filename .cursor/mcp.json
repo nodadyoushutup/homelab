@@ -14,6 +14,9 @@
     },
     "mcp_google_workspace": {
       "url": "https://mcp.google-workspace.nodadyoushutup.com/mcp"
+    },
+    "mcp_kubernetes": {
+      "url": "https://mcp.kubernetes.nodadyoushutup.com/mcp"
     }
   }
 }

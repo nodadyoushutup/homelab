@@ -11,6 +11,7 @@ NPM must forward the **entire hostname** (not only `/mcp`) so OAuth paths reach 
 ## Usage
 
 - Prefer **`GOOGLE_WORKSPACE_MCP_TOOL_TIER=core`** (default in **`applications/mcp-google-workspace/entrypoint.sh`**) unless you need more tools; smaller scope simplifies consent.
+- Restrict exposed services with **`GOOGLE_WORKSPACE_MCP_TOOLS`** in Swarm **`env`** (space-separated upstream service keys). Omit it to load all services.
 - First tool use that needs Google APIs opens sign-in/consent in the browser (server `/oauth2callback` flow).
 - OAuth tokens live in the container under **`WORKSPACE_MCP_CREDENTIALS_DIR`**; redeploy clears them and may require re-consent.
 - **`/mcp` is not protected by MCP OAuth 2.1** — treat the hostname like other homelab MCPs (TLS + network trust). Do not expose it on the public internet without accepting that risk.
@@ -25,7 +26,7 @@ Add a server block in the relevant **`mcp.json`** when a graph should call Googl
 
 ## Swarm
 
-- Stack: **`terraform/swarm/mcp-google-workspace/app/`** — all site credentials in the **`env`** map on **`.config/terraform/swarm/mcp-google-workspace/app.tfvars`** (flat keys such as **`GOOGLE_OAUTH_CLIENT_ID`**, **`GOOGLE_OAUTH_CLIENT_SECRET`**, **`WORKSPACE_EXTERNAL_URL`**; no Vault **`secrets`** block or **`env_file_path`**). Keep tokens out of git.
+- Stack: **`terraform/swarm/mcp-google-workspace/app/`** — all site config in the **`env`** map on **`.config/terraform/swarm/mcp-google-workspace/app.tfvars`** (flat keys such as **`GOOGLE_OAUTH_CLIENT_ID`**, **`GOOGLE_OAUTH_CLIENT_SECRET`**, **`WORKSPACE_EXTERNAL_URL`**, **`GOOGLE_WORKSPACE_MCP_TOOLS`**; no Vault **`secrets`** block or **`env_file_path`**). Keep tokens out of git.
 
 Required keys:
 
@@ -35,7 +36,29 @@ Required keys:
 | `GOOGLE_OAUTH_CLIENT_SECRET` | Matching client secret |
 | `WORKSPACE_EXTERNAL_URL` | Public HTTPS origin, no trailing slash (e.g. `https://mcp.google-workspace.nodadyoushutup.com`) |
 
-Optional: `USER_GOOGLE_EMAIL` (default Workspace account for tool calls), `MCP_GOOGLE_WORKSPACE_LISTEN_PORT`, `MCP_GOOGLE_WORKSPACE_HOST`, `GOOGLE_WORKSPACE_MCP_TOOL_TIER` (`core` / `extended` / `complete`), `GOOGLE_WORKSPACE_MCP_READ_ONLY=true`, `GOOGLE_WORKSPACE_MCP_TOOLS` (space-separated list).
+Optional `env` keys:
+
+| Key | Description |
+| --- | --- |
+| `GOOGLE_WORKSPACE_MCP_TOOLS` | Space-separated upstream service keys to expose (e.g. `gmail drive calendar docs sheets`). Omit to load all services. |
+| `USER_GOOGLE_EMAIL` | Default Workspace account for tool calls |
+| `MCP_GOOGLE_WORKSPACE_LISTEN_PORT` | Container listen port (default `8086`) |
+| `MCP_GOOGLE_WORKSPACE_HOST` | Bind address (default `0.0.0.0`) |
+| `GOOGLE_WORKSPACE_MCP_TOOL_TIER` | `core` / `extended` / `complete` (default `core`) |
+| `GOOGLE_WORKSPACE_MCP_READ_ONLY` | `true` for read-only OAuth scopes and write-tool filtering |
+
+Valid **`GOOGLE_WORKSPACE_MCP_TOOLS`** service keys: `gmail`, `drive`, `calendar`, `docs`, `sheets`, `slides`, `forms`, `tasks`, `contacts`, `chat`, `search`, `appscript`.
+
+Example restriction (exclude Apps Script, Custom Search, Chat, Contacts, Tasks, Forms, Slides):
+
+```hcl
+env = {
+  GOOGLE_OAUTH_CLIENT_ID     = "..."
+  GOOGLE_OAUTH_CLIENT_SECRET = "..."
+  WORKSPACE_EXTERNAL_URL     = "https://mcp.google-workspace.nodadyoushutup.com"
+  GOOGLE_WORKSPACE_MCP_TOOLS = "gmail drive calendar docs sheets"
+}
+```
 
 ## Google Cloud OAuth setup
 

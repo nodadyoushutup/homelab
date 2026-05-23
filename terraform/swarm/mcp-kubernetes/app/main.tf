@@ -1,21 +1,23 @@
 resource "docker_network" "mcp_kubernetes" {
-  name   = local.service_name
+  name   = "mcp-kubernetes"
   driver = "overlay"
 }
 
-resource "docker_service" "mcp_kubernetes" {
-  name = local.service_name
+resource "docker_config" "kubeconfig" {
+  name = "mcp-kubernetes-kubeconfig-${local.kubeconfig_hash}"
+  data = filebase64(var.kubeconfig_path)
 
-  dynamic "auth" {
-    for_each = local.docker_service_pull_auth_map
-    content {
-      server_address = auth.value.server_address
-      username       = auth.value.username
-      password       = auth.value.password
-    }
+  lifecycle {
+    create_before_destroy = true
   }
+}
+
+resource "docker_service" "mcp_kubernetes" {
+  name = "mcp-kubernetes"
 
   task_spec {
+    force_update = local.kubeconfig_force
+
     dynamic "placement" {
       for_each = var.placement == null ? [] : [var.placement]
 
@@ -32,20 +34,21 @@ resource "docker_service" "mcp_kubernetes" {
         }
       }
     }
+
     networks_advanced {
       name    = docker_network.mcp_kubernetes.id
-      aliases = [local.service_name]
+      aliases = ["mcp-kubernetes"]
     }
+
     container_spec {
-      image    = var.image_reference
-      env      = local.effective_env
+      image    = "quay.io/containers/kubernetes_mcp_server:v0.0.60@sha256:766a7282e0536d951d805f72b562d89707eefb84d35dcfd96e31c410071f6164"
       user     = "65532"
       cap_drop = ["ALL"]
       args = [
         "--port",
         "8106",
         "--kubeconfig",
-        local.kubeconfig_container_path,
+        "/etc/kubernetes/kubeconfig",
         "--cluster-provider",
         "kubeconfig",
         "--toolsets",
@@ -56,46 +59,33 @@ resource "docker_service" "mcp_kubernetes" {
         "--disable-multi-cluster",
         "--stateless",
       ]
+
       dns_config {
         nameservers = var.dns_nameservers
       }
-      dynamic "mounts" {
-        for_each = local.swarm_nfs_config_mounts
-        content {
-          type      = mounts.value.type
-          source    = mounts.value.source
-          target    = mounts.value.target
-          read_only = try(mounts.value.read_only, false)
-          dynamic "volume_options" {
-            for_each = try(mounts.value.volume_options, null) != null ? [mounts.value.volume_options] : []
-            content {
-              driver_name    = volume_options.value.driver_name
-              driver_options = volume_options.value.driver_options
-              no_copy        = try(volume_options.value.no_copy, false)
-            }
-          }
-        }
+
+      configs {
+        config_id   = docker_config.kubeconfig.id
+        config_name = docker_config.kubeconfig.name
+        file_name   = "/etc/kubernetes/kubeconfig"
       }
     }
-    restart_policy {
-      condition    = "on-failure"
-      delay        = "10s"
-      max_attempts = 3
-      window       = "2m"
-    }
   }
+
   mode {
     replicated {
       replicas = var.replicas
     }
   }
+
   update_config {
     order = "stop-first"
   }
+
   endpoint_spec {
     ports {
       target_port    = 8106
-      published_port = var.published_port
+      published_port = 18210
       protocol       = "tcp"
       publish_mode   = "ingress"
     }

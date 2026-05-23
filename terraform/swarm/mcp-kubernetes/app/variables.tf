@@ -1,22 +1,6 @@
-variable "env" {
-  description = "Container environment variables."
-  type        = map(string)
-  default     = {}
-  sensitive   = true
-}
-
-
-variable "image_reference" {
-  description = "Container image reference to deploy."
+variable "kubeconfig_path" {
+  description = "Host path to the Kubernetes kubeconfig baked into a Swarm config."
   type        = string
-  default     = "quay.io/containers/kubernetes_mcp_server:v0.0.60@sha256:766a7282e0536d951d805f72b562d89707eefb84d35dcfd96e31c410071f6164"
-}
-
-
-variable "published_port" {
-  description = "Swarm ingress published port."
-  type        = number
-  default     = 18210
 }
 
 
@@ -24,13 +8,6 @@ variable "replicas" {
   description = "Number of Swarm service replicas."
   type        = number
   default     = 1
-}
-
-
-variable "timezone" {
-  description = "Container TZ environment value."
-  type        = string
-  default     = "America/New_York"
 }
 
 
@@ -54,43 +31,7 @@ variable "placement" {
 }
 
 
-variable "swarm_nfs_code_device" {
-  description = "NFS export for homelab code (from nfs.tfvars)."
-  type        = string
-  sensitive   = true
-}
-
-
-variable "swarm_nfs_config_device" {
-  description = "NFS export for homelab config (from nfs.tfvars)."
-  type        = string
-  sensitive   = true
-}
-
-
-variable "swarm_nfs_volume_type" {
-  description = "Docker volume driver type for NFS mounts (from nfs.tfvars)."
-  type        = string
-  sensitive   = true
-}
-
-
-variable "swarm_nfs_volume_o_rw" {
-  description = "Read-write NFS volume mount options (from nfs.tfvars)."
-  type        = string
-  sensitive   = true
-}
-
-
-variable "swarm_nfs_volume_o_ro" {
-  description = "Read-only NFS volume mount options (from nfs.tfvars)."
-  type        = string
-  sensitive   = true
-}
-
-
 variable "swarm_docker_provider_config" {
   description = "Docker SSH host and registry_auths for the Swarm control plane."
   type        = any
 }
-
