@@ -30,7 +30,7 @@ resource "docker_service" "mcp_google_workspace" {
     }
 
     container_spec {
-      image = "ghcr.io/nodadyoushutup/mcp-google-workspace:0.0.1"
+      image = "ghcr.io/nodadyoushutup/mcp-google-workspace:0.0.3"
       env   = var.env
 
       dns_config {
