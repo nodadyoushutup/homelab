@@ -46,7 +46,9 @@ Harbor runtime images use a dedicated workflow (not the generic app image workfl
   - `version` — publish tag (`:<version>-amd64`, `:<version>-arm64`, manifest `:<version>`)
   - `target_registry=github` for `ghcr.io/<owner>/<component>:<tag>`
   - `target_registry=harbor` for `harbor.nodadyoushutup.com/homelab/<component>:<tag>`
-  - `components` — optional comma-separated subset (default: full runtime set)
+- Each dispatch builds the **full** runtime set (12 images); there is no partial component input.
+- **Publish names** always use the `harbor-` prefix (for example `harbor-registry-photon`,
+  not `registry-photon`). The build script retags from upstream Makefile names before push.
 
 ## Runtime image set
 
@@ -57,10 +59,10 @@ The publish script currently covers:
 - `harbor-jobservice`
 - `harbor-registryctl`
 - `harbor-db`
-- `registry-photon`
-- `redis-photon`
-- `nginx-photon`
+- `harbor-registry-photon`
+- `harbor-redis-photon`
+- `harbor-nginx-photon`
 - `harbor-log`
-- `trivy-adapter-photon`
+- `harbor-trivy-adapter-photon`
 - `harbor-exporter`
-- `prepare`
+- `harbor-prepare`

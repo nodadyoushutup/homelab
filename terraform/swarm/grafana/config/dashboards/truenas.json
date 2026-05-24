@@ -24,7 +24,7 @@
   "timezone": "",
   "title": "TrueNAS",
   "uid": "truenas",
-  "version": 1,
+  "version": 2,
   "templating": {
     "list": [
       {
@@ -48,14 +48,14 @@
     {
       "id": 1,
       "title": "Avg disk utilization",
-      "description": "disk_util utilization %",
+      "description": "Unified across TrueNAS versions: legacy disk_util.* (24.x) or truenas_disk_stats.busy.* (newer SCALE).",
       "type": "stat",
       "datasource": { "type": "graphite", "uid": "graphite" },
       "gridPos": { "h": 5, "w": 8, "x": 0, "y": 0 },
       "targets": [
         {
           "refId": "A",
-          "target": "alias(averageSeries(aliasByNode(truenas.$host.disk_util.*.utilization, 3)), 'util %')"
+          "target": "alias(maxSeries(averageSeries(aliasByNode(truenas.$host.disk_util.*.utilization, 3)), averageSeries(truenas.$host.truenas_disk_stats.busy.*.busy)), 'util %')"
         }
       ],
       "fieldConfig": {
@@ -85,18 +85,14 @@
     {
       "id": 2,
       "title": "CPU usage",
-      "description": "Tries truenas_cpu_usage (SCALE) then legacy truenas.$host.cpu.* counters. If empty on nas, that host is not sending CPU charts to Graphite yet (disk charts can still work).",
+      "description": "Unified across TrueNAS versions: truenas_cpu_usage (newer SCALE) or legacy cpu.* counters (24.x).",
       "type": "stat",
       "datasource": { "type": "graphite", "uid": "graphite" },
       "gridPos": { "h": 5, "w": 8, "x": 8, "y": 0 },
       "targets": [
         {
           "refId": "A",
-          "target": "alias(averageSeries(truenas.$host.truenas_cpu_usage.cpu.cpu*), 'cpu %')"
-        },
-        {
-          "refId": "B",
-          "target": "alias(scale(divideSeries(sumSeries(truenas.$host.cpu.*.{user,system,iowait,irq,softirq,nice,steal}), sumSeries(truenas.$host.cpu.*.*)), 100), 'cpu %')"
+          "target": "alias(maxSeries(averageSeries(truenas.$host.truenas_cpu_usage.cpu.cpu*), scale(divideSeries(sumSeries(truenas.$host.cpu.*.{user,system,iowait,irq,softirq,nice,steal}), sumSeries(truenas.$host.cpu.*.*)), 100)), 'cpu %')"
         }
       ],
       "fieldConfig": {
@@ -128,18 +124,14 @@
     {
       "id": 3,
       "title": "Memory used",
-      "description": "Tries truenas_meminfo then legacy system.ram. If empty on nas, that host is not sending RAM charts to Graphite yet.",
+      "description": "Unified across TrueNAS versions: truenas_meminfo (newer SCALE) or legacy system.ram.* (24.x).",
       "type": "stat",
       "datasource": { "type": "graphite", "uid": "graphite" },
       "gridPos": { "h": 5, "w": 8, "x": 16, "y": 0 },
       "targets": [
         {
           "refId": "A",
-          "target": "alias(scale(divideSeries(diffSeries(truenas.$host.truenas_meminfo.total.total, truenas.$host.truenas_meminfo.available.available), truenas.$host.truenas_meminfo.total.total), 100), 'mem %')"
-        },
-        {
-          "refId": "B",
-          "target": "alias(averageSeries(asPercent(groupByNode(truenas.$host.system.ram.used, 1, 'sum'), groupByNode(truenas.$host.system.ram.*, 1, 'sum'))), 'mem %')"
+          "target": "alias(maxSeries(scale(divideSeries(diffSeries(truenas.$host.truenas_meminfo.total.total, truenas.$host.truenas_meminfo.available.available), truenas.$host.truenas_meminfo.total.total), 100), averageSeries(asPercent(groupByNode(truenas.$host.system.ram.used, 1, 'sum'), groupByNode(truenas.$host.system.ram.*, 1, 'sum')))), 'mem %')"
         }
       ],
       "fieldConfig": {
@@ -171,25 +163,18 @@
     {
       "id": 4,
       "title": "CPU & memory",
+      "description": "Same unified CPU and memory queries as the stat row above.",
       "type": "timeseries",
       "datasource": { "type": "graphite", "uid": "graphite" },
       "gridPos": { "h": 8, "w": 24, "x": 0, "y": 5 },
       "targets": [
         {
           "refId": "A",
-          "target": "alias(averageSeries(truenas.$host.truenas_cpu_usage.cpu.cpu*), 'cpu %')"
+          "target": "alias(maxSeries(averageSeries(truenas.$host.truenas_cpu_usage.cpu.cpu*), scale(divideSeries(sumSeries(truenas.$host.cpu.*.{user,system,iowait,irq,softirq,nice,steal}), sumSeries(truenas.$host.cpu.*.*)), 100)), 'cpu %')"
         },
         {
           "refId": "B",
-          "target": "alias(scale(divideSeries(sumSeries(truenas.$host.cpu.*.{user,system,iowait,irq,softirq,nice,steal}), sumSeries(truenas.$host.cpu.*.*)), 100), 'cpu %')"
-        },
-        {
-          "refId": "C",
-          "target": "alias(scale(divideSeries(diffSeries(truenas.$host.truenas_meminfo.total.total, truenas.$host.truenas_meminfo.available.available), truenas.$host.truenas_meminfo.total.total), 100), 'mem %')"
-        },
-        {
-          "refId": "D",
-          "target": "alias(averageSeries(asPercent(groupByNode(truenas.$host.system.ram.used, 1, 'sum'), groupByNode(truenas.$host.system.ram.*, 1, 'sum'))), 'mem %')"
+          "target": "alias(maxSeries(scale(divideSeries(diffSeries(truenas.$host.truenas_meminfo.total.total, truenas.$host.truenas_meminfo.available.available), truenas.$host.truenas_meminfo.total.total), 100), averageSeries(asPercent(groupByNode(truenas.$host.system.ram.used, 1, 'sum'), groupByNode(truenas.$host.system.ram.*, 1, 'sum')))), 'mem %')"
         }
       ],
       "fieldConfig": {
@@ -214,18 +199,18 @@
     {
       "id": 5,
       "title": "Disk activity",
-      "description": "nas: avg disk_busy %. backup: sum of truenas_disk_stats write ops.",
+      "description": "Unified disk busy % and aggregate write ops across TrueNAS versions.",
       "type": "timeseries",
       "datasource": { "type": "graphite", "uid": "graphite" },
       "gridPos": { "h": 9, "w": 24, "x": 0, "y": 13 },
       "targets": [
         {
           "refId": "A",
-          "target": "alias(averageSeries(aliasByNode(truenas.$host.disk_busy.*.busy, 3)), 'busy %')"
+          "target": "alias(maxSeries(averageSeries(aliasByNode(truenas.$host.disk_busy.*.busy, 3)), averageSeries(truenas.$host.truenas_disk_stats.busy.*.busy)), 'busy %')"
         },
         {
           "refId": "B",
-          "target": "alias(sumSeries(truenas.$host.truenas_disk_stats.*.writes), 'writes/s')"
+          "target": "alias(absolute(maxSeries(sumSeries(truenas.$host.disk_ops.*.writes), sumSeries(truenas.$host.truenas_disk_stats.*.writes))), 'writes/s')"
         }
       ],
       "fieldConfig": {

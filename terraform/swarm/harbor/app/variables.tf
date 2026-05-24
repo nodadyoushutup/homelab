@@ -72,16 +72,16 @@ variable "images" {
     trivy_adapter = string
   })
   default = {
-    log           = "ghcr.io/nodadyoushutup/harbor-log:0.0.1@sha256:cfcb4497d9c42eb21a91cc92e2b92033809ddaab9f5b3ff32b98af01e0ffcd2b"
-    registry      = "ghcr.io/nodadyoushutup/registry-photon:0.0.1@sha256:c39b686661967449659425b8752756c81dc6697b48595659181e4c2e61c0dbc4"
-    registryctl   = "ghcr.io/nodadyoushutup/harbor-registryctl:0.0.1@sha256:bc42ae9c1b5853717da9adcbd3ff828b2d5b8fc84377aa86417eb63206a1cb7b"
-    db            = "ghcr.io/nodadyoushutup/harbor-db:0.0.1@sha256:2050cd2a872015c4ec328e808b40084d7172e9610debb2036a9c0dbcc05e172d"
-    core          = "ghcr.io/nodadyoushutup/harbor-core:0.0.1@sha256:0503ee3e98987c57a7ddf5557580208955aade3e6642a5063b7cabd62db69494"
-    portal        = "ghcr.io/nodadyoushutup/harbor-portal:0.0.1@sha256:a695da7e1332848e23a10b455abe70e512083b81651f226d1ca76a9df30dde12"
-    jobservice    = "ghcr.io/nodadyoushutup/harbor-jobservice:0.0.1@sha256:f1d1f7e45232ccff44b2f3ce53ab8b5b6a4d18af41d5ee4112cd52a8d9a1e525"
-    redis         = "ghcr.io/nodadyoushutup/redis-photon:0.0.1@sha256:fa7ffbbdeb59390a45beac1af38969b1e24582490a2cb550fd1936c85a1ac295"
-    proxy         = "ghcr.io/nodadyoushutup/nginx-photon:0.0.1@sha256:b85eb46199a1f8f4cc0c4c4985cbfdda8dfd37c5d3c95596bf6eb31e0f1e8628"
-    trivy_adapter = "ghcr.io/nodadyoushutup/trivy-adapter-photon:0.0.1@sha256:daaaa8c06c597d88d5f11b677748f8128c96212bf3078b70fe269e4ad7e3596a"
+    log           = "ghcr.io/nodadyoushutup/harbor-log:0.0.1"
+    registry      = "ghcr.io/nodadyoushutup/harbor-registry-photon:0.0.1"
+    registryctl   = "ghcr.io/nodadyoushutup/harbor-registryctl:0.0.1"
+    db            = "ghcr.io/nodadyoushutup/harbor-db:0.0.1"
+    core          = "ghcr.io/nodadyoushutup/harbor-core:0.0.1"
+    portal        = "ghcr.io/nodadyoushutup/harbor-portal:0.0.1"
+    jobservice    = "ghcr.io/nodadyoushutup/harbor-jobservice:0.0.1"
+    redis         = "ghcr.io/nodadyoushutup/harbor-redis-photon:0.0.1"
+    proxy         = "ghcr.io/nodadyoushutup/harbor-nginx-photon:0.0.1"
+    trivy_adapter = "ghcr.io/nodadyoushutup/harbor-trivy-adapter-photon:0.0.1"
   }
 }
 

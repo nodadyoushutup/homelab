@@ -208,20 +208,35 @@ harbor_temp_parent_dir() {
   printf '%s\n' "/tmp"
 }
 
+# Registry publish names (all use the harbor- prefix). Upstream `make build` may tag
+# photon images without that prefix; push_runtime_image retags before push.
 runtime_images=(
   harbor-core
   harbor-portal
   harbor-jobservice
   harbor-registryctl
   harbor-db
-  registry-photon
-  redis-photon
-  nginx-photon
+  harbor-registry-photon
+  harbor-redis-photon
+  harbor-nginx-photon
   harbor-log
-  trivy-adapter-photon
+  harbor-trivy-adapter-photon
   harbor-exporter
-  prepare
+  harbor-prepare
 )
+
+upstream_image_name() {
+  case "$1" in
+    harbor-registry-photon) printf '%s' "registry-photon" ;;
+    harbor-redis-photon) printf '%s' "redis-photon" ;;
+    harbor-nginx-photon) printf '%s' "nginx-photon" ;;
+    harbor-trivy-adapter-photon) printf '%s' "trivy-adapter-photon" ;;
+    harbor-prepare) printf '%s' "prepare" ;;
+    *)
+      printf '%s' "$1"
+      ;;
+  esac
+}
 
 validate_runtime_component() {
   local image="$1"
@@ -275,17 +290,17 @@ component_compile_target() {
 
 component_photon_target() {
   case "$1" in
-    prepare) printf '%s' "_build_prepare" ;;
     harbor-db) printf '%s' "_build_db" ;;
     harbor-portal) printf '%s' "_build_portal" ;;
     harbor-core) printf '%s' "_build_core" ;;
     harbor-jobservice) printf '%s' "_build_jobservice" ;;
     harbor-log) printf '%s' "_build_log" ;;
-    trivy-adapter-photon) printf '%s' "_build_trivy_adapter" ;;
-    nginx-photon) printf '%s' "_build_nginx" ;;
-    registry-photon) printf '%s' "_build_registry" ;;
+    harbor-trivy-adapter-photon) printf '%s' "_build_trivy_adapter" ;;
+    harbor-nginx-photon) printf '%s' "_build_nginx" ;;
+    harbor-registry-photon) printf '%s' "_build_registry" ;;
     harbor-registryctl) printf '%s' "_build_registryctl" ;;
-    redis-photon) printf '%s' "_build_redis" ;;
+    harbor-redis-photon) printf '%s' "_build_redis" ;;
+    harbor-prepare) printf '%s' "_build_prepare" ;;
     harbor-exporter) printf '%s' "_compile_and_build_exporter" ;;
     *)
       echo "[ERR] No photon build target for component: $1" >&2
@@ -475,12 +490,13 @@ run_photon_make_target() {
 }
 
 push_runtime_image() {
-  local image="$1"
+  local publish_name="$1"
   local arch_tag="$2"
 
-  local source_ref target_ref
-  source_ref="${IMAGE_NAMESPACE}/${image}:${arch_tag}"
-  target_ref="$(publish_image_ref "${image}" "${arch_tag}")"
+  local upstream_name source_ref target_ref
+  upstream_name="$(upstream_image_name "${publish_name}")"
+  source_ref="${IMAGE_NAMESPACE}/${upstream_name}:${arch_tag}"
+  target_ref="$(publish_image_ref "${publish_name}" "${arch_tag}")"
 
   if [[ "${source_ref}" != "${target_ref}" ]]; then
     docker tag "${source_ref}" "${target_ref}"
