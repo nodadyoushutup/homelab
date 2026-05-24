@@ -99,13 +99,6 @@ resolve_stage_tfvars() {
     candidates+=("${TFVARS_HOME_DIR}/${hyphen_service_dir}.tfvars")
   fi
 
-  case "${service_dir}/${stage_name}" in
-    prometheus/database)
-      candidates+=("${TFVARS_HOME_DIR}/terraform/swarm/prometheus/database.tfvars")
-      candidates+=("${TFVARS_HOME_DIR}/terraform/swarm/prometheus/database.tfvars")
-      ;;
-  esac
-
   for candidate in "${candidates[@]}"; do
     if [[ -f "${candidate}" ]]; then
       realpath "${candidate}"

@@ -1,10 +1,3 @@
-variable "endpoint_host" {
-  description = "Host name used for Prometheus scrape target reporting."
-  type        = string
-  default     = "192.168.1.121"
-}
-
-
 variable "env" {
   description = "Container environment variables shared by all exporter instances."
   type        = map(string)

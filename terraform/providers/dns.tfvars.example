@@ -1,4 +1,4 @@
-# Copy to CONFIG_DIR/terraform/providers/dns.tfvars (same directory as docker_arm64.tfvars).
+# Copy to CONFIG_DIR/terraform/providers/dns.tfvars (same directory as docker_swarm.tfvars).
 # Do not commit site-specific resolvers to the homelab repo; keep the live file on CONFIG_DIR only.
 #
 # Required by scripts/terraform/swarm_pipeline.sh (no in-module default).

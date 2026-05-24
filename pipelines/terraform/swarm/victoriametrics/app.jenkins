@@ -17,13 +17,11 @@ pipeline {
     stage('Run Terraform Stage') {
       steps {
         sh(
-          label: 'swarm/prometheus/database',
+          label: 'swarm/victoriametrics/app',
           script: '''#!/usr/bin/env bash
 set -euo pipefail
-args=()
-[[ -n "${TFVARS_FILE:-}" ]] && args+=(--tfvars "${TFVARS_FILE}")
-[[ -n "${BACKEND_FILE:-}" ]] && args+=(--backend "${BACKEND_FILE}")
-./pipelines/terraform/swarm/prometheus/database.sh "${args[@]}"
+
+./scripts/terraform/jenkins_stage_runner.sh ./pipelines/terraform/swarm/victoriametrics/app.sh
 '''
         )
       }

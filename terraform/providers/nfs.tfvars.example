@@ -1,4 +1,4 @@
-# Copy to <homelab>/.config/terraform/providers/nfs.tfvars (beside docker_arm64.tfvars and dns.tfvars).
+# Copy to <homelab>/.config/terraform/providers/nfs.tfvars (beside docker_swarm.tfvars and dns.tfvars).
 # Default CONFIG_DIR / TFVARS_HOME_DIR is <homelab>/.config (see scripts/terraform/load_root_env.sh).
 # Do not commit site-specific NFS targets to the homelab repo.
 #

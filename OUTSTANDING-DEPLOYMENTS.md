@@ -26,7 +26,7 @@ applicable):
 | Area | Stacks |
 | --- | --- |
 | Edge | Nginx Proxy Manager (app + database), cloud-image-repository |
-| Observability | Grafana (+ postgres, config), Prometheus (+ VictoriaMetrics), Graphite, **Graylog** (+ mongodb, datanode on `swarm-wk-0`), prometheus-pve-exporter, qbittorrent-exporter, node_exporter, telegraf_docker_metrics, dozzle |
+| Observability | Grafana (+ postgres, config), Prometheus, VictoriaMetrics, Graphite, **Graylog** (+ mongodb, datanode on `swarm-wk-0`), prometheus-pve-exporter, qbittorrent-exporter, node_exporter, telegraf_docker_metrics, dozzle |
 | RAG | chromadb, rag-engine, mcp-rag |
 | MCPs | mcp-argocd, mcp-atlassian, mcp-cloudflare, mcp-fortigate, mcp-github, mcp-google-workspace, mcp-kubernetes, mcp-playwright |
 | Harbor runtime | harbor-log, registry, registryctl, postgresql, redis, core, portal, jobservice, proxy, trivy-adapter (all on `swarm-cp-0`) |

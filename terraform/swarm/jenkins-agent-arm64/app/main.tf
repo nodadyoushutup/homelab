@@ -1,5 +1,5 @@
-# Standalone Docker containers on the ARM64 pool host (`swarm_docker_provider_config.docker` from
-# docker_arm64_pool.tfvars). Uses `docker_container` + `devices` for `/dev/kvm` (unlike Swarm services).
+# Standalone Docker containers on the ARM64 pool host (`swarm_docker_provider_config` from
+# `terraform/providers/runner_agent_arm64.tfvars` via gha-runner-arm64 and jenkins-agent-arm64 pipelines).
 
 resource "docker_volume" "agent_home" {
   for_each = local.agent_definitions

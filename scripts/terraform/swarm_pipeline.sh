@@ -32,8 +32,6 @@ SWARM_DNS_PROVIDER_TFVARS="${SWARM_DNS_PROVIDER_TFVARS:-${TFVARS_HOME_DIR}/terra
 export SWARM_DNS_PROVIDER_TFVARS
 SWARM_NFS_PROVIDER_TFVARS="${SWARM_NFS_PROVIDER_TFVARS:-${TFVARS_HOME_DIR}/terraform/providers/nfs.tfvars}"
 export SWARM_NFS_PROVIDER_TFVARS
-SWARM_GRAFANA_PROVIDER_TFVARS="${SWARM_GRAFANA_PROVIDER_TFVARS:-${TFVARS_HOME_DIR}/terraform/providers/grafana.tfvars}"
-export SWARM_GRAFANA_PROVIDER_TFVARS
 
 TERRAFORM_DIR="${TERRAFORM_DIR:-${ROOT_DIR}/terraform/swarm/${SERVICE_NAME}}"
 
@@ -171,32 +169,6 @@ else
   DOCKER_PROVIDER_TFVARS_PATH=""
   export DOCKER_PROVIDER_TFVARS_PATH
 fi
-if [[ -n "${SWARM_DOCKER_AMD64_PROVIDER_TFVARS:-}" ]]; then
-  if [[ ! -f "${SWARM_DOCKER_AMD64_PROVIDER_TFVARS}" ]]; then
-    echo "[ERR] Missing Swarm Docker amd64 pool tfvars: ${SWARM_DOCKER_AMD64_PROVIDER_TFVARS}" >&2
-    echo "[ERR] Create it from homelab terraform/providers/docker_amd64.tfvars.example." >&2
-    exit 1
-  fi
-  SWARM_SHARED_TFVARS_PREFIX+=(-var-file "${SWARM_DOCKER_AMD64_PROVIDER_TFVARS}")
-  echo "Swarm Docker amd64 pool tfvars: ${SWARM_DOCKER_AMD64_PROVIDER_TFVARS}"
-  export DOCKER_AMD64_PROVIDER_TFVARS_PATH="${SWARM_DOCKER_AMD64_PROVIDER_TFVARS}"
-else
-  DOCKER_AMD64_PROVIDER_TFVARS_PATH=""
-  export DOCKER_AMD64_PROVIDER_TFVARS_PATH
-fi
-if [[ -n "${SWARM_DOCKER_ARM64_POOL_TFVARS:-}" ]]; then
-  if [[ ! -f "${SWARM_DOCKER_ARM64_POOL_TFVARS}" ]]; then
-    echo "[ERR] Missing Swarm Docker pool-host tfvars: ${SWARM_DOCKER_ARM64_POOL_TFVARS}" >&2
-    echo "[ERR] Create it from homelab terraform/providers/docker_arm64_pool.tfvars.example." >&2
-    exit 1
-  fi
-  SWARM_SHARED_TFVARS_PREFIX+=(-var-file "${SWARM_DOCKER_ARM64_POOL_TFVARS}")
-  echo "Swarm Docker pool-host tfvars: ${SWARM_DOCKER_ARM64_POOL_TFVARS}"
-  export DOCKER_ARM64_POOL_PROVIDER_TFVARS_PATH="${SWARM_DOCKER_ARM64_POOL_TFVARS}"
-else
-  DOCKER_ARM64_POOL_PROVIDER_TFVARS_PATH=""
-  export DOCKER_ARM64_POOL_PROVIDER_TFVARS_PATH
-fi
 if [[ "${SWARM_SKIP_DNS_PROVIDER_TFVARS:-0}" == "1" ]]; then
   DNS_PROVIDER_TFVARS_PATH=""
   export DNS_PROVIDER_TFVARS_PATH
@@ -226,12 +198,6 @@ else
   echo "Swarm NFS provider tfvars: ${SWARM_NFS_PROVIDER_TFVARS}"
   export NFS_PROVIDER_TFVARS_PATH="${SWARM_NFS_PROVIDER_TFVARS}"
 fi
-
-# grafana.tfvars (provider_config.grafana) is merged only by grafana/config pipelines
-# via scripts/terraform/swarm_grafana_provider_tfvars_env.sh — not here. Last-wins
-# -var-file merge would clobber stack provider_config on NPM and other stages.
-GRAFANA_PROVIDER_TFVARS_PATH="${SWARM_GRAFANA_PROVIDER_TFVARS}"
-export GRAFANA_PROVIDER_TFVARS_PATH
 
 if declare -F pipeline_pre_terraform > /dev/null; then
   pipeline_pre_terraform

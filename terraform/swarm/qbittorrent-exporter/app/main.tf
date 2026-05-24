@@ -10,7 +10,7 @@ resource "docker_network" "qbittorrent_exporter" {
 resource "docker_service" "qbittorrent_exporter" {
   for_each = var.instances
 
-  name = "${local.service_name_prefix}-${each.key}"
+  name = "qbittorrent-exporter-${each.key}"
 
   task_spec {
     dynamic "placement" {
@@ -32,7 +32,7 @@ resource "docker_service" "qbittorrent_exporter" {
 
     networks_advanced {
       name    = docker_network.qbittorrent_exporter.id
-      aliases = ["${local.service_name_prefix}-${each.key}"]
+      aliases = ["qbittorrent-exporter-${each.key}"]
     }
 
     networks_advanced {
@@ -41,7 +41,12 @@ resource "docker_service" "qbittorrent_exporter" {
 
     container_spec {
       image = "ghcr.io/martabal/qbittorrent-exporter:v2.0.1"
-      env   = local.per_instance_env[each.key]
+      env = {
+        for key, value in merge(
+          var.env,
+          { QBITTORRENT_BASE_URL = each.value.base_url },
+        ) : key => trimspace(tostring(value))
+      }
 
       dns_config {
         nameservers = var.dns_nameservers
@@ -61,7 +66,7 @@ resource "docker_service" "qbittorrent_exporter" {
 
   endpoint_spec {
     ports {
-      target_port    = local.internal_port
+      target_port    = 8090
       published_port = each.value.published_port
       protocol       = "tcp"
       publish_mode   = "host"

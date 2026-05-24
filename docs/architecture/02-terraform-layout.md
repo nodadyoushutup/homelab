@@ -73,43 +73,47 @@ Illustrative snapshot of how existing services split:
   Optional `secrets` / `secret_files` blocks in those files are **Vault-only**
   (declared as ignored variables on each slice root). The same rule applies under
   `terraform/cluster/...`, `terraform/remote/...`, and `terraform/network/...`.
-  Swarm Docker provider credentials stay at `terraform/providers/docker_arm64.tfvars`
-  (Swarm control plane SSH + registry auth). The AMD64 GitHub runner pipeline also merges
-  `terraform/providers/docker_amd64.tfvars` for the AMD64 pool-host `swarm_docker_provider_config` only; the
-  ARM64 runner pipeline merges `terraform/providers/docker_arm64_pool.tfvars` for the ARM64 pool host.
+  Swarm Docker provider credentials stay at `terraform/providers/docker_swarm.tfvars`
+  (Swarm control plane SSH + registry auth). Standalone pool hosts outside Swarm use
+  dedicated provider tfvars per pool host: `runner_agent_amd64.tfvars` and
+  `runner_agent_arm64.tfvars` (shared by GHA runner and Jenkins agent pipelines on each arch;
+  each pipeline uses only its arch file for the Docker provider, not `docker_swarm.tfvars`).
   Swarm DNS resolvers live at `terraform/providers/dns.tfvars`, and shared NFS export
   targets at `terraform/providers/nfs.tfvars` (required for `swarm_pipeline.sh` unless a
   stage sets `SWARM_SKIP_DNS_PROVIDER_TFVARS` or `SWARM_SKIP_NFS_PROVIDER_TFVARS`;
-  merged as docker_arm64, optional pool tfvars when set by that pipeline, then dns,
-  then nfs, then optional `terraform/providers/grafana.tfvars` when present, before each stack's slice tfvars).
+  merged as docker_swarm (Swarm stacks only), then dns,
+  then nfs, before each stack's slice tfvars).
   **Bespoke pipelines** (no `swarm_pipeline.sh`): app stacks `chromadb`,
   `cloud-image-repository`, `dozzle`, `node_exporter`, and `prometheus` use
-  `pipelines/terraform/swarm/<svc>/app.sh`; VictoriaMetrics uses
-  `pipelines/terraform/swarm/prometheus/database.sh`. The full
+  `pipelines/terraform/swarm/<svc>/app.sh`. The full
   `nginx_proxy_manager` trio (`database.sh`, `app.sh`, `config.sh`) is bespoke:
-  database and app merge `docker_arm64.tfvars`, `dns.tfvars`, slice tfvars, and
-  `minio.backend.hcl` (no NFS or Grafana provider tfvars); config merges only
-  slice tfvars and the backend (NPM API credentials live in config tfvars).
-  The Grafana file supplies `provider_config.grafana` for the Grafana `config/` root; other stacks ignore the extra map keys.
+  database and app merge `docker_swarm.tfvars`, `dns.tfvars`, slice tfvars, and
+  `minio.backend.hcl` (no NFS provider tfvars); config merges only slice tfvars and
+  the backend (NPM API credentials live in config tfvars). Grafana `config/` also
+  merges only slice tfvars and the backend (`provider_config` lives in
+  `terraform/swarm/grafana/config.tfvars`, same pattern as NPM).
   Values are not defaulted in
   module code—set them only under CONFIG_DIR. Kubernetes app config under `kubernetes/<app>/`. Use
   `scripts/config/migrate_config_dir_to_repo_layout.py` to move an older flat
   `CONFIG_DIR/<name>/` tree (it also flattens legacy `*/<slice>/<slice>.tfvars`
   and `*/config/secrets.tfvars` when present).
 - **App + database:** separate Swarm DB slices use **`{app}-{engine}`** names
-  (overlay, service, and `-{engine}-data` volume where applicable). On the DB
-  overlay, DNS alias **`prometheus-victoriametrics`** matches the VictoriaMetrics
-  service/network name (used by Prometheus `remote_write` and app connectivity):
+  (overlay, service, and `-{engine}-data` volume where applicable):
 
   | App slice | Database engine | Service / network | Data volume |
   | --- | --- | --- | --- |
   | `grafana` | Postgres | `grafana-postgres` | `grafana-postgres-data` |
   | `graylog` | MongoDB | `graylog-mongodb` | `graylog-mongodb-data`, `graylog-mongodb-config` |
   | `nginx_proxy_manager` | MySQL | `nginx-proxy-manager-mysql` | `nginx-proxy-manager-mysql-data` |
-  | `prometheus` | VictoriaMetrics | `prometheus-victoriametrics` | `prometheus-victoriametrics-data` |
-- **App only:** majority of MCP stacks, runners, Rag-engine, etc. Simple app-only stacks
-  with bespoke pipelines: `chromadb`, `cloud-image-repository`, `dozzle`, `node_exporter`,
-  `prometheus` (app and VictoriaMetrics database slices both bespoke). The
+- **VictoriaMetrics** (`terraform/swarm/victoriametrics/app`) is a standalone app
+  (not a `prometheus` database slice): overlay **`victoriametrics-net`**, service
+  **`victoriametrics`**, volume **`victoriametrics-data`**, DNS alias
+  **`victoriametrics`**. Prometheus (`terraform/swarm/prometheus/app`) attaches to
+  that overlay for `remote_write` (`http://victoriametrics:8428/api/v1/write` in
+  live `prometheus.yaml`).
+- **App only:** majority of MCP stacks, runners, Rag-engine, VictoriaMetrics,
+  Graphite, etc. Simple app-only stacks with bespoke pipelines: `chromadb`,
+  `cloud-image-repository`, `dozzle`, `node_exporter`, `prometheus`. The
   `nginx_proxy_manager` database, app, and config slices all use bespoke pipelines.
 
 Legacy nested tfvars (`terraform/swarm/<svc>/app/app.tfvars`) may still exist on

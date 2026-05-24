@@ -15,7 +15,7 @@ homelab_bespoke_swarm_set_defaults() {
   # shellcheck source=resolve_config_by_id.sh
   source "${script_dir}/resolve_config_by_id.sh"
 
-  DEFAULT_DOCKER_TFVARS="$(homelab_resolve_config_path "${config_dir}" "terraform/providers/docker_arm64")"
+  DEFAULT_DOCKER_TFVARS="$(homelab_resolve_config_path "${config_dir}" "terraform/providers/docker_swarm")"
   DEFAULT_DNS_TFVARS="$(homelab_resolve_config_path "${config_dir}" "terraform/providers/dns")"
   DEFAULT_BACKEND="$(homelab_resolve_config_path "${config_dir}" "minio.backend")"
   DEFAULT_SLICE_TFVARS=""

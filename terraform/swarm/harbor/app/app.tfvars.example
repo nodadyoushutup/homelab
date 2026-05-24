@@ -1,5 +1,5 @@
 # Docker SSH + optional registry auth for Harbor component images:
-# /mnt/eapp/code/homelab/.config/terraform/providers/docker_arm64.tfvars (`swarm_docker_provider_config`).
+# /mnt/eapp/code/homelab/.config/terraform/providers/docker_swarm.tfvars (`swarm_docker_provider_config`).
 
 # Keep these aligned with the host where Harbor data/config currently live.
 harbor_install_path = "/mnt/eapp/harbor-manual/harbor"

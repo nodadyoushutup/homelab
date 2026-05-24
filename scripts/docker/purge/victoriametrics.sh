@@ -12,11 +12,7 @@ if ! declare -f purge_main >/dev/null 2>&1; then
   source "${SCRIPT_DIR}/base.sh"
 fi
 
-APP_NAME="prometheus"
-SERVICE_REGEX="^prometheus$"
-NETWORK_REGEX="^prometheus$"
-VOLUME_REGEX="^prometheus-data$"
-CONFIG_REGEX="^prometheus-"
-IMAGE_REGEX="^prom/prometheus:"
+APP_NAME="victoriametrics"
+NETWORK_FILTER="victoriametrics-net"
 
 purge_main "$@"

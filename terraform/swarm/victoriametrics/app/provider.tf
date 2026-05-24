@@ -1,6 +1,6 @@
 terraform {
   backend "s3" {
-    key = "prometheus-victoriametrics.tfstate"
+    key = "victoriametrics.tfstate"
   }
 
   required_providers {

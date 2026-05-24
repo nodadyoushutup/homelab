@@ -1,5 +1,5 @@
-data "docker_network" "prometheus_victoriametrics" {
-  name = "prometheus-victoriametrics"
+data "docker_network" "victoriametrics" {
+  name = "victoriametrics-net"
 }
 
 resource "docker_network" "prometheus" {
@@ -49,7 +49,7 @@ resource "docker_service" "prometheus" {
     }
 
     networks_advanced {
-      name    = data.docker_network.prometheus_victoriametrics.id
+      name    = data.docker_network.victoriametrics.id
       aliases = []
     }
 

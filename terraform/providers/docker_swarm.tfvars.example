@@ -1,5 +1,6 @@
-# Copy to CONFIG_DIR/terraform/providers/docker_arm64.tfvars (not committed; keep secrets on CONFIG_DIR).
-# Swarm control-plane Docker SSH host + registry credentials. Required for scripts/terraform/swarm_pipeline.sh.
+# Copy to CONFIG_DIR/terraform/providers/docker_swarm.tfvars (not committed; keep secrets on CONFIG_DIR).
+# Swarm control-plane Docker SSH host + registry credentials. Required for scripts/terraform/swarm_pipeline.sh
+# and bespoke Swarm app pipelines (chromadb, dozzle, nginx_proxy_manager, prometheus, …).
 # See scripts/terraform/swarm_docker_provider_tfvars_env.sh (default SWARM_DOCKER_PROVIDER_TFVARS).
 
 swarm_docker_provider_config = {

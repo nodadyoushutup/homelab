@@ -30,22 +30,15 @@ resource "terraform_data" "proxmox_file_hash" {
   triggers_replace = local.proxmox_file_hash
 }
 
-resource "grafana_data_source" "prometheus" {
-  name              = "Prometheus"
-  uid               = "prometheus"
-  type              = "prometheus"
-  url               = "http://192.168.1.121:8428"
-  is_default        = true
-  json_data_encoded = jsonencode({ httpMethod = "POST" })
-}
+resource "grafana_data_source" "this" {
+  for_each = { for ds in var.datasources : ds.uid => ds }
 
-resource "grafana_data_source" "graphite" {
-  name              = "Graphite"
-  uid               = "graphite"
-  type              = "graphite"
-  url               = "http://192.168.1.120:8081"
-  is_default        = false
-  json_data_encoded = jsonencode({ httpMethod = "POST" })
+  name              = each.value.name
+  uid               = each.value.uid
+  type              = each.value.type
+  url               = each.value.url
+  is_default        = each.value.is_default
+  json_data_encoded = each.value.json_data != null ? jsonencode(each.value.json_data) : null
 }
 
 resource "grafana_folder" "proxmox" {

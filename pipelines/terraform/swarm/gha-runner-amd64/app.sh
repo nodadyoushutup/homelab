@@ -12,23 +12,18 @@ ENTRYPOINT_RELATIVE="pipelines/terraform/swarm/gha-runner-amd64/app.sh"
 TERRAFORM_DIR="${ROOT_DIR}/terraform/swarm/gha-runner-amd64/app"
 TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${CONFIG_DIR:-${ROOT_DIR}/.config}}"
 
-PLAN_ARGS_EXTRA=()
-APPLY_ARGS_EXTRA=()
-
 PIPELINE_ARGS=("$@")
 
 # shellcheck source=../../../scripts/terraform/resolve_config_by_id.sh
 source "${PIPELINE_SCRIPT_ROOT}/resolve_config_by_id.sh"
-SWARM_DOCKER_AMD64_PROVIDER_TFVARS="${SWARM_DOCKER_AMD64_PROVIDER_TFVARS:-$(homelab_resolve_config_path "${TFVARS_HOME_DIR}" "terraform/providers/docker_amd64")}"
-export SWARM_DOCKER_AMD64_PROVIDER_TFVARS
+SWARM_DOCKER_PROVIDER_TFVARS="${SWARM_DOCKER_PROVIDER_TFVARS:-$(homelab_resolve_config_path "${TFVARS_HOME_DIR}" "terraform/providers/runner_agent_amd64")}"
+export SWARM_DOCKER_PROVIDER_TFVARS
 
-# Pool-host Docker provider: docker_amd64.tfvars sets `swarm_docker_provider_config` last
-# (after shared docker_arm64 / dns / nfs / stack tfvars) so Terraform targets the pool host.
-if [[ -f "${SWARM_DOCKER_AMD64_PROVIDER_TFVARS}" ]]; then
-  PLAN_ARGS_EXTRA+=(-var-file "${SWARM_DOCKER_AMD64_PROVIDER_TFVARS}")
-  APPLY_ARGS_EXTRA+=(-var-file "${SWARM_DOCKER_AMD64_PROVIDER_TFVARS}")
+if [[ ! -f "${SWARM_DOCKER_PROVIDER_TFVARS}" ]]; then
+  echo "[ERR] Missing AMD64 runner/agent Docker provider tfvars: ${SWARM_DOCKER_PROVIDER_TFVARS}" >&2
+  echo "[ERR] Create it from homelab terraform/providers/runner_agent_amd64.tfvars.example." >&2
+  exit 1
 fi
 
 # shellcheck source=/dev/null
-source "${PIPELINE_SCRIPT_ROOT}/swarm_docker_provider_tfvars_env.sh"
 source "${PIPELINE_SCRIPT_ROOT}/swarm_pipeline.sh"

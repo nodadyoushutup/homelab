@@ -48,12 +48,12 @@ assert_tfvars_path "swarm app" \
   "" \
   "${TFVARS_HOME_DIR}/terraform/swarm/grafana/app.tfvars"
 
-assert_tfvars_path "swarm database" \
+assert_tfvars_path "swarm victoriametrics app" \
   "${ROOT_DIR}" \
-  "${ROOT_DIR}/terraform/swarm/prometheus/database" \
-  "prometheus" \
+  "${ROOT_DIR}/terraform/swarm/victoriametrics/app" \
+  "victoriametrics" \
   "" \
-  "${TFVARS_HOME_DIR}/terraform/swarm/prometheus/database.tfvars"
+  "${TFVARS_HOME_DIR}/terraform/swarm/victoriametrics/app.tfvars"
 
 assert_tfvars_path "swarm nginx_proxy_manager database" \
   "${ROOT_DIR}" \

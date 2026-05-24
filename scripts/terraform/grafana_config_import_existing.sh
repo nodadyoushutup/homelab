@@ -7,9 +7,6 @@ STAGE_DIR="${ROOT_DIR}/terraform/swarm/grafana/config"
 TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${CONFIG_DIR:-${ROOT_DIR}/.config}}"
 TFVARS_FILE="${TFVARS_FILE:-${TFVARS_HOME_DIR}/terraform/swarm/grafana/config.tfvars}"
 BACKEND_FILE="${BACKEND_FILE:-${TFVARS_HOME_DIR}/minio.backend.hcl}"
-SWARM_DNS_PROVIDER_TFVARS="${SWARM_DNS_PROVIDER_TFVARS:-${TFVARS_HOME_DIR}/terraform/providers/dns.tfvars}"
-SWARM_NFS_PROVIDER_TFVARS="${SWARM_NFS_PROVIDER_TFVARS:-${TFVARS_HOME_DIR}/terraform/providers/nfs.tfvars}"
-SWARM_GRAFANA_PROVIDER_TFVARS="${SWARM_GRAFANA_PROVIDER_TFVARS:-${TFVARS_HOME_DIR}/terraform/providers/grafana.tfvars}"
 DRY_RUN="0"
 
 usage() {
@@ -49,21 +46,14 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-for required_file in "${TFVARS_FILE}" "${BACKEND_FILE}" "${STAGE_DIR}/main.tf" "${SWARM_DNS_PROVIDER_TFVARS}" "${SWARM_NFS_PROVIDER_TFVARS}"; do
+for required_file in "${TFVARS_FILE}" "${BACKEND_FILE}" "${STAGE_DIR}/main.tf"; do
   if [[ ! -f "${required_file}" ]]; then
     echo "[ERR] Required file not found: ${required_file}" >&2
     exit 1
   fi
 done
 
-IMPORT_VAR_FILES=(-var-file "${SWARM_DNS_PROVIDER_TFVARS}" -var-file "${SWARM_NFS_PROVIDER_TFVARS}" -var-file "${TFVARS_FILE}")
-if [[ -f "${SWARM_GRAFANA_PROVIDER_TFVARS}" ]]; then
-  IMPORT_VAR_FILES+=(-var-file "${SWARM_GRAFANA_PROVIDER_TFVARS}")
-else
-  echo "[ERR] Missing Grafana provider tfvars: ${SWARM_GRAFANA_PROVIDER_TFVARS}" >&2
-  echo "[ERR] Create it from homelab terraform/providers/grafana.tfvars.example." >&2
-  exit 1
-fi
+IMPORT_VAR_FILES=(-var-file "${TFVARS_FILE}")
 
 tmp_manifest="$(mktemp)"
 cleanup() {
@@ -71,13 +61,14 @@ cleanup() {
 }
 trap cleanup EXIT
 
-python3 - "${STAGE_DIR}" > "${tmp_manifest}" <<'PY'
+python3 - "${STAGE_DIR}" "${TFVARS_FILE}" > "${tmp_manifest}" <<'PY'
 import json
 import pathlib
 import re
 import sys
 
 stage_dir = pathlib.Path(sys.argv[1])
+tfvars_path = pathlib.Path(sys.argv[2])
 main_tf = (stage_dir / "main.tf").read_text()
 
 file_map = {}
@@ -90,8 +81,18 @@ resource_blocks = re.findall(
     re.S,
 )
 
+datasource_uids = []
+if tfvars_path.is_file():
+    tfvars_text = tfvars_path.read_text()
+    if re.search(r'\bdatasources\s*=', tfvars_text):
+        datasource_uids = re.findall(r'\buid\s*=\s*"([^"]+)"', tfvars_text)
+
 for resource_type, resource_name, body in resource_blocks:
     import_id = None
+    if resource_type == "grafana_data_source" and resource_name == "this":
+        for uid in datasource_uids:
+            print(f"{resource_type}.{resource_name}[\"{uid}\"]\t{uid}")
+        continue
     if resource_type in {"grafana_data_source", "grafana_folder"}:
         match = re.search(r'uid\s*=\s*"([^"]+)"', body)
         if match:

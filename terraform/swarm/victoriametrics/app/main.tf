@@ -1,15 +1,15 @@
-resource "docker_network" "prometheus_victoriametrics" {
-  name   = "prometheus-victoriametrics"
+resource "docker_network" "victoriametrics" {
+  name   = "victoriametrics-net"
   driver = "overlay"
 }
 
-resource "docker_volume" "prometheus_victoriametrics_data" {
-  name   = "prometheus-victoriametrics-data"
+resource "docker_volume" "victoriametrics_data" {
+  name   = "victoriametrics-data"
   driver = "local"
 }
 
-resource "docker_service" "prometheus_victoriametrics" {
-  name = "prometheus-victoriametrics"
+resource "docker_service" "victoriametrics" {
+  name = "victoriametrics"
 
   task_spec {
     dynamic "placement" {
@@ -30,8 +30,8 @@ resource "docker_service" "prometheus_victoriametrics" {
     }
 
     networks_advanced {
-      name    = docker_network.prometheus_victoriametrics.id
-      aliases = ["prometheus-victoriametrics"]
+      name    = docker_network.victoriametrics.id
+      aliases = ["victoriametrics"]
     }
 
     container_spec {
@@ -43,7 +43,7 @@ resource "docker_service" "prometheus_victoriametrics" {
 
       mounts {
         target = "/victoria-metrics-data"
-        source = docker_volume.prometheus_victoriametrics_data.name
+        source = docker_volume.victoriametrics_data.name
         type   = "volume"
       }
     }

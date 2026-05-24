@@ -1,5 +1,5 @@
-# Standalone Docker containers on the AMD64 pool host (`swarm_docker_provider_config.docker` from
-# docker_amd64.tfvars). Uses `docker_container` + `devices` for `/dev/kvm` (unlike Swarm services).
+# Standalone Docker containers on the AMD64 pool host (`swarm_docker_provider_config` from
+# `terraform/providers/runner_agent_amd64.tfvars` via gha-runner-amd64 and jenkins-agent-amd64 pipelines).
 
 resource "docker_volume" "agent_home" {
   for_each = local.agent_definitions

@@ -50,7 +50,8 @@ When a project does not maintain a standalone docs site, this file links to the 
 | Technology | Repo evidence | Official docs |
 | --- | --- | --- |
 | Grafana | `terraform/swarm/grafana/{app,config,database}` | [Grafana docs](https://grafana.com/docs/) |
-| Prometheus | `terraform/swarm/prometheus/{app,database}` | [Prometheus docs](https://prometheus.io/docs/introduction/overview/) |
+| Prometheus | `terraform/swarm/prometheus/app` | [Prometheus docs](https://prometheus.io/docs/introduction/overview/) |
+| VictoriaMetrics | `terraform/swarm/victoriametrics/app` | [VictoriaMetrics docs](https://docs.victoriametrics.com/) |
 | Graylog | `terraform/swarm/graylog/{database,app}` | [Graylog docs](https://go2docs.graylog.org/current/) |
 | Graphite | `terraform/swarm/graphite/app` | [Graphite docs](https://graphite.readthedocs.io/en/latest/) |
 | Telegraf | `terraform/swarm/telegraf_docker_metrics/app` | [Telegraf docs](https://docs.influxdata.com/telegraf/v1/configuration/) |

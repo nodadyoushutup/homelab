@@ -80,7 +80,7 @@ def explicit_remote(repo: Path, cfg_name: str) -> str | None:
 ALIASES: dict[str, str] = {
     "chat-ui": "terraform/swarm/langchain-agent-chat",
     "langchain-agent-chat": "terraform/swarm/langchain-agent-chat",
-    "victoriametrics": "terraform/swarm/prometheus/database",
+    "victoriametrics": "terraform/swarm/victoriametrics/app",
     "webserver-image": "terraform/swarm/cloud-image-repository",
 }
 

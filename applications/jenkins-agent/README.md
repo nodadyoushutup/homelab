@@ -37,10 +37,10 @@ The workflow publishes a multi-arch image for both `linux/amd64` and
 Agent pools are **`docker_container`** resources on dedicated pool hosts (same
 pattern as `gha-runner-*`), not Swarm services:
 
-| Pool | Terraform | Docker provider host |
+| Pool | Terraform | Docker provider tfvars |
 | --- | --- | --- |
-| ARM64 | `terraform/swarm/jenkins-agent-arm64/app` | `swarm-wk-0` (`docker_arm64_pool.tfvars`) |
-| AMD64 | `terraform/swarm/jenkins-agent-amd64/app` | AMD64 pool host (`docker_amd64.tfvars`) |
+| ARM64 | `terraform/swarm/jenkins-agent-arm64/app` | `runner_agent_arm64.tfvars` |
+| AMD64 | `terraform/swarm/jenkins-agent-amd64/app` | `runner_agent_amd64.tfvars` |
 
 Terraform provisions **`devices { host_path = "/dev/kvm" }`** and
 **`group_add = ["kvm"]`** so Packer/QEMU can use hardware acceleration.

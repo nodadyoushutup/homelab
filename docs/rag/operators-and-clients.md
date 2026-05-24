@@ -6,7 +6,7 @@
 
 | Stack | Terraform | Wrapper script |
 | --- | --- | --- |
-| ChromaDB | **`terraform/swarm/chromadb/app`** | **`pipelines/terraform/swarm/chromadb/app.sh`** (bespoke; **`docker_arm64.tfvars`** + **`dns.tfvars`** + **`chromadb/app.tfvars`**, not **`swarm_pipeline.sh`**) |
+| ChromaDB | **`terraform/swarm/chromadb/app`** | **`pipelines/terraform/swarm/chromadb/app.sh`** (bespoke; **`docker_swarm.tfvars`** + **`dns.tfvars`** + **`chromadb/app.tfvars`**, not **`swarm_pipeline.sh`**) |
 | RAG engine | **`terraform/swarm/rag-engine/app`** | **`pipelines/terraform/swarm/rag-engine/app.sh`** |
 | MCP RAG | **`terraform/swarm/mcp-rag/app`** | **`pipelines/terraform/swarm/mcp-rag/app.sh`** |
 
@@ -14,7 +14,7 @@ Tfvars typically live under **`<repo>/.config/terraform/swarm/<stack>/app.tfvars
 
 **Published ports (fixed in Terraform `main.tf` on the Swarm host):** ChromaDB HTTP **8000**, **`rag-engine` → 9015**, **`mcp-rag` → 9016**.
 
-**Images:** publish with **`.github/workflows/docker_build_push.yml`** (`build_target` **`rag-engine`** or **`mcp-rag`**; **`target_registry`** **`github`** or **`both`** for GHCR under your GitHub username; **`arm64`** when possible). **`rag-engine`** image tag is pinned in **`terraform/swarm/rag-engine/app/main.tf`** (Harbor). Private registry pulls: set **`registry_auths`** under **`swarm_docker_provider_config`** in **`<repo>/.config/terraform/providers/docker_arm64.tfvars`**.
+**Images:** publish with **`.github/workflows/docker_build_push.yml`** (`build_target` **`rag-engine`** or **`mcp-rag`**; **`target_registry`** **`github`** or **`both`** for GHCR under your GitHub username; **`arm64`** when possible). **`rag-engine`** image tag is pinned in **`terraform/swarm/rag-engine/app/main.tf`** (Harbor). Private registry pulls: set **`registry_auths`** under **`swarm_docker_provider_config`** in **`<repo>/.config/terraform/providers/docker_swarm.tfvars`**.
 
 Operational note: `tree-sitter-dockerfile` is not installed as a runtime dependency because it does not publish usable wheels on **linux/arm64**; Dockerfile ingestion falls back to other chunking strategies when the grammar is unavailable.
 
