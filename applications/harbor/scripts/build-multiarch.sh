@@ -777,14 +777,6 @@ if old in text and new not in text:
 
   pushd "${repo_dir}" >/dev/null
 
-  # setup-buildx-action can leave the default builder on the container driver; that breaks
-  # plain `docker run` the same way it breaks Harbor's Makefile `docker build` + `docker run`.
-  # Match docker_build_push.yml: use the classic docker driver before any docker CLI checks.
-  if docker buildx version >/dev/null 2>&1 && docker buildx inspect default >/dev/null 2>&1; then
-    echo "[INFO] buildx use default (docker driver) for Harbor docker CLI"
-    docker buildx use default
-  fi
-
   local runner_uname runner_platform=""
   runner_uname="$(uname -m)"
   case "${runner_uname}" in
@@ -798,14 +790,17 @@ if old in text and new not in text:
     exit 1
   fi
 
-  echo "[INFO] Preflight docker run (target=${platform}, host=${runner_uname})"
-  if ! docker run --rm alpine:3.20 true >/dev/null 2>&1; then
-    if [[ -n "${runner_platform}" ]]; then
-      echo "[ERR] Docker cannot run containers on this ${runner_uname} runner." >&2
-    else
-      echo "[ERR] Docker cannot run containers on this host (uname=${runner_uname})." >&2
-    fi
+  echo "[INFO] Preflight docker daemon (target=${platform}, host=${runner_uname})"
+  if ! docker info >/dev/null 2>&1; then
+    echo "[ERR] Docker daemon is not reachable on this runner." >&2
     exit 1
+  fi
+
+  # Harbor Makefile uses classic `docker build` + `docker run` (not buildx). If a prior
+  # setup-buildx-action left a container driver as default, restore the docker driver.
+  if docker buildx version >/dev/null 2>&1 && docker buildx inspect default >/dev/null 2>&1; then
+    echo "[INFO] buildx use default (docker driver) for Harbor Makefile docker builds"
+    docker buildx use default
   fi
 
   local trivy_platform_suffix trivy_version fallback_trivy_version effective_trivy_version trivy_download_url
