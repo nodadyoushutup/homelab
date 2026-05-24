@@ -39,7 +39,7 @@ resource "docker_service" "rag_engine" {
     }
 
     container_spec {
-      image = "ghcr.io/nodadyoushutup/rag-engine:0.0.10"
+      image = "ghcr.io/nodadyoushutup/rag-engine:0.0.12"
       env   = var.env
 
       dns_config {

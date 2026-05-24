@@ -16,7 +16,6 @@ pipeline {
     choice(name: 'BUILD_TARGET', choices: [
       'langchain-agent-chat',
       'langgraph',
-      'harbor-runtime-set',
       'mcp-argocd',
       'mcp-atlassian',
       'mcp-cloudflare',

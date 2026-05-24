@@ -43,7 +43,7 @@ resource "grafana_data_source" "graphite" {
   name              = "Graphite"
   uid               = "graphite"
   type              = "graphite"
-  url               = "http://192.168.1.28:8081"
+  url               = "http://192.168.1.120:8081"
   is_default        = false
   json_data_encoded = jsonencode({ httpMethod = "POST" })
 }

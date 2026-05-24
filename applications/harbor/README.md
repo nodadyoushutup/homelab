@@ -37,14 +37,16 @@ Notes:
 
 ## GitHub Actions publish
 
-The shared publish workflow now includes a `harbor-runtime-set` target:
+Harbor runtime images use a dedicated workflow (not the generic app image workflow):
 
-- Workflow: `.github/workflows/docker_build_push.yml`
+- Workflow: `.github/workflows/harbor_build_push.yml`
+- Builds each runtime component in parallel per architecture (`max-parallel: 12` on
+  amd64 and arm64 runner pools), then publishes multi-arch manifests.
 - Inputs:
-  - `build_target=harbor-runtime-set`
+  - `version` — publish tag (`:<version>-amd64`, `:<version>-arm64`, manifest `:<version>`)
   - `target_registry=github` for `ghcr.io/<owner>/<component>:<tag>`
-  - `target_registry=harbor` for
-    `harbor.nodadyoushutup.com/homelab/<component>:<tag>`
+  - `target_registry=harbor` for `harbor.nodadyoushutup.com/homelab/<component>:<tag>`
+  - `components` — optional comma-separated subset (default: full runtime set)
 
 ## Runtime image set
 

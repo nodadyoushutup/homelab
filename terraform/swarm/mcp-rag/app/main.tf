@@ -29,7 +29,7 @@ resource "docker_service" "mcp_rag" {
     }
 
     container_spec {
-      image = "ghcr.io/nodadyoushutup/mcp-rag:0.0.4"
+      image = "ghcr.io/nodadyoushutup/mcp-rag:0.0.6"
       env   = var.env
 
       dns_config {

@@ -24,6 +24,7 @@ INSTALL_BINFMT="0"
 PATH_MODE="namespace-component"
 MANIFEST_ONLY="0"
 NO_MANIFEST_PUBLISH="0"
+SELECTED_COMPONENTS=()
 MAKE_HELPER_IMAGE="${MAKE_HELPER_IMAGE:-docker:27-cli}"
 HAS_HOST_MAKE="0"
 MAKE_HELPER_ANNOUNCED="0"
@@ -47,6 +48,8 @@ Options:
   --push                   Push arch tags and publish manifest tags (unless --no-manifest-publish)
   --no-manifest-publish    With --push: push per-arch tags only (for split CI jobs; manifests separately)
   --manifest-only          Skip builds; create and push multi-arch manifests for existing per-arch tags
+  --component <name>       Build/push one runtime image (repeatable; default: full runtime set)
+  --components <csv>       Same as repeated --component (comma-separated image names)
   --install-binfmt         Install qemu/binfmt via tonistiigi/binfmt before build
   -h, --help               Show this help
 
@@ -94,6 +97,19 @@ while [[ $# -gt 0 ]]; do
     --install-binfmt)
       INSTALL_BINFMT="1"
       shift
+      ;;
+    --component)
+      SELECTED_COMPONENTS+=("$2")
+      shift 2
+      ;;
+    --components)
+      IFS=',' read -r -a _components_csv <<<"$2"
+      for _component in "${_components_csv[@]}"; do
+        _component="${_component// /}"
+        [[ -n "${_component}" ]] || continue
+        SELECTED_COMPONENTS+=("${_component}")
+      done
+      shift 2
       ;;
     -h|--help)
       usage
@@ -207,6 +223,77 @@ runtime_images=(
   prepare
 )
 
+validate_runtime_component() {
+  local image="$1"
+  local allowed
+
+  for allowed in "${runtime_images[@]}"; do
+    if [[ "${image}" == "${allowed}" ]]; then
+      return 0
+    fi
+  done
+
+  echo "[ERR] Unsupported runtime component: ${image}" >&2
+  echo "[HINT] Allowed: ${runtime_images[*]}" >&2
+  return 1
+}
+
+resolve_runtime_images() {
+  if [[ ${#SELECTED_COMPONENTS[@]} -eq 0 ]]; then
+    printf '%s\n' "${runtime_images[@]}"
+    return 0
+  fi
+
+  local image
+  local -a unique_components=()
+  for image in "${SELECTED_COMPONENTS[@]}"; do
+    validate_runtime_component "${image}"
+    local seen=false
+    local existing
+    for existing in "${unique_components[@]}"; do
+      if [[ "${existing}" == "${image}" ]]; then
+        seen=true
+        break
+      fi
+    done
+    if [[ "${seen}" == "false" ]]; then
+      unique_components+=("${image}")
+    fi
+  done
+
+  printf '%s\n' "${unique_components[@]}"
+}
+
+component_compile_target() {
+  case "$1" in
+    harbor-core) printf '%s' "compile_core" ;;
+    harbor-jobservice) printf '%s' "compile_jobservice" ;;
+    harbor-registryctl) printf '%s' "compile_registryctl" ;;
+    *) return 1 ;;
+  esac
+}
+
+component_photon_target() {
+  case "$1" in
+    prepare) printf '%s' "_build_prepare" ;;
+    harbor-db) printf '%s' "_build_db" ;;
+    harbor-portal) printf '%s' "_build_portal" ;;
+    harbor-core) printf '%s' "_build_core" ;;
+    harbor-jobservice) printf '%s' "_build_jobservice" ;;
+    harbor-log) printf '%s' "_build_log" ;;
+    trivy-adapter-photon) printf '%s' "_build_trivy_adapter" ;;
+    nginx-photon) printf '%s' "_build_nginx" ;;
+    registry-photon) printf '%s' "_build_registry" ;;
+    harbor-registryctl) printf '%s' "_build_registryctl" ;;
+    redis-photon) printf '%s' "_build_redis" ;;
+    harbor-exporter) printf '%s' "_compile_and_build_exporter" ;;
+    *)
+      echo "[ERR] No photon build target for component: $1" >&2
+      return 1
+      ;;
+  esac
+}
+
 publish_image_ref() {
   local image="$1"
   local tag="$2"
@@ -233,7 +320,12 @@ publish_multiarch_manifests() {
     exit 1
   fi
 
-  for image in "${runtime_images[@]}"; do
+  local -a images_to_publish=()
+  while IFS= read -r image; do
+    [[ -n "${image}" ]] && images_to_publish+=("${image}")
+  done < <(resolve_runtime_images)
+
+  for image in "${images_to_publish[@]}"; do
     local manifest_ref
     manifest_ref="$(publish_image_ref "${image}" "${HARBOR_IMAGE_TAG}")"
 
@@ -314,6 +406,105 @@ run_make_target() {
       fi
       exec make -e "$1"
     ' _ "${target}"
+}
+
+run_photon_make_target() {
+  local repo_dir="$1"
+  local target="$2"
+  shift 2
+  local -a env_pairs=("$@")
+  local photon_makefile="${repo_dir}/make/photon/Makefile"
+
+  if [[ ! -f "${photon_makefile}" ]]; then
+    echo "[ERR] Missing photon Makefile: ${photon_makefile}" >&2
+    exit 1
+  fi
+
+  if [[ "${HAS_HOST_MAKE}" == "1" ]]; then
+    (
+      cd "${repo_dir}"
+      env "TERM=${TERM:-xterm}" "${env_pairs[@]}" make -f make/photon/Makefile "${target}"
+    )
+    return
+  fi
+
+  local -a docker_args env_args
+  docker_args=(
+    --rm
+    --entrypoint sh
+    -v /var/run/docker.sock:/var/run/docker.sock
+    -v "${repo_dir}:${repo_dir}"
+    -w "${repo_dir}"
+  )
+  env_args=()
+
+  if [[ -d "${HOME:-}/.docker" ]]; then
+    docker_args+=(-v "${HOME}/.docker:/root/.docker:ro")
+  fi
+
+  for pair in "${env_pairs[@]}"; do
+    env_args+=(-e "${pair}")
+  done
+
+  env_args+=(-e "DOCKER_HOST=unix:///var/run/docker.sock")
+
+  if [[ "${MAKE_HELPER_ANNOUNCED}" == "0" ]]; then
+    echo "[WARN] Host make+go not both available; using ${MAKE_HELPER_IMAGE} helper container." >&2
+    MAKE_HELPER_ANNOUNCED="1"
+  fi
+
+  docker run \
+    "${docker_args[@]}" \
+    "${env_args[@]}" \
+    "${MAKE_HELPER_IMAGE}" \
+    -c '
+      set -eu
+      apk add --no-cache bash coreutils curl git make >/dev/null
+      export TERM="${TERM:-xterm}"
+      git config --global --add safe.directory "$PWD"
+      test -f make/photon/Makefile || {
+        echo "[ERR] No make/photon/Makefile in $(pwd)." >&2
+        exit 1
+      }
+      if [ -z "${1:-}" ]; then
+        echo "[ERR] photon make goal missing (helper argv bug)." >&2
+        exit 1
+      fi
+      exec make -f make/photon/Makefile "$1"
+    ' _ "${target}"
+}
+
+push_runtime_image() {
+  local image="$1"
+  local arch_tag="$2"
+
+  local source_ref target_ref
+  source_ref="${IMAGE_NAMESPACE}/${image}:${arch_tag}"
+  target_ref="$(publish_image_ref "${image}" "${arch_tag}")"
+
+  if [[ "${source_ref}" != "${target_ref}" ]]; then
+    docker tag "${source_ref}" "${target_ref}"
+  fi
+
+  echo "[PUSH] ${target_ref}"
+  docker push "${target_ref}"
+}
+
+build_runtime_component() {
+  local repo_dir="$1"
+  local image="$2"
+  shift 2
+  local -a build_env=("$@")
+  local compile_target photon_target
+
+  if compile_target="$(component_compile_target "${image}" 2>/dev/null)"; then
+    echo "[BUILD] make ${compile_target} (${image})"
+    run_make_target "${repo_dir}" "${compile_target}" "${build_env[@]}"
+  fi
+
+  photon_target="$(component_photon_target "${image}")"
+  echo "[BUILD] make -f make/photon/Makefile ${photon_target} (${image})"
+  run_photon_make_target "${repo_dir}" "${photon_target}" "${build_env[@]}"
 }
 
 build_for_platform() {
@@ -425,24 +616,26 @@ if old in text and new not in text:
     docker buildx use default
   fi
 
-  echo "[BUILD] make compile (${platform})"
-  run_make_target "${repo_dir}" compile "${build_env[@]}"
+  local -a images_to_build=()
+  while IFS= read -r image; do
+    [[ -n "${image}" ]] && images_to_build+=("${image}")
+  done < <(resolve_runtime_images)
 
-  echo "[BUILD] make build (${platform})"
-  run_make_target "${repo_dir}" build "${build_env[@]}"
+  if [[ ${#SELECTED_COMPONENTS[@]} -eq 0 ]]; then
+    echo "[BUILD] make compile (${platform})"
+    run_make_target "${repo_dir}" compile "${build_env[@]}"
+
+    echo "[BUILD] make build (${platform})"
+    run_make_target "${repo_dir}" build "${build_env[@]}"
+  else
+    for image in "${images_to_build[@]}"; do
+      build_runtime_component "${repo_dir}" "${image}" "${build_env[@]}"
+    done
+  fi
 
   if [[ "${PUSH_IMAGES}" == "1" ]]; then
-    for image in "${runtime_images[@]}"; do
-      local source_ref target_ref
-      source_ref="${IMAGE_NAMESPACE}/${image}:${arch_tag}"
-      target_ref="$(publish_image_ref "${image}" "${arch_tag}")"
-
-      if [[ "${source_ref}" != "${target_ref}" ]]; then
-        docker tag "${source_ref}" "${target_ref}"
-      fi
-
-      echo "[PUSH] ${target_ref}"
-      docker push "${target_ref}"
+    for image in "${images_to_build[@]}"; do
+      push_runtime_image "${image}" "${arch_tag}"
     done
   fi
 

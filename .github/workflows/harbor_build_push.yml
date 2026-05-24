@@ -1,0 +1,418 @@
+name: Harbor - Build and Push Runtime Images
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version tag to publish (per-arch tags use <version>-amd64 / <version>-arm64)"
+        required: true
+      target_registry:
+        description: "Registry target for this publish"
+        required: true
+        default: both
+        type: choice
+        options:
+          - both
+          - github
+          - harbor
+      build_platforms:
+        description: "Architectures to build"
+        required: true
+        default: both
+        type: choice
+        options:
+          - both
+          - amd64
+          - arm64
+      components:
+        description: "Comma-separated runtime images (default all). Example: harbor-core,harbor-portal"
+        required: false
+        default: ""
+
+concurrency:
+  group: harbor-runtime-${{ github.ref }}-${{ github.event.inputs.version }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  GHCR_NAMESPACE: ghcr.io/${{ github.repository_owner }}
+  HARBOR_REGISTRY: harbor.nodadyoushutup.com
+  HARBOR_PROJECT: homelab
+
+jobs:
+  prepare:
+    runs-on: [self-hosted, linux, homelab, build]
+    outputs:
+      version: ${{ steps.prepare.outputs.version }}
+      target_registry: ${{ steps.prepare.outputs.target_registry }}
+      publish_github: ${{ steps.prepare.outputs.publish_github }}
+      publish_harbor: ${{ steps.prepare.outputs.publish_harbor }}
+      platforms: ${{ steps.prepare.outputs.platforms }}
+      build_amd64: ${{ steps.prepare.outputs.build_amd64 }}
+      build_arm64: ${{ steps.prepare.outputs.build_arm64 }}
+      components_json: ${{ steps.prepare.outputs.components_json }}
+
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v6
+
+      - name: Prepare Harbor build parameters
+        id: prepare
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          version="${{ github.event.inputs.version }}"
+          target_registry="${{ github.event.inputs.target_registry }}"
+          requested_platforms="${{ github.event.inputs.build_platforms }}"
+          components_csv="${{ github.event.inputs.components }}"
+
+          all_components=(
+            harbor-core
+            harbor-portal
+            harbor-jobservice
+            harbor-registryctl
+            harbor-db
+            registry-photon
+            redis-photon
+            nginx-photon
+            harbor-log
+            trivy-adapter-photon
+            harbor-exporter
+            prepare
+          )
+
+          if [ -z "$version" ]; then
+            echo "version is required" >&2
+            exit 1
+          fi
+
+          case "$target_registry" in
+            both) publish_github=true; publish_harbor=true ;;
+            github) publish_github=true; publish_harbor=false ;;
+            harbor) publish_github=false; publish_harbor=true ;;
+            *)
+              echo "Unsupported target_registry: $target_registry" >&2
+              exit 1
+              ;;
+          esac
+
+          case "$requested_platforms" in
+            both) requested_platforms_csv="linux/amd64,linux/arm64" ;;
+            amd64) requested_platforms_csv="linux/amd64" ;;
+            arm64) requested_platforms_csv="linux/arm64" ;;
+            *)
+              echo "Unsupported build_platforms: $requested_platforms" >&2
+              exit 1
+              ;;
+          esac
+
+          selected_components=()
+          if [ -z "$components_csv" ]; then
+            selected_components=("${all_components[@]}")
+          else
+            IFS=',' read -r -a requested_components <<<"$components_csv"
+            for component in "${requested_components[@]}"; do
+              component="${component// /}"
+              [ -n "$component" ] || continue
+
+              found=false
+              for allowed in "${all_components[@]}"; do
+                if [ "$component" = "$allowed" ]; then
+                  found=true
+                  selected_components+=("$component")
+                  break
+                fi
+              done
+
+              if [ "$found" = "false" ]; then
+                echo "Unsupported component: $component" >&2
+                echo "Allowed: ${all_components[*]}" >&2
+                exit 1
+              fi
+            done
+          fi
+
+          if [ "${#selected_components[@]}" -eq 0 ]; then
+            echo "No Harbor components selected." >&2
+            exit 1
+          fi
+
+          build_amd64=false
+          build_arm64=false
+          IFS=',' read -r -a platform_list <<<"$requested_platforms_csv"
+          for platform in "${platform_list[@]}"; do
+            case "$platform" in
+              linux/amd64) build_amd64=true ;;
+              linux/arm64) build_arm64=true ;;
+            esac
+          done
+
+          components_json="$(printf '%s\n' "${selected_components[@]}" | jq -R . | jq -s -c .)"
+
+          {
+            echo "version=$version"
+            echo "target_registry=$target_registry"
+            echo "publish_github=$publish_github"
+            echo "publish_harbor=$publish_harbor"
+            echo "platforms=$requested_platforms_csv"
+            echo "build_amd64=$build_amd64"
+            echo "build_arm64=$build_arm64"
+            echo "components_json=$components_json"
+          } >> "$GITHUB_OUTPUT"
+
+          echo "::notice::Harbor runtime publish version=${version} components=$(echo "$components_json" | jq -r 'join(", ")') platforms=${requested_platforms_csv} target_registry=${target_registry}"
+
+      - name: Post-job Docker cleanup (self-hosted disk)
+        if: always()
+        uses: ./.github/actions/docker-selfhosted-cleanup
+
+  build_component_amd64:
+    needs: prepare
+    if: needs.prepare.outputs.build_amd64 == 'true'
+    runs-on: [self-hosted, linux, homelab, amd64, build]
+    strategy:
+      fail-fast: false
+      max-parallel: 12
+      matrix:
+        component: ${{ fromJSON(needs.prepare.outputs.components_json) }}
+    env:
+      HARBOR_BUILD_TMP_PARENT: /var/lib/gha-runner-engine-build
+
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v6
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          install: true
+
+      - name: Log in to GitHub Container Registry
+        if: needs.prepare.outputs.publish_github == 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Validate Harbor credentials
+        if: needs.prepare.outputs.publish_harbor == 'true'
+        env:
+          HARBOR_USERNAME: ${{ secrets.HARBOR_ROBOT_USERNAME }}
+          HARBOR_PASSWORD: ${{ secrets.HARBOR_ROBOT_SECRET }}
+        run: |
+          if [ -z "$HARBOR_USERNAME" ] || [ -z "$HARBOR_PASSWORD" ]; then
+            echo "HARBOR_ROBOT_USERNAME and HARBOR_ROBOT_SECRET are required for Harbor publishes." >&2
+            exit 1
+          fi
+
+      - name: Log in to Harbor Registry
+        if: needs.prepare.outputs.publish_harbor == 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.HARBOR_REGISTRY }}
+          username: ${{ secrets.HARBOR_ROBOT_USERNAME }}
+          password: ${{ secrets.HARBOR_ROBOT_SECRET }}
+
+      - name: Build and push ${{ matrix.component }} (AMD64)
+        env:
+          DOCKER_CLI_EXPERIMENTAL: enabled
+        run: |
+          set -euo pipefail
+
+          chmod 0755 applications/harbor/scripts/build-multiarch.sh
+
+          build_component() {
+            local namespace="$1"
+            local path_mode="$2"
+
+            applications/harbor/scripts/build-multiarch.sh \
+              --namespace "${namespace}" \
+              --tag "${{ needs.prepare.outputs.version }}" \
+              --path-mode "${path_mode}" \
+              --platforms linux/amd64 \
+              --component "${{ matrix.component }}" \
+              --push \
+              --no-manifest-publish
+          }
+
+          if [ "${{ needs.prepare.outputs.publish_github }}" = "true" ]; then
+            build_component "${GHCR_NAMESPACE}" "namespace-component"
+          fi
+
+          if [ "${{ needs.prepare.outputs.publish_harbor }}" = "true" ]; then
+            build_component "${HARBOR_REGISTRY}/${HARBOR_PROJECT}" "namespace-component"
+          fi
+
+      - name: Post-job Docker cleanup (self-hosted disk)
+        if: always()
+        uses: ./.github/actions/docker-selfhosted-cleanup
+
+  build_component_arm64:
+    needs: prepare
+    if: needs.prepare.outputs.build_arm64 == 'true'
+    runs-on: [self-hosted, linux, homelab, arm64]
+    strategy:
+      fail-fast: false
+      max-parallel: 12
+      matrix:
+        component: ${{ fromJSON(needs.prepare.outputs.components_json) }}
+    env:
+      HARBOR_BUILD_TMP_PARENT: /var/lib/gha-runner-engine-build
+
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v6
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          install: true
+
+      - name: Log in to GitHub Container Registry
+        if: needs.prepare.outputs.publish_github == 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Validate Harbor credentials
+        if: needs.prepare.outputs.publish_harbor == 'true'
+        env:
+          HARBOR_USERNAME: ${{ secrets.HARBOR_ROBOT_USERNAME }}
+          HARBOR_PASSWORD: ${{ secrets.HARBOR_ROBOT_SECRET }}
+        run: |
+          if [ -z "$HARBOR_USERNAME" ] || [ -z "$HARBOR_PASSWORD" ]; then
+            echo "HARBOR_ROBOT_USERNAME and HARBOR_ROBOT_SECRET are required for Harbor publishes." >&2
+            exit 1
+          fi
+
+      - name: Log in to Harbor Registry
+        if: needs.prepare.outputs.publish_harbor == 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.HARBOR_REGISTRY }}
+          username: ${{ secrets.HARBOR_ROBOT_USERNAME }}
+          password: ${{ secrets.HARBOR_ROBOT_SECRET }}
+
+      - name: Build and push ${{ matrix.component }} (ARM64)
+        env:
+          DOCKER_CLI_EXPERIMENTAL: enabled
+        run: |
+          set -euo pipefail
+
+          chmod 0755 applications/harbor/scripts/build-multiarch.sh
+
+          build_component() {
+            local namespace="$1"
+            local path_mode="$2"
+
+            applications/harbor/scripts/build-multiarch.sh \
+              --namespace "${namespace}" \
+              --tag "${{ needs.prepare.outputs.version }}" \
+              --path-mode "${path_mode}" \
+              --platforms linux/arm64 \
+              --component "${{ matrix.component }}" \
+              --push \
+              --no-manifest-publish
+          }
+
+          if [ "${{ needs.prepare.outputs.publish_github }}" = "true" ]; then
+            build_component "${GHCR_NAMESPACE}" "namespace-component"
+          fi
+
+          if [ "${{ needs.prepare.outputs.publish_harbor }}" = "true" ]; then
+            build_component "${HARBOR_REGISTRY}/${HARBOR_PROJECT}" "namespace-component"
+          fi
+
+      - name: Post-job Docker cleanup (self-hosted disk)
+        if: always()
+        uses: ./.github/actions/docker-selfhosted-cleanup
+
+  publish_manifest:
+    needs:
+      - prepare
+      - build_component_amd64
+      - build_component_arm64
+    if: >
+      always() &&
+      needs.build_component_amd64.result != 'failure' &&
+      needs.build_component_amd64.result != 'cancelled' &&
+      needs.build_component_arm64.result != 'failure' &&
+      needs.build_component_arm64.result != 'cancelled'
+    runs-on: [self-hosted, linux, homelab, build]
+
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v6
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          install: true
+
+      - name: Log in to GitHub Container Registry
+        if: needs.prepare.outputs.publish_github == 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Validate Harbor credentials
+        if: needs.prepare.outputs.publish_harbor == 'true'
+        env:
+          HARBOR_USERNAME: ${{ secrets.HARBOR_ROBOT_USERNAME }}
+          HARBOR_PASSWORD: ${{ secrets.HARBOR_ROBOT_SECRET }}
+        run: |
+          if [ -z "$HARBOR_USERNAME" ] || [ -z "$HARBOR_PASSWORD" ]; then
+            echo "HARBOR_ROBOT_USERNAME and HARBOR_ROBOT_SECRET are required for Harbor publishes." >&2
+            exit 1
+          fi
+
+      - name: Log in to Harbor Registry
+        if: needs.prepare.outputs.publish_harbor == 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.HARBOR_REGISTRY }}
+          username: ${{ secrets.HARBOR_ROBOT_USERNAME }}
+          password: ${{ secrets.HARBOR_ROBOT_SECRET }}
+
+      - name: Publish Harbor runtime multi-arch manifests
+        env:
+          DOCKER_CLI_EXPERIMENTAL: enabled
+          COMPONENTS_CSV: ${{ join(fromJSON(needs.prepare.outputs.components_json), ',') }}
+        run: |
+          set -euo pipefail
+
+          chmod 0755 applications/harbor/scripts/build-multiarch.sh
+
+          publish_manifests() {
+            local namespace="$1"
+            local path_mode="$2"
+
+            applications/harbor/scripts/build-multiarch.sh \
+              --manifest-only \
+              --namespace "${namespace}" \
+              --tag "${{ needs.prepare.outputs.version }}" \
+              --path-mode "${path_mode}" \
+              --platforms "${{ needs.prepare.outputs.platforms }}" \
+              --components "${COMPONENTS_CSV}"
+          }
+
+          if [ "${{ needs.prepare.outputs.publish_github }}" = "true" ]; then
+            publish_manifests "${GHCR_NAMESPACE}" "namespace-component"
+          fi
+
+          if [ "${{ needs.prepare.outputs.publish_harbor }}" = "true" ]; then
+            publish_manifests "${HARBOR_REGISTRY}/${HARBOR_PROJECT}" "namespace-component"
+          fi
+
+      - name: Post-job Docker cleanup (self-hosted disk)
+        if: always()
+        uses: ./.github/actions/docker-selfhosted-cleanup
