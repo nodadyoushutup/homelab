@@ -24,6 +24,16 @@ on:
           - both
           - amd64
           - arm64
+      component_parallelism:
+        description: "Max parallel component matrix jobs per architecture (1 = sequential)"
+        required: true
+        default: "2"
+        type: choice
+        options:
+          - "1"
+          - "2"
+          - "3"
+          - "4"
 
 concurrency:
   group: harbor-runtime-${{ github.ref }}-${{ github.event.inputs.version }}
@@ -49,6 +59,7 @@ jobs:
       platforms: ${{ steps.prepare.outputs.platforms }}
       build_amd64: ${{ steps.prepare.outputs.build_amd64 }}
       build_arm64: ${{ steps.prepare.outputs.build_arm64 }}
+      matrix_max_parallel: ${{ steps.prepare.outputs.matrix_max_parallel }}
 
     steps:
       - name: Check out the code
@@ -63,6 +74,7 @@ jobs:
           version="${{ github.event.inputs.version }}"
           target_registry="${{ github.event.inputs.target_registry }}"
           requested_platforms="${{ github.event.inputs.build_platforms }}"
+          component_parallelism="${{ github.event.inputs.component_parallelism }}"
 
           if [ -z "$version" ]; then
             echo "version is required" >&2
@@ -99,6 +111,14 @@ jobs:
             esac
           done
 
+          case "$component_parallelism" in
+            1|2|3|4) matrix_max_parallel="$component_parallelism" ;;
+            *)
+              echo "Unsupported component_parallelism: ${component_parallelism}; using 2." >&2
+              matrix_max_parallel="2"
+              ;;
+          esac
+
           {
             echo "version=$version"
             echo "target_registry=$target_registry"
@@ -107,9 +127,10 @@ jobs:
             echo "platforms=$requested_platforms_csv"
             echo "build_amd64=$build_amd64"
             echo "build_arm64=$build_arm64"
+            echo "matrix_max_parallel=${matrix_max_parallel}"
           } >> "$GITHUB_OUTPUT"
 
-          echo "::notice::Harbor runtime publish version=${version} platforms=${requested_platforms_csv} target_registry=${target_registry} (full runtime set)"
+          echo "::notice::Harbor runtime publish version=${version} platforms=${requested_platforms_csv} target_registry=${target_registry} component_parallelism=${matrix_max_parallel} (full runtime set)"
 
       - name: Post-job Docker cleanup (self-hosted disk)
         if: always()
@@ -121,6 +142,8 @@ jobs:
     runs-on: [self-hosted, linux, homelab, amd64, build]
     env:
       HARBOR_BUILD_TMP_PARENT: /var/lib/gha-runner-engine-build
+      HARBOR_RETRY_MAX: "5"
+      HARBOR_RETRY_INITIAL_DELAY: "30"
 
     steps:
       - name: Check out the code
@@ -160,7 +183,7 @@ jobs:
     runs-on: [self-hosted, linux, homelab, amd64, build]
     strategy:
       fail-fast: false
-      max-parallel: 4
+      max-parallel: ${{ fromJSON(needs.prepare.outputs.matrix_max_parallel) }}
       matrix:
         component:
           - harbor-core
@@ -177,6 +200,8 @@ jobs:
           - harbor-prepare
     env:
       HARBOR_BUILD_TMP_PARENT: /var/lib/gha-runner-engine-build
+      HARBOR_RETRY_MAX: "5"
+      HARBOR_RETRY_INITIAL_DELAY: "30"
 
     steps:
       - name: Check out the code
@@ -263,6 +288,8 @@ jobs:
     runs-on: [self-hosted, linux, homelab, arm64]
     env:
       HARBOR_BUILD_TMP_PARENT: /var/lib/gha-runner-engine-build
+      HARBOR_RETRY_MAX: "5"
+      HARBOR_RETRY_INITIAL_DELAY: "30"
 
     steps:
       - name: Check out the code
@@ -302,7 +329,7 @@ jobs:
     runs-on: [self-hosted, linux, homelab, arm64]
     strategy:
       fail-fast: false
-      max-parallel: 4
+      max-parallel: ${{ fromJSON(needs.prepare.outputs.matrix_max_parallel) }}
       matrix:
         component:
           - harbor-core
@@ -319,6 +346,8 @@ jobs:
           - harbor-prepare
     env:
       HARBOR_BUILD_TMP_PARENT: /var/lib/gha-runner-engine-build
+      HARBOR_RETRY_MAX: "5"
+      HARBOR_RETRY_INITIAL_DELAY: "30"
 
     steps:
       - name: Check out the code

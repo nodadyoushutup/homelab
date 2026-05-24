@@ -31,6 +31,56 @@ SELECTED_COMPONENTS=()
 MAKE_HELPER_IMAGE="${MAKE_HELPER_IMAGE:-docker:27-cli}"
 HAS_HOST_MAKE="0"
 MAKE_HELPER_ANNOUNCED="0"
+HARBOR_RETRY_MAX="${HARBOR_RETRY_MAX:-5}"
+HARBOR_RETRY_INITIAL_DELAY="${HARBOR_RETRY_INITIAL_DELAY:-30}"
+HARBOR_RETRY_MAX_DELAY="${HARBOR_RETRY_MAX_DELAY:-300}"
+
+# Docker Hub pull rate limits are usually short (minutes) if you back off; retries help bursts.
+is_transient_registry_error() {
+  local log_file="$1"
+  grep -qiE '429|too many requests|rate limit|toomanyrequests' "${log_file}"
+}
+
+run_with_retry() {
+  local description="$1"
+  shift
+  local attempt=1 delay="${HARBOR_RETRY_INITIAL_DELAY}"
+  local log_file
+  log_file="$(mktemp)"
+
+  while (( attempt <= HARBOR_RETRY_MAX )); do
+    if "$@" >"${log_file}" 2>&1; then
+      cat "${log_file}"
+      rm -f "${log_file}"
+      return 0
+    fi
+
+    if ! is_transient_registry_error "${log_file}"; then
+      cat "${log_file}" >&2
+      rm -f "${log_file}"
+      return 1
+    fi
+
+    if (( attempt >= HARBOR_RETRY_MAX )); then
+      echo "[ERR] ${description} failed after ${HARBOR_RETRY_MAX} attempts (registry rate limit)." >&2
+      cat "${log_file}" >&2
+      rm -f "${log_file}"
+      return 1
+    fi
+
+    echo "[WARN] ${description} hit a transient registry limit (attempt ${attempt}/${HARBOR_RETRY_MAX}); retrying in ${delay}s..." >&2
+    tail -n 8 "${log_file}" >&2 || true
+    sleep "${delay}"
+    attempt=$((attempt + 1))
+    delay=$((delay * 2))
+    if (( delay > HARBOR_RETRY_MAX_DELAY )); then
+      delay="${HARBOR_RETRY_MAX_DELAY}"
+    fi
+  done
+
+  rm -f "${log_file}"
+  return 1
+}
 
 usage() {
   cat <<USAGE
@@ -63,6 +113,8 @@ Environment:
   HARBOR_BUILD_TMP_PARENT  Existing directory for Harbor clones (default: GITHUB_WORKSPACE,
                            else RUNNER_TEMP, TMPDIR, /tmp). Use when Docker bind mounts must
                            resolve on the engine host (CI / nested Docker).
+  HARBOR_RETRY_MAX         Retries on 429 / rate-limit errors (default: 5).
+  HARBOR_RETRY_INITIAL_DELAY  First backoff seconds (default: 30; doubles per attempt, cap 300).
 USAGE
 }
 
@@ -406,7 +458,8 @@ build_harbor_photon_bases() {
         value="${pair#*=}"
         export "${key}=${value}"
       done
-      docker build \
+      run_with_retry "docker build ${image_ref}" \
+        docker build \
         --pull=false \
         -f "make/photon/${comp}/Dockerfile.base" \
         -t "${image_ref}" \
@@ -415,7 +468,7 @@ build_harbor_photon_bases() {
 
     if [[ "${PUSH_IMAGES}" == "1" ]]; then
       echo "[PUSH] ${image_ref}"
-      docker push "${image_ref}"
+      run_with_retry "docker push ${image_ref}" docker push "${image_ref}"
     fi
   done
 }
@@ -538,7 +591,8 @@ ensure_registry_distribution_binary() {
       fi
       rm -rf "${registry_dir}/binary"
       mkdir -p "${registry_dir}/binary"
-      curl --connect-timeout 30 -f -k -L "${REGISTRYURL}" -o "${binary}"
+      run_with_retry "download registry binary" \
+        curl --connect-timeout 30 -f -k -L "${REGISTRYURL}" -o "${binary}"
     fi
     chmod 655 "${binary}"
   )
@@ -793,7 +847,7 @@ push_runtime_image() {
   fi
 
   echo "[PUSH] ${target_ref}"
-  docker push "${target_ref}"
+  run_with_retry "docker push ${target_ref}" docker push "${target_ref}"
 }
 
 retag_and_push_for_platform() {
@@ -837,7 +891,7 @@ retag_and_push_for_platform() {
     fi
 
     echo "[PUSH] ${target_ref}"
-    docker push "${target_ref}"
+    run_with_retry "docker push ${target_ref}" docker push "${target_ref}"
   done
 }
 
@@ -850,7 +904,8 @@ build_runtime_component() {
 
   if compile_target="$(component_compile_target "${image}" 2>/dev/null)"; then
     echo "[BUILD] make ${compile_target} (${image})"
-    run_make_target "${repo_dir}" "${compile_target}" "${build_env[@]}"
+    run_with_retry "make ${compile_target} (${image})" \
+      run_make_target "${repo_dir}" "${compile_target}" "${build_env[@]}"
   fi
 
   if [[ "${image}" == "harbor-registryctl" ]]; then
@@ -859,7 +914,8 @@ build_runtime_component() {
 
   photon_target="$(component_photon_target "${image}")"
   echo "[BUILD] make -f make/photon/Makefile ${photon_target} (${image})"
-  run_photon_make_target "${repo_dir}" "${photon_target}" "${build_env[@]}"
+  run_with_retry "make -f make/photon/Makefile ${photon_target} (${image})" \
+    run_photon_make_target "${repo_dir}" "${photon_target}" "${build_env[@]}"
 }
 
 build_for_platform() {
