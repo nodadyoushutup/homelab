@@ -25,6 +25,8 @@ PATH_MODE="namespace-component"
 MANIFEST_ONLY="0"
 NO_MANIFEST_PUBLISH="0"
 RETAG_FROM_NAMESPACE=""
+PHOTON_BASES_ONLY="0"
+SKIP_BUILD_BASE="0"
 SELECTED_COMPONENTS=()
 MAKE_HELPER_IMAGE="${MAKE_HELPER_IMAGE:-docker:27-cli}"
 HAS_HOST_MAKE="0"
@@ -51,6 +53,8 @@ Options:
   --manifest-only          Skip builds; create and push multi-arch manifests for existing per-arch tags
   --component <name>       Build/push one runtime image (repeatable; default: full runtime set)
   --components <csv>       Same as repeated --component (comma-separated image names)
+  --photon-bases-only      Build and optionally push harbor-*-base images only (sequential; CI)
+  --skip-build-base        Assume harbor-*-base images already exist (matrix component builds)
   --retag-from-namespace <src>  Skip build; retag existing <src>/<image>:<tag> into --namespace and push
   --install-binfmt         Install qemu/binfmt via tonistiigi/binfmt before build
   -h, --help               Show this help
@@ -117,6 +121,14 @@ while [[ $# -gt 0 ]]; do
       RETAG_FROM_NAMESPACE="$2"
       shift 2
       ;;
+    --photon-bases-only)
+      PHOTON_BASES_ONLY="1"
+      shift
+      ;;
+    --skip-build-base)
+      SKIP_BUILD_BASE="1"
+      shift
+      ;;
     -h|--help)
       usage
       exit 0
@@ -144,6 +156,16 @@ case "${PATH_MODE}" in
     exit 2
     ;;
 esac
+
+if [[ "${PHOTON_BASES_ONLY}" == "1" && ${#SELECTED_COMPONENTS[@]} -gt 0 ]]; then
+  echo "[ERR] --photon-bases-only cannot be combined with --component." >&2
+  exit 2
+fi
+
+if [[ "${SKIP_BUILD_BASE}" == "1" && "${PHOTON_BASES_ONLY}" == "1" ]]; then
+  echo "[ERR] --skip-build-base cannot be combined with --photon-bases-only." >&2
+  exit 2
+fi
 
 if [[ "${MANIFEST_ONLY}" == "1" ]]; then
   if [[ -z "${HARBOR_IMAGE_TAG}" ]]; then
@@ -292,6 +314,110 @@ component_compile_target() {
     harbor-registryctl) printf '%s' "compile_registryctl" ;;
     *) return 1 ;;
   esac
+}
+
+# photon directory names for harbor-<name>-base images (sequential CI base build).
+photon_base_components=(
+  prepare
+  db
+  portal
+  core
+  jobservice
+  log
+  nginx
+  registry
+  registryctl
+  redis
+  trivy-adapter
+  exporter
+)
+
+apply_harbor_ci_makefile_patches() {
+  local makefile="$1"
+  local skip_api_lint="${2:-0}"
+
+  if [[ ! -f "${makefile}" ]]; then
+    return 0
+  fi
+
+  python3 -c '
+import pathlib
+import re
+import sys
+
+makefile = pathlib.Path(sys.argv[1])
+skip_api_lint = sys.argv[2] == "1"
+text = makefile.read_text()
+
+old = "$(SPECTRAL) lint ./api/v2.0/swagger.yaml"
+new = "$(SPECTRAL) lint -r .spectral.yaml ./api/v2.0/swagger.yaml"
+if old in text and new not in text:
+    text = text.replace(old, new, 1)
+
+if skip_api_lint:
+    text, count = re.subn(
+        r"^compile_core:\s*lint_apis gen_apis\s*$",
+        "compile_core:",
+        text,
+        count=1,
+        flags=re.MULTILINE,
+    )
+    if count != 1:
+        raise SystemExit(
+            "expected compile_core: lint_apis gen_apis in Harbor Makefile for CI patch"
+        )
+
+makefile.write_text(text)
+' "${makefile}" "${skip_api_lint}"
+}
+
+build_harbor_photon_bases() {
+  local repo_dir="$1"
+  local arch_tag="$2"
+  shift 2
+  local -a build_env=("$@")
+  local comp dockerfile image_ref trivy_flag="false"
+
+  for pair in "${build_env[@]}"; do
+    if [[ "${pair}" == "TRIVYFLAG=true" ]]; then
+      trivy_flag="true"
+    fi
+  done
+
+  for comp in "${photon_base_components[@]}"; do
+    if [[ "${comp}" == "trivy-adapter" && "${trivy_flag}" != "true" ]]; then
+      continue
+    fi
+
+    dockerfile="${repo_dir}/make/photon/${comp}/Dockerfile.base"
+    if [[ ! -f "${dockerfile}" ]]; then
+      echo "[ERR] Missing photon base Dockerfile: ${dockerfile}" >&2
+      exit 1
+    fi
+
+    image_ref="${IMAGE_NAMESPACE}/harbor-${comp}-base:${arch_tag}"
+    echo "[BUILD] photon base ${image_ref}"
+    (
+      cd "${repo_dir}"
+      export TERM="${TERM:-xterm}"
+      local pair key value
+      for pair in "${build_env[@]}"; do
+        key="${pair%%=*}"
+        value="${pair#*=}"
+        export "${key}=${value}"
+      done
+      docker build \
+        --pull=false \
+        -f "make/photon/${comp}/Dockerfile.base" \
+        -t "${image_ref}" \
+        .
+    )
+
+    if [[ "${PUSH_IMAGES}" == "1" ]]; then
+      echo "[PUSH] ${image_ref}"
+      docker push "${image_ref}"
+    fi
+  done
 }
 
 harbor_makefile_var() {
@@ -759,21 +885,12 @@ build_for_platform() {
   echo "[INFO] Cloning ${HARBOR_SOURCE_REPO} @ ${HARBOR_VERSION} for ${platform}"
   git clone --depth 1 --branch "${HARBOR_VERSION}" "${HARBOR_SOURCE_REPO}" "${repo_dir}" >/dev/null
 
-  # Spectral v6 may not pick up .spectral.yaml in some docker/CI runs; upstream invokes
-  # `spectral lint ./api/v2.0/swagger.yaml` without -r. Pin the ruleset path like the CLI docs recommend.
   makefile="${repo_dir}/Makefile"
-  if [[ -f "${makefile}" ]] && grep -Fq '$(SPECTRAL) lint ./api/v2.0/swagger.yaml' "${makefile}" &&
-    ! grep -Fq '$(SPECTRAL) lint -r .spectral.yaml ./api/v2.0/swagger.yaml' "${makefile}"; then
-    python3 -c '
-import pathlib, sys
-p = pathlib.Path(sys.argv[1])
-text = p.read_text()
-old = "$(SPECTRAL) lint ./api/v2.0/swagger.yaml"
-new = "$(SPECTRAL) lint -r .spectral.yaml ./api/v2.0/swagger.yaml"
-if old in text and new not in text:
-    p.write_text(text.replace(old, new, 1))
-' "${makefile}"
+  local skip_api_lint="0"
+  if [[ ${#SELECTED_COMPONENTS[@]} -gt 0 || "${PHOTON_BASES_ONLY}" == "1" ]]; then
+    skip_api_lint="1"
   fi
+  apply_harbor_ci_makefile_patches "${makefile}" "${skip_api_lint}"
 
   pushd "${repo_dir}" >/dev/null
 
@@ -841,6 +958,11 @@ if old in text and new not in text:
   echo "[INFO] Trivy URL for ${arch}: ${trivy_download_url}"
 
   local -a build_env
+  local build_base_flag="true"
+  if [[ "${SKIP_BUILD_BASE}" == "1" ]]; then
+    build_base_flag="false"
+  fi
+
   build_env=(
     "DOCKER_DEFAULT_PLATFORM=${platform}"
     "VERSIONTAG=${arch_tag}"
@@ -851,10 +973,21 @@ if old in text and new not in text:
     "TRIVYFLAG=true"
     "TRIVYVERSION=${effective_trivy_version}"
     "BUILD_INSTALLER=true"
-    "BUILD_BASE=true"
+    "BUILD_BASE=${build_base_flag}"
     "TRIVY_DOWNLOAD_URL=${trivy_download_url}"
     "PULL_BASE_FROM_DOCKERHUB=false"
   )
+
+  append_harbor_photon_env "${repo_dir}" build_env
+
+  if [[ "${PHOTON_BASES_ONLY}" == "1" ]]; then
+    echo "[INFO] Building photon base images only (${platform})"
+    build_harbor_photon_bases "${repo_dir}" "${arch_tag}" "${build_env[@]}"
+    popd >/dev/null
+    rm -rf "${workdir}"
+    trap - RETURN
+    return 0
+  fi
 
   local -a images_to_build=()
   while IFS= read -r image; do
@@ -868,7 +1001,6 @@ if old in text and new not in text:
     echo "[BUILD] make build (${platform})"
     run_make_target "${repo_dir}" build "${build_env[@]}"
   else
-    append_harbor_photon_env "${repo_dir}" build_env
     for image in "${images_to_build[@]}"; do
       build_runtime_component "${repo_dir}" "${image}" "${build_env[@]}"
     done
