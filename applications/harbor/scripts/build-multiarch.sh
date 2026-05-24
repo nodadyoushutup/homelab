@@ -409,7 +409,7 @@ if old in text and new not in text:
 if skip_api_lint:
     text, count = re.subn(
         r"^compile_core:\s*lint_apis gen_apis\s*$",
-        "compile_core:",
+        "compile_core: gen_apis",
         text,
         count=1,
         flags=re.MULTILINE,
