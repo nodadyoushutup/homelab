@@ -942,11 +942,8 @@ build_for_platform() {
   git clone --depth 1 --branch "${HARBOR_VERSION}" "${HARBOR_SOURCE_REPO}" "${repo_dir}" >/dev/null
 
   makefile="${repo_dir}/Makefile"
-  local skip_api_lint="0"
-  if [[ ${#SELECTED_COMPONENTS[@]} -gt 0 || "${PHOTON_BASES_ONLY}" == "1" ]]; then
-    skip_api_lint="1"
-  fi
-  apply_harbor_ci_makefile_patches "${makefile}" "${skip_api_lint}"
+  # CI image factory: skip spectral lint (node pull); keep gen_apis for compile_core.
+  apply_harbor_ci_makefile_patches "${makefile}" "1"
 
   pushd "${repo_dir}" >/dev/null
 
@@ -1052,10 +1049,12 @@ build_for_platform() {
 
   if [[ ${#SELECTED_COMPONENTS[@]} -eq 0 ]]; then
     echo "[BUILD] make compile (${platform})"
-    run_make_target "${repo_dir}" compile "${build_env[@]}"
+    run_with_retry "make compile (${platform})" \
+      run_make_target "${repo_dir}" compile "${build_env[@]}"
 
     echo "[BUILD] make build (${platform})"
-    run_make_target "${repo_dir}" build "${build_env[@]}"
+    run_with_retry "make build (${platform})" \
+      run_make_target "${repo_dir}" build "${build_env[@]}"
   else
     for image in "${images_to_build[@]}"; do
       build_runtime_component "${repo_dir}" "${image}" "${build_env[@]}"

@@ -40,12 +40,13 @@ Notes:
 Harbor runtime images use a dedicated workflow (not the generic app image workflow):
 
 - Workflow: `.github/workflows/harbor_build_push.yml`
-- Per architecture: one job builds all `harbor-*-base` images sequentially, then a
-  component matrix (parallelism **1–4** via `component_parallelism`) builds runtime
-  images with `--skip-build-base`, then `publish_manifest` merges arch tags.
+- Per architecture: **one sequential job** runs upstream `make compile` + `make build`
+  (full runtime set in Harbor order), then `publish_manifest` merges arch tags.
+  amd64 and arm64 jobs can run in parallel on their native runner pools.
+- Set GitHub secrets **`DOCKERHUB_USERNAME`** / **`DOCKERHUB_PASSWORD`** so `photon:5.0`
+  and other Hub base pulls are authenticated (avoids anonymous rate limits).
 - Inputs:
   - `version` — publish tag (`:<version>-amd64`, `:<version>-arm64`, manifest `:<version>`)
-  - `component_parallelism` — matrix `max-parallel` per arch (`1` = fully sequential)
   - `target_registry=github` for `ghcr.io/<owner>/<component>:<tag>`
   - `target_registry=harbor` for `harbor.nodadyoushutup.com/homelab/<component>:<tag>`
 - Each dispatch builds the **full** runtime set (12 images); there is no partial component input.
