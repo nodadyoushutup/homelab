@@ -43,13 +43,10 @@ variable "dns_nameservers" {
 
 
 variable "nfs" {
-  description = "Shared Swarm NFS homelab repo export and volume driver_opts (providers/nfs.tfvars)."
+  description = "Homelab repo NFS mount (providers/nfs.tfvars)."
   type = object({
-    device = string
-    volume = object({
-      type = string
-      opts = string
-    })
+    target         = string
+    driver_options = map(string)
   })
   sensitive = true
 }

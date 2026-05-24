@@ -1,16 +1,12 @@
 locals {
-  nfs_device       = trimspace(var.nfs.device)
-  nfs_volume_type  = trimspace(var.nfs.volume.type)
-  nfs_volume_opts  = trimspace(var.nfs.volume.opts)
-  nfs_mount_target = local.nfs_device != "" ? trimspace(element(split(":", local.nfs_device), length(split(":", local.nfs_device)) - 1)) : ""
-  nfs_driver_opts = merge({
-    type = local.nfs_volume_type
-    o    = local.nfs_volume_opts
-  }, local.nfs_device != "" ? { device = local.nfs_device } : {})
+  nfs_mount_target = trimspace(var.nfs.target)
+  nfs_driver_opts  = var.nfs.driver_options
   nfs_ready = nonsensitive(
-    local.nfs_device != "" &&
-    local.nfs_volume_type != "" &&
-    local.nfs_volume_opts != ""
+    local.nfs_mount_target != "" &&
+    length(local.nfs_driver_opts) > 0 &&
+    trimspace(lookup(local.nfs_driver_opts, "type", "")) != "" &&
+    trimspace(lookup(local.nfs_driver_opts, "device", "")) != "" &&
+    trimspace(lookup(local.nfs_driver_opts, "o", "")) != ""
   )
 
   gha_runner_repo_mount = local.nfs_ready

@@ -365,6 +365,52 @@ append_harbor_photon_env() {
   )
 }
 
+# registryctl (and registry-photon) Dockerfiles COPY make/photon/registry/binary/registry.
+# Upstream photon `build` runs _build_registry before _build_registryctl; per-component
+# matrix jobs must fetch the distribution binary when building registryctl alone.
+ensure_registry_distribution_binary() {
+  local repo_dir="$1"
+  shift
+  local -a build_env=("$@")
+  local binary="${repo_dir}/make/photon/registry/binary/registry"
+  local registry_dir="${repo_dir}/make/photon/registry"
+
+  if [[ -f "${binary}" ]]; then
+    echo "[INFO] Registry distribution binary present."
+    return 0
+  fi
+
+  echo "[BUILD] Fetching registry distribution binary (registryctl prerequisite)..."
+
+  (
+    cd "${repo_dir}"
+    export TERM="${TERM:-xterm}"
+    local pair key value
+    for pair in "${build_env[@]}"; do
+      key="${pair%%=*}"
+      value="${pair#*=}"
+      export "${key}=${value}"
+    done
+
+    if [[ "${BUILDBIN:-}" == "true" ]]; then
+      if [[ -z "${REGISTRY_SRC_TAG:-}" || -z "${DISTRIBUTION_SRC:-}" ]]; then
+        echo "[ERR] BUILDBIN=true requires REGISTRY_SRC_TAG and DISTRIBUTION_SRC." >&2
+        exit 1
+      fi
+      (cd "${registry_dir}" && ./builder "${REGISTRY_SRC_TAG}" "${DISTRIBUTION_SRC}")
+    else
+      if [[ -z "${REGISTRYURL:-}" ]]; then
+        echo "[ERR] REGISTRYURL is not set; cannot download registry binary." >&2
+        exit 1
+      fi
+      rm -rf "${registry_dir}/binary"
+      mkdir -p "${registry_dir}/binary"
+      curl --connect-timeout 30 -f -k -L "${REGISTRYURL}" -o "${binary}"
+    fi
+    chmod 655 "${binary}"
+  )
+}
+
 component_photon_target() {
   case "$1" in
     harbor-db) printf '%s' "_build_db" ;;
@@ -672,6 +718,10 @@ build_runtime_component() {
   if compile_target="$(component_compile_target "${image}" 2>/dev/null)"; then
     echo "[BUILD] make ${compile_target} (${image})"
     run_make_target "${repo_dir}" "${compile_target}" "${build_env[@]}"
+  fi
+
+  if [[ "${image}" == "harbor-registryctl" ]]; then
+    ensure_registry_distribution_binary "${repo_dir}" "${build_env[@]}"
   fi
 
   photon_target="$(component_photon_target "${image}")"
