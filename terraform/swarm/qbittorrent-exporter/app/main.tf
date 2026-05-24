@@ -8,19 +8,9 @@ resource "docker_network" "qbittorrent_exporter" {
 }
 
 resource "docker_service" "qbittorrent_exporter" {
-  for_each = local.qbittorrent_hosts
+  for_each = var.instances
 
   name = "${local.service_name_prefix}-${each.key}"
-
-  dynamic "auth" {
-    for_each = local.docker_service_pull_auth_map
-
-    content {
-      server_address = auth.value.server_address
-      username       = auth.value.username
-      password       = auth.value.password
-    }
-  }
 
   task_spec {
     dynamic "placement" {
@@ -46,24 +36,16 @@ resource "docker_service" "qbittorrent_exporter" {
     }
 
     networks_advanced {
-      name    = data.docker_network.prometheus.id
-      aliases = []
+      name = data.docker_network.prometheus.id
     }
 
     container_spec {
-      image = var.image_reference
+      image = "ghcr.io/martabal/qbittorrent-exporter:v2.0.1"
       env   = local.per_instance_env[each.key]
 
       dns_config {
         nameservers = var.dns_nameservers
       }
-    }
-
-    restart_policy {
-      condition    = "any"
-      delay        = "30s"
-      max_attempts = 0
-      window       = "0s"
     }
   }
 
@@ -80,7 +62,7 @@ resource "docker_service" "qbittorrent_exporter" {
   endpoint_spec {
     ports {
       target_port    = local.internal_port
-      published_port = local.instance_ports[each.key]
+      published_port = each.value.published_port
       protocol       = "tcp"
       publish_mode   = "host"
     }
