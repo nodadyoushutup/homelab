@@ -777,10 +777,34 @@ if old in text and new not in text:
 
   pushd "${repo_dir}" >/dev/null
 
-  echo "[INFO] Preflight platform runtime check: ${platform}"
-  if ! docker run --rm --platform "${platform}" alpine:3.20 true >/dev/null 2>&1; then
-    echo "[ERR] ${platform} containers cannot run on this host (missing binfmt/qemu)." >&2
-    echo "[HINT] Re-run with --install-binfmt or build on native ${arch} hardware." >&2
+  # setup-buildx-action can leave the default builder on the container driver; that breaks
+  # plain `docker run` the same way it breaks Harbor's Makefile `docker build` + `docker run`.
+  # Match docker_build_push.yml: use the classic docker driver before any docker CLI checks.
+  if docker buildx version >/dev/null 2>&1 && docker buildx inspect default >/dev/null 2>&1; then
+    echo "[INFO] buildx use default (docker driver) for Harbor docker CLI"
+    docker buildx use default
+  fi
+
+  local runner_uname runner_platform=""
+  runner_uname="$(uname -m)"
+  case "${runner_uname}" in
+    x86_64|amd64) runner_platform="linux/amd64" ;;
+    aarch64|arm64) runner_platform="linux/arm64" ;;
+  esac
+
+  if [[ -n "${runner_platform}" && "${platform}" != "${runner_platform}" ]]; then
+    echo "[ERR] Build targets ${platform} but this runner is ${runner_uname} (native ${runner_platform})." >&2
+    echo "[HINT] Route ${arch} jobs to the ${arch} runner pool only; do not use binfmt to emulate on the wrong pool." >&2
+    exit 1
+  fi
+
+  echo "[INFO] Preflight docker run (target=${platform}, host=${runner_uname})"
+  if ! docker run --rm alpine:3.20 true >/dev/null 2>&1; then
+    if [[ -n "${runner_platform}" ]]; then
+      echo "[ERR] Docker cannot run containers on this ${runner_uname} runner." >&2
+    else
+      echo "[ERR] Docker cannot run containers on this host (uname=${runner_uname})." >&2
+    fi
     exit 1
   fi
 
@@ -836,15 +860,6 @@ if old in text and new not in text:
     "TRIVY_DOWNLOAD_URL=${trivy_download_url}"
     "PULL_BASE_FROM_DOCKERHUB=false"
   )
-
-  # Harbor Makefile builds tool images (spectral, swagger) with `docker build` then
-  # runs `docker run`. If the active buildx builder uses the docker-container driver,
-  # BuildKit keeps the image only in cache ("No output specified with docker-container
-  # driver"); the image never appears in the local engine and lint_apis/gen_apis fail.
-  if docker buildx version >/dev/null 2>&1 && docker buildx inspect default >/dev/null 2>&1; then
-    echo "[INFO] buildx use default (docker driver) for Harbor Makefile docker builds"
-    docker buildx use default
-  fi
 
   local -a images_to_build=()
   while IFS= read -r image; do
