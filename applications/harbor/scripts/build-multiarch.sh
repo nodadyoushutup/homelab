@@ -288,6 +288,77 @@ component_compile_target() {
   esac
 }
 
+harbor_makefile_var() {
+  local makefile="$1"
+  local key="$2"
+
+  awk -v k="$key" -F= '$1 == k { sub(/^[^=]*=/, ""); gsub(/^[ \t]+|[ \t]+$/, ""); print; exit }' "${makefile}"
+}
+
+expand_makefile_template() {
+  local template="$1"
+  local name="$2"
+  local value="$3"
+
+  template="${template//\$\{${name}\}/${value}}"
+  template="${template//\$\(${name}\)/${value}}"
+  printf '%s' "${template}"
+}
+
+# Photon targets expect the same -e exports as top-level `make build` provides.
+append_harbor_photon_env() {
+  local repo_dir="$1"
+  local -n _env="${2}"
+  local makefile="${repo_dir}/Makefile"
+
+  if [[ ! -f "${makefile}" ]]; then
+    echo "[ERR] Missing Harbor Makefile: ${makefile}" >&2
+    exit 1
+  fi
+
+  local -a keys=(
+    GOBUILDIMAGE
+    NODEBUILDIMAGE
+    REGISTRYVERSION
+    REGISTRY_SRC_TAG
+    DISTRIBUTION_SRC
+    TRIVYADAPTERVERSION
+    DOCKERNETWORK
+    NPM_REGISTRY
+    REGISTRYUSER
+    REGISTRYPASSWORD
+  )
+  local key value registry_version trivy_adapter_version registry_url trivy_adapter_url
+
+  for key in "${keys[@]}"; do
+    value="$(harbor_makefile_var "${makefile}" "${key}")"
+    if [[ -n "${value}" ]]; then
+      _env+=("${key}=${value}")
+    fi
+  done
+
+  registry_version="$(harbor_makefile_var "${makefile}" REGISTRYVERSION)"
+  trivy_adapter_version="$(harbor_makefile_var "${makefile}" TRIVYADAPTERVERSION)"
+
+  registry_url="$(harbor_makefile_var "${makefile}" REGISTRYURL)"
+  if [[ -n "${registry_url}" && -n "${registry_version}" ]]; then
+    registry_url="$(expand_makefile_template "${registry_url}" REGISTRYVERSION "${registry_version}")"
+    _env+=("REGISTRYURL=${registry_url}")
+  fi
+
+  trivy_adapter_url="$(harbor_makefile_var "${makefile}" TRIVY_ADAPTER_DOWNLOAD_URL)"
+  if [[ -n "${trivy_adapter_url}" && -n "${trivy_adapter_version}" ]]; then
+    trivy_adapter_url="$(expand_makefile_template "${trivy_adapter_url}" TRIVYADAPTERVERSION "${trivy_adapter_version}")"
+    _env+=("TRIVY_ADAPTER_DOWNLOAD_URL=${trivy_adapter_url}")
+  fi
+
+  _env+=(
+    "BUILDREG=false"
+    "BUILDTRIVYADP=false"
+    "PUSHBASEIMAGE=false"
+  )
+}
+
 component_photon_target() {
   case "$1" in
     harbor-db) printf '%s' "_build_db" ;;
@@ -644,6 +715,7 @@ if old in text and new not in text:
     echo "[BUILD] make build (${platform})"
     run_make_target "${repo_dir}" build "${build_env[@]}"
   else
+    append_harbor_photon_env "${repo_dir}" build_env
     for image in "${images_to_build[@]}"; do
       build_runtime_component "${repo_dir}" "${image}" "${build_env[@]}"
     done
