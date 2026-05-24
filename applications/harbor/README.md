@@ -40,10 +40,12 @@ Notes:
 Harbor runtime images use a dedicated workflow (not the generic app image workflow):
 
 - Workflow: `.github/workflows/harbor_build_push.yml`
-- Builds each runtime component in parallel per architecture (`max-parallel: 12` on
-  amd64 and arm64 runner pools), then publishes multi-arch manifests.
+- Per architecture: one job builds all `harbor-*-base` images sequentially, then a
+  component matrix (parallelism **1–4** via `component_parallelism`) builds runtime
+  images with `--skip-build-base`, then `publish_manifest` merges arch tags.
 - Inputs:
   - `version` — publish tag (`:<version>-amd64`, `:<version>-arm64`, manifest `:<version>`)
+  - `component_parallelism` — matrix `max-parallel` per arch (`1` = fully sequential)
   - `target_registry=github` for `ghcr.io/<owner>/<component>:<tag>`
   - `target_registry=harbor` for `harbor.nodadyoushutup.com/homelab/<component>:<tag>`
 - Each dispatch builds the **full** runtime set (12 images); there is no partial component input.
