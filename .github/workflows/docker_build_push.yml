@@ -342,6 +342,7 @@ jobs:
             --builder default \
             --platform linux/amd64 \
             --provenance=false \
+            --sbom=false \
             --file "${{ needs.prepare.outputs.dockerfile }}" \
             --load \
             "${tag_args[@]}" \
@@ -406,6 +407,7 @@ jobs:
             --builder default \
             --platform linux/arm64 \
             --provenance=false \
+            --sbom=false \
             --file "${{ needs.prepare.outputs.dockerfile }}" \
             --load \
             "${tag_args[@]}" \

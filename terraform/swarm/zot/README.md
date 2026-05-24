@@ -24,10 +24,11 @@ pipelines/terraform/swarm/zot/app.sh
 After apply (and optional NPM host for HTTPS):
 
 - **UI:** `http://<manager>:35081` (or your public hostname)
-- **Push/pull:** `docker push <host>:35081/homelab/myapp:tag`
-- **Terraform images:** `image = "zot.example.com/homelab/myapp:1.0.0"` (via NPM hostname)
+- **Push/pull:** `docker push zot.nodadyoushutup.com/myapp:tag` (flat namespace)
+- **Terraform images:** `image = "zot.nodadyoushutup.com/myapp:1.0.0"` (via NPM hostname)
 
-Harbor remains the current canonical registry until you repoint GHA/Terraform.
+Swarm config enables **`http.compat: ["docker2s2"]`** so standard `docker push` /
+buildx output (Docker manifest v2 schema 2) is accepted.
 
 ## Auth
 

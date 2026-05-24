@@ -7,6 +7,8 @@ locals {
       address = "0.0.0.0"
       port    = tostring(var.http_port)
       realm   = var.http_realm
+      # Required for `docker push` from buildx/engine (Docker manifest v2 schema 2).
+      compat = ["docker2s2"]
     },
     var.enable_auth ? {
       auth = {

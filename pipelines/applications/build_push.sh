@@ -336,6 +336,7 @@ build_direct_arch() {
     docker buildx build \
       --platform "linux/${arch}" \
       --provenance=false \
+      --sbom=false \
       --file "${DOCKERFILE}" \
       --load \
       "${tag_args[@]}" \
