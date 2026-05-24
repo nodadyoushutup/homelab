@@ -13,7 +13,8 @@ the detailed checklist.
 
 | Domain | Typical contents |
 | --- | --- |
-| `terraform/swarm/` | One directory per **Swarm-deployed** service or family (`harbor/`, `nginx_proxy_manager/`, `mcp-rag/`, observability stacks, runners, …). Most stacks use an `app/` slice; some add `config/` and/or `database/`. |
+| `terraform/swarm/` | One directory per **Swarm-deployed** service or family (`harbor/`, `nginx_proxy_manager/`, `mcp-rag/`, observability stacks, …). Most stacks use an `app/` slice; some add `config/` and/or `database/`. |
+| `terraform/runners/` | **Pool-host** workloads outside Swarm: GitHub Actions runner pools (`gha-runner-amd64`, `gha-runner-arm64`) and Jenkins agent pools (`jenkins-agent-amd64`, `jenkins-agent-arm64`). Each uses an `app/` slice and standalone `docker_container` resources on runner pool hosts. |
 | `terraform/cluster/` | Cluster-oriented roots: for example **Talos** app slice, **Proxmox** app slice, **Argo CD** `config/` slice for post-install Argo configuration. |
 | `terraform/network/` | Network appliances and integrations that are not Swarm services themselves—for example **FortiGate** `config/` against the live firewall API. |
 | `terraform/remote/` | SaaS or remote APIs decoupled from on-prem engines—for example **Cloudflare** `config/` for DNS and zone objects. |
@@ -72,22 +73,24 @@ Illustrative snapshot of how existing services split:
   only. Stamp tags with `scripts/config/stamp_homelab_config_ids.py` (see `.config/README.md`).
   Optional `secrets` / `secret_files` blocks in those files are **Vault-only**
   (declared as ignored variables on each slice root). The same rule applies under
-  `terraform/cluster/...`, `terraform/remote/...`, and `terraform/network/...`.
-  Swarm Docker provider credentials stay at `terraform/providers/docker_swarm.tfvars`
-  (Swarm control plane SSH + registry auth). Standalone pool hosts outside Swarm use
-  dedicated provider tfvars per pool host: `runner_agent_amd64.tfvars` and
-  `runner_agent_arm64.tfvars` (shared by GHA runner and Jenkins agent pipelines on each arch;
-  each pipeline uses only its arch file for the Docker provider, not `docker_swarm.tfvars`).
-  Swarm DNS resolvers live at `terraform/providers/dns.tfvars`, and shared NFS export
-  targets at `terraform/providers/nfs.tfvars` (required for `swarm_pipeline.sh` unless a
+  `terraform/cluster/...`, `terraform/remote/...`, `terraform/network/...`, and
+  `terraform/runners/...`.
+  Swarm Docker provider credentials stay at `terraform/components/swarm.tfvars`
+  (Swarm control plane SSH + registry auth). Runner pool hosts use
+  `terraform/components/amd64.tfvars` and `terraform/components/arm64.tfvars`
+  (shared per arch by GHA runner and Jenkins agent pipelines).
+  Swarm DNS resolvers live at `terraform/components/dns.tfvars`, and shared NFS export
+  targets at `terraform/components/nfs.tfvars` (required for `swarm_pipeline.sh` unless a
   stage sets `SWARM_SKIP_DNS_PROVIDER_TFVARS` or `SWARM_SKIP_NFS_PROVIDER_TFVARS`;
-  merged as docker_swarm (Swarm stacks only), then dns,
+  merged as swarm.tfvars (Swarm stacks only), then dns,
   then nfs, before each stack's slice tfvars).
+  Runner pool pipelines live under `pipelines/terraform/runners/<pool>/app.sh` and merge
+  amd64 or arm64 provider tfvars, then dns, nfs, and slice tfvars via `swarm_pipeline.sh`.
   **Bespoke pipelines** (no `swarm_pipeline.sh`): app stacks `chromadb`,
   `cloud-image-repository`, `dozzle`, `node_exporter`, and `prometheus` use
   `pipelines/terraform/swarm/<svc>/app.sh`. The full
   `nginx_proxy_manager` trio (`database.sh`, `app.sh`, `config.sh`) is bespoke:
-  database and app merge `docker_swarm.tfvars`, `dns.tfvars`, slice tfvars, and
+  database and app merge `swarm.tfvars`, `dns.tfvars`, slice tfvars, and
   `minio.backend.hcl` (no NFS provider tfvars); config merges only slice tfvars and
   the backend (NPM API credentials live in config tfvars). Grafana `config/` also
   merges only slice tfvars and the backend (`provider_config` lives in
@@ -111,10 +114,12 @@ Illustrative snapshot of how existing services split:
   **`victoriametrics`**. Prometheus (`terraform/swarm/prometheus/app`) attaches to
   that overlay for `remote_write` (`http://victoriametrics:8428/api/v1/write` in
   live `prometheus.yaml`).
-- **App only:** majority of MCP stacks, runners, Rag-engine, VictoriaMetrics,
+- **App only:** majority of MCP stacks, Rag-engine, VictoriaMetrics,
   Graphite, etc. Simple app-only stacks with bespoke pipelines: `chromadb`,
-  `cloud-image-repository`, `dozzle`, `node_exporter`, `prometheus`. The
-  `nginx_proxy_manager` database, app, and config slices all use bespoke pipelines.
+  `cloud-image-repository`, `dozzle`, `node_exporter`, `prometheus`. Runner pools
+  (`terraform/runners/*`) and Jenkins agents use `swarm_pipeline.sh` with pool-host
+  Docker provider tfvars. The `nginx_proxy_manager` database, app, and config slices
+  all use bespoke pipelines.
 
 Legacy nested tfvars (`terraform/swarm/<svc>/app/app.tfvars`) may still exist on
 disk until flattened. **New work** should use the sibling naming above.

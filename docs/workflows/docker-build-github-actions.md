@@ -12,7 +12,7 @@ images from this repository. Follow it whenever work produces or requires a new
 - **Always** drive the workflow **Docker - Build and Push Image**
   (file `.github/workflows/docker_build_push.yml`) via `workflow_dispatch`.
 - **Always** set **`target_registry`** to **`github`** unless the user explicitly
-  requires Harbor or both registries.
+  requires Zot or both registries.
 - **Always** set **`build_platforms`** to **`both`** so the workflow builds
   **linux/amd64** and **linux/arm64** when the selected `build_target` supports
   both. The workflow intersects this with per-target support (see exceptions).
@@ -87,15 +87,15 @@ For typical **direct** builds publishing to GitHub:
 Prefer **`docker pull ghcr.io/<owner>/<image_name>:<version>`** so the local
 engine selects the correct architecture from the manifest.
 
-## Harbor registry layout
+## Zot registry layout
 
-When **`target_registry`** is **`harbor`** or **`both`**, direct builds push to
-**`<HARBOR_REGISTRY>/<HARBOR_PROJECT>/<image_name>`**. The workflow sets
-**`HARBOR_PROJECT`** to **`homelab`** by default (see `.github/workflows/docker_build_push.yml`).
+When **`target_registry`** is **`zot`** or **`both`**, direct builds push to
+**`<ZOT_REGISTRY>/<image_name>`** (flat namespace, no project prefix). The workflow sets
+**`ZOT_REGISTRY`** to **`zot.nodadyoushutup.com`** (see `.github/workflows/docker_build_push.yml`).
 The Jenkins/bash mirror **`pipelines/applications/build_push.sh`** uses the same
-layout via environment **`HARBOR_PROJECT`** (default **`homelab`**). Pins in
-Terraform/Kubernetes should use that path (for example
-**`harbor.nodadyoushutup.com/homelab/langgraph:<tag>`**).
+layout via environment **`ZOT_REGISTRY`**. Pins in Terraform/Kubernetes should use that path
+(for example **`zot.nodadyoushutup.com/langgraph:<tag>`**). Zot is configured for
+anonymous push/pull on the homelab network—no registry login step in the workflow.
 
 ## Deploy and health (mandatory end state)
 
@@ -155,7 +155,7 @@ The image **built** but **`docker push` to `ghcr.io/...` failed**. That is regis
 2. **Orphan package** — A **`ghcr.io/<owner>/<image_name>`** package created outside the **`homelab`** workflow (for example via a personal PAT) may not appear under the repo **Packages** tab and can block `write_package`. Delete it under [your packages](https://github.com/users?tab=packages) or **Package settings → Manage Actions access** (grant **`homelab`** **Write**), then re-run the workflow so **`GITHUB_TOKEN`** publishes and links it like other images.
 3. **Self-hosted runners** — Stale `~/.docker/config.json` creds can block push after a successful login. The workflow runs `docker logout ghcr.io` before login; re-run after pulling workflow fixes.
 4. **Optional PAT** — Add repo secret **`GHCR_TOKEN`**: classic PAT with **`write:packages`**. The workflow uses `secrets.GHCR_TOKEN || github.token` for `docker/login-action`.
-5. **Harbor unblock** — Dispatch with **`target_registry`** **`harbor`** or **`both`** and pin **`harbor.nodadyoushutup.com/homelab/<image_name>:<version>`** in Terraform until GHCR is fixed.
+5. **Zot unblock** — Dispatch with **`target_registry`** **`zot`** or **`both`** and pin **`zot.nodadyoushutup.com/<image_name>:<version>`** in Terraform until GHCR is fixed.
 
 ## Break-glass
 

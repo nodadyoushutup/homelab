@@ -6,7 +6,7 @@
 #
 # <config-id> mirrors repo layout, relative to CONFIG_DIR (no leading slash):
 #   terraform/swarm/grafana/app
-#   terraform/providers/dns
+#   terraform/components/dns
 #   kubernetes/langgraph/app
 #   minio.backend
 #   docker/langgraph

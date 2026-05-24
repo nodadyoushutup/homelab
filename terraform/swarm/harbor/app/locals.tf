@@ -4,12 +4,17 @@ locals {
   log_root_path     = trimsuffix(var.harbor_log_path, "/")
   config_root_path  = "${local.install_root_path}/common/config"
 
+  component_env_paths = {
+    db          = "${local.config_root_path}/db/env"
+    core        = "${local.config_root_path}/core/env"
+    registryctl = "${local.config_root_path}/registryctl/env"
+    jobservice  = "${local.config_root_path}/jobservice/env"
+    trivy       = "${local.config_root_path}/trivy-adapter/env"
+  }
+
   env_file_contents = {
-    db          = trimspace(var.env_file_paths.db) != "" ? try(file(var.env_file_paths.db), "") : ""
-    core        = trimspace(var.env_file_paths.core) != "" ? try(file(var.env_file_paths.core), "") : ""
-    registryctl = trimspace(var.env_file_paths.registryctl) != "" ? try(file(var.env_file_paths.registryctl), "") : ""
-    jobservice  = trimspace(var.env_file_paths.jobservice) != "" ? try(file(var.env_file_paths.jobservice), "") : ""
-    trivy       = trimspace(var.env_file_paths.trivy) != "" ? try(file(var.env_file_paths.trivy), "") : ""
+    for env_name, env_path in local.component_env_paths :
+    env_name => try(file(env_path), "")
   }
 
   parsed_env_file_maps = {
@@ -21,13 +26,7 @@ locals {
     }
   }
 
-  effective_env = {
-    db          = length(var.env.db) > 0 ? var.env.db : local.parsed_env_file_maps.db
-    core        = length(var.env.core) > 0 ? var.env.core : local.parsed_env_file_maps.core
-    registryctl = length(var.env.registryctl) > 0 ? var.env.registryctl : local.parsed_env_file_maps.registryctl
-    jobservice  = length(var.env.jobservice) > 0 ? var.env.jobservice : local.parsed_env_file_maps.jobservice
-    trivy       = length(var.env.trivy) > 0 ? var.env.trivy : local.parsed_env_file_maps.trivy
-  }
+  effective_env = local.parsed_env_file_maps
 
   syslog_driver_defaults = {
     "syslog-address" = "tcp://127.0.0.1:${var.log_syslog_published_port}"

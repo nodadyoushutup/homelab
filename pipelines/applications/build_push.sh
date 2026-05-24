@@ -10,8 +10,9 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd -- "${SCRIPT_DIR}/../.." && pwd)"
 
 GHCR_NAMESPACE_DEFAULT="ghcr.io/nodadyoushutup"
+ZOT_REGISTRY_DEFAULT="zot.nodadyoushutup.com"
 HARBOR_REGISTRY_DEFAULT="harbor.nodadyoushutup.com"
-# Harbor project (flat namespace before repo name): registry/<project>/<repo>:<tag>
+# Harbor project (harbor-runtime-set only): registry/<project>/<repo>:<tag>
 HARBOR_PROJECT_DEFAULT="homelab"
 
 log() {
@@ -25,14 +26,14 @@ die() {
 
 usage() {
   cat <<'EOF_USAGE'
-Usage: pipelines/applications/build_push.sh --version <version> --target_registry <github|harbor|both> --build_target <target> [options]
+Usage: pipelines/applications/build_push.sh --version <version> --target_registry <github|zot|both> --build_target <target> [options]
 
 Emulates the repo's Docker GitHub Actions workflow with a repo-native bash
 entrypoint.
 
 Required:
   --version <X.Y.Z>                Version tag to publish
-  --target_registry <value>        Registry target: github, harbor, or both
+  --target_registry <value>        Registry target: github, zot, or both
   --build_target <value>           Build target from the workflow target list
 
 Options:
@@ -43,16 +44,15 @@ Options:
   --install_binfmt                 Install qemu/binfmt before cross-arch builds
   --github_username <value>        Override GHCR username
   --github_token <value>           Override GHCR token/PAT
-  --harbor_username <value>        Override Harbor username
-  --harbor_password <value>        Override Harbor password
+  --harbor_username <value>        Harbor username (harbor-runtime-set with both only)
+  --harbor_password <value>        Harbor password (harbor-runtime-set with both only)
   -h, --help                       Show this help
 
 Environment fallbacks:
   GHCR_USERNAME / GITHUB_ACTOR
   GHCR_TOKEN / GITHUB_TOKEN
-  HARBOR_PROJECT (default: homelab; Harbor project segment before image name)
-  HARBOR_USERNAME
-  HARBOR_PASSWORD
+  HARBOR_PROJECT (default: homelab; harbor-runtime-set Harbor project segment)
+  HARBOR_USERNAME / HARBOR_PASSWORD (harbor-runtime-set with target_registry=both)
 EOF_USAGE
 }
 
@@ -81,20 +81,20 @@ registry_login() {
   require_cmd docker
 
   case "${TARGET_REGISTRY}" in
-    both)
-      registry_login_github
-      registry_login_harbor
-      ;;
-    github)
+    both|github)
       registry_login_github
       ;;
-    harbor)
-      registry_login_harbor
+    zot)
+      log "Zot registry publishes without login (anonymous push enabled)"
       ;;
     *)
       die "Unsupported target_registry: ${TARGET_REGISTRY}"
       ;;
   esac
+
+  if [[ "${BUILD_STRATEGY}" == "harbor-runtime-set" && "${PUBLISH_HARBOR}" == "1" ]]; then
+    registry_login_harbor
+  fi
 }
 
 registry_login_github() {
@@ -225,25 +225,43 @@ resolve_build_target() {
 }
 
 resolve_registry_target() {
+  PUBLISH_GITHUB="0"
+  PUBLISH_ZOT="0"
+  PUBLISH_HARBOR="0"
+
   case "${TARGET_REGISTRY}" in
     both)
       PUBLISH_GITHUB="1"
-      PUBLISH_HARBOR="1"
+      PUBLISH_ZOT="1"
       ;;
     github)
       PUBLISH_GITHUB="1"
-      PUBLISH_HARBOR="0"
       ;;
-    harbor)
-      PUBLISH_GITHUB="0"
-      PUBLISH_HARBOR="1"
+    zot)
+      PUBLISH_ZOT="1"
       ;;
     *)
       die "Unsupported target_registry: ${TARGET_REGISTRY}"
       ;;
   esac
 
+  if [[ "${BUILD_STRATEGY}" == "harbor-runtime-set" ]]; then
+    case "${TARGET_REGISTRY}" in
+      both)
+        PUBLISH_ZOT="0"
+        PUBLISH_HARBOR="1"
+        ;;
+      github)
+        PUBLISH_ZOT="0"
+        ;;
+      zot)
+        die "target_registry=zot does not apply to harbor-runtime-set; use github or both"
+        ;;
+    esac
+  fi
+
   GHCR_IMAGE_BASE=""
+  ZOT_IMAGE_BASE=""
   HARBOR_IMAGE_BASE=""
 
   if [[ "${BUILD_STRATEGY}" == "direct" ]]; then
@@ -251,8 +269,8 @@ resolve_registry_target() {
       GHCR_IMAGE_BASE="${GHCR_NAMESPACE}/${IMAGE_NAME}"
     fi
 
-    if [[ "${PUBLISH_HARBOR}" == "1" ]]; then
-      HARBOR_IMAGE_BASE="${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${IMAGE_NAME}"
+    if [[ "${PUBLISH_ZOT}" == "1" ]]; then
+      ZOT_IMAGE_BASE="${ZOT_REGISTRY}/${IMAGE_NAME}"
     fi
   fi
 }
@@ -302,8 +320,8 @@ build_direct_arch() {
     tag_args+=(--tag "${image_ref}")
   fi
 
-  if [[ "${PUBLISH_HARBOR}" == "1" ]]; then
-    image_ref="${HARBOR_IMAGE_BASE}:${VERSION}-${arch}"
+  if [[ "${PUBLISH_ZOT}" == "1" ]]; then
+    image_ref="${ZOT_IMAGE_BASE}:${VERSION}-${arch}"
     image_refs+=("${image_ref}")
     tag_args+=(--tag "${image_ref}")
   fi
@@ -368,8 +386,8 @@ publish_direct_manifests() {
     publish_manifest_for_base "${GHCR_IMAGE_BASE}"
   fi
 
-  if [[ "${PUBLISH_HARBOR}" == "1" ]]; then
-    publish_manifest_for_base "${HARBOR_IMAGE_BASE}"
+  if [[ "${PUBLISH_ZOT}" == "1" ]]; then
+    publish_manifest_for_base "${ZOT_IMAGE_BASE}"
   fi
 }
 
@@ -498,6 +516,7 @@ case "${NATIVE_ARCH}" in
 esac
 
 GHCR_NAMESPACE="${GHCR_NAMESPACE:-${GHCR_NAMESPACE_DEFAULT}}"
+ZOT_REGISTRY="${ZOT_REGISTRY:-${ZOT_REGISTRY_DEFAULT}}"
 HARBOR_REGISTRY="${HARBOR_REGISTRY:-${HARBOR_REGISTRY_DEFAULT}}"
 HARBOR_PROJECT="${HARBOR_PROJECT:-${HARBOR_PROJECT_DEFAULT}}"
 

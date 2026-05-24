@@ -14,7 +14,7 @@ When a project does not maintain a standalone docs site, this file links to the 
 | Docker Compose | `docker/docker-compose.minio.yaml`, `applications/gha-runner/docker-compose.yaml` | [Docker Compose docs](https://docs.docker.com/compose/) |
 | Docker Swarm | `terraform/swarm/**`, `docs/workflows/terraform.md` | [Docker Swarm docs](https://docs.docker.com/engine/swarm/) |
 | GitHub Actions | `.github/workflows/docker_build_push.yml`, `.github/workflows/packer_build_push.yml` | [GitHub Actions docs](https://docs.github.com/en/actions) |
-| GitHub Actions self-hosted runners | `applications/gha-runner/`, `terraform/swarm/gha-runner-arm64/app`, `terraform/swarm/gha-runner-amd64/app` | [Self-hosted runner docs](https://docs.github.com/en/actions/concepts/runners/self-hosted-runners) |
+| GitHub Actions self-hosted runners | `applications/gha-runner/`, `terraform/runners/gha-runner-arm64/app`, `terraform/runners/gha-runner-amd64/app` | [Self-hosted runner docs](https://docs.github.com/en/actions/concepts/runners/self-hosted-runners) |
 | QEMU | `packer/ubuntu-24.04-ndysu.pkr.hcl`, `.github/workflows/packer_build_push.yml` | [QEMU docs](https://www.qemu.org/docs/master/) |
 | cloud-init | `packer/cloud-init/user-data`, `packer/cloud-init/meta-data` | [cloud-init docs](https://docs.cloud-init.io/en/latest/) |
 
@@ -57,7 +57,8 @@ When a project does not maintain a standalone docs site, this file links to the 
 | Telegraf | `terraform/swarm/telegraf_docker_metrics/app` | [Telegraf docs](https://docs.influxdata.com/telegraf/v1/configuration/) |
 | Dozzle | `terraform/swarm/dozzle/app` (`pipelines/terraform/swarm/dozzle/app.sh`, bespoke) | [Dozzle docs](https://dozzle.dev/guide/what-is-dozzle) |
 | Harbor | `terraform/swarm/harbor/{app,config}`, `applications/harbor/` | [Harbor docs](https://goharbor.io/docs/) |
-| Jenkins | `terraform/swarm/jenkins-agent-arm64/app`, `terraform/swarm/jenkins-agent-amd64/app`, `terraform/swarm/jenkins-controller/{app,config}`, `applications/jenkins-agent/`, `applications/jenkins-controller/` | [Jenkins docs](https://www.jenkins.io/doc/) |
+| Zot | `terraform/swarm/zot/app` | [Zot docs](https://zotregistry.dev/) |
+| Jenkins | `terraform/runners/jenkins-agent-arm64/app`, `terraform/runners/jenkins-agent-amd64/app`, `terraform/swarm/jenkins-controller/{app,config}`, `applications/jenkins-agent/`, `applications/jenkins-controller/` | [Jenkins docs](https://www.jenkins.io/doc/) |
 | Model Context Protocol (MCP) | `applications/mcp-*`, `terraform/swarm/mcp-*/app` | [MCP docs](https://modelcontextprotocol.io/docs/learn) |
 
 ## Application workloads

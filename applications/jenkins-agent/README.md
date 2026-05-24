@@ -26,7 +26,7 @@ Build and publish this image with `.github/workflows/docker_build_push.yml`
 using:
 
 - `build_target=jenkins-agent`
-- `target_registry=github` or `target_registry=harbor`
+- `target_registry=github` or `target_registry=zot`
 - a required `version`
 
 The workflow publishes a multi-arch image for both `linux/amd64` and
@@ -39,8 +39,8 @@ pattern as `gha-runner-*`), not Swarm services:
 
 | Pool | Terraform | Docker provider tfvars |
 | --- | --- | --- |
-| ARM64 | `terraform/swarm/jenkins-agent-arm64/app` | `runner_agent_arm64.tfvars` |
-| AMD64 | `terraform/swarm/jenkins-agent-amd64/app` | `runner_agent_amd64.tfvars` |
+| ARM64 | `terraform/runners/jenkins-agent-arm64/app` | `terraform/components/arm64.tfvars` |
+| AMD64 | `terraform/runners/jenkins-agent-amd64/app` | `terraform/components/amd64.tfvars` |
 
 Terraform provisions **`devices { host_path = "/dev/kvm" }`** and
 **`group_add = ["kvm"]`** so Packer/QEMU can use hardware acceleration.

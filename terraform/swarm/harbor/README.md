@@ -5,39 +5,43 @@ This service is split into two Terraform stages:
 - `app/`: Docker Swarm runtime resources for Harbor containers.
 - `config/`: Harbor API resources (projects/users/members/robots/system settings).
 
-## Runtime Notes
+## Operator config
 
-The `app` stage is intentionally aligned with the existing manual Harbor layout:
+Live tfvars live under **`.config/terraform/swarm/harbor/`**:
 
-- Host install path: `/mnt/eapp/harbor-manual/harbor`
-- Host data path: `/mnt/eapp/harbor-manual/data`
-- Host log path: `/mnt/eapp/harbor-manual/log`
+- **`app.tfvars`** — hostname, admin/DB passwords, host paths, placement. About a dozen values.
+- **`config.tfvars`** — Harbor provider URL/credentials, projects, robots.
 
-These are configurable via tfvars.
+You do **not** hand-write component `env` files. The app pipeline runs **`harbor-prepare`** before `terraform apply`, which renders `harbor.yml` from `app.tfvars` and generates:
+
+- `${harbor_install_path}/common/config/**` (nginx, core, registry, jobservice, trivy, …)
+- `${harbor_data_path}/secret/**` (keys, certs)
+- component env files under `common/config/*/env` (read by Terraform at apply time)
+
+## First apply (recommended order)
+
+1. Copy checked-in examples to your config dir (adjust paths/passwords):
+   - `terraform/swarm/harbor/app/app.tfvars.example` → `.config/terraform/swarm/harbor/app.tfvars`
+   - `terraform/swarm/harbor/config/config.tfvars.example` → `.config/terraform/swarm/harbor/config.tfvars`
+2. Set **`harbor_admin_password`** in `app.tfvars` and the same value in **`config.tfvars`** `provider_config.harbor.password`.
+3. Stop any overlapping standalone Harbor deployment before applying `app`.
+4. Run **`pipelines/terraform/swarm/harbor/app.sh`** (prepare + Terraform apply).
+5. Verify Harbor health (`/api/v2.0/ping`).
+6. Run **`pipelines/terraform/swarm/harbor/config.sh`**.
+
+## Runtime notes
+
+Default host paths in examples are placeholders. Align `harbor_install_path`, `harbor_data_path`, and `harbor_log_path` with your Swarm node layout.
+
+When Harbor is behind Nginx Proxy Manager or another HTTPS edge, set **`harbor_external_url`** in `app.tfvars` (for example `https://harbor.example.com`) so core/registry URLs match what clients use.
 
 ## Harbor projects (`config/` stage)
 
-Harbor has flat projects (no nesting). This repo standardizes on a single **`homelab`** project so images are `harbor.example.com/homelab/<service>:<tag>` instead of duplicating the service name as both project and repository.
+Harbor has flat projects (no nesting). This repo standardizes on a single **`homelab`** project so images are `harbor.example.com/homelab/<service>:<tag>`.
 
-- After changing `projects` in tfvars, run `scripts/misc/harbor_migrate_to_homelab_project.sh` if you need to copy existing tags out of older projects before Terraform deletes them.
 - Robot `project` permissions should use `namespace = "homelab"` for push/pull to those repositories.
 
-### Optional two-phase wipe (config tfvars outside the repo)
+## Pipeline entrypoints
 
-To let Terraform **destroy** all managed Harbor projects/robots before re-applying a clean layout: point `projects` and `robot_accounts` at **empty lists**, set `delete_default_library = false` for the wipe apply, run `apply`, then restore definitions from your backup tfvars (for example `config.tfvars.phase2-backup-*` under the same config directory) and apply again.
-
-## First Apply (Recommended Order)
-
-1. Prepare tfvars files from the **checked-in examples** in this repo (under each slice directory), then copy them to your `CONFIG_DIR` as siblings of the slice folders:
-   - from `terraform/swarm/harbor/app/app.tfvars.example` → **`/mnt/eapp/code/homelab/.config/terraform/swarm/harbor/app.tfvars`**
-   - from `terraform/swarm/harbor/config/config.tfvars.example` → **`/mnt/eapp/code/homelab/.config/terraform/swarm/harbor/config.tfvars`**
-2. Ensure env files for Harbor components are available on the Terraform runner, or set explicit `env` maps in app tfvars.
-3. Stop the current standalone compose Harbor deployment before applying `app` (ports/data paths overlap).
-4. Apply `app` stage.
-5. Verify Harbor health (`/api/v2.0/ping`).
-6. Apply `config` stage.
-
-## Pipeline Entrypoints
-
-- `pipelines/terraform/swarm/harbor/app.sh`
-- `pipelines/terraform/swarm/harbor/config.sh`
+- `pipelines/terraform/swarm/harbor/app.sh` — `scripts/harbor/prepare_from_tfvars.py` then Terraform app slice
+- `pipelines/terraform/swarm/harbor/config.sh` — Harbor API config slice

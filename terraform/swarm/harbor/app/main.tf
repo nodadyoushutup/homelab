@@ -236,7 +236,7 @@ resource "docker_service" "registryctl" {
   lifecycle {
     precondition {
       condition     = length(local.effective_env.registryctl) > 0
-      error_message = "registryctl env is empty. Set env.registryctl or env_file_paths.registryctl."
+      error_message = "registryctl env is empty. Run pipelines/terraform/swarm/harbor/app.sh so harbor-prepare generates ${local.component_env_paths.registryctl}."
     }
   }
 }
@@ -302,7 +302,7 @@ resource "docker_service" "postgresql" {
   lifecycle {
     precondition {
       condition     = length(local.effective_env.db) > 0
-      error_message = "db env is empty. Set env.db or env_file_paths.db."
+      error_message = "db env is empty. Run pipelines/terraform/swarm/harbor/app.sh so harbor-prepare generates ${local.component_env_paths.db}."
     }
   }
 }
@@ -471,7 +471,7 @@ resource "docker_service" "core" {
   lifecycle {
     precondition {
       condition     = length(local.effective_env.core) > 0
-      error_message = "core env is empty. Set env.core or env_file_paths.core."
+      error_message = "core env is empty. Run pipelines/terraform/swarm/harbor/app.sh so harbor-prepare generates ${local.component_env_paths.core}."
     }
   }
 }
@@ -610,7 +610,7 @@ resource "docker_service" "jobservice" {
   lifecycle {
     precondition {
       condition     = length(local.effective_env.jobservice) > 0
-      error_message = "jobservice env is empty. Set env.jobservice or env_file_paths.jobservice."
+      error_message = "jobservice env is empty. Run pipelines/terraform/swarm/harbor/app.sh so harbor-prepare generates ${local.component_env_paths.jobservice}."
     }
   }
 }
@@ -770,7 +770,7 @@ resource "docker_service" "trivy_adapter" {
   lifecycle {
     precondition {
       condition     = length(local.effective_env.trivy) > 0
-      error_message = "trivy env is empty. Set env.trivy or env_file_paths.trivy."
+      error_message = "trivy env is empty. Run pipelines/terraform/swarm/harbor/app.sh so harbor-prepare generates ${local.component_env_paths.trivy}."
     }
   }
 }

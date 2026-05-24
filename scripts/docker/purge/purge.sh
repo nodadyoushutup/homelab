@@ -12,7 +12,6 @@ KNOWN_SERVICES=(
   gha-runner-arm64
   grafana
   graphite
-  harbor
   jenkins-agent-amd64
   jenkins-agent-arm64
   jenkins-controller
@@ -37,7 +36,6 @@ declare -A SERVICE_MAP=(
   [actions_runner]="gha-runner"
   [grafana]="grafana"
   [graphite]="graphite"
-  [harbor]="harbor"
   [jenkins]="jenkins"
   [jenkins-agent]="jenkins-agent"
   [jenkins_agent]="jenkins-agent"

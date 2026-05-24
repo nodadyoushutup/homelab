@@ -4,7 +4,7 @@ This directory is the single site-local source of truth: Terraform/Kubernetes tf
 
 ## homelab-config tags (required)
 
-Every Terraform tfvars file, shared provider tfvars, `minio.backend.hcl`, and live `docker/*.env` under this tree must start with a **first-line** tag:
+Every Terraform tfvars file, shared component tfvars, `minio.backend.hcl`, and live `docker/*.env` under this tree must start with a **first-line** tag:
 
 ```hcl
 # homelab-config: <config-id>
@@ -15,7 +15,7 @@ Every Terraform tfvars file, shared provider tfvars, `minio.backend.hcl`, and li
 | File | Tag id |
 | --- | --- |
 | `terraform/swarm/grafana/app.tfvars` | `terraform/swarm/grafana/app` |
-| `terraform/providers/dns.tfvars` | `terraform/providers/dns` |
+| `terraform/components/dns.tfvars` | `terraform/components/dns` |
 | `minio.backend.hcl` | `minio.backend` |
 | `docker/langgraph.env` | `docker/langgraph` |
 | `scripts/rag.env` | `scripts/rag` |
@@ -36,7 +36,7 @@ Canonical mirrored paths (for example `terraform/swarm/<svc>/app.tfvars`) remain
 - `docker/` — split `*.env` for Compose, LangGraph, and host scripts (see `docker/README.md` and `docker/*.env.example`)
 - `scripts/` — host-only script dotenv (see `scripts/rag.env.example` for `scripts/rag/backfill.sh`); RAG backfill script lives under **`scripts/rag/`**
 - `minio.backend.hcl` — shared remote state backend config for Swarm/remote Terraform stages
-- `terraform/` — merged tfvars, per-stack `app.tfvars` / `config.tfvars`, providers (`terraform/providers/*.tfvars`), secrets slices where used
+- `terraform/` — merged tfvars, per-stack `app.tfvars` / `config.tfvars`, shared components (`terraform/components/*.tfvars`), secrets slices where used
 - `kubernetes/` — optional cluster tfvars if your site keeps them here
 - `.ssh/` — keys and `known_hosts` for optional SSH workflows
 

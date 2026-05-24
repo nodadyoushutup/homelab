@@ -173,7 +173,7 @@ variable "placement" {
 
 
 variable "nfs" {
-  description = "Shared Swarm NFS homelab repo export and volume driver_opts (providers/nfs.tfvars)."
+  description = "Shared Swarm NFS homelab repo export and volume driver_opts (components/nfs.tfvars)."
   type = object({
     device = string
     volume = object({

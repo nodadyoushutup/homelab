@@ -1,47 +1,32 @@
-# Docker SSH + optional registry auth for Harbor component images:
-# /mnt/eapp/code/homelab/.config/terraform/providers/docker_swarm.tfvars (`swarm_docker_provider_config`).
+# homelab-config: terraform/swarm/harbor/app
+#
+# Operator-facing Harbor app settings. Component env files and nginx/core configs are
+# generated automatically by harbor-prepare (runs inside pipelines/terraform/swarm/harbor/app.sh).
 
-# Keep these aligned with the host where Harbor data/config currently live.
-harbor_install_path = "/mnt/eapp/harbor-manual/harbor"
-harbor_data_path    = "/mnt/eapp/harbor-manual/data"
-harbor_log_path     = "/mnt/eapp/harbor-manual/log"
+# Docker SSH + optional registry auth: .config/terraform/components/swarm.tfvars
+# Swarm DNS nameservers: .config/terraform/components/dns.tfvars
 
-# Option A (recommended): point Terraform runner at env files that already exist.
-env_file_paths = {
-  db          = "/mnt/eapp/harbor-manual/harbor/common/config/db/env"
-  core        = "/mnt/eapp/harbor-manual/harbor/common/config/core/env"
-  registryctl = "/mnt/eapp/harbor-manual/harbor/common/config/registryctl/env"
-  jobservice  = "/mnt/eapp/harbor-manual/harbor/common/config/jobservice/env"
-  trivy       = "/mnt/eapp/harbor-manual/harbor/common/config/trivy-adapter/env"
-}
+harbor_hostname         = "harbor.example.com"
+harbor_admin_password   = "replace-me"
+harbor_db_password      = "replace-me"
+# Optional when Harbor is published via HTTPS on an edge proxy:
+# harbor_external_url = "https://harbor.example.com"
 
-# Option B: provide explicit env maps (overrides env_file_paths for non-empty maps).
-# env = {
-#   db = {
-#     POSTGRES_PASSWORD = "replace-me"
-#   }
-#   core = {}
-#   registryctl = {}
-#   jobservice = {}
-#   trivy = {}
-# }
+harbor_install_path = "/mnt/eapp/harbor"
+harbor_data_path    = "/mnt/eapp/data/harbor"
+harbor_log_path     = "/mnt/eapp/log/harbor"
 
-# Override images if you want different local/custom tags (defaults are GHCR 0.0.1 digests in variables.tf).
-# images = {
-#   log           = "ghcr.io/nodadyoushutup/harbor-log:0.0.1@sha256:cfcb4497d9c42eb21a91cc92e2b92033809ddaab9f5b3ff32b98af01e0ffcd2b"
-#   registry      = "ghcr.io/nodadyoushutup/registry-photon:0.0.1@sha256:c39b686661967449659425b8752756c81dc6697b48595659181e4c2e61c0dbc4"
-#   registryctl   = "ghcr.io/nodadyoushutup/harbor-registryctl:0.0.1@sha256:bc42ae9c1b5853717da9adcbd3ff828b2d5b8fc84377aa86417eb63206a1cb7b"
-#   db            = "ghcr.io/nodadyoushutup/harbor-db:0.0.1@sha256:2050cd2a872015c4ec328e808b40084d7172e9610debb2036a9c0dbcc05e172d"
-#   core          = "ghcr.io/nodadyoushutup/harbor-core:0.0.1@sha256:0503ee3e98987c57a7ddf5557580208955aade3e6642a5063b7cabd62db69494"
-#   portal        = "ghcr.io/nodadyoushutup/harbor-portal:0.0.1@sha256:a695da7e1332848e23a10b455abe70e512083b81651f226d1ca76a9df30dde12"
-#   jobservice    = "ghcr.io/nodadyoushutup/harbor-jobservice:0.0.1@sha256:f1d1f7e45232ccff44b2f3ce53ab8b5b6a4d18af41d5ee4112cd52a8d9a1e525"
-#   redis         = "ghcr.io/nodadyoushutup/redis-photon:0.0.1@sha256:fa7ffbbdeb59390a45beac1af38969b1e24582490a2cb550fd1936c85a1ac295"
-#   proxy         = "ghcr.io/nodadyoushutup/nginx-photon:0.0.1@sha256:b85eb46199a1f8f4cc0c4c4985cbfdda8dfd37c5d3c95596bf6eb31e0f1e8628"
-#   trivy_adapter = "ghcr.io/nodadyoushutup/trivy-adapter-photon:0.0.1@sha256:daaaa8c06c597d88d5f11b677748f8128c96212bf3078b70fe269e4ad7e3596a"
-# }
+enable_trivy = true
+
+network_name              = "harbor"
+proxy_published_port      = 35080
+log_syslog_published_port = 1514
+
+# Optional image overrides (defaults are GHCR 0.0.3 digests in variables.tf).
+# images = { ... }
 
 placement = {
-  constraints = ['node.labels.role==swarm-cp-0']
+  constraints = ["node.labels.role==swarm-cp-0"]
   platforms = [
     {
       os           = "linux"

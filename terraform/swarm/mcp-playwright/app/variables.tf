@@ -34,7 +34,7 @@ variable "placement" {
 
 
 variable "nfs" {
-  description = "Homelab repo NFS mount (providers/nfs.tfvars)."
+  description = "Homelab repo NFS mount (components/nfs.tfvars)."
   type = object({
     target         = string
     driver_options = map(string)

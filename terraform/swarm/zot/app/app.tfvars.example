@@ -1,0 +1,25 @@
+# homelab-config: terraform/swarm/zot/app
+#
+# Copy to .config/terraform/swarm/zot/app.tfvars and adjust.
+#
+# Docker SSH + optional registry auth: .config/terraform/components/swarm.tfvars
+# Swarm DNS nameservers: .config/terraform/components/dns.tfvars
+
+network_name     = "zot"
+published_port   = 35081
+http_port        = 5000
+enable_ui        = true
+enable_search    = true
+enable_mgmt      = true
+enable_auth      = false
+# htpasswd_file_path = "/mnt/eapp/zot/htpasswd"
+
+placement = {
+  constraints = ["node.labels.role==swarm-cp-0"]
+  platforms = [
+    {
+      os           = "linux"
+      architecture = "aarch64"
+    },
+  ]
+}

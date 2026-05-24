@@ -30,22 +30,21 @@ docker compose up -d --build
 - Trigger `workflow_dispatch` with:
   - `build_target=gha-runner`
   - required input `version`
-  - `target_registry=github` for GHCR or `target_registry=harbor` for Harbor
+  - `target_registry=github` for GHCR or `target_registry=zot` for Zot
 - Workflow publishes:
   - GHCR: `ghcr.io/<owner>/gha-runner:<version>` and `:latest`
-  - Harbor:
-    `harbor.nodadyoushutup.com/homelab/gha-runner:<version>` and `:latest`
+  - Zot: `zot.nodadyoushutup.com/gha-runner:<version>` and `:latest`
 
 For Terraform deployment, pin the runner image tag in each pool’s `locals.tf` (`local.runner_image`; use an exact published tag, not `latest`).
 
 The runner pools are deployed as **standalone `docker_container` resources** on dedicated pool
 hosts (AMD64 and ARM64), each with `/dev/kvm` passed through via the Docker **`devices`**
 block so QEMU/Packer get real device cgroup permissions (unlike Swarm services). In this
-repo, the ARM64 pool is managed from `terraform/swarm/gha-runner-arm64/app` and the AMD64
-pool from `terraform/swarm/gha-runner-amd64/app`. Pool Docker SSH targets live in
-`terraform/providers/runner_agent_amd64.tfvars` and `terraform/providers/runner_agent_arm64.tfvars`
-(shared with Jenkins agent pools on the same arch; Swarm stacks use
-`terraform/providers/docker_swarm.tfvars`).
+repo, the ARM64 pool is managed from `terraform/runners/gha-runner-arm64/app` and the AMD64
+pool from `terraform/runners/gha-runner-amd64/app`. Pool Docker SSH targets live in
+`terraform/components/amd64.tfvars` and `terraform/components/arm64.tfvars`
+(shared per arch with Jenkins agent pools; Swarm stacks use
+`terraform/components/swarm.tfvars`).
 
 The Docker image publish workflow fans direct image builds out to those native runner pools
 in parallel, then publishes the final multi-arch manifest tags after both native arch images
@@ -91,11 +90,11 @@ Use this before relying on Packer with `accelerator=kvm`:
 
 If `/dev/kvm` is missing on the host, fix the host (BIOS/UEFI virtualization, nested virt for VMs, or correct kernel) before expecting KVM inside the runner container.
 
-**ARM64 pool host choice:** point `swarm_docker_provider_config.docker.host` in `runner_agent_arm64.tfvars` at an AArch64 machine that actually exposes `/dev/kvm` if you expect Packer with `-accel kvm`. Small SBCs often omit KVM; pick another ARM host there if needed.
+**ARM64 pool host choice:** point `swarm_docker_provider_config.docker.host` in `terraform/components/arm64.tfvars` at an AArch64 machine that actually exposes `/dev/kvm` if you expect Packer with `-accel kvm`. Small SBCs often omit KVM; pick another ARM host there if needed.
 
 ### After changing Terraform or the image
 
 1. Build and push a new **`gha-runner`** image if you changed `Dockerfile` or `scripts/install/*` (multi-arch workflow).
-2. Bump `local.runner_image` in `terraform/swarm/gha-runner-amd64/app/locals.tf` and `terraform/swarm/gha-runner-arm64/app/locals.tf` if you need a new tag.
+2. Bump `image` in `terraform/runners/gha-runner-amd64/app/variables.tf` (or override in `.config/terraform/runners/gha-runner-amd64/app.tfvars`) if you need a new tag; same for ARM64.
 3. **`terraform apply`** for `gha-runner-amd64` and `gha-runner-arm64`.
 4. Confirm running containers on each pool host, for example `docker ps --filter name=homelab-gha-runner-amd64` (names include a numeric suffix). Validate KVM with `docker exec <container> dd if=/dev/kvm of=/dev/null count=0` when the pool host passes the device through correctly.

@@ -10,4 +10,4 @@ Use the **`eth0` address** (e.g. `192.168.1.122` for `swarm-wk-1`) if `*.local` 
 
 ## Docker Swarm NFS volumes
 
-Host fstab is separate from Swarm stack NFS local volumes. After changing host mounts, update `nfs.driver_options.o` in `<homelab>/.config/terraform/providers/nfs.tfvars` (see `terraform/providers/nfs.tfvars.example`), then re-apply stacks that mount NFS.
+Host fstab is separate from Swarm stack NFS local volumes. After changing host mounts, update `nfs.driver_options.o` in `<homelab>/.config/terraform/components/nfs.tfvars` (see `terraform/components/nfs.tfvars.example`), then re-apply stacks that mount NFS.

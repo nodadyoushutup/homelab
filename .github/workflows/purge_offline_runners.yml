@@ -4,7 +4,7 @@ on:
   push:
     paths:
       - ".github/workflows/**"
-      - "terraform/swarm/gha-runner*/**"
+      - "terraform/runners/gha-runner*/**"
   schedule:
     - cron: "17 4 * * *"
   workflow_dispatch:

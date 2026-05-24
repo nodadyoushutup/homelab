@@ -42,8 +42,8 @@ Swarm recreate:
 
 | Stack | Where | Status |
 | --- | --- | --- |
-| **gha-runner-amd64** (×2) | `runner-amd64` (`192.168.1.101`) — standalone `docker_container` via [`pipelines/terraform/swarm/gha-runner-amd64/app.sh`](pipelines/terraform/swarm/gha-runner-amd64/app.sh) | Healthy |
-| **gha-runner-arm64** (×2) | `swarm-wk-1` (`192.168.1.122`) — [`pipelines/terraform/swarm/gha-runner-arm64/app.sh`](pipelines/terraform/swarm/gha-runner-arm64/app.sh) | Healthy |
+| **gha-runner-amd64** (×2) | `runner-amd64` (`192.168.1.101`) — standalone `docker_container` via [`pipelines/terraform/runners/gha-runner-amd64/app.sh`](pipelines/terraform/runners/gha-runner-amd64/app.sh) | Healthy |
+| **gha-runner-arm64** (×2) | `swarm-wk-1` (`192.168.1.122`) — [`pipelines/terraform/runners/gha-runner-arm64/app.sh`](pipelines/terraform/runners/gha-runner-arm64/app.sh) | Healthy |
 
 Do **not** expect GHA runners in `docker service ls` on the manager.
 
@@ -61,8 +61,8 @@ Swarm:
 | Stack | Placement | Pipeline order | Notes |
 | --- | --- | --- | --- |
 | **jenkins-controller** | `swarm-wk-1` | [`jenkins-controller/app.sh`](pipelines/terraform/swarm/jenkins-controller/app.sh) → [`jenkins-controller/config.sh`](pipelines/terraform/swarm/jenkins-controller/config.sh) | Fix Terraform syntax in [`terraform/swarm/jenkins-controller/app/main.tf`](terraform/swarm/jenkins-controller/app/main.tf) (`Missing newline after block definition` near dynamic `mounts`) before apply |
-| **jenkins-agent-amd64** | pool / any | [`jenkins-agent-amd64/app.sh`](pipelines/terraform/swarm/jenkins-agent-amd64/app.sh) | Depends on controller |
-| **jenkins-agent-arm64** | pool / any | [`jenkins-agent-arm64/app.sh`](pipelines/terraform/swarm/jenkins-agent-arm64/app.sh) | Depends on controller |
+| **jenkins-agent-amd64** | pool / any | [`jenkins-agent-amd64/app.sh`](pipelines/terraform/runners/jenkins-agent-amd64/app.sh) | Depends on controller |
+| **jenkins-agent-arm64** | pool / any | [`jenkins-agent-arm64/app.sh`](pipelines/terraform/runners/jenkins-agent-arm64/app.sh) | Depends on controller |
 | **langchain-agent-chat** | any (Swarm tfvars exist) | Swarm pipeline if used | Production pair is usually **Kubernetes** — see [`docs/architecture/03-kubernetes-layout.md`](docs/architecture/03-kubernetes-layout.md) and [`applications/langchain-agent-chat/README.md`](applications/langchain-agent-chat/README.md) |
 
 ## Removed / out of scope
