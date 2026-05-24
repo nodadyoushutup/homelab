@@ -328,6 +328,8 @@ append_harbor_photon_env() {
     REGISTRYVERSION
     REGISTRY_SRC_TAG
     DISTRIBUTION_SRC
+    BUILDREG
+    BUILDTRIVYADP
     TRIVYADAPTERVERSION
     DOCKERNETWORK
     NPM_REGISTRY
@@ -358,11 +360,9 @@ append_harbor_photon_env() {
     _env+=("TRIVY_ADAPTER_DOWNLOAD_URL=${trivy_adapter_url}")
   fi
 
-  _env+=(
-    "BUILDREG=false"
-    "BUILDTRIVYADP=false"
-    "PUSHBASEIMAGE=false"
-  )
+  # Upstream defaults BUILDREG/BUILDTRIVYADP=true (compile from source). Do not force
+  # false: the GCS REGISTRYURL prebuilt binary path is dead (storage account removed).
+  _env+=("PUSHBASEIMAGE=false")
 }
 
 # registryctl (and registry-photon) Dockerfiles COPY make/photon/registry/binary/registry.
@@ -392,15 +392,22 @@ ensure_registry_distribution_binary() {
       export "${key}=${value}"
     done
 
-    if [[ "${BUILDBIN:-}" == "true" ]]; then
+    if [[ "${BUILDREG:-}" == "true" ]]; then
       if [[ -z "${REGISTRY_SRC_TAG:-}" || -z "${DISTRIBUTION_SRC:-}" ]]; then
-        echo "[ERR] BUILDBIN=true requires REGISTRY_SRC_TAG and DISTRIBUTION_SRC." >&2
+        echo "[ERR] BUILDREG=true requires REGISTRY_SRC_TAG and DISTRIBUTION_SRC." >&2
         exit 1
       fi
-      (cd "${registry_dir}" && ./builder "${REGISTRY_SRC_TAG}" "${DISTRIBUTION_SRC}")
+      if [[ -z "${GOBUILDIMAGE:-}" ]]; then
+        echo "[ERR] BUILDREG=true requires GOBUILDIMAGE." >&2
+        exit 1
+      fi
+      (cd "${registry_dir}" && ./builder \
+        "${REGISTRY_SRC_TAG}" "${DISTRIBUTION_SRC}" \
+        "${GOBUILDIMAGE}" "${DOCKERNETWORK:-}")
     else
       if [[ -z "${REGISTRYURL:-}" ]]; then
-        echo "[ERR] REGISTRYURL is not set; cannot download registry binary." >&2
+        echo "[ERR] BUILDREG is not true and REGISTRYURL is not set; cannot fetch registry binary." >&2
+        echo "[HINT] Prebuilt registry binaries at storage.googleapis.com/harbor-builds are gone; use BUILDREG=true." >&2
         exit 1
       fi
       rm -rf "${registry_dir}/binary"
