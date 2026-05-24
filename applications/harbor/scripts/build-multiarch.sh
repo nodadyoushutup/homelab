@@ -24,6 +24,7 @@ INSTALL_BINFMT="0"
 PATH_MODE="namespace-component"
 MANIFEST_ONLY="0"
 NO_MANIFEST_PUBLISH="0"
+RETAG_FROM_NAMESPACE=""
 SELECTED_COMPONENTS=()
 MAKE_HELPER_IMAGE="${MAKE_HELPER_IMAGE:-docker:27-cli}"
 HAS_HOST_MAKE="0"
@@ -50,6 +51,7 @@ Options:
   --manifest-only          Skip builds; create and push multi-arch manifests for existing per-arch tags
   --component <name>       Build/push one runtime image (repeatable; default: full runtime set)
   --components <csv>       Same as repeated --component (comma-separated image names)
+  --retag-from-namespace <src>  Skip build; retag existing <src>/<image>:<tag> into --namespace and push
   --install-binfmt         Install qemu/binfmt via tonistiigi/binfmt before build
   -h, --help               Show this help
 
@@ -109,6 +111,10 @@ while [[ $# -gt 0 ]]; do
         [[ -n "${_component}" ]] || continue
         SELECTED_COMPONENTS+=("${_component}")
       done
+      shift 2
+      ;;
+    --retag-from-namespace)
+      RETAG_FROM_NAMESPACE="$2"
       shift 2
       ;;
     -h|--help)
@@ -509,7 +515,7 @@ run_photon_make_target() {
   if [[ "${HAS_HOST_MAKE}" == "1" ]]; then
     (
       cd "${repo_dir}"
-      env "TERM=${TERM:-xterm}" "${env_pairs[@]}" make -f make/photon/Makefile "${target}"
+      env "TERM=${TERM:-xterm}" "${env_pairs[@]}" make -e -f make/photon/Makefile "${target}"
     )
     return
   fi
@@ -556,8 +562,35 @@ run_photon_make_target() {
         echo "[ERR] photon make goal missing (helper argv bug)." >&2
         exit 1
       fi
-      exec make -f make/photon/Makefile "$1"
+      exec make -e -f make/photon/Makefile "$1"
     ' _ "${target}"
+}
+
+find_local_image_ref() {
+  local publish_name="$1"
+  local arch_tag="$2"
+  local upstream_name="$3"
+  shift 3
+  local -a prefixes=("$@")
+  local prefix candidate
+
+  local -a names=("${upstream_name}")
+  if [[ "${publish_name}" != "${upstream_name}" ]]; then
+    names+=("${publish_name}")
+  fi
+
+  for prefix in "${prefixes[@]}"; do
+    [[ -n "${prefix}" ]] || continue
+    for candidate in "${names[@]}"; do
+      candidate="${prefix}/${candidate}:${arch_tag}"
+      if docker image inspect "${candidate}" >/dev/null 2>&1; then
+        printf '%s' "${candidate}"
+        return 0
+      fi
+    done
+  done
+
+  return 1
 }
 
 push_runtime_image() {
@@ -566,15 +599,67 @@ push_runtime_image() {
 
   local upstream_name source_ref target_ref
   upstream_name="$(upstream_image_name "${publish_name}")"
-  source_ref="${IMAGE_NAMESPACE}/${upstream_name}:${arch_tag}"
   target_ref="$(publish_image_ref "${publish_name}" "${arch_tag}")"
 
+  if ! source_ref="$(find_local_image_ref "${publish_name}" "${arch_tag}" "${upstream_name}" \
+    "${IMAGE_NAMESPACE}" "goharbor")"; then
+    echo "[ERR] Built image not found for ${publish_name}:${arch_tag}." >&2
+    echo "[HINT] Expected tags under ${IMAGE_NAMESPACE}/ or goharbor/ (upstream: ${upstream_name})." >&2
+    exit 1
+  fi
+
   if [[ "${source_ref}" != "${target_ref}" ]]; then
+    echo "[INFO] Retagging ${source_ref} -> ${target_ref}"
     docker tag "${source_ref}" "${target_ref}"
   fi
 
   echo "[PUSH] ${target_ref}"
   docker push "${target_ref}"
+}
+
+retag_and_push_for_platform() {
+  local platform="$1"
+  local os arch variant
+  IFS='/' read -r os arch variant <<<"${platform}"
+
+  if [[ "${os}" != "linux" || -z "${arch}" ]]; then
+    echo "[ERR] Unsupported platform format: ${platform}" >&2
+    exit 1
+  fi
+
+  if [[ -z "${RETAG_FROM_NAMESPACE}" ]]; then
+    echo "[ERR] --retag-from-namespace is required for retag-only publish." >&2
+    exit 1
+  fi
+
+  local arch_tag="${HARBOR_IMAGE_TAG}-${arch}"
+  local -a images_to_push=()
+  while IFS= read -r image; do
+    [[ -n "${image}" ]] && images_to_push+=("${image}")
+  done < <(resolve_runtime_images)
+
+  echo "[INFO] Retag ${RETAG_FROM_NAMESPACE}/*:${arch_tag} -> ${IMAGE_NAMESPACE}/*:${arch_tag}"
+
+  local image
+  for image in "${images_to_push[@]}"; do
+    local upstream_name source_ref target_ref
+    upstream_name="$(upstream_image_name "${image}")"
+    target_ref="$(publish_image_ref "${image}" "${arch_tag}")"
+
+    if ! source_ref="$(find_local_image_ref "${image}" "${arch_tag}" "${upstream_name}" \
+      "${RETAG_FROM_NAMESPACE}")"; then
+      echo "[ERR] Source image missing on ${RETAG_FROM_NAMESPACE} for ${image}:${arch_tag}." >&2
+      exit 1
+    fi
+
+    if [[ "${source_ref}" != "${target_ref}" ]]; then
+      echo "[INFO] Retagging ${source_ref} -> ${target_ref}"
+      docker tag "${source_ref}" "${target_ref}"
+    fi
+
+    echo "[PUSH] ${target_ref}"
+    docker push "${target_ref}"
+  done
 }
 
 build_runtime_component() {
@@ -613,6 +698,7 @@ build_for_platform() {
   trap 'rm -rf "${workdir}"' RETURN
 
   echo "[INFO] Harbor build dir: ${workdir} (temp parent: ${temp_parent})"
+  echo "[INFO] Image namespace for this build: ${IMAGE_NAMESPACE}"
   echo "[INFO] Cloning ${HARBOR_SOURCE_REPO} @ ${HARBOR_VERSION} for ${platform}"
   git clone --depth 1 --branch "${HARBOR_VERSION}" "${HARBOR_SOURCE_REPO}" "${repo_dir}" >/dev/null
 
@@ -757,19 +843,23 @@ if [[ "${INSTALL_BINFMT}" == "1" ]]; then
   docker run --privileged --rm tonistiigi/binfmt --install all >/dev/null
 fi
 
-declare -A arch_to_platform
-for platform in "${PLATFORMS[@]}"; do
-  IFS='/' read -r os arch variant <<<"${platform}"
-  if [[ "${os}" != "linux" || -z "${arch}" ]]; then
-    echo "[ERR] Unsupported platform format: ${platform}" >&2
+if [[ -n "${RETAG_FROM_NAMESPACE}" ]]; then
+  if [[ "${PUSH_IMAGES}" != "1" ]]; then
+    echo "[ERR] --retag-from-namespace requires --push." >&2
     exit 1
   fi
-  arch_to_platform["${arch}"]="${platform}"
-done
-
-for platform in "${PLATFORMS[@]}"; do
-  build_for_platform "${platform}"
-done
+  if [[ ${#SELECTED_COMPONENTS[@]} -eq 0 ]]; then
+    echo "[ERR] --retag-from-namespace requires --component (or --components)." >&2
+    exit 1
+  fi
+  for platform in "${PLATFORMS[@]}"; do
+    retag_and_push_for_platform "${platform}"
+  done
+elif [[ "${MANIFEST_ONLY}" != "1" ]]; then
+  for platform in "${PLATFORMS[@]}"; do
+    build_for_platform "${platform}"
+  done
+fi
 
 if [[ "${PUSH_IMAGES}" == "1" && "${NO_MANIFEST_PUBLISH}" == "0" ]]; then
   publish_multiarch_manifests
