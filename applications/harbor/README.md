@@ -43,8 +43,11 @@ Harbor runtime images use a dedicated workflow (not the generic app image workfl
 - Per architecture: **one sequential job** runs upstream `make compile` + `make build`
   (full runtime set in Harbor order), then `publish_manifest` merges arch tags.
   amd64 and arm64 jobs can run in parallel on their native runner pools.
-- Set GitHub secrets **`DOCKERHUB_USERNAME`** / **`DOCKERHUB_PASSWORD`** so `photon:5.0`
-  and other Hub base pulls are authenticated (avoids anonymous rate limits).
+- **Required** GitHub secrets **`DOCKERHUB_USERNAME`** / **`DOCKERHUB_PASSWORD`**
+  (free Docker Hub account). Harbor builds tool images (`swagger`, photon bases) that
+  `FROM` `golang`, `node`, and `photon` on Docker Hub — anonymous pulls always 429 in CI.
+- amd64 and arm64 runtime jobs share a concurrency lock so both arches do not pull from
+  Hub at the same time (same homelab public IP).
 - Inputs:
   - `version` — publish tag (`:<version>-amd64`, `:<version>-arm64`, manifest `:<version>`)
   - `target_registry=github` for `ghcr.io/<owner>/<component>:<tag>`

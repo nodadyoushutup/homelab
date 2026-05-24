@@ -82,6 +82,51 @@ run_with_retry() {
   return 1
 }
 
+dockerhub_login_configured() {
+  local config="${DOCKER_CONFIG:-${HOME:-}/.docker}/config.json"
+  [[ -f "${config}" ]] && grep -q 'index.docker.io' "${config}" 2>/dev/null
+}
+
+require_dockerhub_login() {
+  if [[ "${HARBOR_REQUIRE_DOCKERHUB_LOGIN:-0}" != "1" ]]; then
+    return 0
+  fi
+  if dockerhub_login_configured; then
+    echo "[INFO] Docker Hub credentials present in Docker config."
+    return 0
+  fi
+  echo "[ERR] Harbor builds pull photon/golang/node from Docker Hub (swagger, photon bases, compile)." >&2
+  echo "[HINT] Log in before build: docker login docker.io" >&2
+  echo "[HINT] In GHA set repository secrets DOCKERHUB_USERNAME and DOCKERHUB_PASSWORD." >&2
+  exit 1
+}
+
+# Pull Hub bases once per clone so gen_apis/swagger and photon Dockerfiles use local layers.
+prefetch_harbor_hub_images() {
+  local makefile="$1"
+  local go_image node_image
+  go_image="$(harbor_makefile_var "${makefile}" GOBUILDIMAGE)"
+  node_image="$(harbor_makefile_var "${makefile}" NODEBUILDIMAGE)"
+
+  local -a hub_images=(photon:5.0)
+  if [[ -n "${go_image}" ]]; then
+    hub_images+=("${go_image}")
+  fi
+  if [[ -n "${node_image}" ]]; then
+    hub_images+=("${node_image}")
+  fi
+
+  echo "[INFO] Prefetching Docker Hub images (sequential): ${hub_images[*]}"
+  local img
+  for img in "${hub_images[@]}"; do
+    if docker image inspect "${img}" >/dev/null 2>&1; then
+      echo "[INFO] Already on daemon: ${img}"
+      continue
+    fi
+    run_with_retry "docker pull ${img}" docker pull "${img}"
+  done
+}
+
 usage() {
   cat <<USAGE
 Usage: $(basename "$0") --namespace <registry/namespace> [options]
@@ -115,6 +160,7 @@ Environment:
                            resolve on the engine host (CI / nested Docker).
   HARBOR_RETRY_MAX         Retries on 429 / rate-limit errors (default: 5).
   HARBOR_RETRY_INITIAL_DELAY  First backoff seconds (default: 30; doubles per attempt, cap 300).
+  HARBOR_REQUIRE_DOCKERHUB_LOGIN  Fail early if docker.io is not logged in (set to 1 in GHA).
 USAGE
 }
 
@@ -1032,6 +1078,13 @@ build_for_platform() {
   )
 
   append_harbor_photon_env "${repo_dir}" build_env
+
+  require_dockerhub_login
+  if [[ ${#SELECTED_COMPONENTS[@]} -eq 0 && "${PHOTON_BASES_ONLY}" != "1" && "${MANIFEST_ONLY}" != "1" ]]; then
+    prefetch_harbor_hub_images "${makefile}"
+  elif [[ "${PHOTON_BASES_ONLY}" == "1" ]]; then
+    prefetch_harbor_hub_images "${makefile}"
+  fi
 
   if [[ "${PHOTON_BASES_ONLY}" == "1" ]]; then
     echo "[INFO] Building photon base images only (${platform})"

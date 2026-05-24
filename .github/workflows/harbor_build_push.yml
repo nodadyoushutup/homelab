@@ -121,26 +121,33 @@ jobs:
     needs: prepare
     if: needs.prepare.outputs.build_amd64 == 'true'
     runs-on: [self-hosted, linux, homelab, amd64, build]
+    concurrency:
+      # Homelab runners often share one public IP; never pull from Hub on amd64 and arm64 at once.
+      group: harbor-dockerhub-${{ github.repository }}
+      cancel-in-progress: false
     env:
       HARBOR_BUILD_TMP_PARENT: /var/lib/gha-runner-engine-build
       HARBOR_RETRY_MAX: "8"
       HARBOR_RETRY_INITIAL_DELAY: "60"
+      HARBOR_REQUIRE_DOCKERHUB_LOGIN: "1"
 
     steps:
       - name: Check out the code
         uses: actions/checkout@v6
 
-      - name: Log in to Docker Hub
-        env:
-          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-          DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
+      - name: Require Docker Hub credentials
         run: |
-          set -euo pipefail
-          if [ -n "${DOCKERHUB_USERNAME:-}" ] && [ -n "${DOCKERHUB_PASSWORD:-}" ]; then
-            echo "${DOCKERHUB_PASSWORD}" | docker login docker.io -u "${DOCKERHUB_USERNAME}" --password-stdin
-          else
-            echo "::warning::DOCKERHUB_USERNAME/DOCKERHUB_PASSWORD not set — anonymous Hub pulls (strict rate limits)."
+          if [ -z "${{ secrets.DOCKERHUB_USERNAME }}" ] || [ -z "${{ secrets.DOCKERHUB_PASSWORD }}" ]; then
+            echo "::error::Add repository secrets DOCKERHUB_USERNAME and DOCKERHUB_PASSWORD (free Docker Hub account). Harbor pulls photon:5.0, golang, and node from Docker Hub to build swagger/photon images before compile."
+            exit 1
           fi
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          registry: docker.io
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
       - name: Log in to GitHub Container Registry
         if: needs.prepare.outputs.publish_github == 'true'
@@ -233,26 +240,32 @@ jobs:
     needs: prepare
     if: needs.prepare.outputs.build_arm64 == 'true'
     runs-on: [self-hosted, linux, homelab, arm64]
+    concurrency:
+      group: harbor-dockerhub-${{ github.repository }}
+      cancel-in-progress: false
     env:
       HARBOR_BUILD_TMP_PARENT: /var/lib/gha-runner-engine-build
       HARBOR_RETRY_MAX: "8"
       HARBOR_RETRY_INITIAL_DELAY: "60"
+      HARBOR_REQUIRE_DOCKERHUB_LOGIN: "1"
 
     steps:
       - name: Check out the code
         uses: actions/checkout@v6
 
-      - name: Log in to Docker Hub
-        env:
-          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-          DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
+      - name: Require Docker Hub credentials
         run: |
-          set -euo pipefail
-          if [ -n "${DOCKERHUB_USERNAME:-}" ] && [ -n "${DOCKERHUB_PASSWORD:-}" ]; then
-            echo "${DOCKERHUB_PASSWORD}" | docker login docker.io -u "${DOCKERHUB_USERNAME}" --password-stdin
-          else
-            echo "::warning::DOCKERHUB_USERNAME/DOCKERHUB_PASSWORD not set — anonymous Hub pulls (strict rate limits)."
+          if [ -z "${{ secrets.DOCKERHUB_USERNAME }}" ] || [ -z "${{ secrets.DOCKERHUB_PASSWORD }}" ]; then
+            echo "::error::Add repository secrets DOCKERHUB_USERNAME and DOCKERHUB_PASSWORD (free Docker Hub account). Harbor pulls photon:5.0, golang, and node from Docker Hub to build swagger/photon images before compile."
+            exit 1
           fi
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          registry: docker.io
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
       - name: Log in to GitHub Container Registry
         if: needs.prepare.outputs.publish_github == 'true'
