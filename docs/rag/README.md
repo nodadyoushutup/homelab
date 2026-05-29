@@ -4,6 +4,7 @@ Human-facing **system knowledge** for the semantic index: what it is, what gets 
 
 **Prompts, routing, memory gates, and tool-usage rules** for homelab agents live with the LangGraph runtime and agent contracts:
 
+- [agent-orchestration.md](../workflows/agent-orchestration.md) (supervisor → specialist loop)
 - `applications/langgraph/agent/system_prompt.md` (supervisor / `agent` graph) and `applications/langgraph/framework/agents/system_prompts/`
 - `docs/subagents/*/*.md` (per-specialist deployment overlays)
 - [rag-agent-mcp-integration-roadmap.md](../workflows/rag-agent-mcp-integration-roadmap.md)

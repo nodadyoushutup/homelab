@@ -42,9 +42,9 @@ hosts (AMD64 and ARM64), each with `/dev/kvm` passed through via the Docker **`d
 block so QEMU/Packer get real device cgroup permissions (unlike Swarm services). In this
 repo, the ARM64 pool is managed from `terraform/runners/gha-runner-arm64/app` and the AMD64
 pool from `terraform/runners/gha-runner-amd64/app`. Pool Docker SSH targets live in
-`terraform/components/amd64.tfvars` and `terraform/components/arm64.tfvars`
+`.config/terraform/components/amd64.tfvars` and `.config/terraform/components/arm64.tfvars`
 (shared per arch with Jenkins agent pools; Swarm stacks use
-`terraform/components/swarm.tfvars`).
+`.config/terraform/components/swarm.tfvars`).
 
 The Docker image publish workflow fans direct image builds out to those native runner pools
 in parallel, then publishes the final multi-arch manifest tags after both native arch images
@@ -74,7 +74,7 @@ If `GH_RUNNER_URL` is unset, or no usable runner registration token can be resol
 - `GH_RUNNER_TOKEN` is a single-use registration token; for replicated services use `GH_RUNNER_ACCESS_TOKEN` to mint fresh tokens per task startup.
 - If you set `GH_RUNNER_EPHEMERAL=true`, the runner accepts a single job and exits.
 - Local compose mounts `/var/run/docker.sock` and runs as root so Docker Buildx/QEMU actions can access the host daemon.
-- **Pool host + Harbor (nested `docker run -v $PWD`)**: Runner containers only see the host engine via `docker.sock`; the checkout under `_work` is **not** on the engine host, so Harbor’s Makefile (Spectral, swagger, etc.) bind-mounts an empty path. Both Terraform stacks bind-mount `engine_visible_build_path` (default `/var/lib/gha-runner-engine-build`) at the same absolute path and set `HARBOR_BUILD_TMP_PARENT` on the **container**; GitHub Actions jobs often **do not inherit** that env, so `.github/workflows/docker_build_push.yml` sets the same value at **job** scope for Harbor builds. **Create that directory on the pool host** before apply (`sudo mkdir -p` on the host targeted by `provider_config.docker.host`). The entrypoint runs `mkdir -p` under that mount for job subdirs once the bind succeeds.
+- **Pool host + nested `docker run -v $PWD`**: Runner containers only see the host engine via `docker.sock`; the checkout under `_work` is **not** on the engine host, so nested builds that bind-mount `$PWD` see an empty path unless the job uses a host-visible directory. Both Terraform stacks bind-mount `engine_visible_build_path` (default `/var/lib/gha-runner-engine-build`) at the same absolute path and set `GHA_ENGINE_BUILD_TMP_PARENT` on the **container**. **Create that directory on the pool host** before apply (`sudo mkdir -p` on the host targeted by `provider_config.docker.host`). The entrypoint runs `mkdir -p` under that mount for job subdirs once the bind succeeds.
 - Terraform provisions **`docker_container`** with **`devices { host_path = "/dev/kvm" ... }`** and **`group_add = ["kvm"]`** on each pool. The image installs QEMU/Packer via `scripts/install/packer.sh`; acceleration still requires a working KVM device on **that host**.
 - **Swarm services cannot reliably grant `/dev/kvm` in the device cgroup** ([moby/moby#24865](https://github.com/moby/moby/issues/24865)); bind-mounting the node alone is not enough for QEMU. These runner pools therefore use **standalone containers** on the pool host’s Docker engine, not Swarm services, when KVM matters.
 - Default runner labels include **`build,kvm`** on both pools (see each `variables.tf`). Workflows that need hardware acceleration (for example **Packer** in `.github/workflows/packer_build_push.yml`) should use `runs-on` labels that include **`kvm`** so jobs land on these pools only after you confirm the **pool host** is KVM-capable.
@@ -90,7 +90,7 @@ Use this before relying on Packer with `accelerator=kvm`:
 
 If `/dev/kvm` is missing on the host, fix the host (BIOS/UEFI virtualization, nested virt for VMs, or correct kernel) before expecting KVM inside the runner container.
 
-**ARM64 pool host choice:** point `swarm_docker_provider_config.docker.host` in `terraform/components/arm64.tfvars` at an AArch64 machine that actually exposes `/dev/kvm` if you expect Packer with `-accel kvm`. Small SBCs often omit KVM; pick another ARM host there if needed.
+**ARM64 pool host choice:** point `swarm_docker_provider_config.docker.host` in `.config/terraform/components/arm64.tfvars` at an AArch64 machine that actually exposes `/dev/kvm` if you expect Packer with `-accel kvm`. Small SBCs often omit KVM; pick another ARM host there if needed.
 
 ### After changing Terraform or the image
 

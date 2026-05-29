@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Clients · Torrent Manager{% endblock %}
+
+{% block content %}
+  <section class="page-header">
+    <div>
+      <h1>qBittorrent clients</h1>
+      <p class="lede">
+        Each row is one configured Web API client. Connection status is checked on page load.
+      </p>
+    </div>
+  </section>
+
+  {% if clients %}
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Client ID</th>
+            <th>Host</th>
+            <th>Status</th>
+            <th>Version</th>
+            <th>Error</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for client in clients %}
+            <tr>
+              <td><code>{{ client.client_id }}</code></td>
+              <td>
+                <div>{{ client.display_host }}</div>
+                <div class="muted mono">{{ client.base_url }}</div>
+              </td>
+              <td>
+                {% if client.connected %}
+                  <span class="badge badge-seeding">connected</span>
+                {% else %}
+                  <span class="badge badge-error">offline</span>
+                {% endif %}
+              </td>
+              <td>{{ client.version or "—" }}</td>
+              <td class="muted">{{ client.error or "—" }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="empty-state">
+      <p>No qBittorrent clients configured.</p>
+      <p class="muted">
+        Add clients under <code>qbittorrent.clients</code> in
+        <code>/etc/torrent-manager/config.yaml</code> (or mount your own copy over that path).
+      </p>
+    </div>
+  {% endif %}
+{% endblock %}

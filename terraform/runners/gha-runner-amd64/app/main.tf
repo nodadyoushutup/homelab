@@ -1,4 +1,4 @@
-# Standalone Docker containers on the AMD64 pool host (`terraform/components/amd64.tfvars`).
+# Standalone Docker containers on the AMD64 pool host (`.config/terraform/components/amd64.tfvars`).
 # Uses `docker_container` + `devices` so `/dev/kvm` gets proper cgroup permissions (unlike Swarm services).
 
 resource "docker_volume" "nfs_homelab" {
@@ -38,7 +38,7 @@ resource "docker_container" "gha_runner" {
     target = "/var/run/docker.sock"
   }
 
-  # Must match HARBOR_BUILD_TMP_PARENT in app.tfvars `env` (Harbor nested docker bind-mounts).
+  # Must match GHA_ENGINE_BUILD_TMP_PARENT in app.tfvars `env` (nested docker bind-mounts).
   mounts {
     type   = "bind"
     source = "/var/lib/gha-runner-engine-build"

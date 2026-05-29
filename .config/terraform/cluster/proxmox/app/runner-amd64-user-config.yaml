@@ -1,0 +1,68 @@
+#cloud-config
+chpasswd:
+  list: |
+    nodadyoushutup:S#nvhs89vher
+  expire: false
+hostname: runner-amd64
+packages:
+  - qemu-guest-agent
+write_files:
+  - path: /usr/local/sbin/join-docker-swarm.sh
+    owner: root:root
+    permissions: "0755"
+    content: |
+      #!/usr/bin/env bash
+      set -euo pipefail
+
+      if docker info --format '{{.Swarm.LocalNodeState}}' 2>/dev/null | grep -qx 'active'; then
+        exit 0
+      fi
+
+      if ! systemctl is-active --quiet docker; then
+        systemctl start docker
+      fi
+
+      for _ in $(seq 1 30); do
+        if docker info >/dev/null 2>&1; then
+          break
+        fi
+        sleep 2
+      done
+
+      if docker info --format '{{.Swarm.LocalNodeState}}' 2>/dev/null | grep -qx 'active'; then
+        exit 0
+      fi
+
+      docker swarm join \
+        --token SWMTKN-1-55a18fy25glt01jnvx9hzwfotisqd044sro9k9189q3qwi1cit-e6pr0y0azdi8ye1odiwwvi8gz \
+        192.168.1.120:2377
+  - path: /etc/systemd/system/join-docker-swarm.service
+    owner: root:root
+    permissions: "0644"
+    content: |
+      [Unit]
+      Description=Join Docker Swarm
+      Wants=network-online.target docker.service
+      After=network-online.target docker.service
+
+      [Service]
+      Type=oneshot
+      ExecStart=/usr/local/sbin/join-docker-swarm.sh
+      RemainAfterExit=yes
+      Restart=on-failure
+      RestartSec=15s
+
+      [Install]
+      WantedBy=multi-user.target
+runcmd:
+  - [ bash, -lc, "systemctl daemon-reload" ]
+  - [ bash, -lc, "systemctl enable --now join-docker-swarm.service" ]
+users:
+  - name: nodadyoushutup
+    primary_group: nodadyoushutup
+    groups: sudo
+    shell: /bin/bash
+    lock_passwd: false
+    ssh_authorized_keys:
+      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIB1Bw0T0R8Zai+Ap6nJ5RtwUz9jV2YHnFPY3NuVg/Yrc nodadyoushutup@nodadyoushutup.internal
+    sudo: ALL=(ALL) NOPASSWD:ALL

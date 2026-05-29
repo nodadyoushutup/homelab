@@ -1,0 +1,29 @@
+# Copy to swarm.tfvars beside this file (not committed; keep secrets local).
+# First line of the live file: # homelab-config: terraform/components/swarm
+# Swarm control-plane Docker SSH host + registry credentials. Required for scripts/terraform/swarm_pipeline.sh
+# and bespoke Swarm app pipelines (chromadb, dozzle, nginx_proxy_manager, prometheus, …).
+# See scripts/terraform/swarm_docker_provider_tfvars_env.sh (default SWARM_DOCKER_PROVIDER_TFVARS).
+
+swarm_docker_provider_config = {
+  docker = {
+    host = "ssh://USER@SWARM_MANAGER_OR_DAEMON_HOST"
+    ssh_opts = [
+      "-o", "StrictHostKeyChecking=accept-new",
+      "-o", "UserKnownHostsFile=/path/to/known_hosts",
+      "-i", "/path/to/id_ed25519",
+    ]
+  }
+
+  registry_auths = [
+    {
+      address  = "ghcr.io"
+      username = "GITHUB_USER_OR_ORG"
+      password = "GITHUB_PAT_WITH_PACKAGES_READ"
+    },
+    {
+      address  = "zot.nodadyoushutup.com"
+      username = "homelab"
+      password = "ZOT_REGISTRY_PASSWORD"
+    },
+  ]
+}

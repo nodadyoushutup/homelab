@@ -1,0 +1,71 @@
+# Default torrent-manager configuration.
+# Copy this file, edit it, and mount your copy over /etc/torrent-manager/config.yaml
+# in Docker (or set TORRENT_MANAGER_CONFIG_PATH for local runs).
+# Client list is generated from kubernetes/qbittorrent/overlays/*/ingress-patch.yaml
+
+app:
+  secret_key: dev-only-change-me
+  database_url: sqlite:////data/torrent-manager.db
+  debug: false
+  sqlalchemy_echo: false
+qbittorrent:
+  defaults:
+    username: admin
+    password: "S#nvhs89vher"
+    insecure_tls: true
+    timeout_sec: 20
+  clients:
+  - id: books
+    base_url: https://qbittorrent.books.nodadyoushutup.com
+  - id: cross-seed-ab
+    base_url: https://qbittorrent.cross-seed.ab.nodadyoushutup.com
+  - id: cross-seed-ant
+    base_url: https://qbittorrent.cross-seed.ant.nodadyoushutup.com
+  - id: cross-seed-ath
+    base_url: https://qbittorrent.cross-seed.ath.nodadyoushutup.com
+  - id: cross-seed-bhd
+    base_url: https://qbittorrent.cross-seed.bhd.nodadyoushutup.com
+  - id: cross-seed-blu
+    base_url: https://qbittorrent.cross-seed.blu.nodadyoushutup.com
+  - id: cross-seed-cg
+    base_url: https://qbittorrent.cross-seed.cg.nodadyoushutup.com
+  - id: cross-seed-hdb
+    base_url: https://qbittorrent.cross-seed.hdb.nodadyoushutup.com
+  - id: cross-seed-kg
+    base_url: https://qbittorrent.cross-seed.kg.nodadyoushutup.com
+  - id: cross-seed-sc
+    base_url: https://qbittorrent.cross-seed.sc.nodadyoushutup.com
+  - id: freeleech
+    base_url: https://qbittorrent.freeleech.nodadyoushutup.com
+  - id: movie-0
+    base_url: https://qbittorrent.movie.0.nodadyoushutup.com
+  - id: movie-1
+    base_url: https://qbittorrent.movie.1.nodadyoushutup.com
+  - id: movie-10
+    base_url: https://qbittorrent.movie.10.nodadyoushutup.com
+  - id: movie-2
+    base_url: https://qbittorrent.movie.2.nodadyoushutup.com
+  - id: movie-3
+    base_url: https://qbittorrent.movie.3.nodadyoushutup.com
+  - id: movie-4
+    base_url: https://qbittorrent.movie.4.nodadyoushutup.com
+  - id: movie-5
+    base_url: https://qbittorrent.movie.5.nodadyoushutup.com
+  - id: movie-6
+    base_url: https://qbittorrent.movie.6.nodadyoushutup.com
+  - id: movie-7
+    base_url: https://qbittorrent.movie.7.nodadyoushutup.com
+  - id: movie-8
+    base_url: https://qbittorrent.movie.8.nodadyoushutup.com
+  - id: movie-9
+    base_url: https://qbittorrent.movie.9.nodadyoushutup.com
+  - id: television-0
+    base_url: https://qbittorrent.television.0.nodadyoushutup.com
+  - id: television-1
+    base_url: https://qbittorrent.television.1.nodadyoushutup.com
+  - id: television-2
+    base_url: https://qbittorrent.television.2.nodadyoushutup.com
+  - id: upload
+    base_url: https://qbittorrent.upload.nodadyoushutup.com
+  - id: xxx
+    base_url: https://qbittorrent.xxx.nodadyoushutup.com

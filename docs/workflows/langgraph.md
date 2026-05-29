@@ -3,6 +3,9 @@
 This document describes how to operate and evolve the repo-managed LangGraph and
 Deep Agents scaffold under `applications/langgraph/`.
 
+For how the default **`agent`** supervisor delegates to specialists and chains
+results, see [`agent-orchestration.md`](./agent-orchestration.md).
+
 ## Scope
 
 Use this workflow for:
@@ -90,9 +93,9 @@ When a task changes the LangGraph implementation:
    - keep routing aligned with the specialists actually wired into the runtime;
      if a capability has no specialist, report that limitation instead of
      inventing one
-   - preserve the return-to-supervisor contract: every specialist call returns a
-     result to `agent`, and only `agent` decides whether to call another
-     specialist, use another tool, ask the user, or answer
+   - preserve the return-to-supervisor contract documented in
+     [`agent-orchestration.md`](./agent-orchestration.md): every specialist call
+     returns a result to `agent`, and only `agent` decides the next step
    - do not add peer-to-peer specialist handoffs; model chains as
      `agent -> specialist -> agent -> next_specialist -> agent`
    - keep prompt text in the layered prompt sources instead of reintroducing

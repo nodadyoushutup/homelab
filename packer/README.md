@@ -30,7 +30,7 @@ From repo root:
 Run the repo-native build-and-upload pipeline equivalent of the GHA workflow:
 
 ```bash
-./pipelines/packer/build_push.sh --version 0.0.1
+./packer/pipeline/build_push.sh --version 0.0.1
 ```
 
 The **Packer - Build and Push Image** workflow (`.github/workflows/packer_build_push.yml`) follows the same **prepare → parallel per-arch jobs → publish** shape as Docker **direct** builds: **`prepare`** on `homelab,amd64,build`, then **`build_packer_direct_amd64`** and **`build_packer_direct_arm64`** (each `needs: prepare` only, so they run concurrently when **`build_arch: both`**), then **`publish_packer_artifacts`** downloads all produced artifacts and uploads every `.qcow2` to the cloud image repository host. Job-level `if` cannot use the `matrix` context, so Packer mirrors Docker with **two jobs** rather than a filtered matrix.
@@ -76,7 +76,7 @@ Upload-only (existing built artifacts for a version):
 The tracked Jenkins wrapper for the same flow lives at:
 
 ```text
-pipelines/packer/build_push.jenkins
+packer/pipeline/build_push.jenkins
 ```
 
 ## Output
@@ -139,8 +139,8 @@ packer/keys/packer-nodadyoushutup.pub
 - `packer/build.sh` reserves architecture filtering; pass `--build_arch` instead of raw Packer `-only`/`-except`.
 - `packer/build.sh` enables Packer debug logs by default (`PACKER_LOG=1`); disable with `--no_packer_log`.
 - `packer/upload.sh` accepts `--target cloud-image-repository` and `--build_arch amd64|arm64|both`.
-- `pipelines/packer/build_push.sh` mirrors the GitHub Actions
+- `packer/pipeline/build_push.sh` mirrors the GitHub Actions
   `packer_build_push` inputs and runs `packer/build.sh` followed by
   `packer/upload.sh`.
-- `pipelines/packer/build_push.jenkins` is the in-repo Jenkins Pipeline
+- `packer/pipeline/build_push.jenkins` is the in-repo Jenkins Pipeline
   wrapper for the same flow.

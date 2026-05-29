@@ -1,0 +1,63 @@
+version: v1alpha1
+debug: false
+persist: true
+machine:
+    type: worker
+    token: 9w9rxd.j6vyl4hj1ib9jgdp
+    ca:
+        crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUJQakNCOGFBREFnRUNBaEFSTWJhTnVDN3BXV2xFWThOVC8xVlNNQVVHQXl0bGNEQVFNUTR3REFZRFZRUUsKRXdWMFlXeHZjekFlRncweU5qQXpNRGN4TlRJME1qbGFGdzB6TmpBek1EUXhOVEkwTWpsYU1CQXhEakFNQmdOVgpCQW9UQlhSaGJHOXpNQ293QlFZREsyVndBeUVBdUxQN1V4N3pjTisrV0QvcmtTVVEzSXpWdnFtMmd1UFMzMTFqCncyS2NpSVdqWVRCZk1BNEdBMVVkRHdFQi93UUVBd0lDaERBZEJnTlZIU1VFRmpBVUJnZ3JCZ0VGQlFjREFRWUkKS3dZQkJRVUhBd0l3RHdZRFZSMFRBUUgvQkFVd0F3RUIvekFkQmdOVkhRNEVGZ1FVQXhjb0ZVNFh3bXk4YTJIZgpuZXA1c0pqSDV4NHdCUVlESzJWd0EwRUE1a1V2ZlRyaEIzVnNuNWlQcm1yUlpSMFQ0aXNKdUdBdUwvZjBUdDdjClRsU09WZ3NjSUE2YWRzM0dsOVU3L2NLRlNNNVZIRHlvSGRiWUNkbmhEVDJjQUE9PQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==
+        key: ""
+    certSANs: []
+    kubelet:
+        image: ghcr.io/siderolabs/kubelet:v1.35.0
+        defaultRuntimeSeccompProfileEnabled: true
+        disableManifestsDirectory: true
+    network:
+        interfaces:
+            - interface: ens18
+              addresses:
+                - 192.168.1.204/24
+              routes:
+                - network: 0.0.0.0/0
+                  gateway: 192.168.1.1
+              dhcp: false
+    install:
+        disk: /dev/sda
+        image: factory.talos.dev/installer/eda6c02d94377f983da3aa0c8a98c58dc6b2b9341ec42512161eb7661acb526d:v1.12.4
+        wipe: false
+        grubUseUKICmdline: true
+    features:
+        diskQuotaSupport: true
+        kubePrism:
+            enabled: true
+            port: 7445
+        hostDNS:
+            enabled: true
+            forwardKubeDNSToHost: true
+cluster:
+    id: VbI7pURSCRnp2s89uzF4Z3KaENCP1i-9c8y-ehry0bk=
+    secret: 6kStJly+rN3fdhRlDn37EYL9FiK+k93oG+sXXVJsMWU=
+    controlPlane:
+        endpoint: https://192.168.1.201:6443
+    clusterName: homelab
+    network:
+        dnsDomain: cluster.local
+        podSubnets:
+            - 10.244.0.0/16
+        serviceSubnets:
+            - 10.96.0.0/12
+    token: u4oa8q.nslb4gekrv8ldf4i
+    ca:
+        crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUJpRENDQVMrZ0F3SUJBZ0lRSFJ1V2l0aUZKYUxPSXdvU282Z05MREFLQmdncWhrak9QUVFEQWpBVk1STXcKRVFZRFZRUUtFd3ByZFdKbGNtNWxkR1Z6TUI0WERUSTJNRE13TnpFMU1qUXlPVm9YRFRNMk1ETXdOREUxTWpReQpPVm93RlRFVE1CRUdBMVVFQ2hNS2EzVmlaWEp1WlhSbGN6QlpNQk1HQnlxR1NNNDlBZ0VHQ0NxR1NNNDlBd0VICkEwSUFCRkkrKzFJWCs3QXZvcmZpNzBGZzVheFdpdGlSdExyL0tGM2NyeTB4amR5eDk2eHRmMkdyZVBYVHBDaEcKMTM3RzNrdXZ1Z0Q4NkI1d0k5bVVvdEpLcUtLallUQmZNQTRHQTFVZER3RUIvd1FFQXdJQ2hEQWRCZ05WSFNVRQpGakFVQmdnckJnRUZCUWNEQVFZSUt3WUJCUVVIQXdJd0R3WURWUjBUQVFIL0JBVXdBd0VCL3pBZEJnTlZIUTRFCkZnUVVtMDVoWm41d3dMT24rMnlrWjFEdE1TSmVObm93Q2dZSUtvWkl6ajBFQXdJRFJ3QXdSQUlnR1Q4RlJrdnkKNzVqT0VPUkpaSWQ2b1BFU1dqclc2dEh6VDBjWUdlVExPSzhDSUIraHNhR2dTNVIrTWMyR1o2elA0Z3EvQllCRwphVDFxaldlV200SUtta25zCi0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K
+        key: ""
+    discovery:
+        enabled: true
+        registries:
+            kubernetes:
+                disabled: true
+            service: {}
+---
+apiVersion: v1alpha1
+kind: HostnameConfig
+auto: stable
+

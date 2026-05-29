@@ -3,7 +3,9 @@
 This document is the **contract** for how homelab agents use **`mcp-rag`**, the
 **`homelab`** Chroma corpus collection, and **long-term memory** collections.
 The primary runtime is **LangGraph** (`applications/langgraph/`). Cursor and
-OpenAI Codex use the same HTTPS MCP endpoint and tools.
+OpenAI Codex use the same HTTPS MCP endpoint and tools. For the supervisor
+delegation loop that these gates plug into, see
+[`agent-orchestration.md`](./agent-orchestration.md).
 
 ## Design stance
 

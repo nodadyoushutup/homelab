@@ -9,6 +9,10 @@ These are not a repo-wide contributor startup checklist. Docker image publish
 discipline for this repo lives in
 [`docker-build-github-actions.md`](./docker-build-github-actions.md).
 
+**Orchestration overview:** for the end-to-end supervisor → specialist →
+supervisor loop (delegation, input/output contracts, chaining, and gates), see
+[`agent-orchestration.md`](./agent-orchestration.md).
+
 ## Design principles
 
 - Route work intentionally inside the runtime instead of relying on unnamed
@@ -123,36 +127,27 @@ update `applications/langgraph/agent/system_prompt.md` and framework wiring.
 
 ## Current handoff model
 
-For now, do not assume Redis-backed shared memory or any other shared agent state
-layer.
+See [`agent-orchestration.md`](./agent-orchestration.md) for the full delegation
+loop, input/output contracts, and an example multi-specialist chain. Summary:
 
-- Every agent call must include the context needed for that specific task.
-- Every subagent overlay and supervisor prompt should define the input shape it
-  accepts and the output shape it returns (supervisor:
-  `applications/langgraph/agent/system_prompt.md`).
-- Callers should read the target specialist doc and shape the call to match that
-  documented schema.
-- Parent agents should use subagent output schemas to decide the next call, the
-  next tool action, or the final user response.
-- Subagent outputs must return to the parent agent before any further specialist
-  call; subagent-to-subagent handoff is only a recommendation in the output, not
-  a direct transfer.
-- Every agent should check the relevant `docs/` material before falling back to
-  broad repo search.
+- No shared agent state layer between specialist calls; each `task` carries its
+  own context.
+- Input and output shapes are defined per specialist (framework prompts +
+  `docs/subagents/`) and in the supervisor prompt.
+- Specialist output returns to `agent` before any further specialist call;
+  peer handoff is recommendation-only in markdown, not a direct transfer.
 
 ## Runtime routing expectations
 
-- The `agent` graph is the coordinating supervisor for runtime orchestration.
-- The supervisor delegates to local named specialists through the runtime's
-  native subagent surface instead of a repo-specific remote call wrapper.
-- The default app exposes `agent` as the supported graph. Specialist runnables
-  are private implementation details of that supervisor unless a future task
-  explicitly creates a separate deployment boundary.
-- `Code`, `GitHub`, `Jira`, and `Tech Lead` remain reusable specialist capabilities
-  for their respective domains.
-- If runtime routing changes materially, update Python under
-  `applications/langgraph/` and the matching prompt sources (`agent/system_prompt.md`
-  and `docs/subagents/*` as applicable).
+- The `agent` graph is the coordinating supervisor; specialists are private
+  in-process runnables reached through the runtime `task` tool (not remote
+  `call_*_agent` wrappers).
+- Wired specialists: `code`, `github`, `jira`, `tech_lead`. Route only to
+  specialists that exist in the runtime config.
+- Chains are always `agent → specialist → agent → …`; see
+  [`agent-orchestration.md`](./agent-orchestration.md).
+- Material routing changes require updates under `applications/langgraph/` and
+  matching prompt sources (`agent/system_prompt.md`, `docs/subagents/*`).
 
 ## Architecture rule
 

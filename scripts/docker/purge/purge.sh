@@ -16,9 +16,9 @@ KNOWN_SERVICES=(
   jenkins-agent-arm64
   jenkins-controller
   nginx_proxy_manager
+  cadvisor
   node_exporter
   prometheus
-  telegraf_docker_metrics
   vault
   cloud-image-repository
 )
@@ -52,14 +52,11 @@ declare -A SERVICE_MAP=(
   [nginx_proxy_manager]="nginx_proxy_manager"
   [nginx-proxy]="nginx_proxy_manager"
   [npm]="nginx_proxy_manager"
+  [cadvisor]="cadvisor"
+  [cAdvisor]="cadvisor"
   [node-exporter]="node_exporter"
   [node_exporter]="node_exporter"
   [prometheus]="prometheus"
-  [telegraf-docker-metrics]="telegraf_docker_metrics"
-  [telegraf_docker_metrics]="telegraf_docker_metrics"
-  [telegraf]="telegraf_docker_metrics"
-  [docker-metrics]="telegraf_docker_metrics"
-  [docker_metrics]="telegraf_docker_metrics"
   [vault]="vault"
   [cloud-image-repository]="cloud-image-repository"
   [cloud_image_repository]="cloud-image-repository"

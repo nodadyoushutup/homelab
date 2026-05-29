@@ -36,7 +36,7 @@ Canonical mirrored paths (for example `terraform/swarm/<svc>/app.tfvars`) remain
 - `docker/` — split `*.env` for Compose, LangGraph, and host scripts (see `docker/README.md` and `docker/*.env.example`)
 - `scripts/` — host-only script dotenv (see `scripts/rag.env.example` for `scripts/rag/backfill.sh`); RAG backfill script lives under **`scripts/rag/`**
 - `minio.backend.hcl` — shared remote state backend config for Swarm/remote Terraform stages
-- `terraform/` — merged tfvars, per-stack `app.tfvars` / `config.tfvars`, shared components (`terraform/components/*.tfvars`), secrets slices where used
+- `terraform/` — merged tfvars, per-stack `app.tfvars` / `config.tfvars`, shared components (`terraform/components/*.tfvars`), secrets slices where used. Copy from **`terraform/components/*.tfvars.example`** beside the live files.
 - `kubernetes/` — optional cluster tfvars if your site keeps them here
 - `.ssh/` — keys and `known_hosts` for optional SSH workflows
 
@@ -46,4 +46,4 @@ Set **`CONFIG_DIR`** in **`docker/site.env`** to point at another tree if this h
 
 ## Git
 
-The repo **`.gitignore` ignores `.config/*` except `README.md`, `docker/README.md`, and `docker/*.env.example`** so live secrets and site tfvars are not committed accidentally. Do not force-add tfvars, `docker/*.env`, or private keys.
+The repo **`.gitignore` ignores `.config/*` except `README.md`, `docker/README.md`, `docker/*.env.example`, `scripts/*.env.example`, and `terraform/components/*.tfvars.example`** so live secrets and site tfvars are not committed accidentally. Do not force-add tfvars, `docker/*.env`, or private keys.

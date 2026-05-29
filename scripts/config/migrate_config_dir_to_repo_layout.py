@@ -64,11 +64,11 @@ def qbittorrent_overlay_dest(repo: Path, cfg_name: str) -> str | None:
 
 def explicit_remote(repo: Path, cfg_name: str) -> str | None:
     mapping = {
-        "cloudflare": "terraform/remote/cloudflare/config",
-        "fortigate": "terraform/network/fortigate/config",
-        "argocd": "terraform/cluster/argocd/config",
-        "proxmox": "terraform/cluster/proxmox/app",
-        "talos": "terraform/cluster/talos/app",
+        "cloudflare": "terraform/swarm/cloudflare/config",
+        "fortigate": "terraform/swarm/fortigate/config",
+        "argocd": "terraform/swarm/argocd/config",
+        "proxmox": "terraform/swarm/proxmox/app",
+        "talos": "terraform/swarm/talos/app",
     }
     rel = mapping.get(cfg_name)
     if not rel:
@@ -78,8 +78,6 @@ def explicit_remote(repo: Path, cfg_name: str) -> str | None:
 
 
 ALIASES: dict[str, str] = {
-    "chat-ui": "terraform/swarm/langchain-agent-chat",
-    "langchain-agent-chat": "terraform/swarm/langchain-agent-chat",
     "victoriametrics": "terraform/swarm/victoriametrics/app",
     "webserver-image": "terraform/swarm/cloud-image-repository",
 }

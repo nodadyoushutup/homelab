@@ -1,4 +1,11 @@
+- Cursor Sub Agents
 - Architecture Docs
 - Cross Seed Apps In k8s
 - Kometa in k8s
 - Replicas evaluation for swarm applications
+- Vault and config secrets management
+- Jenkins Controller
+- Jenkins Agent
+- Rework how they handle the pass off for the secret? maybe this time they can add something to vault via CLI instad.
+- GPU in servers
+Kopia for Docker Volumes

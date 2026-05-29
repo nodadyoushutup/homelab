@@ -49,14 +49,17 @@ Before bumping:
 2. Derive the **current** published version from the **source of truth** you are
    updating—commonly:
    - **GHCR / GitHub Packages** tags for `ghcr.io/<owner>/<image_name>`,
-   - **Terraform** `image_reference` or **Kubernetes** `image:` pins in this repo,
+   - **Terraform Swarm** `container_spec.image` in **`terraform/swarm/<svc>/<slice>/main.tf`**
+     (or the documented tfvars exceptions: `controller_image`, `image_reference`,
+     runner `image` / `agent_image`),
+   - **Kubernetes** `image:` pins in manifests or Helm values,
    - or the **last successful** workflow run inputs (if nothing else is pinned).
 
 Then set the dispatch `version` to **current patch + 1**. Update **every pin**
-that selects the image (Terraform **`image_reference`**, Kubernetes
-`Deployment`/`StatefulSet` **`image:`**, Argo-managed manifests, etc.), **commit,
-push**, and drive the **deploy path** for that stack (see below) so the running
-workload matches the tag you built.
+that selects the image (Swarm **`main.tf`** image strings, runner/tfvars
+exceptions above, Kubernetes `Deployment`/`StatefulSet` **`image:`**, Argo-managed
+manifests, etc.), **commit, push**, and drive the **deploy path** for that stack
+(see below) so the running workload matches the tag you built.
 
 ## Architecture exceptions
 
@@ -70,11 +73,6 @@ only amd64 is built. Do not treat that as an error.
 either runner pool can execute checkout, bash, or manifest work when one
 architecture pool is offline. Per-arch **build** jobs still require `amd64` or
 `arm64` as appropriate.
-
-**Harbor runtime images** use a separate workflow:
-`.github/workflows/harbor_build_push.yml`. It matrix-builds each component on
-amd64 and arm64 runners in parallel, then runs `publish_manifest`. App images
-stay on **Docker - Build and Push Image** (`docker_build_push.yml`).
 
 ## Published tags (GHCR)
 
@@ -92,10 +90,13 @@ engine selects the correct architecture from the manifest.
 When **`target_registry`** is **`zot`** or **`both`**, direct builds push to
 **`<ZOT_REGISTRY>/<image_name>`** (flat namespace, no project prefix). The workflow sets
 **`ZOT_REGISTRY`** to **`zot.nodadyoushutup.com`** (see `.github/workflows/docker_build_push.yml`).
-The Jenkins/bash mirror **`pipelines/applications/build_push.sh`** uses the same
+The Jenkins/bash mirror **`scripts/docker/build_push.sh`** uses the same
 layout via environment **`ZOT_REGISTRY`**. Pins in Terraform/Kubernetes should use that path
-(for example **`zot.nodadyoushutup.com/langgraph:<tag>`**). Zot is configured for
-anonymous push/pull on the homelab network—no registry login step in the workflow.
+(for example **`zot.nodadyoushutup.com/langgraph:<tag>`**). Zot requires htpasswd auth;
+set repository secrets **`ZOT_REGISTRY_USERNAME`** and **`ZOT_REGISTRY_PASSWORD`**
+(matching **`.config/terraform/components/*.tfvars`** `registry_auths` for
+`zot.nodadyoushutup.com`). The workflow logs in to Zot before push when
+`target_registry` is **`zot`** or **`both`**.
 
 ## Deploy and health (mandatory end state)
 
@@ -108,7 +109,7 @@ Pick the path that matches where the service runs:
 
 | Where it runs | Typical repo touchpoints | How to roll forward |
 | --- | --- | --- |
-| **Docker Swarm** (Terraform-managed) | `terraform/swarm/<app>/`, tfvars under your config path | Update **`image_reference`** (or equivalent), **`terraform apply`** (or repo pipeline scripts under `pipelines/terraform/` when you use them). If the app exposes a **new public hostname**, also update Cloudflare and Nginx Proxy Manager tfvars and run those stages—see [edge-dns-and-nginx-proxy.md](edge-dns-and-nginx-proxy.md). Per-app modules and [operators-and-clients.md](../rag/operators-and-clients.md) for RAG examples. |
+| **Docker Swarm** (Terraform-managed) | `terraform/swarm/<svc>/<slice>/main.tf` for image pins; slice tfvars under your config path for `env` / `placement` | Bump **`container_spec.image`** in **`main.tf`** (see [swarm-slices.md](../architecture/terraform/swarm-slices.md)), **`terraform apply`** (or `terraform/swarm/<svc>/pipeline/*.sh`). Exceptions: `jenkins-controller` (`controller_image`), `prometheus-pve-exporter` (`image_reference`), and `terraform/runners/*` (`image` / `agent_image` in tfvars). If the app exposes a **new public hostname**, also update Cloudflare and Nginx Proxy Manager tfvars—see [edge-dns-and-nginx-proxy.md](edge-dns-and-nginx-proxy.md). |
 | **Kubernetes (Argo CD)** | `kubernetes/**`, `kubernetes/argocd-management/**` | Edit the manifest or Helm values that set **`image`**, **commit**, **push**, then **sync** the Argo CD application (CLI, UI, or **Argo CD MCP** when configured). Wait for sync healthy / rollout complete. For a **new `Ingress` host**, align **Cloudflare** (or DNS) with the ingress/LB target—see [edge-dns-and-nginx-proxy.md](edge-dns-and-nginx-proxy.md); Nginx Proxy Manager applies only when you front the name through the Swarm edge. |
 | **Kubernetes (non-GitOps manual)** | manifests in repo or cluster-only | Apply or rollout per your process; still verify pods and probes. |
 
@@ -126,8 +127,8 @@ complete every automated step (pins, push, pipeline trigger, sync API) first.
 ## Agent / operator procedure
 
 1. **`rag_search`** (or read this doc + `.github/workflows/docker_build_push.yml`)
-   to confirm inputs, naming, and **where this image is deployed** (Swarm tfvars,
-   K8s manifests, Argo app name).
+   to confirm inputs, naming, and **where this image is deployed** (Swarm
+   **`main.tf`** pins, runner/tfvars exceptions, K8s manifests, Argo app name).
 2. Determine **next patch** `version` and **all pins** that must move; route
    file edits to the **`code`** specialist when needed.
 3. Use **GitHub MCP** (or authenticated `gh workflow run`) to **dispatch** the

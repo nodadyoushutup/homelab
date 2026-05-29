@@ -1,0 +1,597 @@
+provider_config = {
+  fortigate = {
+    host      = "192.168.1.1"
+    port      = 443
+    vdom      = "root"
+    insecure  = true
+    api_token = "mjmc9pc6ykrjG0jk7Qqtnf6N6HdqGf"
+  }
+}
+
+config = {
+  virtual_ips = [
+    {
+      name        = "plex"
+      type        = "static-nat"
+      extintf     = "wan"
+      extip       = "0.0.0.0"
+      protocol    = "tcp"
+      extport     = "32400"
+      mappedport  = "32400"
+      status      = "enable"
+      portforward = "enable"
+      mappedip = [
+        { range = "192.168.1.100" }
+      ]
+    },
+    {
+      name        = "qbittorrent_television"
+      type        = "static-nat"
+      extintf     = "wan"
+      extip       = "0.0.0.0"
+      protocol    = "tcp"
+      extport     = "10098"
+      mappedport  = "10098"
+      status      = "enable"
+      portforward = "enable"
+      mappedip = [
+        { range = "192.168.1.100" }
+      ]
+    },
+    {
+      name        = "qbittorrent_television_tmp"
+      type        = "static-nat"
+      extintf     = "wan"
+      extip       = "0.0.0.0"
+      protocol    = "tcp"
+      extport     = "41196"
+      mappedport  = "41196"
+      status      = "enable"
+      portforward = "enable"
+      mappedip = [
+        { range = "192.168.1.100" }
+      ]
+    },
+    {
+      name        = "qbittorrent_movie"
+      type        = "static-nat"
+      extintf     = "wan"
+      extip       = "0.0.0.0"
+      protocol    = "tcp"
+      extport     = "10096"
+      mappedport  = "10096"
+      status      = "enable"
+      portforward = "enable"
+      mappedip = [
+        { range = "192.168.1.100" }
+      ]
+    },
+    {
+      name        = "qbittorrent_movie_tmp"
+      type        = "static-nat"
+      extintf     = "wan"
+      extip       = "0.0.0.0"
+      protocol    = "tcp"
+      extport     = "31196"
+      mappedport  = "31196"
+      status      = "enable"
+      portforward = "enable"
+      mappedip = [
+        { range = "192.168.1.100" }
+      ]
+    },
+    {
+      name        = "qbittorrent_freeleech"
+      type        = "static-nat"
+      extintf     = "wan"
+      extip       = "0.0.0.0"
+      protocol    = "tcp"
+      extport     = "21196"
+      mappedport  = "21196"
+      status      = "enable"
+      portforward = "enable"
+      mappedip = [
+        { range = "192.168.1.100" }
+      ]
+    },
+    {
+      name        = "qbittorrent_cross_seed_bhd"
+      type        = "static-nat"
+      extintf     = "wan"
+      extip       = "0.0.0.0"
+      protocol    = "tcp"
+      extport     = "10196"
+      mappedport  = "10196"
+      status      = "enable"
+      portforward = "enable"
+      mappedip = [
+        { range = "192.168.1.100" }
+      ]
+    },
+    {
+      name        = "qbittorrent_cross_seed_hdb"
+      type        = "static-nat"
+      extintf     = "wan"
+      extip       = "0.0.0.0"
+      protocol    = "tcp"
+      extport     = "10296"
+      mappedport  = "10296"
+      status      = "enable"
+      portforward = "enable"
+      mappedip = [
+        { range = "192.168.1.100" }
+      ]
+    },
+    {
+      name        = "qbittorrent_cross_seed_ath"
+      type        = "static-nat"
+      extintf     = "wan"
+      extip       = "0.0.0.0"
+      protocol    = "tcp"
+      extport     = "10396"
+      mappedport  = "10396"
+      status      = "enable"
+      portforward = "enable"
+      mappedip = [
+        { range = "192.168.1.100" }
+      ]
+    },
+    {
+      name        = "qbittorrent_cross_seed_cg"
+      type        = "static-nat"
+      extintf     = "wan"
+      extip       = "0.0.0.0"
+      protocol    = "tcp"
+      extport     = "10496"
+      mappedport  = "10496"
+      status      = "enable"
+      portforward = "enable"
+      mappedip = [
+        { range = "192.168.1.100" }
+      ]
+    },
+    {
+      name        = "qbittorrent_cross_seed_kg"
+      type        = "static-nat"
+      extintf     = "wan"
+      extip       = "0.0.0.0"
+      protocol    = "tcp"
+      extport     = "10596"
+      mappedport  = "10596"
+      status      = "enable"
+      portforward = "enable"
+      mappedip = [
+        { range = "192.168.1.100" }
+      ]
+    },
+    {
+      name        = "qbittorrent_cross_seed_ab"
+      type        = "static-nat"
+      extintf     = "wan"
+      extip       = "0.0.0.0"
+      protocol    = "tcp"
+      extport     = "10696"
+      mappedport  = "10696"
+      status      = "enable"
+      portforward = "enable"
+      mappedip = [
+        { range = "192.168.1.100" }
+      ]
+    },
+    {
+      name        = "qbittorrent_cross_seed_blu"
+      type        = "static-nat"
+      extintf     = "wan"
+      extip       = "0.0.0.0"
+      protocol    = "tcp"
+      extport     = "10796"
+      mappedport  = "10796"
+      status      = "enable"
+      portforward = "enable"
+      mappedip = [
+        { range = "192.168.1.100" }
+      ]
+    },
+    {
+      name        = "qbittorrent_cross_seed_ant"
+      type        = "static-nat"
+      extintf     = "wan"
+      extip       = "0.0.0.0"
+      protocol    = "tcp"
+      extport     = "10896"
+      mappedport  = "10896"
+      status      = "enable"
+      portforward = "enable"
+      mappedip = [
+        { range = "192.168.1.100" }
+      ]
+    },
+    {
+      name        = "qbittorrent_cross_seed_sc"
+      type        = "static-nat"
+      extintf     = "wan"
+      extip       = "0.0.0.0"
+      protocol    = "tcp"
+      extport     = "10996"
+      mappedport  = "10996"
+      status      = "enable"
+      portforward = "enable"
+      mappedip = [
+        { range = "192.168.1.100" }
+      ]
+    },
+    {
+      name        = "qbittorrent_upload"
+      type        = "static-nat"
+      extintf     = "wan"
+      extip       = "0.0.0.0"
+      protocol    = "tcp"
+      extport     = "51196"
+      mappedport  = "51196"
+      status      = "enable"
+      portforward = "enable"
+      mappedip = [
+        { range = "192.168.1.100" }
+      ]
+    },
+    {
+      name        = "qbittorrent_xxx"
+      type        = "static-nat"
+      extintf     = "wan"
+      extip       = "0.0.0.0"
+      protocol    = "tcp"
+      extport     = "31199"
+      mappedport  = "31199"
+      status      = "enable"
+      portforward = "enable"
+      mappedip = [
+        { range = "192.168.1.100" }
+      ]
+    },
+    {
+      name        = "qbittorrent_pc"
+      type        = "static-nat"
+      extintf     = "wan"
+      extip       = "0.0.0.0"
+      protocol    = "tcp"
+      extport     = "10365"
+      mappedport  = "10365"
+      status      = "enable"
+      portforward = "enable"
+      mappedip = [
+        { range = "192.168.1.23" }
+      ]
+    },
+    {
+      name        = "nginx_proxy_manager_http"
+      type        = "static-nat"
+      extintf     = "wan"
+      extip       = "0.0.0.0"
+      protocol    = "tcp"
+      extport     = "80"
+      mappedport  = "80"
+      status      = "enable"
+      portforward = "enable"
+      mappedip = [
+        { range = "192.168.1.26" }
+      ]
+    },
+    {
+      name        = "nginx_proxy_manager_https"
+      type        = "static-nat"
+      extintf     = "wan"
+      extip       = "0.0.0.0"
+      protocol    = "tcp"
+      extport     = "443"
+      mappedport  = "443"
+      status      = "enable"
+      portforward = "enable"
+      mappedip = [
+        { range = "192.168.1.26" }
+      ]
+    }
+  ]
+
+  firewall_policies = [
+    {
+      policyid   = 2
+      name       = "plex"
+      action     = "accept"
+      status     = "enable"
+      schedule   = "always"
+      nat        = "disable"
+      logtraffic = "all"
+      match_vip  = "enable"
+      srcintf = [{ name = "wan" }]
+      dstintf = [{ name = "lan" }]
+      srcaddr = [{ name = "all" }]
+      dstaddr = [{ name = "plex" }]
+      service = [{ name = "ALL" }]
+    },
+    {
+      policyid   = 10098
+      name       = "qbittorrent_television"
+      action     = "accept"
+      status     = "enable"
+      schedule   = "always"
+      nat        = "disable"
+      logtraffic = "all"
+      match_vip  = "enable"
+      srcintf = [{ name = "wan" }]
+      dstintf = [{ name = "lan" }]
+      srcaddr = [{ name = "all" }]
+      dstaddr = [{ name = "qbittorrent_television" }]
+      service = [{ name = "ALL" }]
+    },
+    {
+      policyid   = 10
+      name       = "qbittorrent_television_tmp"
+      action     = "accept"
+      status     = "enable"
+      schedule   = "always"
+      nat        = "disable"
+      logtraffic = "all"
+      match_vip  = "enable"
+      srcintf = [{ name = "wan" }]
+      dstintf = [{ name = "lan" }]
+      srcaddr = [{ name = "all" }]
+      dstaddr = [{ name = "qbittorrent_television_tmp" }]
+      service = [{ name = "ALL" }]
+    },
+    {
+      policyid   = 10096
+      name       = "qbittorrent_movie"
+      action     = "accept"
+      status     = "enable"
+      schedule   = "always"
+      nat        = "disable"
+      logtraffic = "all"
+      match_vip  = "enable"
+      srcintf = [{ name = "wan" }]
+      dstintf = [{ name = "lan" }]
+      srcaddr = [{ name = "all" }]
+      dstaddr = [{ name = "qbittorrent_movie" }]
+      service = [{ name = "ALL" }]
+    },
+    {
+      policyid   = 9
+      name       = "qbittorrent_movie_temp"
+      action     = "accept"
+      status     = "enable"
+      schedule   = "always"
+      nat        = "disable"
+      logtraffic = "all"
+      match_vip  = "enable"
+      srcintf = [{ name = "wan" }]
+      dstintf = [{ name = "lan" }]
+      srcaddr = [{ name = "all" }]
+      dstaddr = [{ name = "qbittorrent_movie_tmp" }]
+      service = [{ name = "ALL" }]
+    },
+    {
+      policyid   = 11
+      name       = "qbittorrent_freeleech"
+      action     = "accept"
+      status     = "enable"
+      schedule   = "always"
+      nat        = "disable"
+      logtraffic = "all"
+      match_vip  = "enable"
+      srcintf = [{ name = "wan" }]
+      dstintf = [{ name = "lan" }]
+      srcaddr = [{ name = "all" }]
+      dstaddr = [{ name = "qbittorrent_freeleech" }]
+      service = [{ name = "ALL" }]
+    },
+    {
+      policyid   = 12
+      name       = "qbittorrent_cross_seed_bhd"
+      action     = "accept"
+      status     = "enable"
+      schedule   = "always"
+      nat        = "disable"
+      logtraffic = "all"
+      match_vip  = "enable"
+      srcintf = [{ name = "wan" }]
+      dstintf = [{ name = "lan" }]
+      srcaddr = [{ name = "all" }]
+      dstaddr = [{ name = "qbittorrent_cross_seed_bhd" }]
+      service = [{ name = "ALL" }]
+    },
+    {
+      policyid   = 13
+      name       = "qbittorrent_cross_seed_hdb"
+      action     = "accept"
+      status     = "enable"
+      schedule   = "always"
+      nat        = "disable"
+      logtraffic = "all"
+      match_vip  = "enable"
+      srcintf = [{ name = "wan" }]
+      dstintf = [{ name = "lan" }]
+      srcaddr = [{ name = "all" }]
+      dstaddr = [{ name = "qbittorrent_cross_seed_hdb" }]
+      service = [{ name = "ALL" }]
+    },
+    {
+      policyid   = 14
+      name       = "qbittorrent_cross_seed_ath"
+      action     = "accept"
+      status     = "enable"
+      schedule   = "always"
+      nat        = "disable"
+      logtraffic = "all"
+      match_vip  = "enable"
+      srcintf = [{ name = "wan" }]
+      dstintf = [{ name = "lan" }]
+      srcaddr = [{ name = "all" }]
+      dstaddr = [{ name = "qbittorrent_cross_seed_ath" }]
+      service = [{ name = "ALL" }]
+    },
+    {
+      policyid   = 15
+      name       = "qbittorrent_cross_seed_cg"
+      action     = "accept"
+      status     = "enable"
+      schedule   = "always"
+      nat        = "disable"
+      logtraffic = "all"
+      match_vip  = "enable"
+      srcintf = [{ name = "wan" }]
+      dstintf = [{ name = "lan" }]
+      srcaddr = [{ name = "all" }]
+      dstaddr = [{ name = "qbittorrent_cross_seed_cg" }]
+      service = [{ name = "ALL" }]
+    },
+    {
+      policyid   = 16
+      name       = "qbittorrent_cross_seed_kg"
+      action     = "accept"
+      status     = "enable"
+      schedule   = "always"
+      nat        = "disable"
+      logtraffic = "all"
+      match_vip  = "enable"
+      srcintf = [{ name = "wan" }]
+      dstintf = [{ name = "lan" }]
+      srcaddr = [{ name = "all" }]
+      dstaddr = [{ name = "qbittorrent_cross_seed_kg" }]
+      service = [{ name = "ALL" }]
+    },
+    {
+      policyid   = 17
+      name       = "qbittorrent_cross_seed_ab"
+      action     = "accept"
+      status     = "enable"
+      schedule   = "always"
+      nat        = "disable"
+      logtraffic = "all"
+      match_vip  = "enable"
+      srcintf = [{ name = "wan" }]
+      dstintf = [{ name = "lan" }]
+      srcaddr = [{ name = "all" }]
+      dstaddr = [{ name = "qbittorrent_cross_seed_ab" }]
+      service = [{ name = "ALL" }]
+    },
+    {
+      policyid   = 18
+      name       = "qbittorrent_cross_seed_blu"
+      action     = "accept"
+      status     = "enable"
+      schedule   = "always"
+      nat        = "disable"
+      logtraffic = "all"
+      match_vip  = "enable"
+      srcintf = [{ name = "wan" }]
+      dstintf = [{ name = "lan" }]
+      srcaddr = [{ name = "all" }]
+      dstaddr = [{ name = "qbittorrent_cross_seed_blu" }]
+      service = [{ name = "ALL" }]
+    },
+    {
+      policyid   = 19
+      name       = "qbittorrent_cross_seed_ant"
+      action     = "accept"
+      status     = "enable"
+      schedule   = "always"
+      nat        = "disable"
+      logtraffic = "all"
+      match_vip  = "enable"
+      srcintf = [{ name = "wan" }]
+      dstintf = [{ name = "lan" }]
+      srcaddr = [{ name = "all" }]
+      dstaddr = [{ name = "qbittorrent_cross_seed_ant" }]
+      service = [{ name = "ALL" }]
+    },
+    {
+      policyid   = 23
+      name       = "qbittorrent_cross_seed_sc"
+      action     = "accept"
+      status     = "enable"
+      schedule   = "always"
+      nat        = "disable"
+      logtraffic = "all"
+      match_vip  = "enable"
+      srcintf = [{ name = "wan" }]
+      dstintf = [{ name = "lan" }]
+      srcaddr = [{ name = "all" }]
+      dstaddr = [{ name = "qbittorrent_cross_seed_sc" }]
+      service = [{ name = "ALL" }]
+    },
+    {
+      policyid   = 20
+      name       = "qbittorrent_upload"
+      action     = "accept"
+      status     = "enable"
+      schedule   = "always"
+      nat        = "disable"
+      logtraffic = "all"
+      match_vip  = "enable"
+      srcintf = [{ name = "wan" }]
+      dstintf = [{ name = "lan" }]
+      srcaddr = [{ name = "all" }]
+      dstaddr = [{ name = "qbittorrent_upload" }]
+      service = [{ name = "ALL" }]
+    },
+    {
+      policyid   = 24
+      name       = "qbittorrent_xxx"
+      action     = "accept"
+      status     = "enable"
+      schedule   = "always"
+      nat        = "disable"
+      logtraffic = "all"
+      match_vip  = "enable"
+      srcintf = [{ name = "wan" }]
+      dstintf = [{ name = "lan" }]
+      srcaddr = [{ name = "all" }]
+      dstaddr = [{ name = "qbittorrent_xxx" }]
+      service = [{ name = "ALL" }]
+    },
+    {
+      policyid   = 26
+      name       = "qbittorrent_pc"
+      action     = "accept"
+      status     = "enable"
+      schedule   = "always"
+      nat        = "disable"
+      logtraffic = "all"
+      match_vip  = "enable"
+      srcintf = [{ name = "wan" }]
+      dstintf = [{ name = "lan" }]
+      srcaddr = [{ name = "all" }]
+      dstaddr = [{ name = "qbittorrent_pc" }]
+      service = [{ name = "ALL" }]
+    },
+    {
+      policyid   = 21
+      name       = "nginx_proxy_manager_http"
+      action     = "accept"
+      status     = "enable"
+      schedule   = "always"
+      nat        = "disable"
+      logtraffic = "all"
+      match_vip  = "enable"
+      srcintf = [{ name = "wan" }]
+      dstintf = [{ name = "lan" }]
+      srcaddr = [{ name = "all" }]
+      dstaddr = [{ name = "nginx_proxy_manager_http" }]
+      service = [{ name = "ALL" }]
+    },
+    {
+      policyid   = 22
+      name       = "nginx_proxy_manager_https"
+      action     = "accept"
+      status     = "enable"
+      schedule   = "always"
+      nat        = "disable"
+      logtraffic = "all"
+      match_vip  = "enable"
+      srcintf = [{ name = "wan" }]
+      dstintf = [{ name = "lan" }]
+      srcaddr = [{ name = "all" }]
+      dstaddr = [{ name = "nginx_proxy_manager_https" }]
+      service = [{ name = "ALL" }]
+    }
+  ]
+}

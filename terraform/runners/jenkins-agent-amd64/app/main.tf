@@ -1,4 +1,4 @@
-# Standalone Docker containers on the AMD64 pool host (`terraform/components/amd64.tfvars`).
+# Standalone Docker containers on the AMD64 pool host (`.config/terraform/components/amd64.tfvars`).
 
 resource "docker_volume" "agent_home" {
   for_each = local.agent_definitions

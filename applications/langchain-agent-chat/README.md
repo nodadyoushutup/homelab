@@ -17,10 +17,10 @@ cluster network. The client-facing `NEXT_PUBLIC_API_URL` must stay absolute in
 production and local debug runs because the LangGraph SDK expects a full URL
 when it builds client requests.
 
-The Docker image is built from this directory and published to Harbor as:
+The Docker image is built from this directory and published to GHCR (and optionally Zot) as:
 
-- `harbor.nodadyoushutup.com/homelab/langchain-agent-chat:<tag>`
-- `harbor.nodadyoushutup.com/homelab/langchain-agent-chat:latest`
+- `ghcr.io/nodadyoushutup/langchain-agent-chat:<tag>`
+- `zot.nodadyoushutup.com/langchain-agent-chat:<tag>` (when `target_registry` is `zot` or `both`)
 
 LangChain Agent Chat is a Next.js application which enables chatting with any LangGraph server with a `messages` key through a chat interface.
 

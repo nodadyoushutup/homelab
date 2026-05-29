@@ -45,6 +45,7 @@ on:
           - mcp-rag
           - mcp-terraform
           - rag-engine
+          - torrent-manager
 
 permissions:
   contents: write
@@ -176,6 +177,11 @@ jobs:
             rag-engine)
               image_name="rag-engine"
               docker_context="applications/rag-engine"
+              build_strategy="direct"
+              ;;
+            torrent-manager)
+              image_name="torrent-manager"
+              docker_context="applications/torrent-manager"
               build_strategy="direct"
               ;;
             *)
@@ -313,6 +319,14 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Log in to Zot registry
+        if: needs.prepare.outputs.publish_zot == 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.ZOT_REGISTRY }}
+          username: ${{ secrets.ZOT_REGISTRY_USERNAME }}
+          password: ${{ secrets.ZOT_REGISTRY_PASSWORD }}
+
       - name: Build and push native AMD64 image
         shell: bash
         run: |
@@ -378,6 +392,14 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Log in to Zot registry
+        if: needs.prepare.outputs.publish_zot == 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.ZOT_REGISTRY }}
+          username: ${{ secrets.ZOT_REGISTRY_USERNAME }}
+          password: ${{ secrets.ZOT_REGISTRY_PASSWORD }}
+
       - name: Build and push native ARM64 image
         shell: bash
         run: |
@@ -439,6 +461,14 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Log in to Zot registry
+        if: needs.prepare.outputs.publish_zot == 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.ZOT_REGISTRY }}
+          username: ${{ secrets.ZOT_REGISTRY_USERNAME }}
+          password: ${{ secrets.ZOT_REGISTRY_PASSWORD }}
 
       - name: Publish version and latest manifest tags
         shell: bash

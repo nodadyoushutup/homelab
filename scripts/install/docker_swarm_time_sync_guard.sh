@@ -19,7 +19,8 @@ usage() {
 Usage: docker_swarm_time_sync_guard.sh [--no-restart]
 
 Applies systemd drop-ins so Docker waits for chrony time synchronization
-before startup, preventing Swarm manager startup failures on bad boot time.
+before startup on **every Swarm node** (manager and workers), preventing
+Swarm TLS validation failures when the RTC is stale after power loss.
 
 Options:
   --no-restart   Apply config and enable chrony-wait, but do not restart services.

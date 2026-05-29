@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }} · Torrent Manager{% endblock %}
+
+{% block content %}
+  <section class="page-header">
+    <div>
+      <h1>{{ page_title }}</h1>
+      <p class="lede">Fields map directly to the <code>Torrent</code> SQLAlchemy model.</p>
+    </div>
+  </section>
+
+  <form class="card form-grid" method="post" action="{{ form_action }}" id="torrent-form">
+    <label>
+      <span>Name</span>
+      <input type="text" name="name" required value="{{ torrent.name if torrent else '' }}" />
+    </label>
+
+    <label>
+      <span>Status</span>
+      <select name="status">
+        {% for status in status_choices %}
+          <option
+            value="{{ status }}"
+            {% if torrent and torrent.status == status %}selected{% endif %}
+          >
+            {{ status }}
+          </option>
+        {% endfor %}
+      </select>
+    </label>
+
+    <label class="full-width">
+      <span>Magnet URI</span>
+      <textarea name="magnet_uri" rows="3">{{ torrent.magnet_uri if torrent and torrent.magnet_uri else '' }}</textarea>
+    </label>
+
+    <label>
+      <span>Info hash</span>
+      <input
+        type="text"
+        name="info_hash"
+        value="{{ torrent.info_hash if torrent and torrent.info_hash else '' }}"
+      />
+    </label>
+
+    <label>
+      <span>Size (bytes)</span>
+      <input
+        type="number"
+        name="size_bytes"
+        min="0"
+        value="{{ torrent.size_bytes if torrent and torrent.size_bytes is not none else '' }}"
+      />
+    </label>
+
+    <label class="full-width">
+      <span>Notes</span>
+      <textarea name="notes" rows="4">{{ torrent.notes if torrent and torrent.notes else '' }}</textarea>
+    </label>
+
+    <div class="form-actions full-width">
+      <button type="submit" class="button button-primary">Save</button>
+      <a class="button" href="{{ url_for('torrents.list_torrents') }}">Cancel</a>
+    </div>
+  </form>
+{% endblock %}

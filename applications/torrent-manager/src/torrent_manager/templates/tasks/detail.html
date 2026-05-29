@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}{{ task.name }} · Tasks{% endblock %}
+
+{% block content %}
+  <section class="page-header">
+    <div>
+      <p class="muted"><a href="{{ url_for('tasks.list_tasks') }}">Tasks</a></p>
+      <h1>{{ task.name }}</h1>
+      {% if task.description %}
+        <p class="lede">{{ task.description }}</p>
+      {% endif %}
+    </div>
+    <div class="actions">
+      <form method="post" action="{{ url_for('tasks.run_task', task_id=task.id) }}" class="inline-form">
+        <button type="submit" class="button button-primary">Run task</button>
+      </form>
+      <a class="button" href="{{ url_for('tasks.edit_task', task_id=task.id) }}">Edit</a>
+    </div>
+  </section>
+
+  <div class="detail-grid">
+    <section class="card detail-card">
+      <h2>Definition</h2>
+      <dl class="detail-list">
+        <div>
+          <dt>Type</dt>
+          <dd><code>{{ task.task_type }}</code></dd>
+        </div>
+        <div>
+          <dt>Last status</dt>
+          <dd><span class="badge badge-{{ task.last_status }}">{{ task.last_status }}</span></dd>
+        </div>
+        <div>
+          <dt>Created</dt>
+          <dd>{{ task.created_at.strftime('%Y-%m-%d %H:%M') }}</dd>
+        </div>
+        <div>
+          <dt>Updated</dt>
+          <dd>{{ task.updated_at.strftime('%Y-%m-%d %H:%M') }}</dd>
+        </div>
+      </dl>
+    </section>
+
+    <section class="card detail-card">
+      <h2>Config</h2>
+      {% if task.config_json %}
+        <pre class="code-block mono">{{ task.config_json }}</pre>
+      {% else %}
+        <p class="muted">No config set.</p>
+      {% endif %}
+    </section>
+
+    <section class="card detail-card full-width">
+      <h2>Last run</h2>
+      {% if task.last_output or task.last_error %}
+        {% if task.last_output %}
+          <pre class="code-block mono">{{ task.last_output }}</pre>
+        {% endif %}
+        {% if task.last_error %}
+          <pre class="code-block mono code-error">{{ task.last_error }}</pre>
+        {% endif %}
+      {% else %}
+        <p class="muted">This task has not been run yet.</p>
+      {% endif %}
+    </section>
+
+    <section class="card detail-card full-width">
+      <div class="section-header">
+        <h2>Pipelines using this task</h2>
+      </div>
+      {% if pipeline_steps %}
+        <div class="table-wrap inner-table">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Pipeline</th>
+                <th>Position</th>
+                <th>Step status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for step in pipeline_steps %}
+                <tr class="row-link" data-href="{{ url_for('pipelines.pipeline_detail', pipeline_id=step.pipeline_id) }}">
+                  <td>
+                    <a href="{{ url_for('pipelines.pipeline_detail', pipeline_id=step.pipeline_id) }}">
+                      {{ step.pipeline.name }}
+                    </a>
+                  </td>
+                  <td>{{ step.position + 1 }}</td>
+                  <td><span class="badge badge-{{ step.status }}">{{ step.status }}</span></td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <p class="muted">Not referenced by any pipeline yet.</p>
+      {% endif %}
+    </section>
+  </div>
+
+  <form
+    method="post"
+    action="{{ url_for('tasks.delete_task', task_id=task.id) }}"
+    class="danger-zone"
+    data-confirm-delete
+    data-confirm-message="Delete this task?"
+  >
+    <button type="submit" class="button danger-button">Delete task</button>
+  </form>
+{% endblock %}

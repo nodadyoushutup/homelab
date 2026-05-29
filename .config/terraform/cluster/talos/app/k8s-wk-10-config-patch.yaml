@@ -1,0 +1,15 @@
+machine:
+  install:
+    disk: "/dev/sda"
+    image: "factory.talos.dev/installer/eda6c02d94377f983da3aa0c8a98c58dc6b2b9341ec42512161eb7661acb526d:v1.12.4"
+    extensions:
+      - image: ghcr.io/siderolabs/iscsi-tools:v0.2.0
+  network:
+    interfaces:
+      - interface: ens18
+        dhcp: false
+        addresses:
+          - 192.168.1.212/24
+        routes:
+          - network: 0.0.0.0/0
+            gateway: 192.168.1.1

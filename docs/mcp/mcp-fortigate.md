@@ -26,4 +26,4 @@ Add a server block in the relevant **`mcp.json`** when a graph should call Forti
 ## Related
 
 - [edge-dns-and-nginx-proxy.md](../workflows/edge-dns-and-nginx-proxy.md)
-- Network appliance config (non-MCP): **`terraform/network/fortigate/config/`**
+- Network appliance config (non-MCP): **`terraform/swarm/fortigate/config/`**

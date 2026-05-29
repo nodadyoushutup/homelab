@@ -3,9 +3,9 @@ locals {
   node_exporter_file_hash = filemd5(local.node_exporter_file_path)
   node_exporter_content   = file(local.node_exporter_file_path)
 
-  docker_file_path = "${path.module}/dashboards/docker.json"
-  docker_file_hash = filemd5(local.docker_file_path)
-  docker_content   = file(local.docker_file_path)
+  cadvisor_file_path = "${path.module}/dashboards/cadvisor.json"
+  cadvisor_file_hash = filemd5(local.cadvisor_file_path)
+  cadvisor_content   = file(local.cadvisor_file_path)
 
   truenas_file_path = "${path.module}/dashboards/truenas.json"
   truenas_file_hash = filemd5(local.truenas_file_path)
@@ -30,4 +30,8 @@ locals {
   proxmox_file_path = "${path.module}/dashboards/proxmox.json"
   proxmox_file_hash = filemd5(local.proxmox_file_path)
   proxmox_content   = file(local.proxmox_file_path)
+
+  proxmox_graphite_overview_file_path = "${path.module}/dashboards/proxmox-graphite-overview.json"
+  proxmox_graphite_overview_file_hash = filemd5(local.proxmox_graphite_overview_file_path)
+  proxmox_graphite_overview_content   = file(local.proxmox_graphite_overview_file_path)
 }

@@ -21,13 +21,14 @@ Agents and humans must treat “support both for now” as **out of scope** unle
 ## Where To Look
 
 - `docs/workflows/`: execution workflows
-- `docs/architecture/`: repository and Terraform layout (topic-per-file index in `README.md`)
+- `docs/architecture/`: repository layout ([`architecture/README.md`](docs/architecture/README.md)); **new Swarm app** → [`terraform/swarm-placement.md`](docs/architecture/terraform/swarm-placement.md) then [`terraform/swarm-slices.md`](docs/architecture/terraform/swarm-slices.md); **new Kubernetes app** → [`kubernetes/placement.md`](docs/architecture/kubernetes/placement.md) then [`kubernetes/manifest-patterns.md`](docs/architecture/kubernetes/manifest-patterns.md); **Argo CD / GitOps** → [`argocd/README.md`](docs/architecture/argocd/README.md)
 - `docs/workflows/edge-dns-and-nginx-proxy.md`: new public hostnames → Cloudflare tfvars + Nginx Proxy Manager tfvars (Swarm edge) vs cluster ingress
 - `docs/workflows/docker-build-github-actions.md`: Docker image publishes via GHA (dispatch, semver, Terraform/Argo CD/Swarm rollout, live health, CI)
 - `docs/mcp/README.md`: MCP servers in this repo—naming, URL shape, client wiring (`mcp-*.md`, including **`mcp-playwright.md`** for the **`mcp-playwright`** stack)
 - `docs/resources/README.md`: curated technology reference shelf
 - `docs/workflows/langgraph.md`: LangGraph implementation workflow
 - `docs/workflows/agents.md`: LangGraph runtime index (prompt map, routing, update workflow)
+- `docs/workflows/agent-orchestration.md`: supervisor → specialist delegation loop (input/output contracts, chaining)
 - `applications/langgraph/agent/system_prompt.md`: top-level supervisor (`agent` graph) instruction contract
 - `docs/subagents/*/*.md`: per-specialist **deployment overlays** (loaded by each subagent app)
 

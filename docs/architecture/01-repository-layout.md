@@ -24,14 +24,13 @@ top-level directory.
 
 | Path | Role |
 | --- | --- |
-| `applications/` | Service source and Docker build contexts aligned with deployable units (for example `langgraph/`, `rag-engine/`, `mcp-*`, Jenkins pieces, `harbor/` assets where applicable). |
-| `kubernetes/` | Per-app or per-platform folders consumed by Argo CD or manual apply; cluster ingress, storage, media stack, and production LangGraph/chat pairs live here. Layout conventions: [03-kubernetes-layout.md](./03-kubernetes-layout.md). |
-| `terraform/` | IaC roots: Swarm services, cluster provisioning helpers, remote DNS (Cloudflare), FortiGate config slices, and shared **`terraform/modules/`** helpers. |
+| `applications/` | Service source and Docker build contexts aligned with deployable units (for example `langgraph/`, `rag-engine/`, `mcp-*`, Jenkins pieces). |
+| `kubernetes/` | Per-app or per-platform folders consumed by Argo CD or manual apply; cluster ingress, storage, media stack, and production LangGraph/chat pairs live here. Layout: [kubernetes/README.md](./kubernetes/README.md). |
+| `terraform/` | IaC roots: deployable stacks under **`terraform/swarm/`** (Swarm services, Talos/Proxmox bootstrap, Cloudflare DNS, FortiGate, Argo CD), runner pools under **`terraform/runners/`** (each with **`pipeline/`** entrypoints), and shared **`terraform/modules/`** helpers. Layout: [terraform/README.md](./terraform/README.md). |
 | `docker/` | Compose-based local development; not the production Swarm definition. |
 | `docs/` | Human source of truth: workflows, architecture (this folder), RAG notes, subagent overlays, resources shelf. |
-| `scripts/` | Shell and Python helpers grouped by domain (`swarm/`, `terraform/`, `agents/`, `vault/`, `rag/`, etc.). |
-| `packer/` | Machine and cloud image definitions (for example Ubuntu base images) used upstream of Swarm or cluster nodes. |
-| `pipelines/` | Jenkins (or related) pipeline definitions organized by technology (`applications/`, `packer/`, `terraform/`). |
+| `packer/` | Machine and cloud image definitions (for example Ubuntu base images) used upstream of Swarm or cluster nodes. Jenkins/bash pipeline entrypoints live under **`packer/pipeline/`**. |
+| `scripts/` | Shell and Python helpers grouped by domain (`swarm/`, `terraform/`, `docker/`, `agents/`, `vault/`, `rag/`, etc.). Docker image build/push Jenkins mirror: **`scripts/docker/build_push.sh`**. |
 | `data/` | Local or exported operational data (screenshots, exports, dev artifacts). Treat as **not** authoritative for infra state; Git usually ignores most of it. |
 | `.github/` | GitHub Actions workflows (image builds, Packer, validation). |
 | `.config/` | Site-local tfvars, backends, keys, and dotenv (see `.config/docker/README.md`); never commit real secrets or live tfvars. |
@@ -41,11 +40,15 @@ top-level directory.
 
 Use this rule of thumb when deciding where a *new* component should land:
 
-- **Docker Swarm** (Terraform under `terraform/swarm/<service>/`) for edge
-  proxies, registries, observability agents, internal MCP endpoints, and other
-  infra that the repo already treats as Swarm-first.
+- **Docker Swarm** (`terraform/swarm/<service>/`) for edge proxies, registries,
+  observability agents, internal MCP endpoints, and other infra this repo treats
+  as Swarm-first. **Before creating files**, classify the workload and pick a
+  worker node — [terraform/swarm-placement.md](./terraform/swarm-placement.md).
+  Then choose slices — [terraform/swarm-slices.md](./terraform/swarm-slices.md).
 - **Kubernetes** (`kubernetes/`) for cluster-native apps, CSI drivers,
   ingress-based services, and workloads that share the Talos cluster lifecycle.
+  Classify and place workloads first — [kubernetes/placement.md](./kubernetes/placement.md),
+  then manifest style — [kubernetes/manifest-patterns.md](./kubernetes/manifest-patterns.md).
 
 Some systems exist in both worlds in different roles (for example LangGraph
 dev in Compose, production graph under `kubernetes/langgraph`). Keep dev/prod

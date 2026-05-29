@@ -1,5 +1,5 @@
 # Copy to CONFIG_DIR/terraform/swarm/prometheus/app.tfvars (not committed).
-# config_path is required (see pipelines/terraform/swarm/prometheus/app.sh).
+# config_path is required (see terraform/swarm/prometheus/pipeline/app.sh).
 
 # config_path = "/path/to/prometheus.yaml"
 

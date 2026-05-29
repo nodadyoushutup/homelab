@@ -22,10 +22,10 @@ When a project does not maintain a standalone docs site, this file links to the 
 
 | Technology | Repo evidence | Official docs |
 | --- | --- | --- |
-| Proxmox VE | `terraform/cluster/proxmox/app` | [Proxmox VE docs index](https://pve.proxmox.com/pve-docs/index.html) |
-| Talos Linux | `terraform/cluster/talos/app`, `docs/talos-packages.md` | [Talos docs](https://www.talos.dev/latest/) |
+| Proxmox VE | `terraform/swarm/proxmox/app` | [Proxmox VE docs index](https://pve.proxmox.com/pve-docs/index.html) |
+| Talos Linux | `terraform/swarm/talos/app`, `docs/talos-packages.md` | [Talos docs](https://www.talos.dev/latest/) |
 | Kubernetes | `kubernetes/**`, `docs/workflows/kubernetes.md` | [Kubernetes docs](https://kubernetes.io/docs/home/) |
-| Argo CD | `kubernetes/bootstrap/argocd-management-app.yaml`, `kubernetes/argocd-management/**`, `terraform/cluster/argocd/config` | [Argo CD docs](https://argo-cd.readthedocs.io/en/stable/) |
+| Argo CD | `kubernetes/bootstrap/argocd-management-app.yaml`, `kubernetes/argocd-management/**`, `terraform/swarm/argocd/config` | [Argo CD docs](https://argo-cd.readthedocs.io/en/stable/) |
 | Helm | `kubernetes/snapshot-controller/values.yaml`, Argo CD chart apps under `kubernetes/argocd-management/` | [Helm docs](https://helm.sh/docs/) |
 | Kustomize | `kubernetes/qbittorrent/base/kustomization.yaml`, `kubernetes/cross-seed/base/kustomization.yaml` | [Kustomize docs](https://kustomize.io/) |
 | External Secrets Operator | `kubernetes/external-secrets/`, app-level `secretstore.yaml` and `externalsecret.yaml` manifests | [External Secrets docs](https://external-secrets.io/latest/) |
@@ -38,9 +38,9 @@ When a project does not maintain a standalone docs site, this file links to the 
 
 | Technology | Repo evidence | Official docs |
 | --- | --- | --- |
-| Cloudflare | `terraform/remote/cloudflare/config`, `docs/workflows/edge-dns-and-nginx-proxy.md` | [Cloudflare docs](https://developers.cloudflare.com/) |
+| Cloudflare | `terraform/swarm/cloudflare/config`, `docs/workflows/edge-dns-and-nginx-proxy.md` | [Cloudflare docs](https://developers.cloudflare.com/) |
 | Nginx Proxy Manager | `terraform/swarm/nginx_proxy_manager/{app,config,database}`, `docs/workflows/edge-dns-and-nginx-proxy.md` | [Nginx Proxy Manager guide](https://nginxproxymanager.com/guide/) |
-| FortiGate / FortiOS | `terraform/network/fortigate/config`, torrent ingress policy in `AGENTS.md` | [FortiGate docs](https://docs.fortinet.com/product/fortigate) |
+| FortiGate / FortiOS | `terraform/swarm/fortigate/config`, torrent ingress policy in `AGENTS.md` | [FortiGate docs](https://docs.fortinet.com/product/fortigate) |
 | MinIO | `docker/docker-compose.minio.yaml`, S3 backends in Terraform provider files | [MinIO docs](https://docs.min.io/) |
 | HashiCorp Vault | `terraform/swarm/vault/{app,config}`, `scripts/vault/` | [Vault docs](https://developer.hashicorp.com/vault/docs) |
 | PostgreSQL | app-local `postgres-deployment.yaml` files under `kubernetes/` and service database stages | [PostgreSQL docs](https://www.postgresql.org/docs/) |
@@ -54,9 +54,9 @@ When a project does not maintain a standalone docs site, this file links to the 
 | VictoriaMetrics | `terraform/swarm/victoriametrics/app` | [VictoriaMetrics docs](https://docs.victoriametrics.com/) |
 | Graylog | `terraform/swarm/graylog/{database,app}` | [Graylog docs](https://go2docs.graylog.org/current/) |
 | Graphite | `terraform/swarm/graphite/app` | [Graphite docs](https://graphite.readthedocs.io/en/latest/) |
-| Telegraf | `terraform/swarm/telegraf_docker_metrics/app` | [Telegraf docs](https://docs.influxdata.com/telegraf/v1/configuration/) |
-| Dozzle | `terraform/swarm/dozzle/app` (`pipelines/terraform/swarm/dozzle/app.sh`, bespoke) | [Dozzle docs](https://dozzle.dev/guide/what-is-dozzle) |
-| Harbor | `terraform/swarm/harbor/{app,config}`, `applications/harbor/` | [Harbor docs](https://goharbor.io/docs/) |
+| cAdvisor | `terraform/swarm/cadvisor/app` | [cAdvisor docs](https://github.com/google/cadvisor/blob/master/docs/runtime_options.md) |
+| Dozzle | `terraform/swarm/dozzle/app` (`terraform/swarm/dozzle/pipeline/app.sh`, bespoke) | [Dozzle docs](https://dozzle.dev/guide/what-is-dozzle) |
+| Zot | `terraform/swarm/zot/` | [Zot docs](https://zotregistry.dev/) |
 | Zot | `terraform/swarm/zot/app` | [Zot docs](https://zotregistry.dev/) |
 | Jenkins | `terraform/runners/jenkins-agent-arm64/app`, `terraform/runners/jenkins-agent-amd64/app`, `terraform/swarm/jenkins-controller/{app,config}`, `applications/jenkins-agent/`, `applications/jenkins-controller/` | [Jenkins docs](https://www.jenkins.io/doc/) |
 | Model Context Protocol (MCP) | `applications/mcp-*`, `terraform/swarm/mcp-*/app` | [MCP docs](https://modelcontextprotocol.io/docs/learn) |
@@ -65,7 +65,7 @@ When a project does not maintain a standalone docs site, this file links to the 
 
 | Technology | Repo evidence | Official docs |
 | --- | --- | --- |
-| ChromaDB | `terraform/swarm/chromadb/app` (`pipelines/terraform/swarm/chromadb/app.sh`, bespoke) | [Chroma Docker docs](https://docs.trychroma.com/guides/deploy/docker) |
+| ChromaDB | `terraform/swarm/chromadb/app` (`terraform/swarm/chromadb/pipeline/app.sh`, bespoke) | [Chroma Docker docs](https://docs.trychroma.com/guides/deploy/docker) |
 | qBittorrent | `kubernetes/qbittorrent/base`, `kubernetes/qbittorrent/overlays` | [qBittorrent wiki](https://github.com/qbittorrent/qBittorrent/wiki) |
 | cross-seed | `kubernetes/cross-seed/base`, `kubernetes/cross-seed/overlays` | [cross-seed docs](https://www.cross-seed.org/docs/basics/getting-started) |
 | Plex / ClusterPlex | `kubernetes/clusterplex/` | [Plex support docs](https://support.plex.tv/) |

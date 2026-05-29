@@ -1,16 +1,16 @@
 resource "docker_network" "zot" {
-  name   = var.network_name
+  name   = "zot"
   driver = "overlay"
 }
 
 resource "docker_volume" "zot_data" {
-  name   = var.volume_name
+  name   = "zot-data"
   driver = "local"
 }
 
 resource "docker_config" "zot" {
   name = "zot-config-${local.config_hash}"
-  data = base64encode(local.zot_config_json)
+  data = base64encode(local.zot_config_raw)
 
   lifecycle {
     create_before_destroy = true
@@ -46,7 +46,7 @@ resource "docker_service" "zot" {
     }
 
     container_spec {
-      image = var.image
+      image = "ghcr.io/project-zot/zot:v2.1.15@sha256:376cb38a335bab89571af306eff481547212746aff11828043c22f32637fe17b"
 
       dns_config {
         nameservers = var.dns_nameservers
@@ -59,7 +59,7 @@ resource "docker_service" "zot" {
       }
 
       dynamic "mounts" {
-        for_each = var.enable_auth ? [var.htpasswd_file_path] : []
+        for_each = local.auth_enabled ? [var.htpasswd_path] : []
 
         content {
           type      = "bind"
@@ -89,17 +89,10 @@ resource "docker_service" "zot" {
 
   endpoint_spec {
     ports {
-      target_port    = var.http_port
-      published_port = var.published_port
+      target_port    = tonumber(local.zot_config.http.port)
+      published_port = 35081
       protocol       = "tcp"
       publish_mode   = "ingress"
-    }
-  }
-
-  lifecycle {
-    precondition {
-      condition     = !var.enable_auth || trimspace(var.htpasswd_file_path) != ""
-      error_message = "enable_auth requires htpasswd_file_path pointing at a host htpasswd file."
     }
   }
 }

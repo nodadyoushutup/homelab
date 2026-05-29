@@ -167,6 +167,13 @@ kubeconfig
 .direnv/
 
 # =============================================================================
+# Letterboxd local session (delete-list helper)
+# =============================================================================
+
+.letterboxd/cookies.txt
+.letterboxd/jar
+
+# =============================================================================
 # Site-local Terraform/Kubernetes tfvars (not committed)
 # =============================================================================
 # Mirror layout previously under a separate CONFIG_DIR; default is <repo>/.config
@@ -176,6 +183,9 @@ kubeconfig
 !.config/docker/README.md
 !.config/docker/*.env.example
 !.config/scripts/*.env.example
+!.config/terraform/
+!.config/terraform/components/
+!.config/terraform/components/*.tfvars.example
 
 # =============================================================================
 # Docs

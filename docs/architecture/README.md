@@ -9,15 +9,16 @@ under `docs/resources/`.
 | File | What it covers |
 | --- | --- |
 | [01-repository-layout.md](./01-repository-layout.md) | Top-level directories, what belongs where, and how major areas relate. |
-| [02-terraform-layout.md](./02-terraform-layout.md) | `terraform/` domains, the **`app` / `config` / `database`** slice pattern, and helper modules. |
-| [03-kubernetes-layout.md](./03-kubernetes-layout.md) | `kubernetes/` folders, manifest patterns (plain YAML, Helm values, Kustomize), and link to `applications/`. |
-| [04-argocd-gitops.md](./04-argocd-gitops.md) | Argo CD: bootstrap, `argocd-management`, AppProject vs Application, sync waves, ApplicationSet add-ons, Terraform’s role. |
-| [05-democratic-csi-truenas-iscsi.md](./05-democratic-csi-truenas-iscsi.md) | TrueNAS-backed **block** storage: democratic-csi iSCSI driver, ZFS zvols, StorageClass, snapshots, contrast with NFS CSI. |
+| [terraform/](./terraform/README.md) | **`terraform/`** layout: [index](./terraform/README.md), [Swarm placement](./terraform/swarm-placement.md), [Swarm slices](./terraform/swarm-slices.md). |
+| [kubernetes/](./kubernetes/README.md) | **`kubernetes/`** layout: [index](./kubernetes/README.md), [placement](./kubernetes/placement.md), [manifest patterns](./kubernetes/manifest-patterns.md). |
+| [argocd/](./argocd/README.md) | **Argo CD / GitOps**: [layout](./argocd/gitops-layout.md), [applications & sync waves](./argocd/applications-and-sync-waves.md), [TrueNAS iSCSI storage](./argocd/storage-truenas-iscsi.md). |
 
 ## Related material
 
-- Terraform conventions (including slice file layout) are spelled out for the
-  Code specialist in
+- Terraform layout and Swarm guides: [`terraform/`](./terraform/README.md).
+- Kubernetes layout and placement: [`kubernetes/`](./kubernetes/README.md).
+- Argo CD GitOps and TrueNAS storage: [`argocd/`](./argocd/README.md).
+- Terraform HCL conventions for the Code specialist:
   [`docs/subagents/code/12-terraform.md`](../subagents/code/12-terraform.md).
-  The architecture notes stay high-level; that file is the detailed checklist
-  when editing HCL.
+  Architecture notes stay high-level; that file is the detailed checklist when
+  editing HCL.

@@ -76,19 +76,19 @@ assert_tfvars_path "swarm nginx_proxy_manager config" \
   "" \
   "${TFVARS_HOME_DIR}/terraform/swarm/nginx_proxy_manager/config.tfvars"
 
-assert_tfvars_path "cluster app" \
+assert_tfvars_path "talos app" \
   "${ROOT_DIR}" \
-  "${ROOT_DIR}/terraform/cluster/talos/app" \
+  "${ROOT_DIR}/terraform/swarm/talos/app" \
   "talos" \
   "" \
-  "${TFVARS_HOME_DIR}/terraform/cluster/talos/app.tfvars"
+  "${TFVARS_HOME_DIR}/terraform/swarm/talos/app.tfvars"
 
-assert_tfvars_path "remote config" \
+assert_tfvars_path "cloudflare config" \
   "${ROOT_DIR}" \
-  "${ROOT_DIR}/terraform/remote/cloudflare/config" \
+  "${ROOT_DIR}/terraform/swarm/cloudflare/config" \
   "cloudflare" \
   "" \
-  "${TFVARS_HOME_DIR}/terraform/remote/cloudflare/config.tfvars"
+  "${TFVARS_HOME_DIR}/terraform/swarm/cloudflare/config.tfvars"
 
 assert_tfvars_path "explicit override" \
   "${ROOT_DIR}" \
@@ -165,7 +165,7 @@ while IFS= read -r pipeline_script; do
     echo "[FAIL] ${label}: suspicious double slash: ${tfvars}" >&2
     failures=$((failures + 1))
   fi
-done < <(grep -rlE 'source .*swarm_pipeline\.sh' "${ROOT_DIR}/pipelines/terraform" --include='*.sh' | sort)
+done < <(grep -rlE 'source .*swarm_pipeline\.sh' "${ROOT_DIR}/terraform/swarm" "${ROOT_DIR}/terraform/runners" --include='*.sh' 2>/dev/null | sort)
 
 if [[ "${failures}" -gt 0 ]]; then
   echo "[ERR] ${failures} failure(s) in ${checks} check(s)" >&2

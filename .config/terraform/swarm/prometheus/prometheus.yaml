@@ -1,0 +1,295 @@
+global:
+  scrape_interval: 10s
+  evaluation_interval: 10s
+
+remote_write:
+  - url: http://victoriametrics:8428/api/v1/write
+
+scrape_configs:
+  - job_name: node_exporter
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['192.168.1.120:9100']
+        labels:
+          platform: docker
+          node_domain: swarm
+          hostname: swarm-cp-0.local
+      - targets: ['192.168.1.121:9100']
+        labels:
+          platform: docker
+          node_domain: swarm
+          hostname: swarm-wk-0.local
+      - targets: ['192.168.1.122:9100']
+        labels:
+          platform: docker
+          node_domain: swarm
+          hostname: swarm-wk-1.local
+      - targets: ['192.168.1.123:9100']
+        labels:
+          platform: docker
+          node_domain: swarm
+          hostname: swarm-wk-2.local
+      - targets: ['192.168.1.124:9100']
+        labels:
+          platform: docker
+          node_domain: swarm
+          hostname: swarm-wk-3.local
+      - targets: ['192.168.1.125:9100']
+        labels:
+          platform: docker
+          node_domain: swarm
+          hostname: swarm-wk-4.local
+      - targets: ['192.168.1.36:9100']
+        labels:
+          platform: machine
+          node_domain: machine
+          hostname: nodadyoushutup-host.local
+      - targets: ['192.168.1.201:9100']
+        labels:
+          platform: kubernetes
+          node_domain: cluster
+          hostname: k8s-cp-0
+      - targets: ['192.168.1.202:9100']
+        labels:
+          platform: kubernetes
+          node_domain: cluster
+          hostname: k8s-wk-0
+      - targets: ['192.168.1.203:9100']
+        labels:
+          platform: kubernetes
+          node_domain: cluster
+          hostname: k8s-wk-1
+      - targets: ['192.168.1.204:9100']
+        labels:
+          platform: kubernetes
+          node_domain: cluster
+          hostname: k8s-wk-2
+      - targets: ['192.168.1.205:9100']
+        labels:
+          platform: kubernetes
+          node_domain: cluster
+          hostname: k8s-wk-3
+      - targets: ['192.168.1.206:9100']
+        labels:
+          platform: kubernetes
+          node_domain: cluster
+          hostname: k8s-wk-4
+      - targets: ['192.168.1.207:9100']
+        labels:
+          platform: kubernetes
+          node_domain: cluster
+          hostname: k8s-wk-5
+      - targets: ['192.168.1.208:9100']
+        labels:
+          platform: kubernetes
+          node_domain: cluster
+          hostname: k8s-wk-6
+      - targets: ['192.168.1.209:9100']
+        labels:
+          platform: kubernetes
+          node_domain: cluster
+          hostname: k8s-wk-7
+      - targets: ['192.168.1.210:9100']
+        labels:
+          platform: kubernetes
+          node_domain: cluster
+          hostname: k8s-wk-8
+      - targets: ['192.168.1.211:9100']
+        labels:
+          platform: kubernetes
+          node_domain: cluster
+          hostname: k8s-wk-9
+      - targets: ['192.168.1.212:9100']
+        labels:
+          platform: kubernetes
+          node_domain: cluster
+          hostname: k8s-wk-10
+
+  - job_name: cadvisor
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['192.168.1.120:8080']
+        labels:
+          platform: docker
+          node_domain: swarm
+          hostname: swarm-cp-0.local
+      - targets: ['192.168.1.121:8080']
+        labels:
+          platform: docker
+          node_domain: swarm
+          hostname: swarm-wk-0.local
+      - targets: ['192.168.1.122:8080']
+        labels:
+          platform: docker
+          node_domain: swarm
+          hostname: swarm-wk-1.local
+      - targets: ['192.168.1.123:8080']
+        labels:
+          platform: docker
+          node_domain: swarm
+          hostname: swarm-wk-2.local
+      - targets: ['192.168.1.124:8080']
+        labels:
+          platform: docker
+          node_domain: swarm
+          hostname: swarm-wk-3.local
+      - targets: ['192.168.1.125:8080']
+        labels:
+          platform: docker
+          node_domain: swarm
+          hostname: swarm-wk-4.local
+
+
+  # Velero metrics: NodePort on k8s nodes (ClusterIP is not reachable from Swarm).
+  - job_name: velero
+    metrics_path: /metrics
+    scheme: http
+    static_configs:
+      - targets: ['192.168.1.201:30085']
+        labels:
+          platform: kubernetes
+          node_domain: cluster
+          hostname: k8s-cp-0
+          component: velero
+
+  # qBittorrent exporters on swarm-wk-0 (host publish 192.168.1.121; ports = exporter_port_base + sorted instance index).
+  - job_name: qbittorrent_exporter
+    metrics_path: /metrics
+    scrape_interval: 120s
+    scrape_timeout: 90s
+    static_configs:
+      - targets: ['192.168.1.121:18300']
+        labels:
+          platform: docker
+          node_domain: swarm
+          hostname: swarm-wk-0.local
+          component: qbittorrent-exporter
+          qbittorrent_instance: movie-0
+          qbittorrent_type: movie
+      - targets: ['192.168.1.121:18301']
+        labels:
+          platform: docker
+          node_domain: swarm
+          hostname: swarm-wk-0.local
+          component: qbittorrent-exporter
+          qbittorrent_instance: movie-1
+          qbittorrent_type: movie
+      - targets: ['192.168.1.121:18302']
+        labels:
+          platform: docker
+          node_domain: swarm
+          hostname: swarm-wk-0.local
+          component: qbittorrent-exporter
+          qbittorrent_instance: movie-10
+          qbittorrent_type: movie
+      - targets: ['192.168.1.121:18303']
+        labels:
+          platform: docker
+          node_domain: swarm
+          hostname: swarm-wk-0.local
+          component: qbittorrent-exporter
+          qbittorrent_instance: movie-2
+          qbittorrent_type: movie
+      - targets: ['192.168.1.121:18304']
+        labels:
+          platform: docker
+          node_domain: swarm
+          hostname: swarm-wk-0.local
+          component: qbittorrent-exporter
+          qbittorrent_instance: movie-3
+          qbittorrent_type: movie
+      - targets: ['192.168.1.121:18305']
+        labels:
+          platform: docker
+          node_domain: swarm
+          hostname: swarm-wk-0.local
+          component: qbittorrent-exporter
+          qbittorrent_instance: movie-4
+          qbittorrent_type: movie
+      - targets: ['192.168.1.121:18306']
+        labels:
+          platform: docker
+          node_domain: swarm
+          hostname: swarm-wk-0.local
+          component: qbittorrent-exporter
+          qbittorrent_instance: movie-5
+          qbittorrent_type: movie
+      - targets: ['192.168.1.121:18307']
+        labels:
+          platform: docker
+          node_domain: swarm
+          hostname: swarm-wk-0.local
+          component: qbittorrent-exporter
+          qbittorrent_instance: movie-6
+          qbittorrent_type: movie
+      - targets: ['192.168.1.121:18308']
+        labels:
+          platform: docker
+          node_domain: swarm
+          hostname: swarm-wk-0.local
+          component: qbittorrent-exporter
+          qbittorrent_instance: movie-7
+          qbittorrent_type: movie
+      - targets: ['192.168.1.121:18309']
+        labels:
+          platform: docker
+          node_domain: swarm
+          hostname: swarm-wk-0.local
+          component: qbittorrent-exporter
+          qbittorrent_instance: movie-8
+          qbittorrent_type: movie
+      - targets: ['192.168.1.121:18310']
+        labels:
+          platform: docker
+          node_domain: swarm
+          hostname: swarm-wk-0.local
+          component: qbittorrent-exporter
+          qbittorrent_instance: movie-9
+          qbittorrent_type: movie
+      - targets: ['192.168.1.121:18311']
+        labels:
+          platform: docker
+          node_domain: swarm
+          hostname: swarm-wk-0.local
+          component: qbittorrent-exporter
+          qbittorrent_instance: television-0
+          qbittorrent_type: television
+      - targets: ['192.168.1.121:18312']
+        labels:
+          platform: docker
+          node_domain: swarm
+          hostname: swarm-wk-0.local
+          component: qbittorrent-exporter
+          qbittorrent_instance: television-1
+          qbittorrent_type: television
+      - targets: ['192.168.1.121:18313']
+        labels:
+          platform: docker
+          node_domain: swarm
+          hostname: swarm-wk-0.local
+          component: qbittorrent-exporter
+          qbittorrent_instance: television-2
+          qbittorrent_type: television
+
+  # Proxmox VE via prometheus-pve-exporter on swarm-wk-0 (host publish 192.168.1.121:9221).
+  - job_name: pve
+    metrics_path: /pve
+    scrape_interval: 30s
+    scrape_timeout: 25s
+    static_configs:
+      - targets: ['192.168.1.10']
+        labels:
+          platform: proxmox
+          node_domain: hypervisor
+          hostname: pve
+    params:
+      module: [default]
+      cluster: ['1']
+      node: ['1']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: 192.168.1.121:9221

@@ -1,0 +1,66 @@
+jenkins:
+  systemMessage: "Managed by JCasC from /mnt/eapp/code/homelab/.config/terraform/swarm/jenkins-controller/jenkins.yaml"
+  numExecutors: 0
+  mode: EXCLUSIVE
+  slaveAgentPort: 50000
+  disableRememberMe: true
+  crumbIssuer:
+    standard: {}
+  securityRealm:
+    local:
+      allowsSignup: false
+      enableCaptcha: false
+      users:
+        - id: "${JENKINS_ADMIN_USERNAME}"
+          name: "Jenkins Admin"
+          password: "${JENKINS_ADMIN_PASSWORD}"
+  authorizationStrategy:
+    globalMatrix:
+      entries:
+        - user:
+            name: "${JENKINS_ADMIN_USERNAME}"
+            permissions:
+              - "Overall/Administer"
+  nodes:
+    - permanent:
+        name: "jenkins-agent-arm64-0"
+        nodeDescription: "swarm-wk-1"
+        remoteFS: "/home/jenkins"
+        numExecutors: 4
+        labelString: "jenkins-agent-arm64-0 swarm arm64"
+        mode: EXCLUSIVE
+    - permanent:
+        name: "jenkins-agent-arm64-1"
+        nodeDescription: "swarm-wk-1"
+        remoteFS: "/home/jenkins"
+        numExecutors: 4
+        labelString: "jenkins-agent-arm64-1 swarm arm64"
+        mode: EXCLUSIVE
+    - permanent:
+        name: "jenkins-agent-amd64-0"
+        nodeDescription: "runner-amd64"
+        remoteFS: "/home/jenkins"
+        numExecutors: 4
+        labelString: "jenkins-agent-amd64-0 swarm amd64 build kvm"
+        mode: EXCLUSIVE
+    - permanent:
+        name: "jenkins-agent-amd64-1"
+        nodeDescription: "runner-amd64"
+        remoteFS: "/home/jenkins"
+        numExecutors: 4
+        labelString: "jenkins-agent-amd64-1 swarm amd64 build kvm"
+        mode: EXCLUSIVE
+
+unclassified:
+  location:
+    url: "https://jenkins.nodadyoushutup.com/"
+    adminAddress: "jenkins@nodadyoushutup.com"
+
+appearance:
+  themeManager:
+    disableUserThemes: true
+    theme: "dark"
+
+security:
+  contentSecurityPolicy:
+    enforce: true

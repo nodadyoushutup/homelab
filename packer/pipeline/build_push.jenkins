@@ -1,0 +1,57 @@
+pipeline {
+  agent none
+
+  options {
+    ansiColor('xterm')
+    buildDiscarder(logRotator(numToKeepStr: '20'))
+    disableConcurrentBuilds(abortPrevious: true)
+    timestamps()
+  }
+
+  parameters {
+    string(name: 'AGENT_LABEL', defaultValue: 'swarm && amd64 && kvm', description: 'Jenkins agent label to run this pipeline on')
+    string(name: 'VERSION', defaultValue: '', description: 'Image version to build, for example 0.0.3')
+    choice(name: 'TARGET', choices: ['cloud-image-repository'], description: 'Publish target')
+    choice(name: 'AMD64_ACCELERATOR', choices: ['kvm', 'tcg', 'none'], description: 'AMD64 QEMU accelerator')
+    choice(name: 'ARM64_ACCELERATOR', choices: ['kvm', 'tcg', 'none'], description: 'ARM64 QEMU accelerator')
+    choice(name: 'BUILD_ARCH', choices: ['amd64', 'arm64', 'both'], description: 'Architecture to build')
+  }
+
+  stages {
+    stage('Validate Input') {
+      agent { label "${params.AGENT_LABEL}" }
+      steps {
+        script {
+          if (!params.VERSION?.trim()) {
+            error('VERSION is required')
+          }
+        }
+      }
+    }
+
+    stage('Run Packer Pipeline') {
+      agent { label "${params.AGENT_LABEL}" }
+      steps {
+        sh(
+          label: 'packer build/push',
+          script: """#!/usr/bin/env bash
+set -euo pipefail
+
+./packer/pipeline/build_push.sh \\
+  --version '${params.VERSION}' \\
+  --target '${params.TARGET}' \\
+  --amd64_accelerator '${params.AMD64_ACCELERATOR}' \\
+  --arm64_accelerator '${params.ARM64_ACCELERATOR}' \\
+  --build_arch '${params.BUILD_ARCH}'
+"""
+        )
+      }
+    }
+  }
+
+  post {
+    always {
+      cleanWs(deleteDirs: true, notFailBuild: true)
+    }
+  }
+}

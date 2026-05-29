@@ -16,6 +16,6 @@ APP_NAME="jenkins"
 SERVICE_REGEX='^jenkins-(controller|agent-amd64|agent-arm64)($|-)'
 NETWORK_REGEX='^jenkins$'
 VOLUME_REGEX='^(jenkins-controller-(home|config)|jenkins-agent-(amd64|arm64)-(config|home($|-).*))$'
-IMAGE_REGEX="(^harbor.nodadyoushutup.com/homelab/jenkins-controller:|^harbor.nodadyoushutup.com/homelab/jenkins-agent:)"
+IMAGE_REGEX="(^zot.nodadyoushutup.com/jenkins-controller:|^zot.nodadyoushutup.com/jenkins-agent:|^ghcr.io/nodadyoushutup/jenkins-controller:|^ghcr.io/nodadyoushutup/jenkins-agent:)"
 
 purge_main "$@"

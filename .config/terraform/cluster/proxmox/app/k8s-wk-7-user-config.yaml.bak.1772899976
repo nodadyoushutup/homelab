@@ -1,0 +1,2 @@
+#cloud-config
+hostname: k8s-wk-7

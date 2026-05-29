@@ -11,7 +11,7 @@ Split env files under this directory so Compose can mount only what each service
 4. `rag.env` — RAG engine, hooks, Chroma/embed (`RAG_*`, `RAG_ENGINE_*`)
 5. `mcp.env` — MCP HTTP URLs and auth (`HOMELAB_MCP_*`, `MCP_RAG_*`, mounts)
 6. `langgraph.env` — LangGraph runtime (models, tracing, workflow gates)
-7. `agents.env` — Host scripts / Harbor / optional remote agent endpoints
+7. `agents.env` — Host scripts / optional remote agent endpoints
 8. `argocd.env` — `scripts/install/argocd.sh`
 9. `minio.env` — `docker/docker-compose.minio.yaml`, Velero installer
 10. `qbittorrent.env` — `docker/docker-compose.yaml` exporter dev
@@ -51,4 +51,4 @@ docker compose -f docker/docker-compose.langgraph.yml \
 | `rag-engine` | `…/.config/docker/rag.env` (include `OPENAI_API_KEY` here for Swarm) |
 | `mcp-rag` | `…/.config/docker/mcp.env` |
 
-Pipelines still load the full split set via `load_root_env.sh` for keys such as `CONFIG_DIR` and Harbor.
+Pipelines still load the full split set via `load_root_env.sh` for keys such as `CONFIG_DIR`.

@@ -2,8 +2,8 @@ resource "terraform_data" "node_exporter_file_hash" {
   triggers_replace = local.node_exporter_file_hash
 }
 
-resource "terraform_data" "docker_file_hash" {
-  triggers_replace = local.docker_file_hash
+resource "terraform_data" "cadvisor_file_hash" {
+  triggers_replace = local.cadvisor_file_hash
 }
 
 resource "terraform_data" "truenas_file_hash" {
@@ -30,6 +30,10 @@ resource "terraform_data" "proxmox_file_hash" {
   triggers_replace = local.proxmox_file_hash
 }
 
+resource "terraform_data" "proxmox_graphite_overview_file_hash" {
+  triggers_replace = local.proxmox_graphite_overview_file_hash
+}
+
 resource "grafana_data_source" "this" {
   for_each = { for ds in var.datasources : ds.uid => ds }
 
@@ -46,12 +50,12 @@ resource "grafana_folder" "proxmox" {
   uid   = "proxmox-folder"
 }
 
-resource "grafana_dashboard" "docker" {
+resource "grafana_dashboard" "cadvisor" {
   overwrite   = true
-  config_json = local.docker_content
+  config_json = local.cadvisor_content
 
   lifecycle {
-    replace_triggered_by = [terraform_data.docker_file_hash]
+    replace_triggered_by = [terraform_data.cadvisor_file_hash]
   }
 }
 
@@ -117,5 +121,15 @@ resource "grafana_dashboard" "proxmox" {
 
   lifecycle {
     replace_triggered_by = [terraform_data.proxmox_file_hash]
+  }
+}
+
+resource "grafana_dashboard" "proxmox_graphite_overview" {
+  folder      = grafana_folder.proxmox.id
+  overwrite   = true
+  config_json = local.proxmox_graphite_overview_content
+
+  lifecycle {
+    replace_triggered_by = [terraform_data.proxmox_graphite_overview_file_hash]
   }
 }
