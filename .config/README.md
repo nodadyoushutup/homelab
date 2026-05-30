@@ -14,16 +14,16 @@ Every Terraform tfvars file, shared component tfvars, `minio.backend.hcl`, and l
 
 | File | Tag id |
 | --- | --- |
-| `terraform/swarm/grafana/app.tfvars` | `terraform/swarm/grafana/app` |
-| `terraform/cluster/proxmox/app.tfvars` | `terraform/cluster/proxmox/app` |
-| `terraform/cluster/argocd/config.tfvars` | `terraform/cluster/argocd/config` |
-| `terraform/remote/cloudflare/config.tfvars` | `terraform/remote/cloudflare/config` |
-| `terraform/network/fortigate/config.tfvars` | `terraform/network/fortigate/config` |
-| `.config/terraform/components/swarm/swarm.tfvars` | `terraform/components/swarm/swarm` |
-| `.config/terraform/components/swarm/dns.tfvars` | `terraform/components/swarm/dns` |
-| `.config/terraform/components/swarm/nfs.tfvars` | `terraform/components/swarm/nfs` |
-| `.config/terraform/components/runners/amd64.tfvars` | `terraform/components/runners/amd64` |
-| `.config/terraform/components/runners/arm64.tfvars` | `terraform/components/runners/arm64` |
+| `terraform/components/swarm/grafana/app.tfvars` | `terraform/components/swarm/grafana/app` |
+| `terraform/components/cluster/proxmox/app.tfvars` | `terraform/components/cluster/proxmox/app` |
+| `terraform/components/cluster/argocd/config.tfvars` | `terraform/components/cluster/argocd/config` |
+| `terraform/components/remote/cloudflare/config.tfvars` | `terraform/components/remote/cloudflare/config` |
+| `terraform/components/network/fortigate/config.tfvars` | `terraform/components/network/fortigate/config` |
+| `terraform/components/swarm/swarm.tfvars` | `terraform/components/swarm/swarm` |
+| `terraform/components/swarm/dns.tfvars` | `terraform/components/swarm/dns` |
+| `terraform/components/swarm/nfs.tfvars` | `terraform/components/swarm/nfs` |
+| `terraform/components/runners/amd64.tfvars` | `terraform/components/runners/amd64` |
+| `terraform/components/runners/arm64.tfvars` | `terraform/components/runners/arm64` |
 | `minio.backend.hcl` | `minio.backend` |
 | `docker/langgraph.env` | `docker/langgraph` |
 | `scripts/rag.env` | `scripts/rag` |
@@ -37,14 +37,14 @@ python3 scripts/config/stamp_homelab_config_ids.py --config-dir .config
 python3 scripts/config/stamp_homelab_config_ids.py --config-dir .config --check
 ```
 
-Canonical mirrored paths (for example `terraform/swarm/<svc>/app.tfvars`) remain the fallback when no tagged file exists.
+Canonical mirrored paths (for example `terraform/components/swarm/<svc>/app.tfvars`) remain the fallback when no tagged file exists.
 
 ## Layout (typical)
 
 - `docker/` — split `*.env` for Compose, LangGraph, and host scripts (see `docker/README.md` and `docker/*.env.example`)
 - `scripts/` — host-only script dotenv (see `scripts/rag.env.example` for `scripts/rag/backfill.sh`); RAG backfill script lives under **`scripts/rag/`**
 - `minio.backend.hcl` — shared remote state backend config for Swarm/remote Terraform stages
-- `terraform/` — merged tfvars, per-stack `app.tfvars` / `config.tfvars`, shared components under **`terraform/components/{swarm,cluster,runners,remote}/`**, secrets slices where used. Copy from **`terraform/components/**/*.tfvars.example`** into matching paths under **`.config/terraform/components/`**.
+- `terraform/` — merged tfvars, per-stack `app.tfvars` / `config.tfvars`, shared components under **`terraform/components/{swarm,runners}/`**, secrets slices where used. Copy from **`terraform/components/**/*.tfvars.example`** into matching paths under **`.config/terraform/components/`**.
 - `kubernetes/` — optional cluster tfvars if your site keeps them here
 - `.ssh/` — keys and `known_hosts` for optional SSH workflows
 

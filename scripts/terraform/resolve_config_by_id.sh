@@ -5,7 +5,7 @@
 #   # homelab-config: <config-id>
 #
 # <config-id> mirrors repo layout, relative to CONFIG_DIR (no leading slash):
-#   terraform/swarm/grafana/app
+#   terraform/components/swarm/grafana/app
 #   terraform/components/swarm/dns
 #   kubernetes/langgraph/app
 #   minio.backend

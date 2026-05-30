@@ -49,7 +49,7 @@ Before bumping:
 2. Derive the **current** published version from the **source of truth** you are
    updating—commonly:
    - **GHCR / GitHub Packages** tags for `ghcr.io/<owner>/<image_name>`,
-   - **Terraform Swarm** `container_spec.image` in **`terraform/swarm/<svc>/<slice>/main.tf`**
+   - **Terraform Swarm** `container_spec.image` in **`terraform/components/swarm/<svc>/<slice>/main.tf`**
      (or the documented tfvars exceptions: `controller_image`, `image_reference`,
      runner `image` / `agent_image`),
    - **Kubernetes** `image:` pins in manifests or Helm values,
@@ -109,7 +109,7 @@ Pick the path that matches where the service runs:
 
 | Where it runs | Typical repo touchpoints | How to roll forward |
 | --- | --- | --- |
-| **Docker Swarm** (Terraform-managed) | `terraform/swarm/<svc>/<slice>/main.tf` for image pins; slice tfvars under your config path for `env` / `placement` | Bump **`container_spec.image`** in **`main.tf`** (see [swarm-slices.md](../architecture/terraform/swarm-slices.md)), **`terraform apply`** (or `terraform/swarm/<svc>/pipeline/*.sh`). Exceptions: `jenkins-controller` (`controller_image`), `prometheus-pve-exporter` (`image_reference`), and `terraform/runners/*` (`image` / `agent_image` in tfvars). If the app exposes a **new public hostname**, also update Cloudflare and Nginx Proxy Manager tfvars—see [edge-dns-and-nginx-proxy.md](edge-dns-and-nginx-proxy.md). |
+| **Docker Swarm** (Terraform-managed) | `terraform/components/swarm/<svc>/<slice>/main.tf` for image pins; slice tfvars under your config path for `env` / `placement` | Bump **`container_spec.image`** in **`main.tf`** (see [swarm-slices.md](../architecture/terraform/swarm-slices.md)), **`terraform apply`** (or `terraform/components/swarm/<svc>/pipeline/*.sh`). Exceptions: `jenkins-controller` (`controller_image`), `prometheus-pve-exporter` (`image_reference`), and `terraform/components/runners/*` (`image` / `agent_image` in tfvars). If the app exposes a **new public hostname**, also update Cloudflare and Nginx Proxy Manager tfvars—see [edge-dns-and-nginx-proxy.md](edge-dns-and-nginx-proxy.md). |
 | **Kubernetes (Argo CD)** | `kubernetes/**`, `kubernetes/argocd-management/**` | Edit the manifest or Helm values that set **`image`**, **commit**, **push**, then **sync** the Argo CD application (CLI, UI, or **Argo CD MCP** when configured). Wait for sync healthy / rollout complete. For a **new `Ingress` host**, align **Cloudflare** (or DNS) with the ingress/LB target—see [edge-dns-and-nginx-proxy.md](edge-dns-and-nginx-proxy.md); Nginx Proxy Manager applies only when you front the name through the Swarm edge. |
 | **Kubernetes (non-GitOps manual)** | manifests in repo or cluster-only | Apply or rollout per your process; still verify pods and probes. |
 

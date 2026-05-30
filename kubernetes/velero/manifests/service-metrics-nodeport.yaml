@@ -1,5 +1,5 @@
 # Expose Velero Prometheus metrics to Swarm Prometheus (ClusterIP is not routable off-cluster).
-# Scrape target: .config/terraform/swarm/prometheus/prometheus.yaml job velero
+# Scrape target: .config/terraform/components/swarm/prometheus/prometheus.yaml job velero
 apiVersion: v1
 kind: Service
 metadata:

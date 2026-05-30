@@ -1,6 +1,6 @@
 # Swarm Terraform slices
 
-Swarm stacks under `terraform/swarm/<service>/` use the **`app` / `config` /
+Swarm stacks under `terraform/components/swarm/<service>/` use the **`app` / `config` /
 `database`** slice pattern. Read
 [swarm-placement.md](./swarm-placement.md) first when adding a service —
 **classify the workload and pick a node** before choosing slices.
@@ -15,9 +15,9 @@ Each slice is a **separate Terraform root** with its **own remote state**
 
 | Slice | Purpose | Example |
 | --- | --- | --- |
-| **`app/`** | Runtime infrastructure: overlay networks, `docker_service`, published ports, volumes, secrets wiring. | `terraform/swarm/zot/app/` |
-| **`config/`** | Post-deploy configuration via a provider against a **running** system (NPM hosts, Grafana folders, Vault policies). | `terraform/swarm/nginx_proxy_manager/config/` |
-| **`database/`** | Dedicated data-plane Swarm service (Postgres, MariaDB, MongoDB) with its own lifecycle and state. | `terraform/swarm/grafana/database/` |
+| **`app/`** | Runtime infrastructure: overlay networks, `docker_service`, published ports, volumes, secrets wiring. | `terraform/components/swarm/zot/app/` |
+| **`config/`** | Post-deploy configuration via a provider against a **running** system (NPM hosts, Grafana folders, Vault policies). | `terraform/components/swarm/nginx_proxy_manager/config/` |
+| **`database/`** | Dedicated data-plane Swarm service (Postgres, MariaDB, MongoDB) with its own lifecycle and state. | `terraform/components/swarm/grafana/database/` |
 
 **Apply order:** **`database/`** (when the app depends on it) → **`app/`** →
 **`config/`**. Some stacks are **`app/`** only — apply once dependencies exist.
@@ -64,7 +64,7 @@ endpoints — not image tags. Rollout discipline:
 
 - `jenkins-controller` — `controller_image`
 - `prometheus-pve-exporter` — `image_reference`
-- `terraform/runners/*` — `image` or `agent_image` on `docker_container`
+- `terraform/components/runners/*` — `image` or `agent_image` on `docker_container`
 
 ### What belongs where
 
@@ -80,11 +80,11 @@ endpoints — not image tags. Rollout discipline:
 
 Live tfvars mirror the repo under **`CONFIG_DIR`**:
 
-- `terraform/swarm/grafana/app/` → `.config/terraform/swarm/grafana/app.tfvars`
+- `terraform/components/swarm/grafana/app/` → `.config/terraform/components/swarm/grafana/app.tfvars`
 - Same for `config.tfvars`, `database.tfvars` siblings.
 
 Each file starts with **`# homelab-config: <id>`** matching the mirrored path
-without suffix (for example `terraform/swarm/grafana/app`). Resolve by tag via
+without suffix (for example `terraform/components/swarm/grafana/app`). Resolve by tag via
 `scripts/terraform/resolve_config_by_id.sh`. Stamp with
 `scripts/config/stamp_homelab_config_ids.py` (see `.config/README.md`).
 
@@ -101,39 +101,39 @@ Copy from **`terraform/components/**/*.tfvars.example`** into **`.config/terrafo
 
 **Vault `config/`** merges `secrets` / `secret_files` from slice tfvars via
 `scripts/terraform/vault_merge_config_secrets.py`. Do not put those blocks in
-checked-in `terraform/swarm/vault/config.tfvars`.
+checked-in `terraform/components/swarm/vault/config.tfvars`.
 
 **Pipelines:**
 
 Each stack keeps **bespoke pipeline entrypoints** next to its Terraform slices
-under **`terraform/swarm/<svc>/pipeline/`** (Swarm services),
-**`terraform/network/<svc>/pipeline/`** (FortiGate),
-**`terraform/remote/<svc>/pipeline/`** (Cloudflare), or
-**`terraform/cluster/<svc>/pipeline/`** (Proxmox, Argo CD):
+under **`terraform/components/swarm/<svc>/pipeline/`** (Swarm services),
+**`terraform/components/network/<svc>/pipeline/`** (FortiGate),
+**`terraform/components/remote/<svc>/pipeline/`** (Cloudflare), or
+**`terraform/components/cluster/<svc>/pipeline/`** (Proxmox, Argo CD):
 
 | File | Runs slice |
 | --- | --- |
-| `app.sh` | `terraform/swarm/<svc>/app/` |
-| `config.sh` | `terraform/swarm/<svc>/config/` (when present) |
-| `database.sh` | `terraform/swarm/<svc>/database/` (when present) |
+| `app.sh` | `terraform/components/swarm/<svc>/app/` |
+| `config.sh` | `terraform/components/swarm/<svc>/config/` (when present) |
+| `database.sh` | `terraform/components/swarm/<svc>/database/` (when present) |
 
-- Default Swarm path: `terraform/swarm/<svc>/pipeline/*.sh` via
+- Default Swarm path: `terraform/components/swarm/<svc>/pipeline/*.sh` via
   `scripts/terraform/swarm_pipeline.sh` (merges `swarm.tfvars`, `dns.tfvars`,
   `nfs.tfvars`, slice tfvars).
-- **Cluster** path: `terraform/cluster/<svc>/pipeline/*.sh` via
+- **Cluster** path: `terraform/components/cluster/<svc>/pipeline/*.sh` via
   `scripts/terraform/cluster_pipeline.sh` (slice tfvars only).
-- **Remote** path: `terraform/remote/<svc>/pipeline/*.sh` via
+- **Remote** path: `terraform/components/remote/<svc>/pipeline/*.sh` via
   `scripts/terraform/remote_pipeline.sh` (slice tfvars only).
-- **Network** path: `terraform/network/<svc>/pipeline/*.sh` via
+- **Network** path: `terraform/components/network/<svc>/pipeline/*.sh` via
   `scripts/terraform/network_pipeline.sh` (slice tfvars only).
 - **Bespoke** (no `swarm_pipeline.sh`): `chromadb`, `cadvisor`,
   `cloud-image-repository`, `dozzle`, `node_exporter`, `prometheus`;
   full `nginx_proxy_manager` trio; Grafana `config/` (slice tfvars + backend only).
-- **Runners:** `terraform/runners/<pool>/pipeline/app.sh`.
+- **Runners:** `terraform/components/runners/<pool>/pipeline/app.sh`.
 
 Values are not defaulted in module code — set them only under **`CONFIG_DIR`**.
 Migrate older flat trees with
 `scripts/config/migrate_config_dir_to_repo_layout.py`.
 
-Legacy nested tfvars (`terraform/swarm/<svc>/app/app.tfvars`) may still exist on
+Legacy nested tfvars (`terraform/components/swarm/<svc>/app/app.tfvars`) may still exist on
 disk. **New work** uses sibling `app.tfvars` naming one level up.

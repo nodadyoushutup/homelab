@@ -10,7 +10,7 @@ Downstream clients (**`mcp-rag`**, LangGraph agents, Cursor, Codex, or direct HT
 
 | Piece | Role |
 | --- | --- |
-| **`chromadb` (Swarm)** | Vector database; deployed with **`terraform/swarm/chromadb/app`** as a Swarm service with a named Docker volume (**`chromadb-data`**, fixed in **`main.tf`**, mounted at `/data` in the container). Not defined in the repo’s root Compose file. |
+| **`chromadb` (Swarm)** | Vector database; deployed with **`terraform/components/swarm/chromadb/app`** as a Swarm service with a named Docker volume (**`chromadb-data`**, fixed in **`main.tf`**, mounted at `/data` in the container). Not defined in the repo’s root Compose file. |
 | **`rag-engine`** | HTTP service: ingest jobs, `POST /v1/query`, memory HTTP endpoints. Owns chunking, embedding calls, and writes to Chroma. Code: `applications/rag-engine/`. |
 | **`mcp-rag`** | Thin MCP server: `rag_search` and memory tools forward to `rag-engine` over HTTP. Code: `applications/mcp-rag/`. |
 | **Backfill** | Batch reindex paths under configured prefixes (`RAG_PATHS_ALLOWED`). Operator script: `scripts/rag/backfill.sh`. |

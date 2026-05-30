@@ -40,9 +40,9 @@ For **`swarm-wk-4`**, join + label in one step:
 flowchart TD
   start["Add component XYZ"]
   runtime{"Where does it run?"}
-  swarm["terraform/swarm/"]
+  swarm["terraform/components/swarm/"]
   k8s["kubernetes/ + Argo CD"]
-  runners["terraform/runners/"]
+  runners["terraform/components/runners/"]
   classify{"Swarm workload class?"}
   wk0["swarm-wk-0\n(observability / system mgmt)"]
   wk1["swarm-wk-1\n(CI/CD Swarm services)"]
@@ -84,7 +84,7 @@ container visibility, and similar **operator-facing** observability.
 **global** mode (one task per node). Do **not** pin them to `swarm-wk-0`; they
 already cover every worker.
 
-### CI/CD → `swarm-wk-1` and `terraform/runners/`
+### CI/CD → `swarm-wk-1` and `terraform/components/runners/`
 
 Use **`swarm-wk-1`** for Swarm services that **run or support pipelines**:
 Jenkins controller, build helpers, and anything whose primary job is CI/CD
@@ -94,14 +94,14 @@ orchestration on Swarm.
 `cloud-image-repository`, **`gha-runner-arm64`** (standalone `docker_container`
 resources on the `swarm-wk-1` host — not a `docker service`).
 
-**Runner pools (`terraform/runners/`):** workloads that must be
+**Runner pools (`terraform/components/runners/`):** workloads that must be
 **`docker_container`** on a pool host, not Swarm tasks:
 
 | Pool | Typical host | Stacks |
 | --- | --- | --- |
-| `gha-runner-amd64` | `runner-amd64` (`192.168.1.101`) | `terraform/runners/gha-runner-amd64/app` |
-| `gha-runner-arm64` | `swarm-wk-1` | `terraform/runners/gha-runner-arm64/app` |
-| `jenkins-agent-amd64` / `jenkins-agent-arm64` | pool / any ready host | `terraform/runners/jenkins-agent-*/app` |
+| `gha-runner-amd64` | `runner-amd64` (`192.168.1.101`) | `terraform/components/runners/gha-runner-amd64/app` |
+| `gha-runner-arm64` | `swarm-wk-1` | `terraform/components/runners/gha-runner-arm64/app` |
+| `jenkins-agent-amd64` / `jenkins-agent-arm64` | pool / any ready host | `terraform/components/runners/jenkins-agent-*/app` |
 
 Do **not** look for GHA runners in `docker service ls` on the manager.
 
@@ -163,14 +163,14 @@ Runner pools set the target host via provider tfvars
 
 1. **Classify** — observability (`wk-0`), CI/CD (`wk-1` / runners), AI (`wk-4`),
    manager edge (`cp-0`), or global.
-2. **Confirm runtime** — Swarm `docker_service` vs `terraform/runners/` vs
+2. **Confirm runtime** — Swarm `docker_service` vs `terraform/components/runners/` vs
    Kubernetes.
-3. **Create** `terraform/swarm/<service>/` (and slices) — naming matches the
+3. **Create** `terraform/components/swarm/<service>/` (and slices) — naming matches the
    operational service name.
-4. **Set `placement`** in `.config/terraform/swarm/<service>/app.tfvars` (and
+4. **Set `placement`** in `.config/terraform/components/swarm/<service>/app.tfvars` (and
    `database.tfvars` when the DB slice should follow the same node).
 5. **Pin image + ports** in slice **`main.tf`**; put `env` and secrets in tfvars.
-6. **Add pipeline** under `terraform/swarm/<service>/pipeline/` (`app.sh`,
+6. **Add pipeline** under `terraform/components/swarm/<service>/pipeline/` (`app.sh`,
    and `config.sh` / `database.sh` when those slices exist) — mirror a neighbor
    in the same class; shared logic stays in `scripts/terraform/swarm_pipeline.sh`.
 7. **Public hostname** — Cloudflare + NPM tfvars if the app is edge-published

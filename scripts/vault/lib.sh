@@ -1,7 +1,7 @@
 # Shared Vault script path resolution. Source after load_root_env.sh.
 #
 # When CONFIG_DIR points at a legacy external tree (e.g. /mnt/eapp/config) that no
-# longer mirrors terraform/swarm/vault, fall back to repo .config and _old/ copies.
+# longer mirrors terraform/components/swarm/vault, fall back to repo .config and _old/ copies.
 
 _vault_lib_warn() {
   echo "[WARN] $*" >&2
@@ -24,13 +24,13 @@ resolve_vault_paths() {
   fi
 
   primary_home="${TFVARS_HOME_DIR:-${CONFIG_DIR:-${root_dir}/.config}}"
-  primary_dir="${VAULT_TFVARS_DIR:-${primary_home}/terraform/swarm/vault}"
+  primary_dir="${VAULT_TFVARS_DIR:-${primary_home}/terraform/components/swarm/vault}"
   canonical_init="${primary_dir}/init.json"
 
   init_candidates=(
     "${canonical_init}"
-    "${root_dir}/.config/terraform/swarm/vault/init.json"
-    "${primary_home}/_old/terraform/swarm/vault/init.json"
+    "${root_dir}/.config/terraform/components/swarm/vault/init.json"
+    "${primary_home}/_old/terraform/components/swarm/vault/init.json"
   )
 
   for candidate in "${init_candidates[@]}"; do

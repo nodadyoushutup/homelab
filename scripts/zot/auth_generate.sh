@@ -7,7 +7,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
-DEFAULT_OUTPUT="${ROOT_DIR}/.config/terraform/swarm/zot/htpasswd"
+DEFAULT_OUTPUT="${ROOT_DIR}/.config/terraform/components/swarm/zot/htpasswd"
 DEFAULT_USERNAME="homelab"
 
 usage() {
@@ -15,7 +15,7 @@ usage() {
 Usage: scripts/zot/auth_generate.sh
 
 Prompts for registry username and password, then writes a bcrypt htpasswd file.
-Default output: .config/terraform/swarm/zot/htpasswd
+Default output: .config/terraform/components/swarm/zot/htpasswd
 
 Username/password must match registry_auths for zot.nodadyoushutup.com in
 .config/terraform/components/swarm/swarm.tfvars and
@@ -114,4 +114,4 @@ printf '%s\n' "${line}" >"${output_path}"
 chmod 644 "${output_path}"
 
 echo "[DONE] Wrote ${output_path} for user ${username}"
-echo "[INFO] Re-run terraform plan/apply (or terraform/swarm/zot/pipeline/app.sh) on a host that sees this file at htpasswd_path."
+echo "[INFO] Re-run terraform plan/apply (or terraform/components/swarm/zot/pipeline/app.sh) on a host that sees this file at htpasswd_path."

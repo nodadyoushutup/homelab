@@ -8,8 +8,8 @@ ROOT_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 source "${ROOT_DIR}/scripts/terraform/load_root_env.sh"
 
 TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${CONFIG_DIR:-${ROOT_DIR}/.config}}"
-PVE_EXPORTER_TFVARS="${TFVARS_HOME_DIR}/terraform/swarm/prometheus-pve-exporter/app.tfvars"
-CLUSTER_PROXMOX_TFVARS="${TFVARS_HOME_DIR}/terraform/cluster/proxmox/app.tfvars"
+PVE_EXPORTER_TFVARS="${TFVARS_HOME_DIR}/terraform/components/swarm/prometheus-pve-exporter/app.tfvars"
+CLUSTER_PROXMOX_TFVARS="${TFVARS_HOME_DIR}/terraform/components/cluster/proxmox/app.tfvars"
 
 PVE_ENDPOINT="${PVE_ENDPOINT:-}"
 PVE_MONITOR_USER="${PVE_MONITOR_USER:-prometheus@pve}"

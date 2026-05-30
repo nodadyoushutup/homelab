@@ -13,7 +13,7 @@ SKIP_TABLES=(
   RootFolders RemotePathMappings
   History DownloadHistory Blocklist PendingReleases
   AlternativeTitles Credits ExtraFiles SubtitleFiles
-  ImportListMovies Collections Commands
+  ImportListMovies ImportLists ImportListStatus Collections Commands
 )
 
 psql_src() {

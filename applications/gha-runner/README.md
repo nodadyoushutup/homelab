@@ -40,8 +40,8 @@ For Terraform deployment, pin the runner image tag in each pool’s `locals.tf` 
 The runner pools are deployed as **standalone `docker_container` resources** on dedicated pool
 hosts (AMD64 and ARM64), each with `/dev/kvm` passed through via the Docker **`devices`**
 block so QEMU/Packer get real device cgroup permissions (unlike Swarm services). In this
-repo, the ARM64 pool is managed from `terraform/runners/gha-runner-arm64/app` and the AMD64
-pool from `terraform/runners/gha-runner-amd64/app`. Pool Docker SSH targets live in
+repo, the ARM64 pool is managed from `terraform/components/runners/gha-runner-arm64/app` and the AMD64
+pool from `terraform/components/runners/gha-runner-amd64/app`. Pool Docker SSH targets live in
 `.config/terraform/components/runners/amd64.tfvars` and `.config/terraform/components/runners/arm64.tfvars`
 (shared per arch with Jenkins agent pools; Swarm stacks use
 `.config/terraform/components/swarm/swarm.tfvars`).
@@ -95,6 +95,6 @@ If `/dev/kvm` is missing on the host, fix the host (BIOS/UEFI virtualization, ne
 ### After changing Terraform or the image
 
 1. Build and push a new **`gha-runner`** image if you changed `Dockerfile` or `scripts/install/*` (multi-arch workflow).
-2. Bump `image` in `terraform/runners/gha-runner-amd64/app/variables.tf` (or override in `.config/terraform/runners/gha-runner-amd64/app.tfvars`) if you need a new tag; same for ARM64.
+2. Bump `image` in `terraform/components/runners/gha-runner-amd64/app/variables.tf` (or override in `.config/terraform/components/runners/gha-runner-amd64/app.tfvars`) if you need a new tag; same for ARM64.
 3. **`terraform apply`** for `gha-runner-amd64` and `gha-runner-arm64`.
 4. Confirm running containers on each pool host, for example `docker ps --filter name=homelab-gha-runner-amd64` (names include a numeric suffix). Validate KVM with `docker exec <container> dd if=/dev/kvm of=/dev/null count=0` when the pool host passes the device through correctly.

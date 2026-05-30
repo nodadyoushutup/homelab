@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Resolve DEFAULT_TFVARS_FILE from homelab-config tag or repo Terraform layout.
 #
-# Tag (first line): # homelab-config: terraform/cluster/proxmox/app
-# Canonical fallback: <CONFIG_DIR>/terraform/cluster/proxmox/app.tfvars
+# Tag (first line): # homelab-config: terraform/components/cluster/proxmox/app
+# Canonical fallback: <CONFIG_DIR>/terraform/components/cluster/proxmox/app.tfvars
 
 _homelab_resolve_default_tfvars_loaded=0
 if [[ "${_homelab_resolve_default_tfvars_loaded}" != "1" ]]; then

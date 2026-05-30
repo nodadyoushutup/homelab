@@ -5,7 +5,7 @@ Tag format:
   # homelab-config: <config-id>
 
 Ids are relative to CONFIG_DIR (no leading slash), derived from each file path:
-  terraform/swarm/grafana/app.tfvars  -> terraform/swarm/grafana/app
+  terraform/components/swarm/grafana/app.tfvars  -> terraform/components/swarm/grafana/app
   minio.backend.hcl                   -> minio.backend
   docker/langgraph.env                -> docker/langgraph
 

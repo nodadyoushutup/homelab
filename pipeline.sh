@@ -57,7 +57,7 @@ prompt_select() {
 discover_network_services() {
   local svc_dir
   local -a services=()
-  for svc_dir in "${ROOT_DIR}"/terraform/network/*/pipeline; do
+  for svc_dir in "${ROOT_DIR}"/terraform/components/network/*/pipeline; do
     [[ -d "${svc_dir}" ]] || continue
     services+=("$(basename "$(dirname "${svc_dir}")")")
   done
@@ -69,7 +69,7 @@ discover_network_services() {
 
 discover_network_slices() {
   local service="$1"
-  local pipeline_dir="${ROOT_DIR}/terraform/network/${service}/pipeline"
+  local pipeline_dir="${ROOT_DIR}/terraform/components/network/${service}/pipeline"
   local script
   local -a slices=()
 
@@ -90,7 +90,7 @@ discover_network_slices() {
 discover_remote_services() {
   local svc_dir
   local -a services=()
-  for svc_dir in "${ROOT_DIR}"/terraform/remote/*/pipeline; do
+  for svc_dir in "${ROOT_DIR}"/terraform/components/remote/*/pipeline; do
     [[ -d "${svc_dir}" ]] || continue
     services+=("$(basename "$(dirname "${svc_dir}")")")
   done
@@ -102,7 +102,7 @@ discover_remote_services() {
 
 discover_remote_slices() {
   local service="$1"
-  local pipeline_dir="${ROOT_DIR}/terraform/remote/${service}/pipeline"
+  local pipeline_dir="${ROOT_DIR}/terraform/components/remote/${service}/pipeline"
   local script
   local -a slices=()
 
@@ -123,7 +123,7 @@ discover_remote_slices() {
 discover_cluster_services() {
   local svc_dir
   local -a services=()
-  for svc_dir in "${ROOT_DIR}"/terraform/cluster/*/pipeline; do
+  for svc_dir in "${ROOT_DIR}"/terraform/components/cluster/*/pipeline; do
     [[ -d "${svc_dir}" ]] || continue
     services+=("$(basename "$(dirname "${svc_dir}")")")
   done
@@ -135,7 +135,7 @@ discover_cluster_services() {
 
 discover_cluster_slices() {
   local service="$1"
-  local pipeline_dir="${ROOT_DIR}/terraform/cluster/${service}/pipeline"
+  local pipeline_dir="${ROOT_DIR}/terraform/components/cluster/${service}/pipeline"
   local script
   local -a slices=()
 
@@ -156,7 +156,7 @@ discover_cluster_slices() {
 discover_swarm_services() {
   local svc_dir
   local -a services=()
-  for svc_dir in "${ROOT_DIR}"/terraform/swarm/*/pipeline; do
+  for svc_dir in "${ROOT_DIR}"/terraform/components/swarm/*/pipeline; do
     [[ -d "${svc_dir}" ]] || continue
     services+=("$(basename "$(dirname "${svc_dir}")")")
   done
@@ -168,7 +168,7 @@ discover_swarm_services() {
 
 discover_swarm_slices() {
   local service="$1"
-  local pipeline_dir="${ROOT_DIR}/terraform/swarm/${service}/pipeline"
+  local pipeline_dir="${ROOT_DIR}/terraform/components/swarm/${service}/pipeline"
   local script
   local -a slices=()
 
@@ -189,7 +189,7 @@ discover_swarm_slices() {
 discover_runner_pools() {
   local pool_dir
   local -a pools=()
-  for pool_dir in "${ROOT_DIR}"/terraform/runners/*/pipeline; do
+  for pool_dir in "${ROOT_DIR}"/terraform/components/runners/*/pipeline; do
     [[ -d "${pool_dir}" ]] || continue
     pools+=("$(basename "$(dirname "${pool_dir}")")")
   done
@@ -201,7 +201,7 @@ discover_runner_pools() {
 
 discover_runner_slices() {
   local pool="$1"
-  local pool_dir="${ROOT_DIR}/terraform/runners/${pool}/pipeline"
+  local pool_dir="${ROOT_DIR}/terraform/components/runners/${pool}/pipeline"
   local script
   local -a slices=()
 
@@ -242,7 +242,7 @@ discover_simple_pipelines() {
 run_network_pipeline() {
   local service="$1"
   local slice="$2"
-  local script="${ROOT_DIR}/terraform/network/${service}/pipeline/${slice}.sh"
+  local script="${ROOT_DIR}/terraform/components/network/${service}/pipeline/${slice}.sh"
   [[ -x "${script}" || -f "${script}" ]] || die "missing pipeline script: ${script}"
   exec bash "${script}" "$@"
 }
@@ -250,7 +250,7 @@ run_network_pipeline() {
 run_remote_pipeline() {
   local service="$1"
   local slice="$2"
-  local script="${ROOT_DIR}/terraform/remote/${service}/pipeline/${slice}.sh"
+  local script="${ROOT_DIR}/terraform/components/remote/${service}/pipeline/${slice}.sh"
   [[ -x "${script}" || -f "${script}" ]] || die "missing pipeline script: ${script}"
   exec bash "${script}" "$@"
 }
@@ -258,7 +258,7 @@ run_remote_pipeline() {
 run_cluster_pipeline() {
   local service="$1"
   local slice="$2"
-  local script="${ROOT_DIR}/terraform/cluster/${service}/pipeline/${slice}.sh"
+  local script="${ROOT_DIR}/terraform/components/cluster/${service}/pipeline/${slice}.sh"
   [[ -x "${script}" || -f "${script}" ]] || die "missing pipeline script: ${script}"
   exec bash "${script}" "$@"
 }
@@ -266,7 +266,7 @@ run_cluster_pipeline() {
 run_swarm_pipeline() {
   local service="$1"
   local slice="$2"
-  local script="${ROOT_DIR}/terraform/swarm/${service}/pipeline/${slice}.sh"
+  local script="${ROOT_DIR}/terraform/components/swarm/${service}/pipeline/${slice}.sh"
   [[ -x "${script}" || -f "${script}" ]] || die "missing pipeline script: ${script}"
   exec bash "${script}" "$@"
 }
@@ -274,7 +274,7 @@ run_swarm_pipeline() {
 run_runner_pipeline() {
   local pool="$1"
   local slice="$2"
-  local script="${ROOT_DIR}/terraform/runners/${pool}/pipeline/${slice}.sh"
+  local script="${ROOT_DIR}/terraform/components/runners/${pool}/pipeline/${slice}.sh"
   [[ -x "${script}" || -f "${script}" ]] || die "missing pipeline script: ${script}"
   exec bash "${script}" "$@"
 }
@@ -329,7 +329,7 @@ main() {
       prompt_select "Select slice for ${service}:" "${slices[@]}"
       slice="${SELECTED}"
 
-      printf '\nRunning terraform/network/%s/pipeline/%s.sh\n\n' "${service}" "${slice}"
+      printf '\nRunning terraform/components/network/%s/pipeline/%s.sh\n\n' "${service}" "${slice}"
       run_network_pipeline "${service}" "${slice}" "$@"
       ;;
     "Remote stacks")
@@ -341,7 +341,7 @@ main() {
       prompt_select "Select slice for ${service}:" "${slices[@]}"
       slice="${SELECTED}"
 
-      printf '\nRunning terraform/remote/%s/pipeline/%s.sh\n\n' "${service}" "${slice}"
+      printf '\nRunning terraform/components/remote/%s/pipeline/%s.sh\n\n' "${service}" "${slice}"
       run_remote_pipeline "${service}" "${slice}" "$@"
       ;;
     "Cluster stacks")
@@ -353,7 +353,7 @@ main() {
       prompt_select "Select slice for ${service}:" "${slices[@]}"
       slice="${SELECTED}"
 
-      printf '\nRunning terraform/cluster/%s/pipeline/%s.sh\n\n' "${service}" "${slice}"
+      printf '\nRunning terraform/components/cluster/%s/pipeline/%s.sh\n\n' "${service}" "${slice}"
       run_cluster_pipeline "${service}" "${slice}" "$@"
       ;;
     "Swarm stacks")
@@ -365,7 +365,7 @@ main() {
       prompt_select "Select slice for ${service}:" "${slices[@]}"
       slice="${SELECTED}"
 
-      printf '\nRunning terraform/swarm/%s/pipeline/%s.sh\n\n' "${service}" "${slice}"
+      printf '\nRunning terraform/components/swarm/%s/pipeline/%s.sh\n\n' "${service}" "${slice}"
       run_swarm_pipeline "${service}" "${slice}" "$@"
       ;;
     "Runner pools")
@@ -377,7 +377,7 @@ main() {
       prompt_select "Select slice for ${service}:" "${slices[@]}"
       slice="${SELECTED}"
 
-      printf '\nRunning terraform/runners/%s/pipeline/%s.sh\n\n' "${service}" "${slice}"
+      printf '\nRunning terraform/components/runners/%s/pipeline/%s.sh\n\n' "${service}" "${slice}"
       run_runner_pipeline "${service}" "${slice}" "$@"
       ;;
     "Application image builds")

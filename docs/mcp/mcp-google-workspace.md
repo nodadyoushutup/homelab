@@ -18,7 +18,7 @@ NPM must forward the **entire hostname** (not only `/mcp`) so OAuth paths reach 
 
 ## Cursor
 
-Project **`.cursor/mcp.json`** registers **`mcp_google_workspace`** at **`https://mcp.google-workspace.nodadyoushutup.com/mcp`** (Streamable HTTP — **`--transport streamable-http`** in **`applications/mcp-google-workspace/entrypoint.sh`**). No client API key — **`GOOGLE_OAUTH_*`** and **`WORKSPACE_EXTERNAL_URL`** live in Swarm **`env`** on **`.config/terraform/swarm/mcp-google-workspace/app.tfvars`**. After deploy or config edits, **reload MCP** in Cursor Settings if tools stay disconnected.
+Project **`.cursor/mcp.json`** registers **`mcp_google_workspace`** at **`https://mcp.google-workspace.nodadyoushutup.com/mcp`** (Streamable HTTP — **`--transport streamable-http`** in **`applications/mcp-google-workspace/entrypoint.sh`**). No client API key — **`GOOGLE_OAUTH_*`** and **`WORKSPACE_EXTERNAL_URL`** live in Swarm **`env`** on **`.config/terraform/components/swarm/mcp-google-workspace/app.tfvars`**. After deploy or config edits, **reload MCP** in Cursor Settings if tools stay disconnected.
 
 ## LangGraph
 
@@ -26,7 +26,7 @@ Add a server block in the relevant **`mcp.json`** when a graph should call Googl
 
 ## Swarm
 
-- Stack: **`terraform/swarm/mcp-google-workspace/app/`** — all site config in the **`env`** map on **`.config/terraform/swarm/mcp-google-workspace/app.tfvars`** (flat keys such as **`GOOGLE_OAUTH_CLIENT_ID`**, **`GOOGLE_OAUTH_CLIENT_SECRET`**, **`WORKSPACE_EXTERNAL_URL`**, **`GOOGLE_WORKSPACE_MCP_TOOLS`**; no Vault **`secrets`** block or **`env_file_path`**). Keep tokens out of git.
+- Stack: **`terraform/components/swarm/mcp-google-workspace/app/`** — all site config in the **`env`** map on **`.config/terraform/components/swarm/mcp-google-workspace/app.tfvars`** (flat keys such as **`GOOGLE_OAUTH_CLIENT_ID`**, **`GOOGLE_OAUTH_CLIENT_SECRET`**, **`WORKSPACE_EXTERNAL_URL`**, **`GOOGLE_WORKSPACE_MCP_TOOLS`**; no Vault **`secrets`** block or **`env_file_path`**). Keep tokens out of git.
 
 Required keys:
 

@@ -83,13 +83,13 @@ resolve_stage_tfvars() {
   local candidate
   local candidates=()
 
-  rel_service="${stage_dir#${ROOT_DIR}/terraform/swarm/}"
+  rel_service="${stage_dir#${ROOT_DIR}/terraform/components/swarm/}"
   service_dir="${rel_service%/*}"
   stage_name="${rel_service##*/}"
   hyphen_service_dir="${service_dir//_/-}"
 
-  candidates+=("${TFVARS_HOME_DIR}/terraform/swarm/${service_dir}/${stage_name}.tfvars")
-  candidates+=("${TFVARS_HOME_DIR}/terraform/swarm/${service_dir}/${stage_name}/${stage_name}.tfvars")
+  candidates+=("${TFVARS_HOME_DIR}/terraform/components/swarm/${service_dir}/${stage_name}.tfvars")
+  candidates+=("${TFVARS_HOME_DIR}/terraform/components/swarm/${service_dir}/${stage_name}/${stage_name}.tfvars")
   candidates+=("${TFVARS_HOME_DIR}/${service_dir}/${stage_name}.tfvars")
   if [[ "${hyphen_service_dir}" != "${service_dir}" ]]; then
     candidates+=("${TFVARS_HOME_DIR}/${hyphen_service_dir}/${stage_name}.tfvars")
@@ -350,7 +350,7 @@ EOF
 }
 
 mapfile -t stage_dirs < <(
-  find "${ROOT_DIR}/terraform/swarm" -mindepth 3 -maxdepth 3 -type f -name provider.tf -print \
+  find "${ROOT_DIR}/terraform/components/swarm" -mindepth 3 -maxdepth 3 -type f -name provider.tf -print \
     | while read -r provider_file; do
         if grep -q 'source[[:space:]]*=[[:space:]]*"kreuzwerker/docker"' "${provider_file}"; then
           dirname "${provider_file}"

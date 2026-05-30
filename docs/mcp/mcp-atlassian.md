@@ -13,7 +13,7 @@ Publish the service behind HTTPS; clients call the Streamable MCP URL your proxy
 
 ## Cursor
 
-Project **`.cursor/mcp.json`** registers **`mcp_atlassian`** at **`https://mcp.atlassian.nodadyoushutup.com/mcp`**. No client API key — Jira/Confluence credentials live in Swarm **`env`** on **`.config/terraform/swarm/mcp-atlassian/app.tfvars`**. After deploy or config edits, **reload MCP** in Cursor Settings if tools stay disconnected.
+Project **`.cursor/mcp.json`** registers **`mcp_atlassian`** at **`https://mcp.atlassian.nodadyoushutup.com/mcp`**. No client API key — Jira/Confluence credentials live in Swarm **`env`** on **`.config/terraform/components/swarm/mcp-atlassian/app.tfvars`**. After deploy or config edits, **reload MCP** in Cursor Settings if tools stay disconnected.
 
 ## LangGraph
 
@@ -21,7 +21,7 @@ Project **`.cursor/mcp.json`** registers **`mcp_atlassian`** at **`https://mcp.a
 
 ## Secrets and Swarm
 
-- Swarm stack: **`terraform/swarm/mcp-atlassian/app/`** — credentials and site settings in **`env`** on **`.config/terraform/swarm/mcp-atlassian/app.tfvars`** (see **`variables.tf`**). Keep tokens out of git.
+- Swarm stack: **`terraform/components/swarm/mcp-atlassian/app/`** — credentials and site settings in **`env`** on **`.config/terraform/components/swarm/mcp-atlassian/app.tfvars`** (see **`variables.tf`**). Keep tokens out of git.
 
 ## Related
 

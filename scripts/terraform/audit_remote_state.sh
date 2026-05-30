@@ -19,13 +19,13 @@ resolve_stage_tfvars() {
   local candidate
   local candidates=()
 
-  rel_service="${stage_dir#${ROOT_DIR}/terraform/swarm/}"
+  rel_service="${stage_dir#${ROOT_DIR}/terraform/components/swarm/}"
   service_dir="${rel_service%/*}"
   stage_name="${rel_service##*/}"
   hyphen_service_dir="${service_dir//_/-}"
 
-  candidates+=("${TFVARS_HOME_DIR}/terraform/swarm/${service_dir}/${stage_name}.tfvars")
-  candidates+=("${TFVARS_HOME_DIR}/terraform/swarm/${service_dir}/${stage_name}/${stage_name}.tfvars")
+  candidates+=("${TFVARS_HOME_DIR}/terraform/components/swarm/${service_dir}/${stage_name}.tfvars")
+  candidates+=("${TFVARS_HOME_DIR}/terraform/components/swarm/${service_dir}/${stage_name}/${stage_name}.tfvars")
   candidates+=("${TFVARS_HOME_DIR}/${service_dir}/${stage_name}.tfvars")
   if [[ "${hyphen_service_dir}" != "${service_dir}" ]]; then
     candidates+=("${TFVARS_HOME_DIR}/${hyphen_service_dir}/${stage_name}.tfvars")
@@ -178,7 +178,7 @@ PY
   defined_exact=()
   defined_collections=()
   tfvars_file=""
-  if [[ "${rel_stage}" == terraform/swarm/* ]]; then
+  if [[ "${rel_stage}" == terraform/components/swarm/* ]]; then
     tfvars_file="$(resolve_stage_tfvars "${stage_dir}" || true)"
   fi
 

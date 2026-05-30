@@ -22,7 +22,7 @@ kubectl exec -n "${NS}" "deploy/${PG}" -- \
 
 kubectl exec -n "${NS}" "deploy/${PG}" -- \
   psql -U "${DB_USER}" -d "${DB_NAME}" -v ON_ERROR_STOP=1 \
-  -c "DELETE FROM \"DownloadClientStatus\" WHERE \"DownloadClientId\" NOT IN (SELECT \"Id\" FROM \"DownloadClients\"); DELETE FROM \"DownloadClients\" WHERE \"Id\" <> (SELECT MIN(\"Id\") FROM \"DownloadClients\");"
+  -c "DELETE FROM \"DownloadClientStatus\"; DELETE FROM \"DownloadClients\" WHERE \"Id\" <> (SELECT MIN(\"Id\") FROM \"DownloadClients\");"
 
 echo "[radarr-4k] Download clients:"
 kubectl exec -n "${NS}" "deploy/${PG}" -- \

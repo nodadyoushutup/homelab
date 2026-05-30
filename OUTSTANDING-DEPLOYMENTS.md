@@ -2,8 +2,8 @@
 
 Operator snapshot of what is **not yet deployed** on Swarm after the **May 2026
 Swarm recreate** on `swarm-cp-0` (`192.168.1.120`). Live tfvars live under
-[`.config/terraform/swarm/`](.config/terraform/swarm/). Pipelines live under
-[`terraform/swarm/<service>/pipeline/`](terraform/swarm/).
+[`.config/terraform/components/swarm/`](.config/terraform/components/swarm/). Pipelines live under
+[`terraform/components/swarm/<service>/pipeline/`](terraform/components/swarm/).
 
 **Last verified:** 2026-05-23 (Swarm services on `swarm-cp-0`, GHA runner
 containers on pool hosts).
@@ -39,8 +39,8 @@ Swarm recreate:
 
 | Stack | Where | Status |
 | --- | --- | --- |
-| **gha-runner-amd64** (×2) | `runner-amd64` (`192.168.1.101`) — standalone `docker_container` via [`terraform/runners/gha-runner-amd64/pipeline/app.sh`](terraform/runners/gha-runner-amd64/pipeline/app.sh) | Healthy |
-| **gha-runner-arm64** (×2) | `swarm-wk-1` (`192.168.1.122`) — [`terraform/runners/gha-runner-arm64/pipeline/app.sh`](terraform/runners/gha-runner-arm64/pipeline/app.sh) | Healthy |
+| **gha-runner-amd64** (×2) | `runner-amd64` (`192.168.1.101`) — standalone `docker_container` via [`terraform/components/runners/gha-runner-amd64/pipeline/app.sh`](terraform/components/runners/gha-runner-amd64/pipeline/app.sh) | Healthy |
+| **gha-runner-arm64** (×2) | `swarm-wk-1` (`192.168.1.122`) — [`terraform/components/runners/gha-runner-arm64/pipeline/app.sh`](terraform/components/runners/gha-runner-arm64/pipeline/app.sh) | Healthy |
 
 Do **not** expect GHA runners in `docker service ls` on the manager.
 
@@ -48,18 +48,18 @@ Do **not** expect GHA runners in `docker service ls` on the manager.
 
 | Stack | Node | Notes |
 | --- | --- | --- |
-| **mcp-terraform** | `swarm-wk-0` | Service exists at **`0/0`** — `replicas = 0` in [`.config/terraform/swarm/mcp-terraform/app.tfvars`](.config/terraform/swarm/mcp-terraform/app.tfvars). Raise replicas and re-apply to enable. |
+| **mcp-terraform** | `swarm-wk-0` | Service exists at **`0/0`** — `replicas = 0` in [`.config/terraform/components/swarm/mcp-terraform/app.tfvars`](.config/terraform/components/swarm/mcp-terraform/app.tfvars). Raise replicas and re-apply to enable. |
 
 ## Yet to deploy (Swarm)
 
-Stacks with tfvars under `.config/terraform/swarm/` that are **not** running on
+Stacks with tfvars under `.config/terraform/components/swarm/` that are **not** running on
 Swarm:
 
 | Stack | Placement | Pipeline order | Notes |
 | --- | --- | --- | --- |
-| **jenkins-controller** | `swarm-wk-1` | [`jenkins-controller/app.sh`](terraform/swarm/jenkins-controller/pipeline/app.sh) → [`jenkins-controller/config.sh`](terraform/swarm/jenkins-controller/pipeline/config.sh) | Fix Terraform syntax in [`terraform/swarm/jenkins-controller/app/main.tf`](terraform/swarm/jenkins-controller/app/main.tf) (`Missing newline after block definition` near dynamic `mounts`) before apply |
-| **jenkins-agent-amd64** | pool / any | [`jenkins-agent-amd64/pipeline/app.sh`](terraform/runners/jenkins-agent-amd64/pipeline/app.sh) | Depends on controller |
-| **jenkins-agent-arm64** | pool / any | [`jenkins-agent-arm64/pipeline/app.sh`](terraform/runners/jenkins-agent-arm64/pipeline/app.sh) | Depends on controller |
+| **jenkins-controller** | `swarm-wk-1` | [`jenkins-controller/app.sh`](terraform/components/swarm/jenkins-controller/pipeline/app.sh) → [`jenkins-controller/config.sh`](terraform/components/swarm/jenkins-controller/pipeline/config.sh) | Fix Terraform syntax in [`terraform/components/swarm/jenkins-controller/app/main.tf`](terraform/components/swarm/jenkins-controller/app/main.tf) (`Missing newline after block definition` near dynamic `mounts`) before apply |
+| **jenkins-agent-amd64** | pool / any | [`jenkins-agent-amd64/pipeline/app.sh`](terraform/components/runners/jenkins-agent-amd64/pipeline/app.sh) | Depends on controller |
+| **jenkins-agent-arm64** | pool / any | [`jenkins-agent-arm64/pipeline/app.sh`](terraform/components/runners/jenkins-agent-arm64/pipeline/app.sh) | Depends on controller |
 | **langchain-agent-chat** | Kubernetes | Argo CD / cluster apply | Production pair is **Kubernetes** only — see [`docs/architecture/kubernetes/README.md`](docs/architecture/kubernetes/README.md) and [`applications/langchain-agent-chat/README.md`](applications/langchain-agent-chat/README.md) |
 
 ## Removed / out of scope

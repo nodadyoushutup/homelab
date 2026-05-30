@@ -3,9 +3,9 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
-STAGE_DIR="${ROOT_DIR}/terraform/swarm/grafana/config"
+STAGE_DIR="${ROOT_DIR}/terraform/components/swarm/grafana/config"
 TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${CONFIG_DIR:-${ROOT_DIR}/.config}}"
-TFVARS_FILE="${TFVARS_FILE:-${TFVARS_HOME_DIR}/terraform/swarm/grafana/config.tfvars}"
+TFVARS_FILE="${TFVARS_FILE:-${TFVARS_HOME_DIR}/terraform/components/swarm/grafana/config.tfvars}"
 BACKEND_FILE="${BACKEND_FILE:-${TFVARS_HOME_DIR}/minio.backend.hcl}"
 DRY_RUN="0"
 

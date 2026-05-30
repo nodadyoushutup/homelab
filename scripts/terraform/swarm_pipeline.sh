@@ -33,7 +33,7 @@ export SWARM_DNS_PROVIDER_TFVARS
 SWARM_NFS_PROVIDER_TFVARS="${SWARM_NFS_PROVIDER_TFVARS:-${TFVARS_HOME_DIR}/terraform/components/swarm/nfs.tfvars}"
 export SWARM_NFS_PROVIDER_TFVARS
 
-TERRAFORM_DIR="${TERRAFORM_DIR:-${ROOT_DIR}/terraform/swarm/${SERVICE_NAME}}"
+TERRAFORM_DIR="${TERRAFORM_DIR:-${ROOT_DIR}/terraform/components/swarm/${SERVICE_NAME}}"
 
 # shellcheck source=/dev/null
 source "${PIPELINE_SCRIPT_ROOT}/resolve_default_tfvars_file.sh"

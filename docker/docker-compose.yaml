@@ -1,4 +1,4 @@
-# qBittorrent exporter — local dev (martabal; Swarm via terraform/swarm/qbittorrent-exporter).
+# qBittorrent exporter — local dev (martabal; Swarm via terraform/components/swarm/qbittorrent-exporter).
 #
 # From docker/:
 #   docker compose pull

@@ -32,13 +32,14 @@ Do **not** jump straight to `main.tf`. Work through this order:
 
 | Domain | Typical contents |
 | --- | --- |
-| `terraform/swarm/` | One directory per **Swarm deployable stack** — services (`zot/`, `mcp-rag/`, observability, …). Each stack has Terraform slices (`app/`, `config/`, `database/`) and **bespoke pipeline scripts** under `pipeline/`. Placement and slice rules: [swarm-placement.md](./swarm-placement.md), [swarm-slices.md](./swarm-slices.md). |
-| `terraform/network/` | **On-prem network appliance** Terraform roots — **FortiGate** (`fortigate/config`). Pipelines use `scripts/terraform/network_pipeline.sh` (slice tfvars only). |
-| `terraform/remote/` | **Remote SaaS / API** Terraform roots — **Cloudflare** DNS (`cloudflare/config`). Pipelines use `scripts/terraform/remote_pipeline.sh` (slice tfvars only). |
-| `terraform/cluster/` | **Kubernetes cluster bootstrap** and GitOps wiring: **Proxmox** VM lifecycle (`proxmox/app`), **Argo CD** root Application (`argocd/config`). Pipelines use `scripts/terraform/cluster_pipeline.sh` (slice tfvars only — no Swarm component merges). **Talos** (`talos/app`) remains under **`terraform/swarm/`** until moved. |
-| `terraform/runners/` | **Pool-host** workloads outside Swarm: GHA runner pools and Jenkins agent pools. Each uses an `app/` slice and `docker_container` on pool hosts — CI/CD class; see placement doc. Jenkins/bash pipeline entrypoints live under **`pipeline/`** (for example `terraform/runners/gha-runner-amd64/pipeline/app.sh`). |
-| `terraform/components/` | Shared **component tfvars** merged by domain pipelines: **`swarm/`** (Docker SSH, DNS, NFS), **`runners/`** (pool-host Docker), **`cluster/`** and **`remote/`** (reserved). Examples live in-repo; live files under **`.config/terraform/components/`**. |
+| `terraform/components/swarm/` | One directory per **Swarm deployable stack** — services (`zot/`, `mcp-rag/`, observability, …). Each stack has Terraform slices (`app/`, `config/`, `database/`) and **bespoke pipeline scripts** under `pipeline/`. Placement and slice rules: [swarm-placement.md](./swarm-placement.md), [swarm-slices.md](./swarm-slices.md). |
+| `terraform/components/network/` | **On-prem network appliance** Terraform roots — **FortiGate** (`fortigate/config`). Pipelines use `scripts/terraform/network_pipeline.sh` (slice tfvars only). |
+| `terraform/components/remote/` | **Remote SaaS / API** Terraform roots — **Cloudflare** DNS (`cloudflare/config`). Pipelines use `scripts/terraform/remote_pipeline.sh` (slice tfvars only). |
+| `terraform/components/cluster/` | **Kubernetes cluster bootstrap** and GitOps wiring: **Proxmox** VM lifecycle (`proxmox/app`), **Talos** cluster (`talos/app`), **Argo CD** root Application (`argocd/config`). Pipelines use `scripts/terraform/cluster_pipeline.sh` (slice tfvars only — no Swarm component merges). |
+| `terraform/components/runners/` | **Pool-host** workloads outside Swarm: GHA runner pools and Jenkins agent pools. Each uses an `app/` slice and `docker_container` on pool hosts — CI/CD class; see placement doc. Jenkins/bash pipeline entrypoints live under **`pipeline/`** (for example `terraform/components/runners/gha-runner-amd64/pipeline/app.sh`). |
 | `terraform/modules/` | **Optional shared HCL** composed into slice roots. **Not** deployable roots (no backend here). Swarm stacks **inline** `docker_service` blocks for now. |
+
+Shared **provider tfvars** (Docker SSH, DNS, NFS under `terraform/components/swarm/`, pool-host Docker under `terraform/components/runners/`) merge into domain pipelines; examples live in-repo, live files under **`.config/terraform/components/`** — see [swarm-slices.md](./swarm-slices.md).
 
 Naming under `swarm/` follows the **operational service name** (underscores where
 historical stacks use them, e.g. `nginx_proxy_manager`).
@@ -50,13 +51,12 @@ historical stacks use them, e.g. `nginx_proxy_manager`).
   [swarm-slices.md](./swarm-slices.md).
 - **`terraform/modules/<name>/`** holds shared implementation pulled in via
   `module` blocks (e.g. `source = "../../../modules/<name>"` from
-  `terraform/swarm/<service>/app/`).
+  `terraform/components/swarm/<service>/app/`).
 
 Extract a **module** when a pattern repeats; do not invent new slice names.
 
-**Cloudflare** DNS lives under **`terraform/remote/`**. **FortiGate** appliance
-config lives under **`terraform/network/`**. Cluster bootstrap (**Proxmox**,
-**Argo CD**; **Talos** still in swarm) lives under **`terraform/cluster/`** —
-see the table above.
+**Cloudflare** DNS lives under **`terraform/components/remote/`**. **FortiGate** appliance
+config lives under **`terraform/components/network/`**. Cluster bootstrap (**Proxmox**,
+**Talos**, **Argo CD**) lives under **`terraform/components/cluster/`** — see the table above.
 
 Treat **`config/`**-only roots the same way: **one slice = one state**.

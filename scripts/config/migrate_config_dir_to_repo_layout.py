@@ -37,13 +37,13 @@ def norm(s: str) -> str:
 
 
 def find_swarm_dir(repo: Path, cfg_name: str) -> str | None:
-    swarm = repo / "terraform" / "swarm"
+    swarm = repo / "terraform" / "components" / "swarm"
     if not swarm.is_dir():
         return None
     n = norm(cfg_name)
     for child in sorted(swarm.iterdir()):
         if child.is_dir() and norm(child.name) == n:
-            return f"terraform/swarm/{child.name}"
+            return f"terraform/components/swarm/{child.name}"
     return None
 
 
@@ -64,11 +64,11 @@ def qbittorrent_overlay_dest(repo: Path, cfg_name: str) -> str | None:
 
 def explicit_remote(repo: Path, cfg_name: str) -> str | None:
     mapping = {
-        "cloudflare": "terraform/remote/cloudflare/config",
-        "fortigate": "terraform/network/fortigate/config",
-        "argocd": "terraform/cluster/argocd/config",
-        "proxmox": "terraform/cluster/proxmox/app",
-        "talos": "terraform/swarm/talos/app",
+        "cloudflare": "terraform/components/remote/cloudflare/config",
+        "fortigate": "terraform/components/network/fortigate/config",
+        "argocd": "terraform/components/cluster/argocd/config",
+        "proxmox": "terraform/components/cluster/proxmox/app",
+        "talos": "terraform/components/cluster/talos/app",
     }
     rel = mapping.get(cfg_name)
     if not rel:
@@ -78,8 +78,8 @@ def explicit_remote(repo: Path, cfg_name: str) -> str | None:
 
 
 ALIASES: dict[str, str] = {
-    "victoriametrics": "terraform/swarm/victoriametrics/app",
-    "webserver-image": "terraform/swarm/cloud-image-repository",
+    "victoriametrics": "terraform/components/swarm/victoriametrics/app",
+    "webserver-image": "terraform/components/swarm/cloud-image-repository",
 }
 
 
@@ -111,7 +111,7 @@ def resolve_dest(repo: Path, cfg_name: str) -> str | None:
     if s:
         return s
 
-    return f"terraform/swarm/{cfg_name}"
+    return f"terraform/components/swarm/{cfg_name}"
 
 
 def replace_prefixes(text: str, replacements: list[tuple[str, str]]) -> str:

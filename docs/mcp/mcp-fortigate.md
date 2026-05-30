@@ -13,7 +13,7 @@ Publish the service behind TLS at **`https://mcp.fortigate.nodadyoushutup.com/mc
 
 ## Cursor
 
-Project **`.cursor/mcp.json`** registers **`mcp_fortigate`** at **`https://mcp.fortigate.nodadyoushutup.com/mcp`** when enabled on trusted machines. No client API key — FortiGate credentials live in Swarm **`env`** on **`.config/terraform/swarm/mcp-fortigate/app.tfvars`**. After deploy or config edits, **reload MCP** in Cursor Settings if tools stay disconnected.
+Project **`.cursor/mcp.json`** registers **`mcp_fortigate`** at **`https://mcp.fortigate.nodadyoushutup.com/mcp`** when enabled on trusted machines. No client API key — FortiGate credentials live in Swarm **`env`** on **`.config/terraform/components/swarm/mcp-fortigate/app.tfvars`**. After deploy or config edits, **reload MCP** in Cursor Settings if tools stay disconnected.
 
 ## LangGraph
 
@@ -21,9 +21,9 @@ Add a server block in the relevant **`mcp.json`** when a graph should call Forti
 
 ## Swarm
 
-- Stack: **`terraform/swarm/mcp-fortigate/app/`** — all site credentials and device settings in the **`env`** map on **`.config/terraform/swarm/mcp-fortigate/app.tfvars`** (flat keys such as **`FORTIGATE_*`**, **`MCP_HTTP_PATH`**; no **`env_file_path`**). Keep tokens out of git.
+- Stack: **`terraform/components/swarm/mcp-fortigate/app/`** — all site credentials and device settings in the **`env`** map on **`.config/terraform/components/swarm/mcp-fortigate/app.tfvars`** (flat keys such as **`FORTIGATE_*`**, **`MCP_HTTP_PATH`**; no **`env_file_path`**). Keep tokens out of git.
 
 ## Related
 
 - [edge-dns-and-nginx-proxy.md](../workflows/edge-dns-and-nginx-proxy.md)
-- Network appliance config (non-MCP): **`terraform/network/fortigate/config/`**
+- Network appliance config (non-MCP): **`terraform/components/network/fortigate/config/`**

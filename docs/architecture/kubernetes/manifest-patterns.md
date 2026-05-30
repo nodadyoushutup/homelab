@@ -100,7 +100,7 @@ publishes. After `docker_build_push.yml` succeeds, bump the pin, commit, push,
 and Argo sync — [docker-build-github-actions.md](../../workflows/docker-build-github-actions.md).
 
 **Build in `applications/`, run in `kubernetes/`** — same split as Swarm’s
-`applications/` + `terraform/swarm/`, but manifests instead of Terraform
+`applications/` + `terraform/components/swarm/`, but manifests instead of Terraform
 `main.tf` for image pins.
 
 ## Pick a neighbor

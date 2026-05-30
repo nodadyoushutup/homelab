@@ -214,14 +214,14 @@ def consolidate_config_dir(cfg: Path) -> None:
 
 
 def patch_terraform_roots(repo: Path) -> None:
-    swarm = repo / "terraform" / "swarm"
+    swarm = repo / "terraform" / "components" / "swarm"
     if swarm.is_dir():
         for slice in ("app", "config", "database"):
             for vf in sorted(swarm.rglob(f"{slice}/variables.tf")):
                 if ".terraform" in vf.parts:
                     continue
                 rel = vf.relative_to(repo)
-                if "swarm/vault/config" in str(rel).replace("\\", "/"):
+                if "components/swarm/vault/config" in str(rel).replace("\\", "/"):
                     continue
                 text = vf.read_text(encoding="utf-8")
                 if 'variable "secrets"' in text:
@@ -230,11 +230,11 @@ def patch_terraform_roots(repo: Path) -> None:
                 print(f"[PATCH] {vf}", file=sys.stderr)
 
     for rel in (
-        repo / "terraform" / "cluster" / "argocd" / "config" / "variables.tf",
-        repo / "terraform" / "cluster" / "proxmox" / "app" / "variables.tf",
-        repo / "terraform" / "cluster" / "talos" / "app" / "variables.tf",
-        repo / "terraform" / "remote" / "cloudflare" / "config" / "variables.tf",
-        repo / "terraform" / "network" / "fortigate" / "config" / "variables.tf",
+        repo / "terraform" / "components" / "cluster" / "argocd" / "config" / "variables.tf",
+        repo / "terraform" / "components" / "cluster" / "proxmox" / "app" / "variables.tf",
+        repo / "terraform" / "components" / "cluster" / "talos" / "app" / "variables.tf",
+        repo / "terraform" / "components" / "remote" / "cloudflare" / "config" / "variables.tf",
+        repo / "terraform" / "components" / "network" / "fortigate" / "config" / "variables.tf",
     ):
         if not rel.is_file():
             continue

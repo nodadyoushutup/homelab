@@ -96,8 +96,8 @@ parse_args() {
 sync_vault_artifacts() {
   local ssh_target="$1"
   local local_vault_dir remote_vault_dir
-  local_vault_dir="${LOCAL_TFVARS_HOME}/terraform/swarm/vault"
-  remote_vault_dir="${REMOTE_TFVARS_HOME}/terraform/swarm/vault"
+  local_vault_dir="${LOCAL_TFVARS_HOME}/terraform/components/swarm/vault"
+  remote_vault_dir="${REMOTE_TFVARS_HOME}/terraform/components/swarm/vault"
 
   [[ -f "${local_vault_dir}/init.json" ]] || fail "Missing ${local_vault_dir}/init.json"
   [[ -f "${local_vault_dir}/.env" ]] || fail "Missing ${local_vault_dir}/.env"

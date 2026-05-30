@@ -75,7 +75,7 @@ if [[ -z "${TFVARS_HOME_DIR:-}" && -n "${CONFIG_DIR:-}" ]]; then
 fi
 
 if [[ -z "${JENKINS_CONTROLLER_TFVARS_DIR:-}" && -n "${CONFIG_DIR:-}" ]]; then
-  export JENKINS_CONTROLLER_TFVARS_DIR="${CONFIG_DIR}/terraform/swarm/jenkins-controller"
+  export JENKINS_CONTROLLER_TFVARS_DIR="${CONFIG_DIR}/terraform/components/swarm/jenkins-controller"
 fi
 
 export PIPELINE_ROOT_ENV_LOADED=1

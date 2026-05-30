@@ -30,8 +30,8 @@ Native tool calling exposes **`rag_search`**, **`memory_recall`**, **`memory_sav
 
 ## Swarm
 
-- Stack: **`terraform/swarm/mcp-rag/app/`** — all site credentials in the **`env`** map on **`.config/terraform/swarm/mcp-rag/app.tfvars`** (flat keys such as **`RAG_ENGINE_BASE_URL`**, **`RAG_ENGINE_API_KEY`**, **`MCP_RAG_API_KEY`**; no Vault **`secrets`** block or **`env_file_path`**). Keep keys out of git.
-- Image tag and ingress port **9016** are pinned in **`terraform/swarm/mcp-rag/app/main.tf`**. Bump the tag after publish, then re-apply.
+- Stack: **`terraform/components/swarm/mcp-rag/app/`** — all site credentials in the **`env`** map on **`.config/terraform/components/swarm/mcp-rag/app.tfvars`** (flat keys such as **`RAG_ENGINE_BASE_URL`**, **`RAG_ENGINE_API_KEY`**, **`MCP_RAG_API_KEY`**; no Vault **`secrets`** block or **`env_file_path`**). Keep keys out of git.
+- Image tag and ingress port **9016** are pinned in **`terraform/components/swarm/mcp-rag/app/main.tf`**. Bump the tag after publish, then re-apply.
 - The service joins the existing **`rag-engine`** overlay network (created by the **rag-engine** stack) so it can reach **`http://rag-engine:8080`**.
 
 ## Deploy

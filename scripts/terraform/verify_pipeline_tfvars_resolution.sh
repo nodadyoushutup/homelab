@@ -43,87 +43,87 @@ assert_tfvars_path() {
 # Known slice layouts (representative + edge cases).
 assert_tfvars_path "swarm app" \
   "${ROOT_DIR}" \
-  "${ROOT_DIR}/terraform/swarm/grafana/app" \
+  "${ROOT_DIR}/terraform/components/swarm/grafana/app" \
   "grafana" \
   "" \
-  "${TFVARS_HOME_DIR}/terraform/swarm/grafana/app.tfvars"
+  "${TFVARS_HOME_DIR}/terraform/components/swarm/grafana/app.tfvars"
 
 assert_tfvars_path "swarm victoriametrics app" \
   "${ROOT_DIR}" \
-  "${ROOT_DIR}/terraform/swarm/victoriametrics/app" \
+  "${ROOT_DIR}/terraform/components/swarm/victoriametrics/app" \
   "victoriametrics" \
   "" \
-  "${TFVARS_HOME_DIR}/terraform/swarm/victoriametrics/app.tfvars"
+  "${TFVARS_HOME_DIR}/terraform/components/swarm/victoriametrics/app.tfvars"
 
 assert_tfvars_path "swarm nginx_proxy_manager database" \
   "${ROOT_DIR}" \
-  "${ROOT_DIR}/terraform/swarm/nginx_proxy_manager/database" \
+  "${ROOT_DIR}/terraform/components/swarm/nginx_proxy_manager/database" \
   "nginx_proxy_manager" \
   "" \
-  "${TFVARS_HOME_DIR}/terraform/swarm/nginx_proxy_manager/database.tfvars"
+  "${TFVARS_HOME_DIR}/terraform/components/swarm/nginx_proxy_manager/database.tfvars"
 
 assert_tfvars_path "swarm nginx_proxy_manager app" \
   "${ROOT_DIR}" \
-  "${ROOT_DIR}/terraform/swarm/nginx_proxy_manager/app" \
+  "${ROOT_DIR}/terraform/components/swarm/nginx_proxy_manager/app" \
   "nginx_proxy_manager" \
   "" \
-  "${TFVARS_HOME_DIR}/terraform/swarm/nginx_proxy_manager/app.tfvars"
+  "${TFVARS_HOME_DIR}/terraform/components/swarm/nginx_proxy_manager/app.tfvars"
 
 assert_tfvars_path "swarm nginx_proxy_manager config" \
   "${ROOT_DIR}" \
-  "${ROOT_DIR}/terraform/swarm/nginx_proxy_manager/config" \
+  "${ROOT_DIR}/terraform/components/swarm/nginx_proxy_manager/config" \
   "nginx_proxy_manager" \
   "" \
-  "${TFVARS_HOME_DIR}/terraform/swarm/nginx_proxy_manager/config.tfvars"
+  "${TFVARS_HOME_DIR}/terraform/components/swarm/nginx_proxy_manager/config.tfvars"
 
 assert_tfvars_path "cluster proxmox app" \
   "${ROOT_DIR}" \
-  "${ROOT_DIR}/terraform/cluster/proxmox/app" \
+  "${ROOT_DIR}/terraform/components/cluster/proxmox/app" \
   "proxmox" \
   "" \
-  "${TFVARS_HOME_DIR}/terraform/cluster/proxmox/app.tfvars"
+  "${TFVARS_HOME_DIR}/terraform/components/cluster/proxmox/app.tfvars"
 
 assert_tfvars_path "cluster argocd config" \
   "${ROOT_DIR}" \
-  "${ROOT_DIR}/terraform/cluster/argocd/config" \
+  "${ROOT_DIR}/terraform/components/cluster/argocd/config" \
   "argocd" \
   "" \
-  "${TFVARS_HOME_DIR}/terraform/cluster/argocd/config.tfvars"
+  "${TFVARS_HOME_DIR}/terraform/components/cluster/argocd/config.tfvars"
 
-assert_tfvars_path "talos app" \
+assert_tfvars_path "cluster talos app" \
   "${ROOT_DIR}" \
-  "${ROOT_DIR}/terraform/swarm/talos/app" \
+  "${ROOT_DIR}/terraform/components/cluster/talos/app" \
   "talos" \
   "" \
-  "${TFVARS_HOME_DIR}/terraform/swarm/talos/app.tfvars"
+  "${TFVARS_HOME_DIR}/terraform/components/cluster/talos/app.tfvars"
 
 assert_tfvars_path "network fortigate config" \
   "${ROOT_DIR}" \
-  "${ROOT_DIR}/terraform/network/fortigate/config" \
+  "${ROOT_DIR}/terraform/components/network/fortigate/config" \
   "fortigate" \
   "" \
-  "${TFVARS_HOME_DIR}/terraform/network/fortigate/config.tfvars"
+  "${TFVARS_HOME_DIR}/terraform/components/network/fortigate/config.tfvars"
 
 assert_tfvars_path "remote cloudflare config" \
   "${ROOT_DIR}" \
-  "${ROOT_DIR}/terraform/remote/cloudflare/config" \
+  "${ROOT_DIR}/terraform/components/remote/cloudflare/config" \
   "cloudflare" \
   "" \
-  "${TFVARS_HOME_DIR}/terraform/remote/cloudflare/config.tfvars"
+  "${TFVARS_HOME_DIR}/terraform/components/remote/cloudflare/config.tfvars"
 
 assert_tfvars_path "explicit override" \
   "${ROOT_DIR}" \
-  "${ROOT_DIR}/terraform/swarm/qbittorrent-exporter/app" \
+  "${ROOT_DIR}/terraform/components/swarm/qbittorrent-exporter/app" \
   "qbittorrent-exporter" \
-  "${TFVARS_HOME_DIR}/terraform/swarm/qbittorrent-exporter/app.tfvars" \
-  "${TFVARS_HOME_DIR}/terraform/swarm/qbittorrent-exporter/app.tfvars"
+  "${TFVARS_HOME_DIR}/terraform/components/swarm/qbittorrent-exporter/app.tfvars" \
+  "${TFVARS_HOME_DIR}/terraform/components/swarm/qbittorrent-exporter/app.tfvars"
 
 assert_tfvars_path "prometheus-pve-exporter app" \
   "${ROOT_DIR}" \
-  "${ROOT_DIR}/terraform/swarm/prometheus-pve-exporter/app" \
+  "${ROOT_DIR}/terraform/components/swarm/prometheus-pve-exporter/app" \
   "prometheus-pve-exporter" \
   "" \
-  "${TFVARS_HOME_DIR}/terraform/swarm/prometheus-pve-exporter/app.tfvars"
+  "${TFVARS_HOME_DIR}/terraform/components/swarm/prometheus-pve-exporter/app.tfvars"
 
 assert_tfvars_path "basename fallback" \
   "${ROOT_DIR}" \
@@ -135,12 +135,12 @@ assert_tfvars_path "basename fallback" \
 # Bash quirk guard: assignment inside case must not be reintroduced in swarm_pipeline.
 assert_case_assignment_still_broken() {
   local ROOT_DIR="/mnt/eapp/code/homelab"
-  local TERRAFORM_DIR="/mnt/eapp/code/homelab/terraform/swarm/grafana/app"
+  local TERRAFORM_DIR="/mnt/eapp/code/homelab/terraform/components/swarm/grafana/app"
   local broken=""
   case "${TERRAFORM_DIR}" in
     "${ROOT_DIR}"/*) broken="${TERRAFORM_DIR#"${ROOT_DIR}/"}" ;;
   esac
-  if [[ "${broken}" == "terraform/swarm/grafana/app" ]]; then
+  if [[ "${broken}" == "terraform/components/swarm/grafana/app" ]]; then
     echo "[WARN] bash case+strip quirk no longer reproduces; revisit resolve_default_tfvars_file.sh" >&2
   fi
 }
@@ -148,8 +148,8 @@ assert_case_assignment_still_broken
 
 # Tag index must resolve a representative slice when stamped under .config.
 checks=$((checks + 1))
-if ! tagged="$(homelab_find_config_by_id "${TFVARS_HOME_DIR}" "terraform/swarm/grafana/app" 2>/dev/null)"; then
-  echo "[FAIL] homelab-config tag missing for terraform/swarm/grafana/app (run scripts/config/stamp_homelab_config_ids.py)" >&2
+if ! tagged="$(homelab_find_config_by_id "${TFVARS_HOME_DIR}" "terraform/components/swarm/grafana/app" 2>/dev/null)"; then
+  echo "[FAIL] homelab-config tag missing for terraform/components/swarm/grafana/app (run scripts/config/stamp_homelab_config_ids.py)" >&2
   failures=$((failures + 1))
 elif [[ ! -f "${tagged}" ]]; then
   echo "[FAIL] tagged grafana app tfvars not found: ${tagged}" >&2
@@ -186,7 +186,7 @@ while IFS= read -r pipeline_script; do
     echo "[FAIL] ${label}: suspicious double slash: ${tfvars}" >&2
     failures=$((failures + 1))
   fi
-done < <(grep -rlE 'source .*(swarm|cluster|remote|network)_pipeline\.sh' "${ROOT_DIR}/terraform/swarm" "${ROOT_DIR}/terraform/cluster" "${ROOT_DIR}/terraform/remote" "${ROOT_DIR}/terraform/network" "${ROOT_DIR}/terraform/runners" --include='*.sh' 2>/dev/null | sort)
+done < <(grep -rlE 'source .*(swarm|cluster|remote|network)_pipeline\.sh' "${ROOT_DIR}/terraform/components/swarm" "${ROOT_DIR}/terraform/components/cluster" "${ROOT_DIR}/terraform/components/remote" "${ROOT_DIR}/terraform/components/network" "${ROOT_DIR}/terraform/components/runners" --include='*.sh' 2>/dev/null | sort)
 
 if [[ "${failures}" -gt 0 ]]; then
   echo "[ERR] ${failures} failure(s) in ${checks} check(s)" >&2

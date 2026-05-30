@@ -17,11 +17,11 @@ Not part of the checked-in LangGraph **`mcp.json`** files by default; add a serv
 
 ## Swarm
 
-- Stack: **`terraform/swarm/mcp-playwright/app/`** — optional container settings in the **`env`** map on **`.config/terraform/swarm/mcp-playwright/app.tfvars`** (no Vault **`secrets`** block or **`env_file_path`**).
-- Image and ingress port **18211** are pinned in **`terraform/swarm/mcp-playwright/app/main.tf`**. The stack runs the upstream **`mcr.microsoft.com/playwright/mcp:latest`** image with headless Chromium.
+- Stack: **`terraform/components/swarm/mcp-playwright/app/`** — optional container settings in the **`env`** map on **`.config/terraform/components/swarm/mcp-playwright/app.tfvars`** (no Vault **`secrets`** block or **`env_file_path`**).
+- Image and ingress port **18211** are pinned in **`terraform/components/swarm/mcp-playwright/app/main.tf`**. The stack runs the upstream **`mcr.microsoft.com/playwright/mcp:latest`** image with headless Chromium.
 - **NFS:** same homelab repo export as **`rag-engine`** — merged from **`.config/terraform/components/swarm/nfs.tfvars`** (see **`terraform/components/swarm/nfs.tfvars.example`**). The repo is mounted at **`nfs.target`** inside the container.
-- **Viewport:** **`--viewport-size 1920x1080`** in **`terraform/swarm/mcp-playwright/app/main.tf`** (1080p).
-- **Exports:** set **`PLAYWRIGHT_MCP_OUTPUT_DIR`** in **`.config/terraform/swarm/mcp-playwright/app.tfvars`** (must match the NFS mount, e.g. **`/mnt/eapp/code/homelab/data/playwright`**). Screenshots and other Playwright file output land in **`data/playwright/`** at the repo root on the host when tools use auto-generated filenames (omit **`filename`** on **`browser_take_screenshot`** — custom names write to the NFS workspace root per upstream Playwright MCP). Git ignores **`data/playwright/**`** via **`.dockerignore`** / **`.cursorignore`**.
+- **Viewport:** **`--viewport-size 1920x1080`** in **`terraform/components/swarm/mcp-playwright/app/main.tf`** (1080p).
+- **Exports:** set **`PLAYWRIGHT_MCP_OUTPUT_DIR`** in **`.config/terraform/components/swarm/mcp-playwright/app.tfvars`** (must match the NFS mount, e.g. **`/mnt/eapp/code/homelab/data/playwright`**). Screenshots and other Playwright file output land in **`data/playwright/`** at the repo root on the host when tools use auto-generated filenames (omit **`filename`** on **`browser_take_screenshot`** — custom names write to the NFS workspace root per upstream Playwright MCP). Git ignores **`data/playwright/**`** via **`.dockerignore`** / **`.cursorignore`**.
 
 ## Related
 

@@ -29,7 +29,7 @@ TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${CONFIG_DIR:-${ROOT_DIR}/.config}}"
 source "${PIPELINE_SCRIPT_ROOT}/resolve_config_by_id.sh"
 DEFAULT_BACKEND_FILE="${DEFAULT_BACKEND_FILE:-$(homelab_resolve_config_path "${TFVARS_HOME_DIR}" "minio.backend")}"
 
-TERRAFORM_DIR="${TERRAFORM_DIR:-${ROOT_DIR}/terraform/cluster/${SERVICE_NAME}}"
+TERRAFORM_DIR="${TERRAFORM_DIR:-${ROOT_DIR}/terraform/components/cluster/${SERVICE_NAME}}"
 
 # shellcheck source=/dev/null
 source "${PIPELINE_SCRIPT_ROOT}/resolve_default_tfvars_file.sh"

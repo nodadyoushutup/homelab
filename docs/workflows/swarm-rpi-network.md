@@ -10,13 +10,12 @@ Use the **`eth0` address** (e.g. `192.168.1.122` for `swarm-wk-1`) if `*.local` 
 
 ## Boot time sync and Docker Swarm (every node)
 
-Power loss or a cold boot can leave Pis with a **stale RTC** (clock weeks or
-months behind). **Docker starts before chrony finishes NTP sync**, validates
-Swarm TLS with the wrong time, and stays in `Swarm=error` even after the system
-clock is correct. The manager may keep running if it already had the guard; workers
-without it show **Down** in `docker node ls` and constrained services sit at
-**Pending** (the age in `docker service ps` is *scheduler wait time*, not proof
-the host or container was up that long).
+Power loss or **pulling the plug** leaves Pis with a **dead RTC** (clock at
+1970). Shutdown hooks never run, so time must be restored from **fake-hwclock**
+(periodic saves while running) and **plain UDP NTP** on boot. **Docker starts
+before chrony finishes NTP sync** without the guard, validates Swarm TLS with
+the wrong time, and stays in `Swarm=error` even after the system clock is
+correct.
 
 ### Symptoms
 
@@ -40,30 +39,29 @@ the host or container was up that long).
 Run once per Swarm node (including new workers after join):
 
 ```bash
-sudo <repo>/scripts/install/docker_swarm_time_sync_guard.sh
+sudo <repo>/scripts/install/swarm_pi_clock_bootstrap.sh
 ```
 
-From an operator workstation with SSH to each host:
+Or from an operator workstation (all six Pis):
 
 ```bash
-REPO=/mnt/eapp/code/homelab   # adjust
-for ip in 120 121 122 123 124 125; do
-  scp "${REPO}/scripts/install/docker_swarm_time_sync_guard.sh" \
-    "nodadyoushutup@192.168.1.${ip}:/tmp/"
-  ssh "nodadyoushutup@192.168.1.${ip}" \
-    'chmod +x /tmp/docker_swarm_time_sync_guard.sh && sudo /tmp/docker_swarm_time_sync_guard.sh'
-done
+<repo>/scripts/swarm/apply_swarm_pi_clock_bootstrap_all.sh
 ```
 
-The script:
+That script installs:
 
-1. Writes `chrony-wait.service.d/10-no-timeout.conf` (wait until sync, no start timeout).
-2. Writes `docker.service.d/10-wait-for-time-sync.conf` (`After=` / `Requires=`
-   `chrony-wait.service`).
-3. Enables `chrony-wait.service` and restarts Docker (use `--no-restart` to only
-   install drop-ins).
+1. **fake-hwclock** with **5-minute periodic save** and **save-after-chrony-sync**
+   on every boot — required because homelab Pis are normally powered off by
+   **pulling the plug** (no clean shutdown, dead RTC battery).
+2. **Plain UDP NTP bootstrap sources** (`192.168.1.1`, Cloudflare, pool.ntp.org)
+   in `/etc/chrony/sources.d/00-homelab-bootstrap.sources` — sync works before
+   NTS TLS certificates validate on a wildly wrong clock.
+3. **`makestep 1 -1`** — always step large offsets after power loss.
+4. **`docker_swarm_time_sync_guard.sh`** drop-ins — Docker waits for
+   `chrony-wait.service` before starting Swarm.
 
-After a guarded boot, Docker should not start until chrony has synchronized time.
+After a guarded boot with the bootstrap sources installed, chrony should sync
+within seconds and Docker starts once time is valid.
 
 ### Verify guard is installed
 
@@ -98,8 +96,8 @@ When joining `swarm-wk-N` to the cluster:
 1. Static `eth0` and Wi‑Fi off (above).
 2. `docker swarm join` (see `scripts/swarm/prepare_swarm_wk4_ai_node.sh` or
    `scripts/swarm/ensure_swarm_worker_node.sh`).
-3. **`docker_swarm_time_sync_guard.sh`** on that host before relying on it
-   across the next power cycle.
+3. **`swarm_pi_clock_bootstrap.sh`** on that host before relying on it
+   across the next power cycle (includes the Docker time-sync guard).
 4. Label `role=swarm-wk-N` on the manager.
 
 ## Docker Swarm NFS volumes

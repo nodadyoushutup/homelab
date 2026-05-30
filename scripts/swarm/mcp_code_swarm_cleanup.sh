@@ -8,7 +8,7 @@
 #   docker container prune -f
 #   docker volume rm mcp-code-mnt-eapp-code
 #
-# Terraform: destroy terraform/swarm/mcp-code/app (or drop mcp-code.tfstate from your backend)
+# Terraform: destroy terraform/components/swarm/mcp-code/app (or drop mcp-code.tfstate from your backend)
 # before re-running this script if the stack might recreate the service.
 
 set -eu

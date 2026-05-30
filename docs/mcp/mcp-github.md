@@ -13,7 +13,7 @@ Publish the service behind TLS at **`https://mcp.github.nodadyoushutup.com/mcp`*
 
 ## Cursor
 
-Project **`.cursor/mcp.json`** registers **`mcp_github`** at **`https://mcp.github.nodadyoushutup.com/mcp`** (Streamable HTTP — **`--transport streamablehttp`** in **`applications/mcp-github/entrypoint.sh`**). No client API key — **`GITHUB_PERSONAL_ACCESS_TOKEN`** lives in Swarm **`env`** on **`.config/terraform/swarm/mcp-github/app.tfvars`**. After deploy or config edits, **reload MCP** in Cursor Settings if tools stay disconnected.
+Project **`.cursor/mcp.json`** registers **`mcp_github`** at **`https://mcp.github.nodadyoushutup.com/mcp`** (Streamable HTTP — **`--transport streamablehttp`** in **`applications/mcp-github/entrypoint.sh`**). No client API key — **`GITHUB_PERSONAL_ACCESS_TOKEN`** lives in Swarm **`env`** on **`.config/terraform/components/swarm/mcp-github/app.tfvars`**. After deploy or config edits, **reload MCP** in Cursor Settings if tools stay disconnected.
 
 ## LangGraph
 
@@ -21,7 +21,7 @@ Project **`.cursor/mcp.json`** registers **`mcp_github`** at **`https://mcp.gith
 
 ## Swarm
 
-- Stack: **`terraform/swarm/mcp-github/app/`** — all site credentials in the **`env`** map on **`.config/terraform/swarm/mcp-github/app.tfvars`** (flat keys such as **`GITHUB_PERSONAL_ACCESS_TOKEN`**; no Vault **`secrets`** block or **`env_file_path`**). Keep tokens out of git.
+- Stack: **`terraform/components/swarm/mcp-github/app/`** — all site credentials in the **`env`** map on **`.config/terraform/components/swarm/mcp-github/app.tfvars`** (flat keys such as **`GITHUB_PERSONAL_ACCESS_TOKEN`**; no Vault **`secrets`** block or **`env_file_path`**). Keep tokens out of git.
 
 ## Related
 

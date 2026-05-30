@@ -14,7 +14,7 @@ Publish the service behind TLS at **`https://mcp.argocd.nodadyoushutup.com/mcp`*
 
 ## Cursor
 
-Project **`.cursor/mcp.json`** registers **`mcp_argocd`** at **`https://mcp.argocd.nodadyoushutup.com/mcp`**. No client API key — **`ARGOCD_*`** credentials live in Swarm **`env`** on **`.config/terraform/swarm/mcp-argocd/app.tfvars`**. After deploy or config edits, **reload MCP** in Cursor Settings if tools stay disconnected.
+Project **`.cursor/mcp.json`** registers **`mcp_argocd`** at **`https://mcp.argocd.nodadyoushutup.com/mcp`**. No client API key — **`ARGOCD_*`** credentials live in Swarm **`env`** on **`.config/terraform/components/swarm/mcp-argocd/app.tfvars`**. After deploy or config edits, **reload MCP** in Cursor Settings if tools stay disconnected.
 
 ## LangGraph
 
@@ -22,7 +22,7 @@ Add a server block in the relevant **`mcp.json`** when a graph should call Argo 
 
 ## Swarm
 
-- Stack: **`terraform/swarm/mcp-argocd/app/`** — all site credentials in the **`env`** map on **`.config/terraform/swarm/mcp-argocd/app.tfvars`** (flat keys such as **`ARGOCD_BASE_URL`**, **`ARGOCD_API_TOKEN`**; no Vault **`secrets`** block or **`env_file_path`**). Keep tokens out of git.
+- Stack: **`terraform/components/swarm/mcp-argocd/app/`** — all site credentials in the **`env`** map on **`.config/terraform/components/swarm/mcp-argocd/app.tfvars`** (flat keys such as **`ARGOCD_BASE_URL`**, **`ARGOCD_API_TOKEN`**; no Vault **`secrets`** block or **`env_file_path`**). Keep tokens out of git.
 
 ## Related
 

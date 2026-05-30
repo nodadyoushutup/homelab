@@ -1,5 +1,5 @@
 jenkins:
-  systemMessage: "Managed by JCasC from /mnt/eapp/code/homelab/.config/terraform/swarm/jenkins-controller/jenkins.yaml"
+  systemMessage: "Managed by JCasC from /mnt/eapp/code/homelab/.config/terraform/components/swarm/jenkins-controller/jenkins.yaml"
   numExecutors: 0
   mode: EXCLUSIVE
   slaveAgentPort: 50000

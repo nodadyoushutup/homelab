@@ -84,7 +84,7 @@ def _service_dir_name(key: str) -> str:
 
 
 def _fragment_out_path(home: Path, key: str) -> Path:
-    """Pick terraform/swarm, kubernetes, cluster, or qbittorrent overlay root for this key."""
+    """Pick terraform/components/swarm, kubernetes, cluster, or qbittorrent overlay root for this key."""
     hyp = _service_dir_name(str(key))
     candidates: list[Path] = []
     if hyp.startswith("qbittorrent-"):
@@ -92,15 +92,15 @@ def _fragment_out_path(home: Path, key: str) -> Path:
         candidates.append(home / "kubernetes" / "qbittorrent" / "overlays" / suf)
     candidates.extend(
         [
-            home / "terraform" / "swarm" / hyp,
+            home / "terraform" / "components" / "swarm" / hyp,
             home / "kubernetes" / hyp,
-            home / "terraform" / "cluster" / hyp,
+            home / "terraform" / "components" / "cluster" / hyp,
         ]
     )
     for root in candidates:
         if root.is_dir():
             return root / "app.tfvars"
-    return home / "terraform" / "swarm" / hyp / "app.tfvars"
+    return home / "terraform" / "components" / "swarm" / hyp / "app.tfvars"
 
 
 def _write_fragment(path: Path, secrets_k8s: dict | None, files_k8s: dict | None) -> None:

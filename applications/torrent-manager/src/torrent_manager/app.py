@@ -6,7 +6,7 @@ from flask import Flask, render_template
 
 from torrent_manager.config import Config, load_config
 from torrent_manager.extensions import db
-from torrent_manager.models import Pipeline, PipelineStep, Task  # noqa: F401 — register metadata
+from torrent_manager.models import Pipeline, PipelineStep, Task, Torrent  # noqa: F401 — register metadata
 from torrent_manager.routes import clients_bp, health_bp, pipelines_bp, tasks_bp, torrents_bp
 from torrent_manager.services.qbittorrent import QBitTorrentRegistry
 

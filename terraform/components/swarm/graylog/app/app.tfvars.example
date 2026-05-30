@@ -1,0 +1,22 @@
+# Copy to CONFIG_DIR/terraform/components/swarm/graylog/app.tfvars (not committed).
+#
+# Prerequisites on Swarm nodes (Data Node / OpenSearch backend):
+#   echo "vm.max_map_count=262144" | sudo tee -a /etc/sysctl.conf
+#   sudo sysctl -p
+#
+# Generate secrets:
+#   openssl rand -hex 32                                    # GRAYLOG_PASSWORD_SECRET
+#   echo -n 'your-admin-password' | sha256sum | awk '{print $1}'  # GRAYLOG_ROOT_PASSWORD_SHA2
+#
+# Apply order: database pipeline, then app, then Cloudflare + NPM config pipelines.
+
+env = {
+  GRAYLOG_PASSWORD_SECRET    = "replace-with-64-char-hex-secret"
+  GRAYLOG_ROOT_PASSWORD_SHA2 = "replace-with-sha256-hex-of-root-password"
+  GRAYLOG_HTTP_EXTERNAL_URI  = "https://graylog.example.com/"
+  GRAYLOG_MONGODB_URI        = "mongodb://mongodb:27017/graylog"
+}
+
+published_port_ui         = 9000
+published_port_syslog_tcp = 1514
+published_port_gelf_tcp   = 12201

@@ -1,0 +1,38 @@
+pipeline {
+  agent { label 'swarm' }
+
+  options {
+    ansiColor('xterm')
+    buildDiscarder(logRotator(numToKeepStr: '20'))
+    disableConcurrentBuilds(abortPrevious: true)
+    timestamps()
+  }
+
+  parameters {
+    string(name: 'TFVARS_FILE', defaultValue: '', description: 'Optional tfvars path; leave empty to auto-discover defaults')
+    string(name: 'BACKEND_FILE', defaultValue: '', description: 'Optional backend config path; leave empty to auto-discover defaults')
+  }
+
+  stages {
+    stage('Run Terraform Stage') {
+      steps {
+        sh(
+          label: 'swarm/chromadb/app',
+          script: '''#!/usr/bin/env bash
+set -euo pipefail
+args=()
+[[ -n "${TFVARS_FILE:-}" ]] && args+=(--tfvars "${TFVARS_FILE}")
+[[ -n "${BACKEND_FILE:-}" ]] && args+=(--backend "${BACKEND_FILE}")
+./terraform/components/swarm/chromadb/pipeline/app.sh "${args[@]}"
+'''
+        )
+      }
+    }
+  }
+
+  post {
+    always {
+      cleanWs(deleteDirs: true, notFailBuild: true)
+    }
+  }
+}

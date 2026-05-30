@@ -7,7 +7,7 @@ variable definitions file for use as a trailing -var-file.
 
 The root vault slice tfvars must not define secrets or secret_files (only
 non-secret settings such as mount_path). Colocate Vault payloads in the same
-slice tfvars files next to each stack (for example terraform/swarm/grafana/app.tfvars).
+slice tfvars files next to each stack (for example terraform/components/swarm/grafana/app.tfvars).
 """
 
 

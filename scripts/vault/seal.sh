@@ -15,7 +15,7 @@ if [[ -f "${ROOT_ENV_LOADER}" ]]; then
 fi
 
 VAULT_TFVARS_HOME="${TFVARS_HOME_DIR:-${CONFIG_DIR:-${ROOT_DIR}/.config}}"
-VAULT_TFVARS_DIR="${VAULT_TFVARS_DIR:-${VAULT_TFVARS_HOME}/terraform/swarm/vault}"
+VAULT_TFVARS_DIR="${VAULT_TFVARS_DIR:-${VAULT_TFVARS_HOME}/terraform/components/swarm/vault}"
 VAULT_ENV_FILE="${VAULT_TFVARS_DIR}/.env"
 DEFAULT_VAULT_ADDR="${DEFAULT_VAULT_ADDR:-http://swarm-cp-0.local:8200}"
 WAIT_SECONDS="120"

@@ -80,7 +80,7 @@ Secrets live in [`../.config/docker/*.env`](./../.config/docker/*.env).
 For now, non-secret dev defaults such as ports and public local URLs are
 hardcoded directly in `docker-compose.yml`. **`rag-engine-dev`** sets
 **`RAG_CHROMA_HOSTNAME`** to **`192.168.1.120:8000`** by default (Swarm Chroma per
-`terraform/swarm/chromadb`); override with **`HOMELAB_DEV_CHROMA_HOSTNAME`** in the
+`terraform/components/swarm/chromadb`); override with **`HOMELAB_DEV_CHROMA_HOSTNAME`** in the
 shell when invoking Compose if your LAN differs.
 
 The browser-facing `NEXT_PUBLIC_API_URL` and the internal proxy
