@@ -8,8 +8,8 @@ source "${PIPELINE_SCRIPT_ROOT}/load_root_env.sh"
 
 SERVICE_NAME="fortigate"
 STAGE_NAME="FortiGate config"
-ENTRYPOINT_RELATIVE="terraform/swarm/fortigate/pipeline/config.sh"
-TERRAFORM_DIR="${ROOT_DIR}/terraform/swarm/fortigate/config"
+ENTRYPOINT_RELATIVE="terraform/network/fortigate/pipeline/config.sh"
+TERRAFORM_DIR="${ROOT_DIR}/terraform/network/fortigate/config"
 
 TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${CONFIG_DIR:-${ROOT_DIR}/.config}}"
 
@@ -18,4 +18,4 @@ APPLY_ARGS_EXTRA=("-parallelism=1")
 
 PIPELINE_ARGS=("$@")
 
-source "${PIPELINE_SCRIPT_ROOT}/swarm_pipeline.sh"
+source "${PIPELINE_SCRIPT_ROOT}/network_pipeline.sh"

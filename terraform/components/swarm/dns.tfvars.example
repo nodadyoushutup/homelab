@@ -1,0 +1,9 @@
+# Copy to <repo>/.config/terraform/components/swarm/dns.tfvars (not committed; keep secrets local).
+# First line of the live file: # homelab-config: terraform/components/swarm/dns
+# Required by scripts/terraform/swarm_pipeline.sh (no in-module default).
+
+dns_nameservers = [
+  "__YOUR_LAN_DNS__",
+  "1.1.1.1",
+  "8.8.8.8",
+]

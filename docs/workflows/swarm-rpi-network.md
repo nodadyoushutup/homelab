@@ -104,4 +104,4 @@ When joining `swarm-wk-N` to the cluster:
 
 ## Docker Swarm NFS volumes
 
-Host fstab is separate from Swarm stack NFS local volumes. After changing host mounts, update `nfs.driver_options.o` in `<homelab>/.config/terraform/components/nfs.tfvars` (see `.config/terraform/components/nfs.tfvars.example`), then re-apply stacks that mount NFS.
+Host fstab is separate from Swarm stack NFS local volumes. After changing host mounts, update `nfs.driver_options.o` in `<homelab>/.config/terraform/components/swarm/nfs.tfvars` (see `terraform/components/swarm/nfs.tfvars.example`), then re-apply stacks that mount NFS.

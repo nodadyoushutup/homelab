@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: radarr-4k-config
+  namespace: radarr-4k
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 150Gi
+  storageClassName: truenas-iscsi-csi-retain
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: radarr-4k-config-v2
+  namespace: radarr-4k
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 150Gi
+  storageClassName: truenas-iscsi-csi-retain
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: radarr-4k-postgres-data
+  namespace: radarr-4k
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Gi
+  storageClassName: truenas-iscsi-csi-retain

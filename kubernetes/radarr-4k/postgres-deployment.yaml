@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: radarr-4k-postgres
+  namespace: radarr-4k
+  annotations:
+    argocd.argoproj.io/sync-wave: "20"
+spec:
+  replicas: 1
+  revisionHistoryLimit: 0
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: radarr-4k-postgres
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: radarr-4k-postgres
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: k8s-wk-0
+      containers:
+        - name: postgres
+          image: postgres:17-alpine
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: radarr-4k-secrets
+                  key: POSTGRES_DB
+            - name: POSTGRES_LOG_DB
+              valueFrom:
+                secretKeyRef:
+                  name: radarr-4k-secrets
+                  key: POSTGRES_LOG_DB
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: radarr-4k-secrets
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: radarr-4k-secrets
+                  key: POSTGRES_PASSWORD
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          ports:
+            - name: postgres
+              containerPort: 5432
+              protocol: TCP
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -lc
+                - pg_isready -U "${POSTGRES_USER}" -d "${POSTGRES_DB}"
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -lc
+                - pg_isready -U "${POSTGRES_USER}" -d "${POSTGRES_DB}"
+            initialDelaySeconds: 30
+            periodSeconds: 20
+          volumeMounts:
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
+            - name: postgres-init
+              mountPath: /docker-entrypoint-initdb.d/10-create-log-db.sh
+              subPath: 10-create-log-db.sh
+      volumes:
+        - name: postgres-data
+          persistentVolumeClaim:
+            claimName: radarr-4k-postgres-data
+        - name: postgres-init
+          configMap:
+            name: radarr-4k-postgres-init
+            defaultMode: 0755

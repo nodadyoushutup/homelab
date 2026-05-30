@@ -18,7 +18,8 @@ Prompts for registry username and password, then writes a bcrypt htpasswd file.
 Default output: .config/terraform/swarm/zot/htpasswd
 
 Username/password must match registry_auths for zot.nodadyoushutup.com in
-.config/terraform/components/{swarm,amd64,arm64}.tfvars.
+.config/terraform/components/swarm/swarm.tfvars and
+.config/terraform/components/runners/{amd64,arm64}.tfvars.
 EOF
 }
 

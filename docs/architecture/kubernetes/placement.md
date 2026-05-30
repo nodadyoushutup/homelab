@@ -34,9 +34,9 @@ type** and explicit hostname pins in manifests.
 flowchart TD
   start["Add component XYZ"]
   runtime{"Where does it run?"}
-  swarm["terraform/swarm/\n(see swarm-placement.md)"]
+  swarm["terraform/components/swarm/\n(see swarm-placement.md)"]
   k8s["kubernetes/ + Argo CD"]
-  runners["terraform/runners/"]
+  runners["terraform/components/runners/"]
   classify{"K8s workload class?"}
   platform["Platform add-on\n(cluster-scoped / DaemonSet)"]
   media["Media / library app\n(hostPath media, k8s-wk-0 default)"]
@@ -88,7 +88,7 @@ services: *arr apps, request managers, Plex workers, and similar workloads that
 mount **`hostPath: /mnt/epool/media`** (or app-local PVCs backed by cluster
 storage).
 
-**Pinned to `k8s-wk-0` today:** `radarr`, `sonarr`, `prowlarr`, `seerr`,
+**Pinned to `k8s-wk-0` today:** `radarr`, `radarr-4k`, `sonarr`, `prowlarr`, `seerr`,
 `tautulli`, `picsur`, `privatebin`, `thelounge`, `cross-seed` base, and their
 Postgres sidecars where present.
 
@@ -133,7 +133,7 @@ runner pools** — [terraform/swarm-placement.md](../terraform/swarm-placement.m
 Do not move pipeline orchestration to the cluster without an explicit redesign.
 
 **Swarm observability** (Prometheus, Grafana on Swarm, etc.) stays under
-`terraform/swarm/` on **`swarm-wk-0`**, separate from `kubernetes/node-exporter`.
+`terraform/components/swarm/` on **`swarm-wk-0`**, separate from `kubernetes/node-exporter`.
 
 ## Expressing placement in manifests
 

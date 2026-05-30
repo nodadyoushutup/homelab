@@ -94,7 +94,7 @@ The Jenkins/bash mirror **`scripts/docker/build_push.sh`** uses the same
 layout via environment **`ZOT_REGISTRY`**. Pins in Terraform/Kubernetes should use that path
 (for example **`zot.nodadyoushutup.com/langgraph:<tag>`**). Zot requires htpasswd auth;
 set repository secrets **`ZOT_REGISTRY_USERNAME`** and **`ZOT_REGISTRY_PASSWORD`**
-(matching **`.config/terraform/components/*.tfvars`** `registry_auths` for
+(matching **`.config/terraform/components/**`** `registry_auths` for
 `zot.nodadyoushutup.com`). The workflow logs in to Zot before push when
 `target_registry` is **`zot`** or **`both`**.
 

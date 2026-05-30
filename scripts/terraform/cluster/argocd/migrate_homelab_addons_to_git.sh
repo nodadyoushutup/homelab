@@ -11,7 +11,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/../../../.." && pwd)"
-TF_DIR="${ROOT_DIR}/terraform/swarm/argocd/config"
+TF_DIR="${ROOT_DIR}/terraform/cluster/argocd/config"
 
 # Stale CONFIG_DIR=/mnt/eapp/config breaks minio.backend.hcl lookup; .config/docker/site.env should leave CONFIG_DIR empty.
 unset CONFIG_DIR TFVARS_HOME_DIR PIPELINE_ROOT_ENV_LOADED
@@ -65,7 +65,7 @@ fi
 if ! terraform state list 2>/dev/null | grep -q 'argocd_application.argocd_management'; then
   echo "[STEP] Importing existing argocd-management Application into state"
   terraform import \
-    -var-file="${CONFIG_DIR}/terraform/swarm/argocd/config.tfvars" \
+    -var-file="${CONFIG_DIR}/terraform/cluster/argocd/config.tfvars" \
     argocd_application.argocd_management \
     argocd-management:argocd
 fi

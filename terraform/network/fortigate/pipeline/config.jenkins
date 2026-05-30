@@ -17,11 +17,11 @@ pipeline {
     stage('Run Terraform Stage') {
       steps {
         sh(
-          label: 'swarm/fortigate/config',
+          label: 'network/fortigate/config',
           script: '''#!/usr/bin/env bash
 set -euo pipefail
 
-./scripts/terraform/jenkins_stage_runner.sh ./terraform/swarm/fortigate/pipeline/config.sh
+./scripts/terraform/jenkins_stage_runner.sh ./terraform/network/fortigate/pipeline/config.sh
 '''
         )
       }

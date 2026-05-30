@@ -185,7 +185,6 @@ kubeconfig
 !.config/scripts/*.env.example
 !.config/terraform/
 !.config/terraform/components/
-!.config/terraform/components/*.tfvars.example
 
 # =============================================================================
 # Docs

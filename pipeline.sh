@@ -54,6 +54,105 @@ prompt_select() {
   SELECTED="${options[$((REPLY - 1))]}"
 }
 
+discover_network_services() {
+  local svc_dir
+  local -a services=()
+  for svc_dir in "${ROOT_DIR}"/terraform/network/*/pipeline; do
+    [[ -d "${svc_dir}" ]] || continue
+    services+=("$(basename "$(dirname "${svc_dir}")")")
+  done
+  if [[ ${#services[@]} -eq 0 ]]; then
+    return 1
+  fi
+  printf '%s\n' "${services[@]}" | LC_ALL=C sort -u
+}
+
+discover_network_slices() {
+  local service="$1"
+  local pipeline_dir="${ROOT_DIR}/terraform/network/${service}/pipeline"
+  local script
+  local -a slices=()
+
+  [[ -d "${pipeline_dir}" ]] || return 1
+
+  for script in "${pipeline_dir}"/*.sh; do
+    [[ -f "${script}" ]] || continue
+    slices+=("$(basename "${script}" .sh)")
+  done
+
+  if [[ ${#slices[@]} -eq 0 ]]; then
+    return 1
+  fi
+
+  printf '%s\n' "${slices[@]}" | LC_ALL=C sort
+}
+
+discover_remote_services() {
+  local svc_dir
+  local -a services=()
+  for svc_dir in "${ROOT_DIR}"/terraform/remote/*/pipeline; do
+    [[ -d "${svc_dir}" ]] || continue
+    services+=("$(basename "$(dirname "${svc_dir}")")")
+  done
+  if [[ ${#services[@]} -eq 0 ]]; then
+    return 1
+  fi
+  printf '%s\n' "${services[@]}" | LC_ALL=C sort -u
+}
+
+discover_remote_slices() {
+  local service="$1"
+  local pipeline_dir="${ROOT_DIR}/terraform/remote/${service}/pipeline"
+  local script
+  local -a slices=()
+
+  [[ -d "${pipeline_dir}" ]] || return 1
+
+  for script in "${pipeline_dir}"/*.sh; do
+    [[ -f "${script}" ]] || continue
+    slices+=("$(basename "${script}" .sh)")
+  done
+
+  if [[ ${#slices[@]} -eq 0 ]]; then
+    return 1
+  fi
+
+  printf '%s\n' "${slices[@]}" | LC_ALL=C sort
+}
+
+discover_cluster_services() {
+  local svc_dir
+  local -a services=()
+  for svc_dir in "${ROOT_DIR}"/terraform/cluster/*/pipeline; do
+    [[ -d "${svc_dir}" ]] || continue
+    services+=("$(basename "$(dirname "${svc_dir}")")")
+  done
+  if [[ ${#services[@]} -eq 0 ]]; then
+    return 1
+  fi
+  printf '%s\n' "${services[@]}" | LC_ALL=C sort -u
+}
+
+discover_cluster_slices() {
+  local service="$1"
+  local pipeline_dir="${ROOT_DIR}/terraform/cluster/${service}/pipeline"
+  local script
+  local -a slices=()
+
+  [[ -d "${pipeline_dir}" ]] || return 1
+
+  for script in "${pipeline_dir}"/*.sh; do
+    [[ -f "${script}" ]] || continue
+    slices+=("$(basename "${script}" .sh)")
+  done
+
+  if [[ ${#slices[@]} -eq 0 ]]; then
+    return 1
+  fi
+
+  printf '%s\n' "${slices[@]}" | LC_ALL=C sort
+}
+
 discover_swarm_services() {
   local svc_dir
   local -a services=()
@@ -140,6 +239,30 @@ discover_simple_pipelines() {
   printf '%s\n' "${names[@]}" | LC_ALL=C sort
 }
 
+run_network_pipeline() {
+  local service="$1"
+  local slice="$2"
+  local script="${ROOT_DIR}/terraform/network/${service}/pipeline/${slice}.sh"
+  [[ -x "${script}" || -f "${script}" ]] || die "missing pipeline script: ${script}"
+  exec bash "${script}" "$@"
+}
+
+run_remote_pipeline() {
+  local service="$1"
+  local slice="$2"
+  local script="${ROOT_DIR}/terraform/remote/${service}/pipeline/${slice}.sh"
+  [[ -x "${script}" || -f "${script}" ]] || die "missing pipeline script: ${script}"
+  exec bash "${script}" "$@"
+}
+
+run_cluster_pipeline() {
+  local service="$1"
+  local slice="$2"
+  local script="${ROOT_DIR}/terraform/cluster/${service}/pipeline/${slice}.sh"
+  [[ -x "${script}" || -f "${script}" ]] || die "missing pipeline script: ${script}"
+  exec bash "${script}" "$@"
+}
+
 run_swarm_pipeline() {
   local service="$1"
   local slice="$2"
@@ -169,6 +292,15 @@ main() {
   local category service slice name
   local -a services=() slices=() names=()
 
+  if mapfile -t network_services < <(discover_network_services); then
+    categories+=("Network stacks")
+  fi
+  if mapfile -t remote_services < <(discover_remote_services); then
+    categories+=("Remote stacks")
+  fi
+  if mapfile -t cluster_services < <(discover_cluster_services); then
+    categories+=("Cluster stacks")
+  fi
   if mapfile -t services < <(discover_swarm_services); then
     categories+=("Swarm stacks")
   fi
@@ -188,6 +320,42 @@ main() {
   category="${SELECTED}"
 
   case "${category}" in
+    "Network stacks")
+      mapfile -t network_services < <(discover_network_services)
+      prompt_select "Select network stack:" "${network_services[@]}"
+      service="${SELECTED}"
+
+      mapfile -t slices < <(discover_network_slices "${service}")
+      prompt_select "Select slice for ${service}:" "${slices[@]}"
+      slice="${SELECTED}"
+
+      printf '\nRunning terraform/network/%s/pipeline/%s.sh\n\n' "${service}" "${slice}"
+      run_network_pipeline "${service}" "${slice}" "$@"
+      ;;
+    "Remote stacks")
+      mapfile -t remote_services < <(discover_remote_services)
+      prompt_select "Select remote stack:" "${remote_services[@]}"
+      service="${SELECTED}"
+
+      mapfile -t slices < <(discover_remote_slices "${service}")
+      prompt_select "Select slice for ${service}:" "${slices[@]}"
+      slice="${SELECTED}"
+
+      printf '\nRunning terraform/remote/%s/pipeline/%s.sh\n\n' "${service}" "${slice}"
+      run_remote_pipeline "${service}" "${slice}" "$@"
+      ;;
+    "Cluster stacks")
+      mapfile -t cluster_services < <(discover_cluster_services)
+      prompt_select "Select cluster stack:" "${cluster_services[@]}"
+      service="${SELECTED}"
+
+      mapfile -t slices < <(discover_cluster_slices "${service}")
+      prompt_select "Select slice for ${service}:" "${slices[@]}"
+      slice="${SELECTED}"
+
+      printf '\nRunning terraform/cluster/%s/pipeline/%s.sh\n\n' "${service}" "${slice}"
+      run_cluster_pipeline "${service}" "${slice}" "$@"
+      ;;
     "Swarm stacks")
       mapfile -t services < <(discover_swarm_services)
       prompt_select "Select Swarm stack:" "${services[@]}"

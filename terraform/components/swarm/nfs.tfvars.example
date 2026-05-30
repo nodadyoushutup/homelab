@@ -1,5 +1,5 @@
-# Copy to nfs.tfvars beside this file (not committed; keep secrets local).
-# First line of the live file: # homelab-config: terraform/components/nfs
+# Copy to <repo>/.config/terraform/components/swarm/nfs.tfvars (not committed; keep secrets local).
+# First line of the live file: # homelab-config: terraform/components/swarm/nfs
 # Default CONFIG_DIR / TFVARS_HOME_DIR is <homelab>/.config (see scripts/terraform/load_root_env.sh).
 #
 # Required by scripts/terraform/swarm_pipeline.sh (merged after dns.tfvars; no in-module defaults).

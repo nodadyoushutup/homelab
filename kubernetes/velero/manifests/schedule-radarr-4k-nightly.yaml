@@ -1,0 +1,17 @@
+# Nightly Velero backups: 5-minute stagger from 00:00 (cluster local time).
+
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: radarr-4k-nightly
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "20"
+spec:
+  schedule: "30 0 * * *"
+  template:
+    snapshotMoveData: true
+    includedNamespaces:
+      - radarr-4k
+    storageLocation: radarr-4k
+    ttl: 336h0m0s

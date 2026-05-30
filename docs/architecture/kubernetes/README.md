@@ -46,7 +46,7 @@ small helper manifests. Long-lived workloads are GitOps-driven through Argo CD.
 | `metallb/`, `ingress-nginx/`, `external-secrets/`, `democratic-csi-*`, `node-exporter/`, `snapshot-controller/`, `velero/` | **Platform add-ons** — usually `values.yaml` (+ `namespace.yaml` where needed), wired from `argocd-management/applications/*.yaml`. Block storage: [argocd/storage-truenas-iscsi.md](../argocd/storage-truenas-iscsi.md). |
 | `langgraph/`, `langchain-agent-chat/` | **First-party production** — flat manifests (Deployments, Services, Ingress, ExternalSecrets, PVCs). Images built from `applications/`. |
 | `qbittorrent/`, `cross-seed/` | **Kustomize** — `base/` + `overlays/<instance>/` when many similar instances differ by namespace, node, or secrets. |
-| `clusterplex/`, `radarr/`, `sonarr/`, `prowlarr/`, `seerr/`, `tautulli/`, `picsur/`, `privatebin/`, `thelounge/` | **Media and apps** — plain manifest bundles per deployable unit. |
+| `clusterplex/`, `radarr/`, `radarr-4k/`, `sonarr/`, `prowlarr/`, `seerr/`, `tautulli/`, `picsur/`, `privatebin/`, `thelounge/` | **Media and apps** — plain manifest bundles per deployable unit. |
 
 When you add a directory, mirror a **neighbor in the same class and delivery
 style** — see [manifest-patterns.md](./manifest-patterns.md).
@@ -55,8 +55,8 @@ style** — see [manifest-patterns.md](./manifest-patterns.md).
 
 | Concern | Where it lives |
 | --- | --- |
-| Edge proxy, Swarm observability, MCP/RAG on Swarm | `terraform/swarm/` — [terraform/swarm-placement.md](../terraform/swarm-placement.md) |
-| CI/CD (Jenkins, GHA runners) | Swarm `swarm-wk-1` + `terraform/runners/` — not Kubernetes |
+| Edge proxy, Swarm observability, MCP/RAG on Swarm | `terraform/components/swarm/` — [terraform/swarm-placement.md](../terraform/swarm-placement.md) |
+| CI/CD (Jenkins, GHA runners) | Swarm `swarm-wk-1` + `terraform/components/runners/` — not Kubernetes |
 | Production LangGraph + Agent Chat | `kubernetes/langgraph/`, `kubernetes/langchain-agent-chat/` |
 | Media *arr stack, qBittorrent, Clusterplex | `kubernetes/<app>/` |
 | Cluster ingress, CSI, MetalLB, ESO | `kubernetes/` platform add-ons |

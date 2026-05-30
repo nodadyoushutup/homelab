@@ -18,7 +18,7 @@ Kubernetes manifest layout (what gets synced):
 
 ```mermaid
 flowchart TB
-  tf["terraform/swarm/argocd/config\n(root Application)"]
+  tf["terraform/cluster/argocd/config\n(root Application)"]
   mgmt["kubernetes/argocd-management/\n(applications/ + ops/)"]
   plat["Platform sync waves\nMetalLB → ingress → CSI → …"]
   apps["Workload Applications\nlanggraph, radarr, …"]

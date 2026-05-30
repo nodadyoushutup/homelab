@@ -1,5 +1,5 @@
-# Copy to arm64.tfvars beside this file (not committed; keep secrets local).
-# First line of the live file: # homelab-config: terraform/components/arm64
+# Copy to <repo>/.config/terraform/components/runners/arm64.tfvars (not committed; keep secrets local).
+# First line of the live file: # homelab-config: terraform/components/runners/arm64
 # Docker provider for ARM64 pool hosts (standalone docker_container, not Swarm).
 # Shared by gha-runner-arm64 and jenkins-agent-arm64 pipelines.
 

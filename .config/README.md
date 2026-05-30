@@ -15,7 +15,15 @@ Every Terraform tfvars file, shared component tfvars, `minio.backend.hcl`, and l
 | File | Tag id |
 | --- | --- |
 | `terraform/swarm/grafana/app.tfvars` | `terraform/swarm/grafana/app` |
-| `terraform/components/dns.tfvars` | `terraform/components/dns` |
+| `terraform/cluster/proxmox/app.tfvars` | `terraform/cluster/proxmox/app` |
+| `terraform/cluster/argocd/config.tfvars` | `terraform/cluster/argocd/config` |
+| `terraform/remote/cloudflare/config.tfvars` | `terraform/remote/cloudflare/config` |
+| `terraform/network/fortigate/config.tfvars` | `terraform/network/fortigate/config` |
+| `.config/terraform/components/swarm/swarm.tfvars` | `terraform/components/swarm/swarm` |
+| `.config/terraform/components/swarm/dns.tfvars` | `terraform/components/swarm/dns` |
+| `.config/terraform/components/swarm/nfs.tfvars` | `terraform/components/swarm/nfs` |
+| `.config/terraform/components/runners/amd64.tfvars` | `terraform/components/runners/amd64` |
+| `.config/terraform/components/runners/arm64.tfvars` | `terraform/components/runners/arm64` |
 | `minio.backend.hcl` | `minio.backend` |
 | `docker/langgraph.env` | `docker/langgraph` |
 | `scripts/rag.env` | `scripts/rag` |
@@ -36,7 +44,7 @@ Canonical mirrored paths (for example `terraform/swarm/<svc>/app.tfvars`) remain
 - `docker/` — split `*.env` for Compose, LangGraph, and host scripts (see `docker/README.md` and `docker/*.env.example`)
 - `scripts/` — host-only script dotenv (see `scripts/rag.env.example` for `scripts/rag/backfill.sh`); RAG backfill script lives under **`scripts/rag/`**
 - `minio.backend.hcl` — shared remote state backend config for Swarm/remote Terraform stages
-- `terraform/` — merged tfvars, per-stack `app.tfvars` / `config.tfvars`, shared components (`terraform/components/*.tfvars`), secrets slices where used. Copy from **`terraform/components/*.tfvars.example`** beside the live files.
+- `terraform/` — merged tfvars, per-stack `app.tfvars` / `config.tfvars`, shared components under **`terraform/components/{swarm,cluster,runners,remote}/`**, secrets slices where used. Copy from **`terraform/components/**/*.tfvars.example`** into matching paths under **`.config/terraform/components/`**.
 - `kubernetes/` — optional cluster tfvars if your site keeps them here
 - `.ssh/` — keys and `known_hosts` for optional SSH workflows
 
@@ -46,4 +54,4 @@ Set **`CONFIG_DIR`** in **`docker/site.env`** to point at another tree if this h
 
 ## Git
 
-The repo **`.gitignore` ignores `.config/*` except `README.md`, `docker/README.md`, `docker/*.env.example`, `scripts/*.env.example`, and `terraform/components/*.tfvars.example`** so live secrets and site tfvars are not committed accidentally. Do not force-add tfvars, `docker/*.env`, or private keys.
+The repo **`.gitignore` ignores `.config/*` except `README.md`, `docker/README.md`, `docker/*.env.example`, `scripts/*.env.example`**, and checked-in examples under **`terraform/components/`**, so live secrets and site tfvars are not committed accidentally. Do not force-add tfvars, `docker/*.env`, or private keys.

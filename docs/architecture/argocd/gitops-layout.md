@@ -20,14 +20,14 @@ File: `kubernetes/bootstrap/argocd-management-app.yaml`.
 This is a **one-time bootstrap** artifact, not the ongoing source of truth for
 individual workloads.
 
-### 2. Terraform root Application — `terraform/swarm/argocd/config/`
+### 2. Terraform root Application — `terraform/cluster/argocd/config/`
 
 The **Argo CD provider** manages a single `Application` named
 **`argocd-management`** that tracks **`kubernetes/argocd-management`** recursively
 (`directory.recurse: true` — required because manifests live under `applications/`
 and `ops/`, not the directory root).
 
-```20:28:terraform/swarm/argocd/config/main.tf
+```20:28:terraform/cluster/argocd/config/main.tf
     source {
       repo_url        = "git@github.com:nodadyoushutup/homelab.git"
       target_revision = "HEAD"
@@ -71,7 +71,7 @@ is healthy.
 
 | Path | Role |
 | --- | --- |
-| `terraform/swarm/argocd/config/` | Terraform slice — bootstraps root Application only |
+| `terraform/cluster/argocd/config/` | Terraform slice — bootstraps root Application only |
 | `kubernetes/bootstrap/` | Initial Argo → Git path wiring |
 | `kubernetes/argocd-management/` | All ongoing Application / AppProject CRs |
 | `kubernetes/<app>/` | Workload manifests each Application points at |

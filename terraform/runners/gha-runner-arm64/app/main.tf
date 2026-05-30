@@ -1,4 +1,4 @@
-# Standalone Docker containers on the ARM64 pool host (`.config/terraform/components/arm64.tfvars`).
+# Standalone Docker containers on the ARM64 pool host (`.config/terraform/components/runners/arm64.tfvars`).
 # Uses `docker_container` + `devices` so `/dev/kvm` gets proper cgroup permissions (unlike Swarm services).
 
 resource "docker_volume" "nfs_homelab" {

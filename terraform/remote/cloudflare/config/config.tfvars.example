@@ -1,4 +1,4 @@
-# Example only — copy to /mnt/eapp/code/homelab/.config/terraform/swarm/cloudflare/config.tfvars (or pass via --tfvars).
+# Example only — copy to /mnt/eapp/code/homelab/.config/terraform/remote/cloudflare/config.tfvars (or pass via --tfvars).
 # Do not commit real api_token values.
 # To drop DNS for retired standalone code MCPs only: edit your live tfvars and delete those
 # `records` rows — see docs/workflows/edge-dns-and-nginx-proxy.md (section "Retired standalone code MCPs").

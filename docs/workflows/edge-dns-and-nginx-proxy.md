@@ -9,7 +9,7 @@ Remove DNS and NPM objects for services that are no longer deployed. Typical ret
 1. **Standalone code MCPs** (replaced then removed): **`mcp.filesystem.<apex>`**, **`mcp.git.<apex>`**, **`mcp.ast-grep.<apex>`** (or **`mcp.astgrep.<apex>`**), including **`-homelab`** lane variants.
 2. **Aggregate mcp-code**: **`mcp.code.<apex>`** (Swarm published port **`18212`** in prior defaults).
 
-**Cloudflare** — edit **`<repo>/.config/terraform/swarm/cloudflare/config.tfvars`**. Delete **`records`** items whose **`name`** matches retired hostnames only.
+**Cloudflare** — edit **`<repo>/.config/terraform/remote/cloudflare/config.tfvars`**. Delete **`records`** items whose **`name`** matches retired hostnames only.
 
 **NPM** — edit **`<repo>/.config/terraform/swarm/nginx_proxy_manager/config.tfvars`**. Remove **`certificates`**, **`proxy_hosts`**, **`redirections`**, and **`streams`** keys that only served those hostnames (match **`domain_names`** / **`forward_port`**).
 
@@ -34,7 +34,7 @@ Every other name—including apex, `www`, wildcard, MCP, LangGraph, dev compose 
 1. **Name the public hostname** (for example `app.example.com`) and decide **where traffic lands**:
    - **Swarm published port on the edge host** (typical: HTTP(S) via Nginx Proxy Manager on the Swarm manager, with `forward_host` / `forward_port` pointing at the Swarm ingress IP and published port).
    - **Kubernetes**: `Ingress` `host:` in `kubernetes/<app>/` (often `ingress-nginx` + MetalLB). The Cloudflare `A` record `content` may be the **ingress/LB LAN IP**, not the Swarm edge—match whatever actually serves that ingress in your network.
-2. **Cloudflare** (`terraform/swarm/cloudflare/config`): add or extend a `records` entry with a stable `key`, the full `name`, `content` (target IP), `ttl`, and `proxied`. Live tfvars usually live at **`<repo>/.config/terraform/swarm/cloudflare/config.tfvars`** (see `terraform/swarm/cloudflare/pipeline/config.sh`).
+2. **Cloudflare** (`terraform/remote/cloudflare/config`): add or extend a `records` entry with a stable `key`, the full `name`, `content` (target IP), `ttl`, and `proxied`. Live tfvars usually live at **`<repo>/.config/terraform/remote/cloudflare/config.tfvars`** (see `terraform/remote/cloudflare/pipeline/config.sh`).
 3. **Nginx Proxy Manager** (`terraform/swarm/nginx_proxy_manager/config`): when the app is fronted **through NPM on the Swarm edge** (not through cluster ingress alone), add:
    - a **Let's Encrypt certificate** entry under top-level **`certificates`** (map key = certificate name used by proxy hosts), and
    - a **proxy host** entry under top-level **`proxy_hosts`** (map key = stable Terraform id; body includes `forward_host`, `forward_port`, and `certificate` or `certificate_id` aligned with the Swarm **published port** and certificate map key). Live tfvars: **`<repo>/.config/terraform/swarm/nginx_proxy_manager/config.tfvars`** (`terraform/swarm/nginx_proxy_manager/pipeline/config.sh`).
@@ -45,7 +45,7 @@ Every other name—including apex, `www`, wildcard, MCP, LangGraph, dev compose 
 
 | Piece | Terraform module | Jenkins / shell entry |
 | --- | --- | --- |
-| Cloudflare `A` records | `terraform/swarm/cloudflare/config` | `terraform/swarm/cloudflare/pipeline/config.sh`, `config.jenkins` |
+| Cloudflare `A` records | `terraform/remote/cloudflare/config` | `terraform/remote/cloudflare/pipeline/config.sh`, `config.jenkins` |
 | NPM certificates + proxy hosts | `terraform/swarm/nginx_proxy_manager/config` | `terraform/swarm/nginx_proxy_manager/pipeline/config.sh`, `config.jenkins` |
 | NPM stack (service + DB) | `terraform/swarm/nginx_proxy_manager/{app,database}` | `app.sh`, `database.sh` |
 
@@ -68,7 +68,7 @@ The **`homelab-dev`** stack publishes **LangGraph**, **LangChain Agent Chat**, *
 | RAG engine | `dev.rag-engine.<apex>` | 9015 |
 | MCP RAG | `dev.mcp.rag.<apex>` | 9016 |
 
-Terraform: add matching **`A`** records in **`terraform/swarm/cloudflare/config`** and **proxy hosts** (plus a Let's Encrypt certificate) in **`terraform/swarm/nginx_proxy_manager/config`**, with **`forward_host` / `forward_port`** pointing at the **machine where `docker compose` is actually running** (often the same Swarm edge IP if that host runs both; adjust if your dev workstation differs). For the browser chat build arg, set **`LANGCHAIN_AGENT_CHAT_PUBLIC_API_URL`** to the HTTPS Agent Chat URL when you stop using `localhost`.
+Terraform: add matching **`A`** records in **`terraform/remote/cloudflare/config`** and **proxy hosts** (plus a Let's Encrypt certificate) in **`terraform/swarm/nginx_proxy_manager/config`**, with **`forward_host` / `forward_port`** pointing at the **machine where `docker compose` is actually running** (often the same Swarm edge IP if that host runs both; adjust if your dev workstation differs). For the browser chat build arg, set **`LANGCHAIN_AGENT_CHAT_PUBLIC_API_URL`** to the HTTPS Agent Chat URL when you stop using `localhost`.
 
 **Postgres** in that Compose file has no published port and does not need a public name.
 

@@ -76,6 +76,20 @@ assert_tfvars_path "swarm nginx_proxy_manager config" \
   "" \
   "${TFVARS_HOME_DIR}/terraform/swarm/nginx_proxy_manager/config.tfvars"
 
+assert_tfvars_path "cluster proxmox app" \
+  "${ROOT_DIR}" \
+  "${ROOT_DIR}/terraform/cluster/proxmox/app" \
+  "proxmox" \
+  "" \
+  "${TFVARS_HOME_DIR}/terraform/cluster/proxmox/app.tfvars"
+
+assert_tfvars_path "cluster argocd config" \
+  "${ROOT_DIR}" \
+  "${ROOT_DIR}/terraform/cluster/argocd/config" \
+  "argocd" \
+  "" \
+  "${TFVARS_HOME_DIR}/terraform/cluster/argocd/config.tfvars"
+
 assert_tfvars_path "talos app" \
   "${ROOT_DIR}" \
   "${ROOT_DIR}/terraform/swarm/talos/app" \
@@ -83,12 +97,19 @@ assert_tfvars_path "talos app" \
   "" \
   "${TFVARS_HOME_DIR}/terraform/swarm/talos/app.tfvars"
 
-assert_tfvars_path "cloudflare config" \
+assert_tfvars_path "network fortigate config" \
   "${ROOT_DIR}" \
-  "${ROOT_DIR}/terraform/swarm/cloudflare/config" \
+  "${ROOT_DIR}/terraform/network/fortigate/config" \
+  "fortigate" \
+  "" \
+  "${TFVARS_HOME_DIR}/terraform/network/fortigate/config.tfvars"
+
+assert_tfvars_path "remote cloudflare config" \
+  "${ROOT_DIR}" \
+  "${ROOT_DIR}/terraform/remote/cloudflare/config" \
   "cloudflare" \
   "" \
-  "${TFVARS_HOME_DIR}/terraform/swarm/cloudflare/config.tfvars"
+  "${TFVARS_HOME_DIR}/terraform/remote/cloudflare/config.tfvars"
 
 assert_tfvars_path "explicit override" \
   "${ROOT_DIR}" \
@@ -165,7 +186,7 @@ while IFS= read -r pipeline_script; do
     echo "[FAIL] ${label}: suspicious double slash: ${tfvars}" >&2
     failures=$((failures + 1))
   fi
-done < <(grep -rlE 'source .*swarm_pipeline\.sh' "${ROOT_DIR}/terraform/swarm" "${ROOT_DIR}/terraform/runners" --include='*.sh' 2>/dev/null | sort)
+done < <(grep -rlE 'source .*(swarm|cluster|remote|network)_pipeline\.sh' "${ROOT_DIR}/terraform/swarm" "${ROOT_DIR}/terraform/cluster" "${ROOT_DIR}/terraform/remote" "${ROOT_DIR}/terraform/network" "${ROOT_DIR}/terraform/runners" --include='*.sh' 2>/dev/null | sort)
 
 if [[ "${failures}" -gt 0 ]]; then
   echo "[ERR] ${failures} failure(s) in ${checks} check(s)" >&2

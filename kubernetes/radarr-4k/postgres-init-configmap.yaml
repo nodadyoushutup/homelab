@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: radarr-4k-postgres-init
+  namespace: radarr-4k
+  annotations:
+    argocd.argoproj.io/sync-wave: "18"
+data:
+  10-create-log-db.sh: |
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    if [ -z "${POSTGRES_LOG_DB:-}" ]; then
+      echo "POSTGRES_LOG_DB is empty; skipping log database creation"
+      exit 0
+    fi
+
+    if [ "${POSTGRES_LOG_DB}" = "${POSTGRES_DB}" ]; then
+      echo "POSTGRES_LOG_DB matches POSTGRES_DB; skipping extra database creation"
+      exit 0
+    fi
+
+    if psql -U "${POSTGRES_USER}" -d "${POSTGRES_DB}" -tAc "SELECT 1 FROM pg_database WHERE datname='${POSTGRES_LOG_DB}'" | grep -q 1; then
+      echo "Database ${POSTGRES_LOG_DB} already exists"
+      exit 0
+    fi
+
+    echo "Creating log database ${POSTGRES_LOG_DB}"
+    createdb -U "${POSTGRES_USER}" -O "${POSTGRES_USER}" "${POSTGRES_LOG_DB}"

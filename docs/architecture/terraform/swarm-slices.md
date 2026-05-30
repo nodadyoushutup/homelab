@@ -92,12 +92,12 @@ without suffix (for example `terraform/swarm/grafana/app`). Resolve by tag via
 
 | File | Used for |
 | --- | --- |
-| `.config/terraform/components/swarm.tfvars` | Swarm SSH + registry auth |
-| `.config/terraform/components/dns.tfvars` | Swarm DNS resolvers |
-| `.config/terraform/components/nfs.tfvars` | Shared NFS export targets |
-| `.config/terraform/components/amd64.tfvars` / `arm64.tfvars` | Runner pool Docker hosts |
+| `.config/terraform/components/swarm/swarm.tfvars` | Swarm SSH + registry auth |
+| `.config/terraform/components/swarm/dns.tfvars` | Swarm DNS resolvers |
+| `.config/terraform/components/swarm/nfs.tfvars` | Shared NFS export targets |
+| `.config/terraform/components/runners/amd64.tfvars` / `arm64.tfvars` | Runner pool Docker hosts |
 
-Copy from **`.config/terraform/components/*.tfvars.example`** when bootstrapping a site.
+Copy from **`terraform/components/**/*.tfvars.example`** into **`.config/terraform/components/`** when bootstrapping a site.
 
 **Vault `config/`** merges `secrets` / `secret_files` from slice tfvars via
 `scripts/terraform/vault_merge_config_secrets.py`. Do not put those blocks in
@@ -106,8 +106,10 @@ checked-in `terraform/swarm/vault/config.tfvars`.
 **Pipelines:**
 
 Each stack keeps **bespoke pipeline entrypoints** next to its Terraform slices
-under **`terraform/swarm/<svc>/pipeline/`** (Swarm services, Talos/Proxmox,
-Cloudflare, FortiGate, Argo CD, …):
+under **`terraform/swarm/<svc>/pipeline/`** (Swarm services),
+**`terraform/network/<svc>/pipeline/`** (FortiGate),
+**`terraform/remote/<svc>/pipeline/`** (Cloudflare), or
+**`terraform/cluster/<svc>/pipeline/`** (Proxmox, Argo CD):
 
 | File | Runs slice |
 | --- | --- |
@@ -118,6 +120,12 @@ Cloudflare, FortiGate, Argo CD, …):
 - Default Swarm path: `terraform/swarm/<svc>/pipeline/*.sh` via
   `scripts/terraform/swarm_pipeline.sh` (merges `swarm.tfvars`, `dns.tfvars`,
   `nfs.tfvars`, slice tfvars).
+- **Cluster** path: `terraform/cluster/<svc>/pipeline/*.sh` via
+  `scripts/terraform/cluster_pipeline.sh` (slice tfvars only).
+- **Remote** path: `terraform/remote/<svc>/pipeline/*.sh` via
+  `scripts/terraform/remote_pipeline.sh` (slice tfvars only).
+- **Network** path: `terraform/network/<svc>/pipeline/*.sh` via
+  `scripts/terraform/network_pipeline.sh` (slice tfvars only).
 - **Bespoke** (no `swarm_pipeline.sh`): `chromadb`, `cadvisor`,
   `cloud-image-repository`, `dozzle`, `node_exporter`, `prometheus`;
   full `nginx_proxy_manager` trio; Grafana `config/` (slice tfvars + backend only).

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Export path to shared Swarm container DNS tfvars (tag: terraform/components/dns).
+# Export path to shared Swarm container DNS tfvars (tag: terraform/components/swarm/dns).
 set -euo pipefail
 
 _script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -7,5 +7,5 @@ _script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${_script_dir}/resolve_config_by_id.sh"
 
 TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${CONFIG_DIR:-${ROOT_DIR}/.config}}"
-SWARM_DNS_PROVIDER_TFVARS="${SWARM_DNS_PROVIDER_TFVARS:-$(homelab_resolve_config_path "${TFVARS_HOME_DIR}" "terraform/components/dns")}"
+SWARM_DNS_PROVIDER_TFVARS="${SWARM_DNS_PROVIDER_TFVARS:-$(homelab_resolve_config_path "${TFVARS_HOME_DIR}" "terraform/components/swarm/dns")}"
 export SWARM_DNS_PROVIDER_TFVARS

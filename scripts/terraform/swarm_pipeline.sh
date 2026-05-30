@@ -28,9 +28,9 @@ TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${CONFIG_DIR:-${ROOT_DIR}/.config}}"
 # shellcheck source=resolve_config_by_id.sh
 source "${PIPELINE_SCRIPT_ROOT}/resolve_config_by_id.sh"
 DEFAULT_BACKEND_FILE="${DEFAULT_BACKEND_FILE:-$(homelab_resolve_config_path "${TFVARS_HOME_DIR}" "minio.backend")}"
-SWARM_DNS_PROVIDER_TFVARS="${SWARM_DNS_PROVIDER_TFVARS:-${TFVARS_HOME_DIR}/terraform/components/dns.tfvars}"
+SWARM_DNS_PROVIDER_TFVARS="${SWARM_DNS_PROVIDER_TFVARS:-${TFVARS_HOME_DIR}/terraform/components/swarm/dns.tfvars}"
 export SWARM_DNS_PROVIDER_TFVARS
-SWARM_NFS_PROVIDER_TFVARS="${SWARM_NFS_PROVIDER_TFVARS:-${TFVARS_HOME_DIR}/terraform/components/nfs.tfvars}"
+SWARM_NFS_PROVIDER_TFVARS="${SWARM_NFS_PROVIDER_TFVARS:-${TFVARS_HOME_DIR}/terraform/components/swarm/nfs.tfvars}"
 export SWARM_NFS_PROVIDER_TFVARS
 
 TERRAFORM_DIR="${TERRAFORM_DIR:-${ROOT_DIR}/terraform/swarm/${SERVICE_NAME}}"
@@ -176,7 +176,7 @@ if [[ "${SWARM_SKIP_DNS_PROVIDER_TFVARS:-0}" == "1" ]]; then
 else
   if [[ ! -f "${SWARM_DNS_PROVIDER_TFVARS}" ]]; then
     echo "[ERR] Missing Swarm DNS provider tfvars: ${SWARM_DNS_PROVIDER_TFVARS}" >&2
-    echo "[ERR] Add dns_nameservers there (see .config/terraform/components/dns.tfvars.example)." >&2
+    echo "[ERR] Add dns_nameservers there (see terraform/components/swarm/dns.tfvars.example)." >&2
     exit 1
   fi
   SWARM_SHARED_TFVARS_PREFIX+=(-var-file "${SWARM_DNS_PROVIDER_TFVARS}")
@@ -191,7 +191,7 @@ if [[ "${SWARM_SKIP_NFS_PROVIDER_TFVARS:-0}" == "1" ]]; then
 else
   if [[ ! -f "${SWARM_NFS_PROVIDER_TFVARS}" ]]; then
     echo "[ERR] Missing Swarm NFS provider tfvars: ${SWARM_NFS_PROVIDER_TFVARS}" >&2
-    echo "[ERR] Add nfs there (see .config/terraform/components/nfs.tfvars.example)." >&2
+    echo "[ERR] Add nfs there (see terraform/components/swarm/nfs.tfvars.example)." >&2
     exit 1
   fi
   SWARM_SHARED_TFVARS_PREFIX+=(-var-file "${SWARM_NFS_PROVIDER_TFVARS}")

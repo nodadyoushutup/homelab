@@ -17,11 +17,11 @@ pipeline {
     stage('Run Terraform Stage') {
       steps {
         sh(
-          label: 'swarm/cloudflare/config',
+          label: 'remote/cloudflare/config',
           script: '''#!/usr/bin/env bash
 set -euo pipefail
 
-./scripts/terraform/jenkins_stage_runner.sh ./terraform/swarm/cloudflare/pipeline/config.sh
+./scripts/terraform/jenkins_stage_runner.sh ./terraform/remote/cloudflare/pipeline/config.sh
 '''
         )
       }

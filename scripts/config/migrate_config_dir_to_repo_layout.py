@@ -64,10 +64,10 @@ def qbittorrent_overlay_dest(repo: Path, cfg_name: str) -> str | None:
 
 def explicit_remote(repo: Path, cfg_name: str) -> str | None:
     mapping = {
-        "cloudflare": "terraform/swarm/cloudflare/config",
-        "fortigate": "terraform/swarm/fortigate/config",
-        "argocd": "terraform/swarm/argocd/config",
-        "proxmox": "terraform/swarm/proxmox/app",
+        "cloudflare": "terraform/remote/cloudflare/config",
+        "fortigate": "terraform/network/fortigate/config",
+        "argocd": "terraform/cluster/argocd/config",
+        "proxmox": "terraform/cluster/proxmox/app",
         "talos": "terraform/swarm/talos/app",
     }
     rel = mapping.get(cfg_name)

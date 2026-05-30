@@ -24,6 +24,25 @@ spec:
 apiVersion: velero.io/v1
 kind: BackupStorageLocation
 metadata:
+  name: radarr-4k
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "15"
+spec:
+  provider: aws
+  accessMode: ReadWrite
+  objectStorage:
+    bucket: radarr-4k
+  config:
+    region: us-east-1
+    s3ForcePathStyle: "true"
+    s3Url: http://192.168.1.67:9000
+    insecureSkipTLSVerify: "true"
+---
+
+apiVersion: velero.io/v1
+kind: BackupStorageLocation
+metadata:
   name: sonarr
   namespace: velero
   annotations:

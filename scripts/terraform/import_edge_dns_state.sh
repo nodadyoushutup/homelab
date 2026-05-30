@@ -10,9 +10,9 @@ source "${SCRIPT_DIR}/load_root_env.sh"
 
 TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${CONFIG_DIR:-${ROOT_DIR}/.config}}"
 BACKEND_FILE="${BACKEND_FILE:-${TFVARS_HOME_DIR}/minio.backend.hcl}"
-CF_TFVARS="${TFVARS_HOME_DIR}/terraform/swarm/cloudflare/config.tfvars"
+CF_TFVARS="${TFVARS_HOME_DIR}/terraform/remote/cloudflare/config.tfvars"
 NPM_TFVARS="${TFVARS_HOME_DIR}/terraform/swarm/nginx_proxy_manager/config.tfvars"
-CF_DIR="${ROOT_DIR}/terraform/swarm/cloudflare/config"
+CF_DIR="${ROOT_DIR}/terraform/remote/cloudflare/config"
 NPM_DIR="${ROOT_DIR}/terraform/swarm/nginx_proxy_manager/config"
 DRY_RUN="${DRY_RUN:-0}"
 ONLY="${ONLY:-}"
@@ -25,7 +25,7 @@ echo "[STEP] terraform init (npm)"
 
 export CF_TFVARS CF_DIR NPM_TFVARS NPM_DIR DRY_RUN ONLY
 # Match swarm_pipeline order: shared dns/nfs first, stack tfvars last (wins on provider_config).
-NPM_EXTRA_VARFILES="${TFVARS_HOME_DIR}/terraform/components/dns.tfvars,${TFVARS_HOME_DIR}/terraform/components/nfs.tfvars"
+NPM_EXTRA_VARFILES="${TFVARS_HOME_DIR}/terraform/components/swarm/dns.tfvars,${TFVARS_HOME_DIR}/terraform/components/swarm/nfs.tfvars"
 export NPM_EXTRA_VARFILES
 python3 - <<'PY'
 import json

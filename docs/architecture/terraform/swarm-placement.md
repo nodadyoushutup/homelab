@@ -156,7 +156,7 @@ schedulable anywhere. For new replicated services, **always set a constraint**
 matching the workload class above.
 
 Runner pools set the target host via provider tfvars
-(`.config/terraform/components/amd64.tfvars`, `arm64.tfvars`) — see
+(`.config/terraform/components/runners/amd64.tfvars`, `runners/arm64.tfvars`) — see
 [swarm-slices.md](./swarm-slices.md#config-and-pipelines).
 
 ## Checklist: new Swarm app

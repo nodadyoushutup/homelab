@@ -26,7 +26,7 @@ top-level directory.
 | --- | --- |
 | `applications/` | Service source and Docker build contexts aligned with deployable units (for example `langgraph/`, `rag-engine/`, `mcp-*`, Jenkins pieces). |
 | `kubernetes/` | Per-app or per-platform folders consumed by Argo CD or manual apply; cluster ingress, storage, media stack, and production LangGraph/chat pairs live here. Layout: [kubernetes/README.md](./kubernetes/README.md). |
-| `terraform/` | IaC roots: deployable stacks under **`terraform/swarm/`** (Swarm services, Talos/Proxmox bootstrap, Cloudflare DNS, FortiGate, Argo CD), runner pools under **`terraform/runners/`** (each with **`pipeline/`** entrypoints), and shared **`terraform/modules/`** helpers. Layout: [terraform/README.md](./terraform/README.md). |
+| `terraform/` | IaC roots: deployable stacks under **`terraform/swarm/`** (Swarm services, Talos bootstrap, …), **`terraform/network/`** (FortiGate), **`terraform/remote/`** (Cloudflare DNS), **`terraform/cluster/`** (Proxmox, Argo CD), runner pools under **`terraform/runners/`** (each with **`pipeline/`** entrypoints), and shared **`terraform/modules/`** helpers. Layout: [terraform/README.md](./terraform/README.md). |
 | `docker/` | Compose-based local development; not the production Swarm definition. |
 | `docs/` | Human source of truth: workflows, architecture (this folder), RAG notes, subagent overlays, resources shelf. |
 | `packer/` | Machine and cloud image definitions (for example Ubuntu base images) used upstream of Swarm or cluster nodes. Jenkins/bash pipeline entrypoints live under **`packer/pipeline/`**. |

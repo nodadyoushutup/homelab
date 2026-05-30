@@ -1,5 +1,5 @@
 variable "env" {
-  description = "Container environment variables (components/nfs.tfvars and slice tfvars). GH_RUNNER_NAME is set per replica in main.tf."
+  description = "Container environment variables (components/swarm/nfs.tfvars and slice tfvars). GH_RUNNER_NAME is set per replica in main.tf."
   type        = map(string)
   sensitive   = true
 }
@@ -27,7 +27,7 @@ variable "dns_nameservers" {
 
 
 variable "nfs" {
-  description = "Homelab repo NFS mount (components/nfs.tfvars)."
+  description = "Homelab repo NFS mount (components/swarm/nfs.tfvars)."
   type = object({
     target         = string
     driver_options = map(string)
