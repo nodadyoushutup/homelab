@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Point radarr-4k at qbittorrent-movies-4k as its only download client.
+# Point radarr-4k at qbittorrent-movie-4k as its only download client.
 set -euo pipefail
 
 NS="${NS:-radarr-4k}"
 PG="${PG:-radarr-4k-postgres}"
 DB_USER="${DB_USER:-radarr4k}"
 DB_NAME="${DB_NAME:-radarr4k-main}"
-QBIT_HOST="${QBIT_HOST:-qbittorrent.qbittorrent-movies-4k.svc.cluster.local}"
+QBIT_HOST="${QBIT_HOST:-qbittorrent.qbittorrent-movie-4k.svc.cluster.local}"
 QBIT_PORT="${QBIT_PORT:-8080}"
 QBIT_USER="${QBIT_USER:-admin}"
 QBIT_PASS="${QBIT_PASS:-S#nvhs89vher}"

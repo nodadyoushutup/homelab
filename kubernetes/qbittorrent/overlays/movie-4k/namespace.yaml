@@ -1,8 +1,8 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: qbittorrent-movies-4k
+  name: qbittorrent-movie-4k
   labels:
     app.kubernetes.io/name: qbittorrent
     app.kubernetes.io/part-of: qbittorrent
-    app.kubernetes.io/instance: movies-4k
+    app.kubernetes.io/instance: movie-4k

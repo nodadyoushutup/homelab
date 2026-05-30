@@ -632,7 +632,7 @@ spec:
 apiVersion: velero.io/v1
 kind: BackupStorageLocation
 metadata:
-  name: qbittorrent-movies-4k
+  name: qbittorrent-movie-4k
   namespace: velero
   annotations:
     argocd.argoproj.io/sync-wave: "15"
@@ -640,7 +640,7 @@ spec:
   provider: aws
   accessMode: ReadWrite
   objectStorage:
-    bucket: qbittorrent-movies-4k
+    bucket: qbittorrent-movie-4k
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
