@@ -43,6 +43,8 @@ qbittorrent:
     base_url: https://qbittorrent.movie.1.nodadyoushutup.com
   - id: movie-10
     base_url: https://qbittorrent.movie.10.nodadyoushutup.com
+  - id: movies-4k
+    base_url: https://qbittorrent.movies.4k.nodadyoushutup.com
   - id: movie-2
     base_url: https://qbittorrent.movie.2.nodadyoushutup.com
   - id: movie-3
