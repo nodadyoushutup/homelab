@@ -401,6 +401,24 @@ spec:
 apiVersion: velero.io/v1
 kind: Schedule
 metadata:
+  name: qbittorrent-movies-4k-nightly
+  namespace: velero
+  annotations:
+    argocd.argoproj.io/sync-wave: "21"
+spec:
+  schedule: "37 2 * * *"
+  template:
+    snapshotMoveData: true
+    includedNamespaces:
+      - qbittorrent-movies-4k
+    storageLocation: qbittorrent-movies-4k
+    ttl: 336h0m0s
+
+---
+
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
   name: qbittorrent-television-0-nightly
   namespace: velero
   annotations:

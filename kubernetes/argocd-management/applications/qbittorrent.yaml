@@ -36,6 +36,8 @@ spec:
       server: https://kubernetes.default.svc
     - namespace: qbittorrent-movie-10
       server: https://kubernetes.default.svc
+    - namespace: qbittorrent-movies-4k
+      server: https://kubernetes.default.svc
     - namespace: qbittorrent-television-0
       server: https://kubernetes.default.svc
     - namespace: qbittorrent-television-1
@@ -473,6 +475,35 @@ spec:
     repoURL: git@github.com:nodadyoushutup/homelab.git
     targetRevision: HEAD
     path: kubernetes/qbittorrent/overlays/movie-10
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: qbittorrent-movies-4k
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: qbittorrent
+    app.kubernetes.io/part-of: qbittorrent
+    app.kubernetes.io/instance: movies-4k
+  annotations:
+    argocd.argoproj.io/sync-wave: "61"
+spec:
+  project: qbittorrent
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: qbittorrent-movies-4k
+  source:
+    repoURL: git@github.com:nodadyoushutup/homelab.git
+    targetRevision: HEAD
+    path: kubernetes/qbittorrent/overlays/movies-4k
   syncPolicy:
     automated:
       prune: true
