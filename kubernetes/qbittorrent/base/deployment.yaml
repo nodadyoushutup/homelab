@@ -50,6 +50,11 @@ spec:
                 echo "WARN: could not overwrite /config/qBittorrent/qBittorrent.conf; using existing file" >&2
               fi
               if [ -f /config/qBittorrent/qBittorrent.conf ]; then
+                # Vault/external-secrets may store over-escaped PBKDF2 values; normalize the final config.
+                pbkdf2_core=$(grep '^WebUI\\Password_PBKDF2=' /config/qBittorrent/qBittorrent.conf | sed -n 's/.*\(@ByteArray([^)]*)\).*/\1/p')
+                if [ -n "$pbkdf2_core" ]; then
+                  sed -i "s|^WebUI\\\\Password_PBKDF2=.*|WebUI\\\\Password_PBKDF2=\"${pbkdf2_core}\"|" /config/qBittorrent/qBittorrent.conf
+                fi
                 chmod 600 /config/qBittorrent/qBittorrent.conf || true
               fi
           env:

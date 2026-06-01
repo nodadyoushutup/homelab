@@ -72,7 +72,7 @@ data:
     MailNotification\req_auth=true
     Scheduler\end_time=@Variant(\0\0\0\xf\x1\xb7t\0)
     Scheduler\start_time=@Variant(\0\0\0\xf\0\0\0\0)
-    WebUI\AuthSubnetWhitelist=192.168.1.0/24
+    WebUI\AuthSubnetWhitelist=192.168.1.0/24, 10.244.0.0/16
     WebUI\AuthSubnetWhitelistEnabled=true
     WebUI\HostHeaderValidation=false
     WebUI\LocalHostAuth=false
