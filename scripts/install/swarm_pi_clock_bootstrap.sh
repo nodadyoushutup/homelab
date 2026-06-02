@@ -26,6 +26,8 @@ Installs cold-boot time sync on a Swarm Pi (including unclean power loss):
   - plain UDP NTP bootstrap sources (no NTS/TLS — works with dead RTC)
   - makestep 1 -1 (always step large offsets)
   - docker_swarm_time_sync_guard.sh drop-ins (Docker waits for chrony)
+  - docker_swarm_boot_recovery.service (restart Docker if Swarm=error after NTP sync)
+  - swarm-pi-eth0-watchdog.timer (bounce eth0 / reboot on silent LAN loss)
 
 Environment:
   GATEWAY_NTP   LAN NTP server (default: 192.168.1.1)
@@ -153,6 +155,51 @@ apply_docker_time_sync_guard() {
   as_root bash "${guard}" --no-restart
 }
 
+install_docker_swarm_boot_recovery() {
+  local recovery="${SCRIPT_DIR}/docker_swarm_boot_recovery.sh"
+  if [[ ! -f "${recovery}" ]]; then
+    recovery="/tmp/install/docker_swarm_boot_recovery.sh"
+  fi
+  [[ -f "${recovery}" ]] || die "Missing docker_swarm_boot_recovery.sh beside ${SCRIPT_DIR}"
+
+  log "Installing docker-swarm-boot-recovery.service"
+  as_root install -m 0755 "${recovery}" /usr/local/sbin/docker_swarm_boot_recovery.sh
+  as_root tee /etc/systemd/system/docker-swarm-boot-recovery.service >/dev/null <<'EOF'
+[Unit]
+Description=Recover Docker Swarm if stuck in error after NTP sync
+After=docker.service chrony-wait.service
+Wants=chrony-wait.service
+ConditionPathExists=/usr/bin/docker
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/docker_swarm_boot_recovery.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+  as_root systemctl daemon-reload
+  as_root systemctl enable docker-swarm-boot-recovery.service >/dev/null
+}
+
+install_eth0_watchdog() {
+  local watchdog="${SCRIPT_DIR}/swarm_pi_eth0_watchdog.sh"
+  if [[ ! -f "${watchdog}" ]]; then
+    watchdog="/tmp/install/swarm_pi_eth0_watchdog.sh"
+  fi
+  [[ -f "${watchdog}" ]] || die "Missing swarm_pi_eth0_watchdog.sh beside ${SCRIPT_DIR}"
+
+  local peer="192.168.1.120"
+  if [[ "$(hostname -s 2>/dev/null || hostname)" == "swarm-cp-0" ]]; then
+    peer="192.168.1.121"
+  fi
+
+  log "Installing swarm-pi-eth0-watchdog.timer (peer=${peer})"
+  GATEWAY="${GATEWAY_NTP}" PEER="${peer}" as_root env GATEWAY="${GATEWAY_NTP}" PEER="${peer}" bash "${watchdog}" --install
+}
+
 reload_chrony() {
   if [[ "${RESTART_CHRONY}" == "0" ]]; then
     log "Skipping chrony restart (--no-restart-chrony)."
@@ -182,6 +229,10 @@ show_status() {
   echo "=== docker guard ==="
   test -f /etc/systemd/system/docker.service.d/10-wait-for-time-sync.conf \
     && echo "docker time-sync drop-in: YES" || echo "docker time-sync drop-in: NO"
+  systemctl is-enabled docker-swarm-boot-recovery.service 2>/dev/null \
+    || echo "docker-swarm-boot-recovery: not installed"
+  systemctl is-enabled swarm-pi-eth0-watchdog.timer 2>/dev/null \
+    || echo "swarm-pi-eth0-watchdog: not installed"
   if command -v docker >/dev/null 2>&1; then
     docker info --format 'Swarm={{.Swarm.LocalNodeState}}' 2>/dev/null || true
   fi
@@ -195,6 +246,8 @@ main() {
   write_chrony_makestep
   write_fake_hwclock_plug_pull_hooks
   apply_docker_time_sync_guard
+  install_docker_swarm_boot_recovery
+  install_eth0_watchdog
   reload_chrony
   show_status
   log "Done."

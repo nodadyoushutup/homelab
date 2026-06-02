@@ -8,6 +8,47 @@ Static `eth0` addresses: `swarm-cp-0` → `192.168.1.120`, `swarm-wk-0` … `swa
 
 Use the **`eth0` address** (e.g. `192.168.1.122` for `swarm-wk-1`) if `*.local` still resolves to a removed Wi‑Fi address.
 
+## Silent LAN loss (unpingable while powered)
+
+Separate from the clock/Swarm TLS problem: the Pis can stay **powered on** with
+**`eth0` link up** (switch LED / `ip link` shows UP) but become **unpingable**
+from the LAN for hours. That is **not** fixed by NTP or Docker restarts.
+
+### Symptoms (today's outage, 2026-06-02)
+
+- All six Pis unreachable by ping/SSH; power and switch link LEDs still on.
+- Kernel logs on **`swarm-cp-0`** show **`eth0: Link is Up`** for the entire
+  prior boot (no carrier drop).
+- Around **03:30 EDT** the mesh lost inter-node connectivity:
+  `dial tcp 192.168.1.120:7946: connect: no route to host` (ARP/L2 failure, not
+  TLS).
+- **`192.168.1.100` (NFS)** then logged **`not responding, timed out`** at
+  ~1,600/hour until manual reboot (~6 hours later).
+- Reboot cleared it immediately — points to a **stuck NIC or switch forwarding
+  path**, not dead hardware.
+
+### Mitigation (every Swarm Pi)
+
+`swarm_pi_clock_bootstrap.sh` also installs **`swarm-pi-eth0-watchdog.timer`**:
+
+- Every minute, ping **`192.168.1.1`** (gateway) and **`192.168.1.120`**
+  (manager) on **`eth0`**.
+- **3 failures** → bounce **`eth0`** (down/up + netplan/networkd reapply).
+- Still dead **3 minutes after bounce** → **reboot**.
+
+Verify:
+
+```bash
+systemctl is-enabled swarm-pi-eth0-watchdog.timer
+systemctl list-timers swarm-pi-eth0-watchdog.timer
+```
+
+### Operator follow-up
+
+When this happens again, check the **switch ports** for the Pi cluster (errors,
+STP, MAC table) and whether **`192.168.1.100`** also dropped at the same time
+(segment issue vs single-host wedge).
+
 ## Boot time sync and Docker Swarm (every node)
 
 Power loss or **pulling the plug** leaves Pis with a **dead RTC** (clock at
@@ -59,6 +100,8 @@ That script installs:
 3. **`makestep 1 -1`** — always step large offsets after power loss.
 4. **`docker_swarm_time_sync_guard.sh`** drop-ins — Docker waits for
    `chrony-wait.service` before starting Swarm.
+5. **`docker-swarm-boot-recovery.service`** — if Swarm is still `error` after
+   NTP sync on boot, restart Docker once (belt-and-suspenders for races).
 
 After a guarded boot with the bootstrap sources installed, chrony should sync
 within seconds and Docker starts once time is valid.
@@ -70,6 +113,7 @@ On each node:
 ```bash
 test -f /etc/systemd/system/docker.service.d/10-wait-for-time-sync.conf && echo OK
 systemctl is-enabled chrony-wait.service
+systemctl is-enabled docker-swarm-boot-recovery.service
 docker info --format 'Swarm={{.Swarm.LocalNodeState}}'
 ```
 

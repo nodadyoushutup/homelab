@@ -57,4 +57,15 @@ done)"
 
 ssh_mgr docker node update --label-add "role=${NODE_ROLE}" "${node_id}"
 ssh_mgr docker node inspect "${node_id}" --format 'hostname={{.Description.Hostname}} addr={{.Status.Addr}} role={{index .Spec.Labels "role"}} availability={{.Spec.Availability}}'
+
+log "Applying clock bootstrap on worker (cold-boot NTP + Docker guard) ..."
+ssh_wkr "sudo ${ROOT_DIR}/scripts/install/swarm_pi_clock_bootstrap.sh" 2>/dev/null || \
+  scp -o BatchMode=yes -o StrictHostKeyChecking=no -i "${SSH_KEY}" \
+    ${KNOWN_HOSTS:+-o "UserKnownHostsFile=${KNOWN_HOSTS}"} \
+    "${ROOT_DIR}/scripts/install/swarm_pi_clock_bootstrap.sh" \
+    "${ROOT_DIR}/scripts/install/docker_swarm_time_sync_guard.sh" \
+    "${ROOT_DIR}/scripts/install/docker_swarm_boot_recovery.sh" \
+    "${SSH_USER}@${WORKER_HOST}:/tmp/" && \
+  ssh_wkr "mkdir -p /tmp/install && mv /tmp/swarm_pi_clock_bootstrap.sh /tmp/docker_swarm_time_sync_guard.sh /tmp/docker_swarm_boot_recovery.sh /tmp/install/ && chmod +x /tmp/install/*.sh && sudo /tmp/install/swarm_pi_clock_bootstrap.sh"
+
 log "OK — ${NODE_ROLE} labeled on node ${node_id}"
