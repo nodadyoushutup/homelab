@@ -9,6 +9,7 @@ SSH_USER="${SSH_USER:-nodadyoushutup}"
 INSTALL_SCRIPT="${ROOT_DIR}/scripts/install/swarm_pi_clock_bootstrap.sh"
 GUARD_SCRIPT="${ROOT_DIR}/scripts/install/docker_swarm_time_sync_guard.sh"
 RECOVERY_SCRIPT="${ROOT_DIR}/scripts/install/docker_swarm_boot_recovery.sh"
+OVERLAY_RECOVERY_SCRIPT="${ROOT_DIR}/scripts/install/docker_swarm_overlay_recovery.sh"
 WATCHDOG_SCRIPT="${ROOT_DIR}/scripts/install/swarm_pi_eth0_watchdog.sh"
 GATEWAY_NTP="${GATEWAY_NTP:-192.168.1.1}"
 
@@ -41,6 +42,7 @@ done
 [[ -f "${INSTALL_SCRIPT}" ]] || fail "Missing ${INSTALL_SCRIPT}"
 [[ -f "${GUARD_SCRIPT}" ]] || fail "Missing ${GUARD_SCRIPT}"
 [[ -f "${RECOVERY_SCRIPT}" ]] || fail "Missing ${RECOVERY_SCRIPT}"
+[[ -f "${OVERLAY_RECOVERY_SCRIPT}" ]] || fail "Missing ${OVERLAY_RECOVERY_SCRIPT}"
 [[ -f "${WATCHDOG_SCRIPT}" ]] || fail "Missing ${WATCHDOG_SCRIPT}"
 [[ -f "${SSH_KEY}" ]] || fail "Missing SSH key: ${SSH_KEY}"
 
@@ -66,10 +68,10 @@ apply_host() {
 
   scp -o BatchMode=yes -o StrictHostKeyChecking=no -i "${SSH_KEY}" \
     ${KNOWN_HOSTS:+-o "UserKnownHostsFile=${KNOWN_HOSTS}"} \
-    "${INSTALL_SCRIPT}" "${GUARD_SCRIPT}" "${RECOVERY_SCRIPT}" "${WATCHDOG_SCRIPT}" "${host}:/tmp/"
+    "${INSTALL_SCRIPT}" "${GUARD_SCRIPT}" "${RECOVERY_SCRIPT}" "${OVERLAY_RECOVERY_SCRIPT}" "${WATCHDOG_SCRIPT}" "${host}:/tmp/"
 
   "${SSH_BASE[@]}" "${host}" \
-    "mkdir -p /tmp/install && mv /tmp/swarm_pi_clock_bootstrap.sh /tmp/docker_swarm_time_sync_guard.sh /tmp/docker_swarm_boot_recovery.sh /tmp/swarm_pi_eth0_watchdog.sh /tmp/install/ && chmod +x /tmp/install/*.sh && sudo GATEWAY_NTP=${GATEWAY_NTP} /tmp/install/swarm_pi_clock_bootstrap.sh"
+    "mkdir -p /tmp/install && mv /tmp/swarm_pi_clock_bootstrap.sh /tmp/docker_swarm_time_sync_guard.sh /tmp/docker_swarm_boot_recovery.sh /tmp/docker_swarm_overlay_recovery.sh /tmp/swarm_pi_eth0_watchdog.sh /tmp/install/ && chmod +x /tmp/install/*.sh && sudo GATEWAY_NTP=${GATEWAY_NTP} /tmp/install/swarm_pi_clock_bootstrap.sh"
 }
 
 for ip in "${SWARM_IPS[@]}"; do

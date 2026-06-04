@@ -100,8 +100,15 @@ That script installs:
 3. **`makestep 1 -1`** — always step large offsets after power loss.
 4. **`docker_swarm_time_sync_guard.sh`** drop-ins — Docker waits for
    `chrony-wait.service` before starting Swarm.
-5. **`docker-swarm-boot-recovery.service`** — if Swarm is still `error` after
-   NTP sync on boot, restart Docker once (belt-and-suspenders for races).
+5. **`docker-swarm-boot-recovery.service`** — on boot, run overlay recovery
+   (stale vxlan cleanup, Swarm `error` after NTP sync, NPM edge force-update).
+6. **`docker-swarm-overlay-recovery.timer`** — every **2 minutes** (and ~90s
+   after boot) on **every Swarm node**, plus after **`network-online.target`**
+   when the gateway is reachable again. Fixes the recurring post-outage failure:
+   `network sandbox join failed … error creating vxlan interface: file exists`
+   (stale VXLAN from Docker/libnetwork after WAN/LAN blips). On the manager,
+   also forces **`nginx-proxy-manager`** back up when no task is running or
+   **443** is not listening.
 
 After a guarded boot with the bootstrap sources installed, chrony should sync
 within seconds and Docker starts once time is valid.
@@ -114,11 +121,36 @@ On each node:
 test -f /etc/systemd/system/docker.service.d/10-wait-for-time-sync.conf && echo OK
 systemctl is-enabled chrony-wait.service
 systemctl is-enabled docker-swarm-boot-recovery.service
+systemctl is-enabled docker-swarm-overlay-recovery.timer
+systemctl list-timers docker-swarm-overlay-recovery.timer
 docker info --format 'Swarm={{.Swarm.LocalNodeState}}'
 ```
 
-Expect `chrony-wait` **enabled**, drop-in **present**, and `Swarm=active` on
-joined nodes.
+Expect `chrony-wait` **enabled**, drop-in **present**,
+`docker-swarm-overlay-recovery.timer` **enabled**, and `Swarm=active` on joined
+nodes.
+
+### NPM / edge URLs down after internet reboot (stale VXLAN)
+
+Symptoms: Cloudflare DNS resolves, **`192.168.1.120`** is pingable, but HTTPS
+hostnames **502/504** or NPM admin on **:81** is down. On the manager:
+
+```bash
+docker service ps nginx-proxy-manager --no-trunc | head -6
+```
+
+Look for **`error creating vxlan interface: file exists`**. The periodic timer
+should clear this automatically; to run recovery immediately on one node:
+
+```bash
+sudo /usr/local/sbin/docker_swarm_overlay_recovery.sh
+```
+
+Re-apply bootstrap on all Pis if the timer is missing:
+
+```bash
+<repo>/scripts/swarm/apply_swarm_pi_clock_bootstrap_all.sh
+```
 
 ### Break-glass recovery (guard missing or first boot after outage)
 

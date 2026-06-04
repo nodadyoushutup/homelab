@@ -27,6 +27,5 @@ records = [
     ttl     = 1
     proxied = false
   },
-  # Only apps intentionally exposed on WAN should use your public IP in `content`;
-  # align FortiGate VIPs / firewall with that same allowlist (see docs/workflows/edge-dns-and-nginx-proxy.md).
+  # NPM edge (swarm-cp-0): use 192.168.1.120 for all HTTPS hostnames — see docs/workflows/edge-dns-and-nginx-proxy.md.
 ]

@@ -65,7 +65,8 @@ ssh_wkr "sudo ${ROOT_DIR}/scripts/install/swarm_pi_clock_bootstrap.sh" 2>/dev/nu
     "${ROOT_DIR}/scripts/install/swarm_pi_clock_bootstrap.sh" \
     "${ROOT_DIR}/scripts/install/docker_swarm_time_sync_guard.sh" \
     "${ROOT_DIR}/scripts/install/docker_swarm_boot_recovery.sh" \
+    "${ROOT_DIR}/scripts/install/docker_swarm_overlay_recovery.sh" \
     "${SSH_USER}@${WORKER_HOST}:/tmp/" && \
-  ssh_wkr "mkdir -p /tmp/install && mv /tmp/swarm_pi_clock_bootstrap.sh /tmp/docker_swarm_time_sync_guard.sh /tmp/docker_swarm_boot_recovery.sh /tmp/install/ && chmod +x /tmp/install/*.sh && sudo /tmp/install/swarm_pi_clock_bootstrap.sh"
+  ssh_wkr "mkdir -p /tmp/install && mv /tmp/swarm_pi_clock_bootstrap.sh /tmp/docker_swarm_time_sync_guard.sh /tmp/docker_swarm_boot_recovery.sh /tmp/docker_swarm_overlay_recovery.sh /tmp/install/ && chmod +x /tmp/install/*.sh && sudo /tmp/install/swarm_pi_clock_bootstrap.sh"
 
 log "OK — ${NODE_ROLE} labeled on node ${node_id}"

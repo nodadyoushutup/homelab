@@ -19,27 +19,35 @@ Remove DNS and NPM objects for services that are no longer deployed. Typical ret
 
 **Apply** — run your usual **Cloudflare** then **NPM config** Terraform pipelines (`plan` → `apply`).
 
-## Public WAN vs LAN `A` record targets
+## DNS `A` record targets (NPM edge)
 
-Only these hostnames use the **public WAN** address in Cloudflare `records[].content` (so the name resolves to something reachable from the open internet, subject to firewall/port-forward rules):
+All homelab hostnames that terminate TLS on **Nginx Proxy Manager** use the **Swarm NPM edge LAN IP** in Cloudflare `records[].content` — **`192.168.1.120`** (`swarm-cp-0`). That includes **Picsur**, **PrivateBin**, **The Lounge**, MCPs, Grafana, and the rest: NPM holds the certificate and forwards to the real backend (Swarm published port or Kubernetes ingress, typically **`192.168.1.241:80`** for cluster ingress).
 
-- **Picsur**
-- **PrivateBin**
-- **The Lounge**
+Do **not** point DNS at the ISP **WAN** address. ONT reboots change the public IP and break names; LAN + NPM stays stable.
 
-Every other name—including apex, `www`, wildcard, MCP, LangGraph, dev compose names, and internal stacks—must use a **private LAN IP** (for example `192.168.1.120` for the Swarm/NPM edge, or the correct K8s LB / service IP). That way global DNS does not advertise a routable target for those apps. Router or FortiGate policies should align so only the three public apps are forwarded from WAN.
+Reachability from outside the LAN is via VPN or your own port-forward setup—not by publishing a changing WAN IP in Cloudflare.
 
 ## Expectation (checklist)
 
 1. **Name the public hostname** (for example `app.example.com`) and decide **where traffic lands**:
    - **Swarm published port on the edge host** (typical: HTTP(S) via Nginx Proxy Manager on the Swarm manager, with `forward_host` / `forward_port` pointing at the Swarm ingress IP and published port).
    - **Kubernetes**: `Ingress` `host:` in `kubernetes/<app>/` (often `ingress-nginx` + MetalLB). The Cloudflare `A` record `content` may be the **ingress/LB LAN IP**, not the Swarm edge—match whatever actually serves that ingress in your network.
-2. **Cloudflare** (`terraform/components/remote/cloudflare/config`): add or extend a `records` entry with a stable `key`, the full `name`, `content` (target IP), `ttl`, and `proxied`. Live tfvars usually live at **`<repo>/.config/terraform/components/remote/cloudflare/config.tfvars`** (see `terraform/components/remote/cloudflare/pipeline/config.sh`).
-3. **Nginx Proxy Manager** (`terraform/components/swarm/nginx_proxy_manager/config`): when the app is fronted **through NPM on the Swarm edge** (not through cluster ingress alone), add:
+2. **Cloudflare** (`terraform/components/remote/cloudflare/config`): add or extend a `records` entry with a stable `key`, the full `name`, `content` = **`192.168.1.120`** (NPM edge) unless the app is intentionally LAN-only on another IP, `ttl`, and `proxied`. Live tfvars: **`<repo>/.config/terraform/remote/cloudflare/config.tfvars`** (see `terraform/components/remote/cloudflare/pipeline/config.sh`).
+3. **Nginx Proxy Manager** (`terraform/components/swarm/nginx_proxy_manager/config`): for every HTTPS hostname on the edge, add:
    - a **Let's Encrypt certificate** entry under top-level **`certificates`** (map key = certificate name used by proxy hosts), and
    - a **proxy host** entry under top-level **`proxy_hosts`** (map key = stable Terraform id; body includes `forward_host`, `forward_port`, and `certificate` or `certificate_id` aligned with the Swarm **published port** and certificate map key). Live tfvars: **`<repo>/.config/terraform/components/swarm/nginx_proxy_manager/config.tfvars`** (`terraform/components/swarm/nginx_proxy_manager/pipeline/config.sh`).
 4. **Apply order**: merge tfvars changes, then run the **Cloudflare** pipeline and the **NPM config** pipeline (order is flexible when only adding records/hosts; keep state backends and credentials as you do today). NPM config uses **`-parallelism=1`** to reduce API races.
-5. **Kubernetes-only apps**: you still need **Cloudflare** (or other DNS) consistency with the **ingress host** and the correct **target IP**. You do **not** add NPM proxy hosts unless you intentionally terminate TLS or proxy through NPM for that hostname.
+5. **Kubernetes apps** (The Lounge, Picsur, PrivateBin, qBittorrent, …): keep **`Ingress`** `host:` in `kubernetes/<app>/`; add **Cloudflare** `A` → **`192.168.1.120`** and an **NPM proxy host** with `forward_host` / `forward_port` pointing at ingress (**`192.168.1.241:80`** in this cluster).
+
+## Recovery after WAN / power outages
+
+NPM runs on Swarm **`swarm-cp-0`** (`192.168.1.120`). After internet or router
+reboots, overlay tasks can fail with **stale VXLAN interfaces** and NPM never
+comes back until Docker is fixed. Automated recovery is installed by
+**`scripts/install/swarm_pi_clock_bootstrap.sh`** on every Swarm Pi:
+**`docker-swarm-overlay-recovery.timer`** (every 2 minutes) and boot-time
+**`docker-swarm-boot-recovery.service`**. See
+[swarm-rpi-network.md](swarm-rpi-network.md) (NPM / edge URLs section).
 
 ## Repo references
 
@@ -59,7 +67,7 @@ A zone wildcard (for example `*.example.com` → edge IP) can make new hostnames
 
 ## Docker Compose dev (`docker/docker-compose.yml`)
 
-The **`homelab-dev`** stack publishes **LangGraph**, **LangChain Agent Chat**, **`rag-engine-dev`**, and **`mcp-rag-dev`** on host ports **2124**, **3000**, **9015**, and **9016**. When those services should be reachable under **HTTPS on the LAN** (or VPN), use a **`dev.`** first label on the existing prod-style hostname. Keep **`A` records on a private IP** per the policy above—not the WAN address:
+The **`homelab-dev`** stack publishes **LangGraph**, **LangChain Agent Chat**, **`rag-engine-dev`**, and **`mcp-rag-dev`** on host ports **2124**, **3000**, **9015**, and **9016**. When those services should be reachable under **HTTPS on the LAN** (or VPN), use a **`dev.`** first label on the existing prod-style hostname. Keep **`A` records on `192.168.1.120`** (NPM edge):
 
 | Service | Public hostname (example zone) | Host port |
 | --- | --- | --- |
