@@ -7,7 +7,7 @@ metadata:
     app.kubernetes.io/instance: clusterplex
     app.kubernetes.io/name: pms
 spec:
-  replicas: 1
+  replicas: 0
   revisionHistoryLimit: 3
   strategy:
     type: Recreate
