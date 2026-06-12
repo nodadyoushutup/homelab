@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: clusterplex-transcode
+  namespace: clusterplex
+  labels:
+    app.kubernetes.io/instance: clusterplex
+    app.kubernetes.io/name: transcode
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 100Gi
+  storageClassName: truenas-nfs-csi-retain
+  volumeName: pvc-3fbda2f1-7dd1-4806-9c05-f9424dbe29c0
