@@ -50,7 +50,7 @@ spec:
               done
       containers:
         - name: langgraph
-          image: ghcr.io/nodadyoushutup/langgraph:0.0.2
+          image: ghcr.io/nodadyoushutup/langgraph:0.0.3
           imagePullPolicy: Always
           workingDir: /app/langgraph/agent
           command:

@@ -25,7 +25,7 @@ spec:
         - name: langchain-agent-chat-registry
       containers:
         - name: langchain-agent-chat
-          image: ghcr.io/nodadyoushutup/langchain-agent-chat:0.0.1
+          image: ghcr.io/nodadyoushutup/langchain-agent-chat:0.0.2
           imagePullPolicy: Always
           securityContext:
             runAsUser: 1000
