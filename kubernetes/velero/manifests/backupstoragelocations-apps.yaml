@@ -1,4 +1,4 @@
-# Per-app MinIO buckets on http://192.168.1.67:9000 (one bucket per app).
+# Per-app MinIO buckets on http://192.168.1.25:9000 (one bucket per app).
 # Layout per bucket: <bucket>/backups/<backup-name>/ and <bucket>/kopia/<namespace>/
 # Velero always uses a backups/ subdirectory at the bucket root.
 
@@ -17,7 +17,7 @@ spec:
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
-    s3Url: http://192.168.1.67:9000
+    s3Url: http://192.168.1.25:9000
     insecureSkipTLSVerify: "true"
 ---
 
@@ -36,7 +36,7 @@ spec:
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
-    s3Url: http://192.168.1.67:9000
+    s3Url: http://192.168.1.25:9000
     insecureSkipTLSVerify: "true"
 ---
 
@@ -55,7 +55,7 @@ spec:
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
-    s3Url: http://192.168.1.67:9000
+    s3Url: http://192.168.1.25:9000
     insecureSkipTLSVerify: "true"
 ---
 
@@ -74,7 +74,7 @@ spec:
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
-    s3Url: http://192.168.1.67:9000
+    s3Url: http://192.168.1.25:9000
     insecureSkipTLSVerify: "true"
 ---
 
@@ -93,7 +93,7 @@ spec:
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
-    s3Url: http://192.168.1.67:9000
+    s3Url: http://192.168.1.25:9000
     insecureSkipTLSVerify: "true"
 ---
 
@@ -112,7 +112,7 @@ spec:
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
-    s3Url: http://192.168.1.67:9000
+    s3Url: http://192.168.1.25:9000
     insecureSkipTLSVerify: "true"
 ---
 
@@ -131,7 +131,7 @@ spec:
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
-    s3Url: http://192.168.1.67:9000
+    s3Url: http://192.168.1.25:9000
     insecureSkipTLSVerify: "true"
 ---
 
@@ -150,7 +150,7 @@ spec:
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
-    s3Url: http://192.168.1.67:9000
+    s3Url: http://192.168.1.25:9000
     insecureSkipTLSVerify: "true"
 ---
 
@@ -169,7 +169,7 @@ spec:
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
-    s3Url: http://192.168.1.67:9000
+    s3Url: http://192.168.1.25:9000
     insecureSkipTLSVerify: "true"
 ---
 
@@ -188,7 +188,7 @@ spec:
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
-    s3Url: http://192.168.1.67:9000
+    s3Url: http://192.168.1.25:9000
     insecureSkipTLSVerify: "true"
 ---
 
@@ -207,7 +207,7 @@ spec:
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
-    s3Url: http://192.168.1.67:9000
+    s3Url: http://192.168.1.25:9000
     insecureSkipTLSVerify: "true"
 ---
 
@@ -226,7 +226,7 @@ spec:
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
-    s3Url: http://192.168.1.67:9000
+    s3Url: http://192.168.1.25:9000
     insecureSkipTLSVerify: "true"
 ---
 
@@ -245,7 +245,7 @@ spec:
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
-    s3Url: http://192.168.1.67:9000
+    s3Url: http://192.168.1.25:9000
     insecureSkipTLSVerify: "true"
 ---
 
@@ -264,7 +264,7 @@ spec:
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
-    s3Url: http://192.168.1.67:9000
+    s3Url: http://192.168.1.25:9000
     insecureSkipTLSVerify: "true"
 ---
 
@@ -283,7 +283,7 @@ spec:
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
-    s3Url: http://192.168.1.67:9000
+    s3Url: http://192.168.1.25:9000
     insecureSkipTLSVerify: "true"
 ---
 
@@ -302,7 +302,7 @@ spec:
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
-    s3Url: http://192.168.1.67:9000
+    s3Url: http://192.168.1.25:9000
     insecureSkipTLSVerify: "true"
 ---
 
@@ -321,7 +321,7 @@ spec:
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
-    s3Url: http://192.168.1.67:9000
+    s3Url: http://192.168.1.25:9000
     insecureSkipTLSVerify: "true"
 ---
 
@@ -340,7 +340,7 @@ spec:
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
-    s3Url: http://192.168.1.67:9000
+    s3Url: http://192.168.1.25:9000
     insecureSkipTLSVerify: "true"
 ---
 
@@ -359,7 +359,7 @@ spec:
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
-    s3Url: http://192.168.1.67:9000
+    s3Url: http://192.168.1.25:9000
     insecureSkipTLSVerify: "true"
 ---
 
@@ -378,7 +378,7 @@ spec:
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
-    s3Url: http://192.168.1.67:9000
+    s3Url: http://192.168.1.25:9000
     insecureSkipTLSVerify: "true"
 ---
 
@@ -397,7 +397,7 @@ spec:
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
-    s3Url: http://192.168.1.67:9000
+    s3Url: http://192.168.1.25:9000
     insecureSkipTLSVerify: "true"
 ---
 
@@ -416,7 +416,7 @@ spec:
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
-    s3Url: http://192.168.1.67:9000
+    s3Url: http://192.168.1.25:9000
     insecureSkipTLSVerify: "true"
 ---
 
@@ -435,7 +435,7 @@ spec:
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
-    s3Url: http://192.168.1.67:9000
+    s3Url: http://192.168.1.25:9000
     insecureSkipTLSVerify: "true"
 ---
 
@@ -454,7 +454,7 @@ spec:
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
-    s3Url: http://192.168.1.67:9000
+    s3Url: http://192.168.1.25:9000
     insecureSkipTLSVerify: "true"
 ---
 
@@ -473,7 +473,7 @@ spec:
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
-    s3Url: http://192.168.1.67:9000
+    s3Url: http://192.168.1.25:9000
     insecureSkipTLSVerify: "true"
 ---
 
@@ -492,7 +492,7 @@ spec:
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
-    s3Url: http://192.168.1.67:9000
+    s3Url: http://192.168.1.25:9000
     insecureSkipTLSVerify: "true"
 ---
 
@@ -511,7 +511,7 @@ spec:
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
-    s3Url: http://192.168.1.67:9000
+    s3Url: http://192.168.1.25:9000
     insecureSkipTLSVerify: "true"
 ---
 
@@ -530,7 +530,7 @@ spec:
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
-    s3Url: http://192.168.1.67:9000
+    s3Url: http://192.168.1.25:9000
     insecureSkipTLSVerify: "true"
 ---
 
@@ -549,7 +549,7 @@ spec:
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
-    s3Url: http://192.168.1.67:9000
+    s3Url: http://192.168.1.25:9000
     insecureSkipTLSVerify: "true"
 ---
 
@@ -568,7 +568,7 @@ spec:
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
-    s3Url: http://192.168.1.67:9000
+    s3Url: http://192.168.1.25:9000
     insecureSkipTLSVerify: "true"
 ---
 
@@ -587,7 +587,7 @@ spec:
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
-    s3Url: http://192.168.1.67:9000
+    s3Url: http://192.168.1.25:9000
     insecureSkipTLSVerify: "true"
 ---
 
@@ -606,7 +606,7 @@ spec:
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
-    s3Url: http://192.168.1.67:9000
+    s3Url: http://192.168.1.25:9000
     insecureSkipTLSVerify: "true"
 ---
 
@@ -625,7 +625,7 @@ spec:
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
-    s3Url: http://192.168.1.67:9000
+    s3Url: http://192.168.1.25:9000
     insecureSkipTLSVerify: "true"
 ---
 
@@ -644,7 +644,7 @@ spec:
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
-    s3Url: http://192.168.1.67:9000
+    s3Url: http://192.168.1.25:9000
     insecureSkipTLSVerify: "true"
 ---
 
@@ -663,7 +663,7 @@ spec:
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
-    s3Url: http://192.168.1.67:9000
+    s3Url: http://192.168.1.25:9000
     insecureSkipTLSVerify: "true"
 ---
 
@@ -682,7 +682,7 @@ spec:
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
-    s3Url: http://192.168.1.67:9000
+    s3Url: http://192.168.1.25:9000
     insecureSkipTLSVerify: "true"
 ---
 
@@ -701,7 +701,7 @@ spec:
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
-    s3Url: http://192.168.1.67:9000
+    s3Url: http://192.168.1.25:9000
     insecureSkipTLSVerify: "true"
 ---
 
@@ -720,7 +720,7 @@ spec:
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
-    s3Url: http://192.168.1.67:9000
+    s3Url: http://192.168.1.25:9000
     insecureSkipTLSVerify: "true"
 ---
 
@@ -739,5 +739,5 @@ spec:
   config:
     region: us-east-1
     s3ForcePathStyle: "true"
-    s3Url: http://192.168.1.67:9000
+    s3Url: http://192.168.1.25:9000
     insecureSkipTLSVerify: "true"

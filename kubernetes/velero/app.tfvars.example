@@ -5,7 +5,7 @@
 #     aws_access_key_id="SERVICE_ACCOUNT_ACCESS_KEY" \
 #     aws_secret_access_key="SERVICE_ACCOUNT_SECRET_KEY"
 #
-# MinIO S3 API (not Console :9001): http://192.168.1.67:9000
+# MinIO S3 API (not Console :9001): http://192.168.1.25:9000
 # One bucket per app (radarr, sonarr, …) plus velero-misc for the default BSL.
 # Velero service account needs s3:* on those buckets (or use root keys for homelab).
 
