@@ -19,7 +19,7 @@
   "liveNow": false,
   "refresh": "30s",
   "schemaVersion": 39,
-  "tags": ["homelab", "cadvisor", "containers", "docker"],
+  "tags": ["homelab", "cadvisor", "containers", "docker", "kubernetes"],
   "time": { "from": "now-1h", "to": "now" },
   "timezone": "",
   "title": "cAdvisor",
@@ -32,8 +32,8 @@
         "label": "Type",
         "type": "query",
         "datasource": { "type": "prometheus", "uid": "prometheus" },
-        "definition": "label_values(up{job=\"cadvisor\"}, platform)",
-        "query": "label_values(up{job=\"cadvisor\"}, platform)",
+        "definition": "label_values(up{job=~\"cadvisor|kubernetes-cadvisor\"}, platform)",
+        "query": "label_values(up{job=~\"cadvisor|kubernetes-cadvisor\"}, platform)",
         "includeAll": true,
         "allValue": ".*",
         "multi": true,
@@ -47,8 +47,8 @@
         "label": "Node",
         "type": "query",
         "datasource": { "type": "prometheus", "uid": "prometheus" },
-        "definition": "label_values(up{job=\"cadvisor\", platform=~\"$platform\"}, hostname)",
-        "query": "label_values(up{job=\"cadvisor\", platform=~\"$platform\"}, hostname)",
+        "definition": "label_values(up{job=~\"cadvisor|kubernetes-cadvisor\", platform=~\"$platform\"}, hostname)",
+        "query": "label_values(up{job=~\"cadvisor|kubernetes-cadvisor\", platform=~\"$platform\"}, hostname)",
         "includeAll": true,
         "allValue": ".*",
         "multi": true,
@@ -62,8 +62,68 @@
         "label": "Service",
         "type": "query",
         "datasource": { "type": "prometheus", "uid": "prometheus" },
-        "definition": "label_values(container_memory_working_set_bytes{job=\"cadvisor\", platform=~\"$platform\", hostname=~\"$node\", container_label_com_docker_swarm_service_name!=\"\", id!=\"/\"}, container_label_com_docker_swarm_service_name)",
-        "query": "label_values(container_memory_working_set_bytes{job=\"cadvisor\", platform=~\"$platform\", hostname=~\"$node\", container_label_com_docker_swarm_service_name!=\"\", id!=\"/\"}, container_label_com_docker_swarm_service_name)",
+        "definition": "label_values(container_memory_working_set_bytes{job=~\"cadvisor|kubernetes-cadvisor\", platform=~\"$platform\", hostname=~\"$node\", container_label_com_docker_swarm_service_name!=\"\", id!=\"/\"}, container_label_com_docker_swarm_service_name)",
+        "query": "label_values(container_memory_working_set_bytes{job=~\"cadvisor|kubernetes-cadvisor\", platform=~\"$platform\", hostname=~\"$node\", container_label_com_docker_swarm_service_name!=\"\", id!=\"/\"}, container_label_com_docker_swarm_service_name)",
+        "includeAll": true,
+        "allValue": ".*",
+        "multi": true,
+        "refresh": 2,
+        "sort": 1,
+        "current": { "selected": true, "text": "All", "value": "$__all" },
+        "hide": 0
+      },
+      {
+        "name": "namespace",
+        "label": "Kubernetes namespace",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "definition": "label_values(kube_pod_info{platform=\"kubernetes\"}, namespace)",
+        "query": "label_values(kube_pod_info{platform=\"kubernetes\"}, namespace)",
+        "includeAll": true,
+        "allValue": ".*",
+        "multi": true,
+        "refresh": 1,
+        "sort": 1,
+        "current": { "selected": true, "text": "All", "value": "$__all" },
+        "hide": 0
+      },
+      {
+        "name": "application",
+        "label": "Kubernetes application",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "definition": "label_values(kube_pod_labels{platform=\"kubernetes\", namespace=~\"$namespace\", label_app_kubernetes_io_name!=\"\"}, label_app_kubernetes_io_name)",
+        "query": "label_values(kube_pod_labels{platform=\"kubernetes\", namespace=~\"$namespace\", label_app_kubernetes_io_name!=\"\"}, label_app_kubernetes_io_name)",
+        "includeAll": true,
+        "allValue": ".*",
+        "multi": true,
+        "refresh": 2,
+        "sort": 1,
+        "current": { "selected": true, "text": "All", "value": "$__all" },
+        "hide": 0
+      },
+      {
+        "name": "pod",
+        "label": "Kubernetes pod",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "definition": "label_values(kube_pod_info{platform=\"kubernetes\", namespace=~\"$namespace\"}, pod)",
+        "query": "label_values(kube_pod_info{platform=\"kubernetes\", namespace=~\"$namespace\"}, pod)",
+        "includeAll": true,
+        "allValue": ".*",
+        "multi": true,
+        "refresh": 2,
+        "sort": 1,
+        "current": { "selected": true, "text": "All", "value": "$__all" },
+        "hide": 0
+      },
+      {
+        "name": "container",
+        "label": "Kubernetes container",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "definition": "label_values(kube_pod_container_info{platform=\"kubernetes\", namespace=~\"$namespace\", pod=~\"$pod\"}, container)",
+        "query": "label_values(kube_pod_container_info{platform=\"kubernetes\", namespace=~\"$namespace\", pod=~\"$pod\"}, container)",
         "includeAll": true,
         "allValue": ".*",
         "multi": true,
@@ -75,15 +135,15 @@
     ]
   },
   "panels": [
-    {
+{
       "type": "row",
-      "title": "Swarm nodes (job=cadvisor)",
+      "title": "Container nodes",
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
       "id": 100,
       "collapsed": false,
       "panels": []
     },
-    {
+{
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "description": "cAdvisor scrape targets in Prometheus.",
       "fieldConfig": {
@@ -110,7 +170,7 @@
       },
       "targets": [
         {
-          "expr": "count(count by (hostname) (up{job=\"cadvisor\", platform=~\"$platform\"}))",
+          "expr": "count(count by (hostname) (up{job=~\"cadvisor|kubernetes-cadvisor\", platform=~\"$platform\"}))",
           "instant": true,
           "legendFormat": "total",
           "refId": "A"
@@ -119,7 +179,7 @@
       "title": "Total nodes",
       "type": "stat"
     },
-    {
+{
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
@@ -148,7 +208,7 @@
       },
       "targets": [
         {
-          "expr": "count(max by (hostname) (up{job=\"cadvisor\", platform=~\"$platform\"}) == 1)",
+          "expr": "count(max by (hostname) (up{job=~\"cadvisor|kubernetes-cadvisor\", platform=~\"$platform\"}) == 1)",
           "instant": true,
           "legendFormat": "online",
           "refId": "A"
@@ -157,7 +217,7 @@
       "title": "Online",
       "type": "stat"
     },
-    {
+{
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
@@ -186,7 +246,7 @@
       },
       "targets": [
         {
-          "expr": "count(max by (hostname) (up{job=\"cadvisor\", platform=~\"$platform\"}) == 0) or vector(0)",
+          "expr": "count(max by (hostname) (up{job=~\"cadvisor|kubernetes-cadvisor\", platform=~\"$platform\"}) == 0) or vector(0)",
           "instant": true,
           "legendFormat": "offline",
           "refId": "A"
@@ -195,7 +255,7 @@
       "title": "Offline",
       "type": "stat"
     },
-    {
+{
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "description": "Host-level cgroup (id=\"/\"). Per-container series appear when cAdvisor can read Docker cgroups.",
       "fieldConfig": {
@@ -222,7 +282,7 @@
       },
       "targets": [
         {
-          "expr": "count(count by (hostname) (machine_memory_bytes{job=\"cadvisor\", platform=~\"$platform\", hostname=~\"$node\"}))",
+          "expr": "count(count by (hostname) (machine_memory_bytes{job=~\"cadvisor|kubernetes-cadvisor\", platform=~\"$platform\", hostname=~\"$node\"}))",
           "instant": true,
           "legendFormat": "reporting",
           "refId": "A"
@@ -231,190 +291,16 @@
       "title": "Reporting hosts",
       "type": "stat"
     },
-    {
+{
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "thresholds" },
           "custom": {
             "align": "auto",
-            "cellOptions": { "type": "color-text" },
+            "cellOptions": { "type": "auto" },
             "inspect": false
           },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "red", "value": null },
-              { "color": "green", "value": 1 }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 5 },
-      "id": 5,
-      "options": {
-        "cellHeight": "sm",
-        "footer": { "countRows": false, "fields": "", "reducer": ["sum"], "show": false },
-        "showHeader": true,
-        "sortBy": [{ "desc": false, "displayName": "Node" }]
-      },
-      "pluginVersion": "11.0.0",
-      "targets": [
-        {
-          "expr": "max by (hostname, platform, instance) (up{job=\"cadvisor\", platform=~\"$platform\", hostname=~\"$node\"})",
-          "format": "table",
-          "instant": true,
-          "legendFormat": "__auto",
-          "refId": "A"
-        }
-      ],
-      "title": "Scrape status",
-      "transformations": [
-        { "id": "organize", "options": { "excludeByName": { "Time": true }, "renameByName": { "Value": "up", "hostname": "Node", "instance": "Target", "platform": "Type" } } }
-      ],
-      "type": "table"
-    },
-    {
-      "type": "row",
-      "title": "Swarm applications",
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 13 },
-      "id": 150,
-      "collapsed": false,
-      "panels": []
-    },
-    {
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "description": "Distinct Swarm services with at least one running task.",
-      "fieldConfig": {
-        "defaults": {
-          "color": { "mode": "thresholds" },
-          "decimals": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [{ "color": "blue", "value": null }]
-          },
-          "unit": "short"
-        },
-        "overrides": []
-      },
-      "gridPos": { "h": 4, "w": 8, "x": 0, "y": 14 },
-      "id": 151,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "center",
-        "orientation": "auto",
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "textMode": "auto"
-      },
-      "targets": [
-        {
-          "expr": "count(count by (container_label_com_docker_swarm_service_name) ((time() - container_last_seen{job=\"cadvisor\", platform=~\"$platform\", hostname=~\"$node\", container_label_com_docker_swarm_service_name=~\"$service\", container_label_com_docker_swarm_service_name!=\"\", id!=\"/\"}) < 60))",
-          "instant": true,
-          "legendFormat": "services",
-          "refId": "A"
-        }
-      ],
-      "title": "Services online",
-      "type": "stat"
-    },
-    {
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": {
-        "defaults": {
-          "color": { "mode": "thresholds" },
-          "decimals": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "red", "value": null },
-              { "color": "green", "value": 1 }
-            ]
-          },
-          "unit": "short"
-        },
-        "overrides": []
-      },
-      "gridPos": { "h": 4, "w": 8, "x": 8, "y": 14 },
-      "id": 152,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "center",
-        "orientation": "auto",
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "textMode": "auto"
-      },
-      "targets": [
-        {
-          "expr": "count((time() - container_last_seen{job=\"cadvisor\", platform=~\"$platform\", hostname=~\"$node\", container_label_com_docker_swarm_service_name=~\"$service\", container_label_com_docker_swarm_service_name!=\"\", id!=\"/\"}) < 60)",
-          "instant": true,
-          "legendFormat": "tasks",
-          "refId": "A"
-        }
-      ],
-      "title": "Tasks online",
-      "type": "stat"
-    },
-    {
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": {
-        "defaults": {
-          "color": { "mode": "thresholds" },
-          "decimals": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "red", "value": 1 }
-            ]
-          },
-          "unit": "short"
-        },
-        "overrides": []
-      },
-      "gridPos": { "h": 4, "w": 8, "x": 16, "y": 14 },
-      "id": 153,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "center",
-        "orientation": "auto",
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "textMode": "auto"
-      },
-      "targets": [
-        {
-          "expr": "count((time() - container_last_seen{job=\"cadvisor\", platform=~\"$platform\", hostname=~\"$node\", container_label_com_docker_swarm_service_name=~\"$service\", container_label_com_docker_swarm_service_name!=\"\", id!=\"/\"}) >= 60) or vector(0)",
-          "instant": true,
-          "legendFormat": "tasks",
-          "refId": "A"
-        }
-      ],
-      "title": "Tasks offline",
-      "type": "stat"
-    },
-    {
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "description": "Running Swarm tasks reported by cAdvisor on each node (hostname = node assignment).",
-      "fieldConfig": {
-        "defaults": {
-          "color": { "mode": "thresholds" },
-          "custom": {
-            "align": "auto",
-            "cellOptions": { "type": "color-text" },
-            "inspect": false
-          },
-          "mappings": [
-            {
-              "options": {
-                "0": { "color": "red", "index": 1, "text": "Offline" },
-                "1": { "color": "green", "index": 0, "text": "Online" }
-              },
-              "type": "value"
-            }
-          ],
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -427,24 +313,342 @@
           {
             "matcher": { "id": "byName", "options": "Status" },
             "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "0": { "color": "red", "index": 1, "text": "Offline" },
+                      "1": { "color": "green", "index": 0, "text": "Online" }
+                    },
+                    "type": "value"
+                  }
+                ]
+              },
               { "id": "custom.cellOptions", "value": { "type": "color-background" } },
               { "id": "custom.align", "value": "center" }
             ]
           }
         ]
       },
-      "gridPos": { "h": 12, "w": 24, "x": 0, "y": 18 },
-      "id": 154,
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 5 },
+      "id": 5,
       "options": {
         "cellHeight": "sm",
         "footer": { "countRows": false, "fields": "", "reducer": ["sum"], "show": false },
         "showHeader": true,
-        "sortBy": [{ "desc": false, "displayName": "Service" }]
+        "sortBy": [{ "desc": false, "displayName": "Node" }]
       },
       "pluginVersion": "11.0.0",
       "targets": [
         {
-          "expr": "((time() - max by (container_label_com_docker_swarm_service_name, hostname, name) (container_last_seen{job=\"cadvisor\", platform=~\"$platform\", hostname=~\"$node\", container_label_com_docker_swarm_service_name=~\"$service\", container_label_com_docker_swarm_service_name!=\"\", id!=\"/\"})) < 60)",
+          "expr": "max by (hostname, platform, instance) (up{job=~\"cadvisor|kubernetes-cadvisor\", platform=~\"$platform\", hostname=~\"$node\"})",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "__auto",
+          "refId": "A"
+        }
+      ],
+      "title": "Scrape status",
+      "transformations": [
+        { "id": "organize", "options": { "excludeByName": { "Time": true }, "renameByName": { "Value": "Status", "hostname": "Node", "instance": "Target", "platform": "Type" } } }
+      ],
+      "type": "table"
+    },
+    {
+      "type": "row",
+      "title": "Applications",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 13
+      },
+      "id": 150,
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "Healthy Docker services plus Kubernetes applications with at least one running pod.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 0,
+        "y": 14
+      },
+      "id": 151,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "expr": "(count(count by (container_label_com_docker_swarm_service_name) ((time() - container_last_seen{job=~\"cadvisor|kubernetes-cadvisor\", platform=~\"$platform\", hostname=~\"$node\", container_label_com_docker_swarm_service_name=~\"$service\", container_label_com_docker_swarm_service_name!=\"\", id!=\"/\"}) < 60)) or vector(0)) + (count(count by (namespace, label_app_kubernetes_io_name) (max by (namespace, label_app_kubernetes_io_name, pod) ((kube_pod_status_phase{platform=~\"$platform\", namespace=~\"$namespace\", pod=~\"$pod\", phase=\"Running\"} == 1) * on (namespace, pod) group_left (label_app_kubernetes_io_name) max by (namespace, pod, label_app_kubernetes_io_name) (kube_pod_labels{platform=~\"$platform\", namespace=~\"$namespace\", label_app_kubernetes_io_name=~\"$application\"})))) or vector(0))",
+          "instant": true,
+          "legendFormat": "workloads",
+          "refId": "A"
+        }
+      ],
+      "title": "Workloads online",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 8,
+        "y": 14
+      },
+      "id": 152,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "expr": "(count((time() - container_last_seen{job=~\"cadvisor|kubernetes-cadvisor\", platform=~\"$platform\", hostname=~\"$node\", container_label_com_docker_swarm_service_name=~\"$service\", container_label_com_docker_swarm_service_name!=\"\", id!=\"/\"}) < 60) or vector(0)) + (count(min by (namespace, pod) (kube_pod_container_status_ready{platform=~\"$platform\", namespace=~\"$namespace\", pod=~\"$pod\", container=~\"$container\"} * on (namespace, pod) group_left (label_app_kubernetes_io_name) max by (namespace, pod, label_app_kubernetes_io_name) (kube_pod_labels{platform=~\"$platform\", namespace=~\"$namespace\", label_app_kubernetes_io_name=~\"$application\"})) == 1) or vector(0))",
+          "instant": true,
+          "legendFormat": "instances",
+          "refId": "A"
+        }
+      ],
+      "title": "Instances online",
+      "type": "stat",
+      "description": "Running Swarm tasks plus ready Kubernetes pods."
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 16,
+        "y": 14
+      },
+      "id": 153,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "expr": "(count((time() - container_last_seen{job=~\"cadvisor|kubernetes-cadvisor\", platform=~\"$platform\", hostname=~\"$node\", container_label_com_docker_swarm_service_name=~\"$service\", container_label_com_docker_swarm_service_name!=\"\", id!=\"/\"}) >= 60) or vector(0)) + (count((min by (namespace, pod) (kube_pod_container_status_ready{platform=~\"$platform\", namespace=~\"$namespace\", pod=~\"$pod\", container=~\"$container\"} * on (namespace, pod) group_left (label_app_kubernetes_io_name) max by (namespace, pod, label_app_kubernetes_io_name) (kube_pod_labels{platform=~\"$platform\", namespace=~\"$namespace\", label_app_kubernetes_io_name=~\"$application\"})) == 0) and on (namespace, pod) (max by (namespace, pod) (kube_pod_status_phase{platform=~\"$platform\", namespace=~\"$namespace\", pod=~\"$pod\", phase=~\"Pending|Running\"} == 1))) or vector(0))",
+          "instant": true,
+          "legendFormat": "instances",
+          "refId": "A"
+        }
+      ],
+      "title": "Instances unhealthy",
+      "type": "stat",
+      "description": "Stale Swarm tasks plus Kubernetes pods with at least one unready container."
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "Normalized Docker service tasks and Kubernetes pods. Filters select either runtime or both.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Status"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "0": {
+                        "color": "red",
+                        "index": 1,
+                        "text": "Offline"
+                      },
+                      "1": {
+                        "color": "green",
+                        "index": 0,
+                        "text": "Online"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "custom.align",
+                "value": "center"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 24,
+        "x": 0,
+        "y": 18
+      },
+      "id": 154,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": false,
+            "displayName": "Workload"
+          }
+        ]
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "expr": "sum by (workload, node, instance_name, runtime, namespace) (label_replace(label_replace(label_replace(label_replace(((time() - max by (container_label_com_docker_swarm_service_name, hostname, name, job) (container_last_seen{job=~\"cadvisor|kubernetes-cadvisor\", platform=~\"$platform\", hostname=~\"$node\", container_label_com_docker_swarm_service_name=~\"$service\", container_label_com_docker_swarm_service_name!=\"\", id!=\"/\"})) < bool 60), \"workload\", \"$1\", \"container_label_com_docker_swarm_service_name\", \"(.*)\"), \"node\", \"$1\", \"hostname\", \"(.*)\"), \"instance_name\", \"$1\", \"name\", \"(.*)\"), \"runtime\", \"docker\", \"job\", \".*\")) or sum by (workload, node, instance_name, runtime, namespace) (label_replace(label_replace(label_replace(min by (namespace, label_app_kubernetes_io_name, pod, node, platform) (kube_pod_container_status_ready{platform=~\"$platform\", namespace=~\"$namespace\", pod=~\"$pod\", container=~\"$container\"} * on (namespace, pod) group_left (label_app_kubernetes_io_name) max by (namespace, pod, label_app_kubernetes_io_name) (kube_pod_labels{platform=~\"$platform\", namespace=~\"$namespace\", label_app_kubernetes_io_name=~\"$application\"}) * on (namespace, pod) group_left (node) max by (namespace, pod, node) (kube_pod_info{platform=~\"$platform\"})), \"workload\", \"$1\", \"label_app_kubernetes_io_name\", \"(.*)\"), \"instance_name\", \"$1\", \"pod\", \"(.*)\"), \"runtime\", \"kubernetes\", \"platform\", \".*\"))",
           "format": "table",
           "instant": true,
           "legendFormat": "__auto",
@@ -459,25 +663,32 @@
             "excludeByName": {
               "Time": true,
               "__name__": true,
+              "container_label_com_docker_swarm_service_name": true,
+              "hostname": true,
               "id": true,
               "instance": true,
               "job": true,
+              "label_app_kubernetes_io_name": true,
+              "name": true,
               "node_domain": true,
               "platform": true,
+              "pod": true,
               "state": true
             },
             "renameByName": {
               "Value": "Status",
-              "container_label_com_docker_swarm_service_name": "Service",
-              "hostname": "Node",
-              "name": "Container"
+              "instance_name": "Instance",
+              "namespace": "Namespace",
+              "node": "Node",
+              "runtime": "Platform",
+              "workload": "Workload"
             }
           }
         }
       ],
       "type": "table"
     },
-    {
+{
       "type": "row",
       "title": "CPU & memory (host cgroup id=\"/\")",
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 30 },
@@ -485,7 +696,7 @@
       "collapsed": false,
       "panels": []
     },
-    {
+{
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "description": "100 * rate(container_cpu_usage_seconds_total) / machine_cpu_cores",
       "fieldConfig": {
@@ -534,7 +745,7 @@
       },
       "targets": [
         {
-          "expr": "100 * sum by (hostname) (rate(container_cpu_usage_seconds_total{job=\"cadvisor\", platform=~\"$platform\", hostname=~\"$node\", id=\"/\", cpu=\"total\"}[5m])) / clamp_min(sum by (hostname) (machine_cpu_cores{job=\"cadvisor\", platform=~\"$platform\", hostname=~\"$node\"}), 1)",
+          "expr": "100 * sum by (hostname) (rate(container_cpu_usage_seconds_total{job=~\"cadvisor|kubernetes-cadvisor\", platform=~\"$platform\", hostname=~\"$node\", id=\"/\", cpu=\"total\"}[5m])) / clamp_min(sum by (hostname) (machine_cpu_cores{job=~\"cadvisor|kubernetes-cadvisor\", platform=~\"$platform\", hostname=~\"$node\"}), 1)",
           "legendFormat": "{{hostname}}",
           "refId": "A"
         }
@@ -542,7 +753,7 @@
       "title": "CPU usage %",
       "type": "timeseries"
     },
-    {
+{
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "description": "Working set vs machine RAM.",
       "fieldConfig": {
@@ -591,7 +802,7 @@
       },
       "targets": [
         {
-          "expr": "100 * container_memory_working_set_bytes{job=\"cadvisor\", platform=~\"$platform\", hostname=~\"$node\", id=\"/\"} / clamp_min(machine_memory_bytes{job=\"cadvisor\", platform=~\"$platform\", hostname=~\"$node\"}, 1)",
+          "expr": "100 * max by (hostname) (container_memory_working_set_bytes{job=~\"cadvisor|kubernetes-cadvisor\", platform=~\"$platform\", hostname=~\"$node\", id=\"/\"}) / clamp_min(max by (hostname) (machine_memory_bytes{job=~\"cadvisor|kubernetes-cadvisor\", platform=~\"$platform\", hostname=~\"$node\"}), 1)",
           "legendFormat": "{{hostname}}",
           "refId": "A"
         }
@@ -599,7 +810,7 @@
       "title": "Memory working set %",
       "type": "timeseries"
     },
-    {
+{
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
@@ -637,12 +848,12 @@
       },
       "targets": [
         {
-          "expr": "container_memory_working_set_bytes{job=\"cadvisor\", platform=~\"$platform\", hostname=~\"$node\", id=\"/\"}",
+          "expr": "container_memory_working_set_bytes{job=~\"cadvisor|kubernetes-cadvisor\", platform=~\"$platform\", hostname=~\"$node\", id=\"/\"}",
           "legendFormat": "{{hostname}} working set",
           "refId": "A"
         },
         {
-          "expr": "machine_memory_bytes{job=\"cadvisor\", platform=~\"$platform\", hostname=~\"$node\"}",
+          "expr": "machine_memory_bytes{job=~\"cadvisor|kubernetes-cadvisor\", platform=~\"$platform\", hostname=~\"$node\"}",
           "legendFormat": "{{hostname}} machine RAM",
           "refId": "B"
         }
@@ -650,7 +861,7 @@
       "title": "Memory bytes",
       "type": "timeseries"
     },
-    {
+{
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
@@ -688,12 +899,12 @@
       },
       "targets": [
         {
-          "expr": "sum by (hostname) (rate(container_network_receive_bytes_total{job=\"cadvisor\", platform=~\"$platform\", hostname=~\"$node\", id=\"/\"}[5m]))",
+          "expr": "sum by (hostname) (rate(container_network_receive_bytes_total{job=~\"cadvisor|kubernetes-cadvisor\", platform=~\"$platform\", hostname=~\"$node\", id=\"/\"}[5m]))",
           "legendFormat": "{{hostname}} rx",
           "refId": "A"
         },
         {
-          "expr": "sum by (hostname) (rate(container_network_transmit_bytes_total{job=\"cadvisor\", platform=~\"$platform\", hostname=~\"$node\", id=\"/\"}[5m]))",
+          "expr": "sum by (hostname) (rate(container_network_transmit_bytes_total{job=~\"cadvisor|kubernetes-cadvisor\", platform=~\"$platform\", hostname=~\"$node\", id=\"/\"}[5m]))",
           "legendFormat": "{{hostname}} tx",
           "refId": "B"
         }
@@ -701,7 +912,7 @@
       "title": "Network throughput",
       "type": "timeseries"
     },
-    {
+{
       "type": "row",
       "title": "Rankings",
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 47 },
@@ -709,7 +920,7 @@
       "collapsed": false,
       "panels": []
     },
-    {
+{
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
@@ -747,7 +958,7 @@
       },
       "targets": [
         {
-          "expr": "topk(12, 100 * sum by (hostname) (rate(container_cpu_usage_seconds_total{job=\"cadvisor\", platform=~\"$platform\", hostname=~\"$node\", id=\"/\", cpu=\"total\"}[5m])) / clamp_min(sum by (hostname) (machine_cpu_cores{job=\"cadvisor\", platform=~\"$platform\", hostname=~\"$node\"}), 1))",
+          "expr": "topk(12, 100 * sum by (hostname) (rate(container_cpu_usage_seconds_total{job=~\"cadvisor|kubernetes-cadvisor\", platform=~\"$platform\", hostname=~\"$node\", id=\"/\", cpu=\"total\"}[5m])) / clamp_min(sum by (hostname) (machine_cpu_cores{job=~\"cadvisor|kubernetes-cadvisor\", platform=~\"$platform\", hostname=~\"$node\"}), 1))",
           "legendFormat": "{{hostname}}",
           "refId": "A"
         }
@@ -755,7 +966,7 @@
       "title": "Top CPU % (now)",
       "type": "timeseries"
     },
-    {
+{
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
@@ -793,7 +1004,7 @@
       },
       "targets": [
         {
-          "expr": "topk(12, 100 * container_memory_working_set_bytes{job=\"cadvisor\", platform=~\"$platform\", hostname=~\"$node\", id=\"/\"} / clamp_min(machine_memory_bytes{job=\"cadvisor\", platform=~\"$platform\", hostname=~\"$node\"}, 1))",
+          "expr": "topk(12, 100 * max by (hostname) (container_memory_working_set_bytes{job=~\"cadvisor|kubernetes-cadvisor\", platform=~\"$platform\", hostname=~\"$node\", id=\"/\"}) / clamp_min(max by (hostname) (machine_memory_bytes{job=~\"cadvisor|kubernetes-cadvisor\", platform=~\"$platform\", hostname=~\"$node\"}), 1))",
           "legendFormat": "{{hostname}}",
           "refId": "A"
         }
@@ -801,7 +1012,7 @@
       "title": "Top memory % (now)",
       "type": "timeseries"
     },
-    {
+{
       "type": "row",
       "title": "Filesystem (host cgroup)",
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 56 },
@@ -809,7 +1020,7 @@
       "collapsed": false,
       "panels": []
     },
-    {
+{
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
@@ -849,7 +1060,7 @@
       },
       "targets": [
         {
-          "expr": "100 * container_fs_usage_bytes{job=\"cadvisor\", platform=~\"$platform\", hostname=~\"$node\", id=\"/\"} / clamp_min(container_fs_limit_bytes{job=\"cadvisor\", platform=~\"$platform\", hostname=~\"$node\", id=\"/\"}, 1)",
+          "expr": "100 * container_fs_usage_bytes{job=~\"cadvisor|kubernetes-cadvisor\", platform=~\"$platform\", hostname=~\"$node\", id=\"/\"} / clamp_min(container_fs_limit_bytes{job=~\"cadvisor|kubernetes-cadvisor\", platform=~\"$platform\", hostname=~\"$node\", id=\"/\"}, 1)",
           "legendFormat": "{{hostname}}",
           "refId": "A"
         }
@@ -857,7 +1068,7 @@
       "title": "Filesystem usage %",
       "type": "timeseries"
     },
-    {
+{
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
@@ -895,12 +1106,417 @@
       },
       "targets": [
         {
-          "expr": "sum by (hostname) (rate(container_fs_reads_bytes_total{job=\"cadvisor\", platform=~\"$platform\", hostname=~\"$node\", id=\"/\"}[5m]) + rate(container_fs_writes_bytes_total{job=\"cadvisor\", platform=~\"$platform\", hostname=~\"$node\", id=\"/\"}[5m]))",
+          "expr": "sum by (hostname) (rate(container_fs_reads_bytes_total{job=~\"cadvisor|kubernetes-cadvisor\", platform=~\"$platform\", hostname=~\"$node\", id=\"/\"}[5m]) + rate(container_fs_writes_bytes_total{job=~\"cadvisor|kubernetes-cadvisor\", platform=~\"$platform\", hostname=~\"$node\", id=\"/\"}[5m]))",
           "legendFormat": "{{hostname}}",
           "refId": "A"
         }
       ],
       "title": "Filesystem I/O",
+      "type": "timeseries"
+    },
+    {
+      "type": "row",
+      "title": "Application resource usage",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 65
+      },
+      "id": 510,
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "Container CPU usage grouped by Kubernetes application. Includes Docker services and Kubernetes applications.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            }
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 66
+      },
+      "id": 511,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum by (namespace, label_app_kubernetes_io_name) (rate(container_cpu_usage_seconds_total{job=\"kubernetes-cadvisor\", platform=~\"$platform\", namespace=~\"$namespace\", pod=~\"$pod\", container=~\"$container\", container!=\"\", image!=\"\"}[5m]) * on (namespace, pod) group_left (label_app_kubernetes_io_name) max by (namespace, pod, label_app_kubernetes_io_name) (kube_pod_labels{platform=~\"$platform\", namespace=~\"$namespace\", label_app_kubernetes_io_name=~\"$application\"}))",
+          "legendFormat": "{{namespace}} / {{label_app_kubernetes_io_name}}",
+          "refId": "A"
+        },
+        {
+          "expr": "sum by (container_label_com_docker_swarm_service_name) (rate(container_cpu_usage_seconds_total{job=~\"cadvisor|kubernetes-cadvisor\", platform=~\"$platform\", hostname=~\"$node\", container_label_com_docker_swarm_service_name=~\"$service\", container_label_com_docker_swarm_service_name!=\"\", id!=\"/\"}[5m]))",
+          "legendFormat": "docker / {{container_label_com_docker_swarm_service_name}}",
+          "refId": "B"
+        }
+      ],
+      "title": "Application CPU",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "Container working-set memory grouped by Kubernetes application. Includes Docker services and Kubernetes applications.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            }
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 66
+      },
+      "id": 512,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum by (namespace, label_app_kubernetes_io_name) (container_memory_working_set_bytes{job=\"kubernetes-cadvisor\", platform=~\"$platform\", namespace=~\"$namespace\", pod=~\"$pod\", container=~\"$container\", container!=\"\", image!=\"\"} * on (namespace, pod) group_left (label_app_kubernetes_io_name) max by (namespace, pod, label_app_kubernetes_io_name) (kube_pod_labels{platform=~\"$platform\", namespace=~\"$namespace\", label_app_kubernetes_io_name=~\"$application\"}))",
+          "legendFormat": "{{namespace}} / {{label_app_kubernetes_io_name}}",
+          "refId": "A"
+        },
+        {
+          "expr": "sum by (container_label_com_docker_swarm_service_name) (container_memory_working_set_bytes{job=~\"cadvisor|kubernetes-cadvisor\", platform=~\"$platform\", hostname=~\"$node\", container_label_com_docker_swarm_service_name=~\"$service\", container_label_com_docker_swarm_service_name!=\"\", id!=\"/\"})",
+          "legendFormat": "docker / {{container_label_com_docker_swarm_service_name}}",
+          "refId": "B"
+        }
+      ],
+      "title": "Application memory",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "Container pod network traffic grouped by Kubernetes application. Includes Docker services and Kubernetes applications.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            }
+          },
+          "unit": "Bps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 74
+      },
+      "id": 513,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum by (namespace, label_app_kubernetes_io_name) (rate(container_network_receive_bytes_total{job=\"kubernetes-cadvisor\", platform=~\"$platform\", namespace=~\"$namespace\", pod=~\"$pod\"}[5m]) * on (namespace, pod) group_left (label_app_kubernetes_io_name) max by (namespace, pod, label_app_kubernetes_io_name) (kube_pod_labels{platform=~\"$platform\", namespace=~\"$namespace\", label_app_kubernetes_io_name=~\"$application\"}))",
+          "legendFormat": "RX {{namespace}} / {{label_app_kubernetes_io_name}}",
+          "refId": "A"
+        },
+        {
+          "expr": "sum by (namespace, label_app_kubernetes_io_name) (rate(container_network_transmit_bytes_total{job=\"kubernetes-cadvisor\", platform=~\"$platform\", namespace=~\"$namespace\", pod=~\"$pod\"}[5m]) * on (namespace, pod) group_left (label_app_kubernetes_io_name) max by (namespace, pod, label_app_kubernetes_io_name) (kube_pod_labels{platform=~\"$platform\", namespace=~\"$namespace\", label_app_kubernetes_io_name=~\"$application\"}))",
+          "legendFormat": "TX {{namespace}} / {{label_app_kubernetes_io_name}}",
+          "refId": "B"
+        },
+        {
+          "expr": "sum by (container_label_com_docker_swarm_service_name) (rate(container_network_receive_bytes_total{job=~\"cadvisor|kubernetes-cadvisor\", platform=~\"$platform\", hostname=~\"$node\", container_label_com_docker_swarm_service_name=~\"$service\", container_label_com_docker_swarm_service_name!=\"\", id!=\"/\"}[5m]))",
+          "legendFormat": "docker RX / {{container_label_com_docker_swarm_service_name}}",
+          "refId": "C"
+        },
+        {
+          "expr": "sum by (container_label_com_docker_swarm_service_name) (rate(container_network_transmit_bytes_total{job=~\"cadvisor|kubernetes-cadvisor\", platform=~\"$platform\", hostname=~\"$node\", container_label_com_docker_swarm_service_name=~\"$service\", container_label_com_docker_swarm_service_name!=\"\", id!=\"/\"}[5m]))",
+          "legendFormat": "docker TX / {{container_label_com_docker_swarm_service_name}}",
+          "refId": "D"
+        }
+      ],
+      "title": "Application network",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "Container filesystem I/O grouped by Kubernetes application. Includes Docker services and Kubernetes applications.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            }
+          },
+          "unit": "Bps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 74
+      },
+      "id": 514,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum by (namespace, label_app_kubernetes_io_name) ((rate(container_fs_reads_bytes_total{job=\"kubernetes-cadvisor\", platform=~\"$platform\", namespace=~\"$namespace\", pod=~\"$pod\", container=~\"$container\", container!=\"\"}[5m]) + rate(container_fs_writes_bytes_total{job=\"kubernetes-cadvisor\", platform=~\"$platform\", namespace=~\"$namespace\", pod=~\"$pod\", container=~\"$container\", container!=\"\"}[5m])) * on (namespace, pod) group_left (label_app_kubernetes_io_name) max by (namespace, pod, label_app_kubernetes_io_name) (kube_pod_labels{platform=~\"$platform\", namespace=~\"$namespace\", label_app_kubernetes_io_name=~\"$application\"}))",
+          "legendFormat": "{{namespace}} / {{label_app_kubernetes_io_name}}",
+          "refId": "A"
+        },
+        {
+          "expr": "sum by (container_label_com_docker_swarm_service_name) (rate(container_fs_reads_bytes_total{job=~\"cadvisor|kubernetes-cadvisor\", platform=~\"$platform\", hostname=~\"$node\", container_label_com_docker_swarm_service_name=~\"$service\", container_label_com_docker_swarm_service_name!=\"\", id!=\"/\"}[5m]) + rate(container_fs_writes_bytes_total{job=~\"cadvisor|kubernetes-cadvisor\", platform=~\"$platform\", hostname=~\"$node\", container_label_com_docker_swarm_service_name=~\"$service\", container_label_com_docker_swarm_service_name!=\"\", id!=\"/\"}[5m]))",
+          "legendFormat": "docker / {{container_label_com_docker_swarm_service_name}}",
+          "refId": "B"
+        }
+      ],
+      "title": "Application filesystem I/O",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "Kubernetes container restart increases grouped by application.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            }
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 82
+      },
+      "id": 515,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum by (namespace, label_app_kubernetes_io_name) (increase(kube_pod_container_status_restarts_total{platform=~\"$platform\", namespace=~\"$namespace\", pod=~\"$pod\", container=~\"$container\"}[5m]) * on (namespace, pod) group_left (label_app_kubernetes_io_name) max by (namespace, pod, label_app_kubernetes_io_name) (kube_pod_labels{platform=~\"$platform\", namespace=~\"$namespace\", label_app_kubernetes_io_name=~\"$application\"}))",
+          "legendFormat": "{{namespace}} / {{label_app_kubernetes_io_name}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Container restarts",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "Desired, available, and unavailable Deployment replicas.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineInterpolation": "stepAfter",
+            "lineWidth": 2,
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            }
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 82
+      },
+      "id": 516,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "expr": "kube_deployment_spec_replicas{platform=~\"$platform\", namespace=~\"$namespace\", deployment=~\"$application\"}",
+          "legendFormat": "desired {{namespace}} / {{deployment}}",
+          "refId": "A"
+        },
+        {
+          "expr": "kube_deployment_status_replicas_available{platform=~\"$platform\", namespace=~\"$namespace\", deployment=~\"$application\"}",
+          "legendFormat": "available {{namespace}} / {{deployment}}",
+          "refId": "B"
+        },
+        {
+          "expr": "kube_deployment_status_replicas_unavailable{platform=~\"$platform\", namespace=~\"$namespace\", deployment=~\"$application\"}",
+          "legendFormat": "unavailable {{namespace}} / {{deployment}}",
+          "refId": "C"
+        }
+      ],
+      "title": "Deployment replicas",
       "type": "timeseries"
     }
   ]

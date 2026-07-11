@@ -10,14 +10,6 @@ resource "terraform_data" "truenas_file_hash" {
   triggers_replace = local.truenas_file_hash
 }
 
-resource "terraform_data" "proxmox_qemu_overview_file_hash" {
-  triggers_replace = local.proxmox_qemu_overview_file_hash
-}
-
-resource "terraform_data" "proxmox_storage_overview_file_hash" {
-  triggers_replace = local.proxmox_storage_overview_file_hash
-}
-
 resource "terraform_data" "velero_overview_file_hash" {
   triggers_replace = local.velero_overview_file_hash
 }
@@ -30,10 +22,6 @@ resource "terraform_data" "proxmox_file_hash" {
   triggers_replace = local.proxmox_file_hash
 }
 
-resource "terraform_data" "proxmox_graphite_overview_file_hash" {
-  triggers_replace = local.proxmox_graphite_overview_file_hash
-}
-
 resource "grafana_data_source" "this" {
   for_each = { for ds in var.datasources : ds.uid => ds }
 
@@ -43,11 +31,6 @@ resource "grafana_data_source" "this" {
   url               = each.value.url
   is_default        = each.value.is_default
   json_data_encoded = each.value.json_data != null ? jsonencode(each.value.json_data) : null
-}
-
-resource "grafana_folder" "proxmox" {
-  title = "Proxmox"
-  uid   = "proxmox-folder"
 }
 
 resource "grafana_dashboard" "cadvisor" {
@@ -65,26 +48,6 @@ resource "grafana_dashboard" "node_exporter" {
 
   lifecycle {
     replace_triggered_by = [terraform_data.node_exporter_file_hash]
-  }
-}
-
-resource "grafana_dashboard" "proxmox_qemu_overview" {
-  folder      = grafana_folder.proxmox.id
-  overwrite   = true
-  config_json = local.proxmox_qemu_overview_content
-
-  lifecycle {
-    replace_triggered_by = [terraform_data.proxmox_qemu_overview_file_hash]
-  }
-}
-
-resource "grafana_dashboard" "proxmox_storage_overview" {
-  folder      = grafana_folder.proxmox.id
-  overwrite   = true
-  config_json = local.proxmox_storage_overview_content
-
-  lifecycle {
-    replace_triggered_by = [terraform_data.proxmox_storage_overview_file_hash]
   }
 }
 
@@ -121,15 +84,5 @@ resource "grafana_dashboard" "proxmox" {
 
   lifecycle {
     replace_triggered_by = [terraform_data.proxmox_file_hash]
-  }
-}
-
-resource "grafana_dashboard" "proxmox_graphite_overview" {
-  folder      = grafana_folder.proxmox.id
-  overwrite   = true
-  config_json = local.proxmox_graphite_overview_content
-
-  lifecycle {
-    replace_triggered_by = [terraform_data.proxmox_graphite_overview_file_hash]
   }
 }

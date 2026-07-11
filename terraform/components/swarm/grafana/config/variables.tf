@@ -7,7 +7,7 @@ variable "provider_config" {
 }
 
 variable "datasources" {
-  description = "Grafana data source definitions. uid must match dashboard JSON datasource references."
+  description = "Grafana data source definitions. uid must match dashboard JSON datasource references; uid prometheus is the canonical VictoriaMetrics query path."
   type = list(object({
     name       = string
     uid        = string
@@ -16,5 +16,13 @@ variable "datasources" {
     is_default = optional(bool, false)
     json_data  = optional(map(any))
   }))
+
+  validation {
+    condition = alltrue([
+      for datasource in var.datasources :
+      datasource.uid != "prometheus" || datasource.url == "http://victoriametrics:8428"
+    ])
+    error_message = "The prometheus datasource UID must use the canonical VictoriaMetrics URL http://victoriametrics:8428."
+  }
 }
 

@@ -85,6 +85,7 @@ without renumbering everything.
 | 24–26 | democratic-csi-iscsi, democratic-csi-nfs |
 | 26–27 | external-secrets |
 | 27–28 | node-exporter |
+| 28–29 | kubernetes-metrics |
 | 29 | snapshot-controller |
 | 30+ | Media apps, Clusterplex, Velero, … |
 | 47–48 | LangGraph |
@@ -118,8 +119,9 @@ see [gitops-layout.md](./gitops-layout.md).
 ## Platform add-ons
 
 MetalLB, ingress-nginx, democratic-csi (iSCSI + NFS), External Secrets,
-node-exporter, snapshot-controller, and Velero are **individual files** under
-`kubernetes/argocd-management/applications/`, not a single ApplicationSet.
+node-exporter, kubernetes-metrics, snapshot-controller, and Velero are
+**individual files** under `kubernetes/argocd-management/applications/`, not a
+single ApplicationSet.
 
 Values and extra manifests live under `kubernetes/<addon>/`.
 

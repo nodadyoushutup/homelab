@@ -19,7 +19,6 @@ Unlike Swarm (`node.labels.role==swarm-wk-*`), this repo pins workloads with
 | --- | --- |
 | `k8s-wk-0` | Default for **media metadata** (*arr, Seerr, Tautulli), **first-party chat**, and small web apps |
 | `k8s-wk-1` … `k8s-wk-10` | **qBittorrent overlay instances** spread for capacity; some cross-seed overlays |
-| `talos-r6x-28q` | Exception host for specific qBittorrent overlays when needed |
 
 **LangGraph** (`kubernetes/langgraph/`) has **no `nodeSelector`** — the scheduler
 may place it on any ready worker.
@@ -70,8 +69,8 @@ depends on: load balancing, ingress, CSI drivers, External Secrets operator,
 metrics DaemonSets, backup, snapshot controller.
 
 **Examples:** `metallb`, `ingress-nginx`, `external-secrets`,
-`democratic-csi-iscsi`, `democratic-csi-nfs`, `node-exporter`, `snapshot-controller`,
-`velero`.
+`democratic-csi-iscsi`, `democratic-csi-nfs`, `node-exporter`,
+`kubernetes-metrics`, `snapshot-controller`, `velero`.
 
 **Placement:** Helm chart defaults or DaemonSet-style scheduling — not pinned to
 `k8s-wk-0`. Register in `kubernetes/argocd-management/applications/<addon>.yaml`
@@ -80,6 +79,12 @@ with **early sync waves** (platform before apps). See
 
 `node-exporter` uses `kubernetes.io/os: linux` and tolerations to run on all
 nodes — do not copy that pattern for single-replica app Deployments.
+
+`kubernetes-metrics` runs vmagent and kube-state-metrics in the `monitoring`
+namespace. It scrapes the kubelets' built-in cAdvisor endpoints with a
+short-lived ServiceAccount token and remote-writes to the central
+VictoriaMetrics service on Swarm. See
+[kubernetes-container-metrics.md](../../workflows/kubernetes-container-metrics.md).
 
 ### Media and library apps → `k8s-wk-0` (default)
 
@@ -116,8 +121,7 @@ image builds. Local dev uses Compose only — see `AGENTS.md`.
 
 **qBittorrent** and **cross-seed** use **`base/` + `overlays/<instance>/`**.
 Each overlay patches **`deployment-node-patch.yaml`** to set
-`kubernetes.io/hostname` — spreading instances across `k8s-wk-1` … `k8s-wk-10`
-(and `talos-r6x-28q` where configured).
+`kubernetes.io/hostname` — spreading instances across `k8s-wk-1` … `k8s-wk-10`.
 
 **One Argo `Application` per overlay path** — see
 `kubernetes/argocd-management/applications/qbittorrent.yaml` and
@@ -132,8 +136,10 @@ with capacity — do not stack every torrent Deployment on `k8s-wk-0`.
 runner pools** — [terraform/swarm-placement.md](../terraform/swarm-placement.md).
 Do not move pipeline orchestration to the cluster without an explicit redesign.
 
-**Swarm observability** (Prometheus, Grafana on Swarm, etc.) stays under
-`terraform/components/swarm/` on **`swarm-wk-0`**, separate from `kubernetes/node-exporter`.
+**Central observability** (Prometheus, VictoriaMetrics, and Grafana) stays under
+`terraform/components/swarm/` on **`swarm-wk-0`**. Cluster-local collectors
+such as `node-exporter` and `kubernetes-metrics` stay under `kubernetes/` and
+send or expose metrics to that central stack.
 
 ## Expressing placement in manifests
 

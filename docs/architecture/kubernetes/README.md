@@ -43,7 +43,7 @@ small helper manifests. Long-lived workloads are GitOps-driven through Argo CD.
 | --- | --- |
 | `bootstrap/` | **Seed** `Application` with placeholder repo URL/revision — points a fresh Argo install at `kubernetes/argocd-management`. Not the ongoing workload source of truth. |
 | `argocd-management/` | **GitOps control plane**: `applications/` (one file per stack), `ops/` (Argo-local config). Synced by the Terraform-managed root Application — [argocd/README.md](../argocd/README.md). |
-| `metallb/`, `ingress-nginx/`, `external-secrets/`, `democratic-csi-*`, `node-exporter/`, `snapshot-controller/`, `velero/` | **Platform add-ons** — usually `values.yaml` (+ `namespace.yaml` where needed), wired from `argocd-management/applications/*.yaml`. Block storage: [argocd/storage-truenas-iscsi.md](../argocd/storage-truenas-iscsi.md). |
+| `metallb/`, `ingress-nginx/`, `external-secrets/`, `democratic-csi-*`, `node-exporter/`, `kubernetes-metrics/`, `snapshot-controller/`, `velero/` | **Platform add-ons** — usually `values.yaml` (+ `namespace.yaml` or extra manifests where needed), wired from `argocd-management/applications/*.yaml`. Block storage: [argocd/storage-truenas-iscsi.md](../argocd/storage-truenas-iscsi.md). Kubernetes container metrics: [kubernetes-container-metrics.md](../../workflows/kubernetes-container-metrics.md). |
 | `langgraph/`, `langchain-agent-chat/` | **First-party production** — flat manifests (Deployments, Services, Ingress, ExternalSecrets, PVCs). Images built from `applications/`. |
 | `qbittorrent/`, `cross-seed/` | **Kustomize** — `base/` + `overlays/<instance>/` when many similar instances differ by namespace, node, or secrets. |
 | `clusterplex/`, `radarr/`, `radarr-4k/`, `sonarr/`, `prowlarr/`, `seerr/`, `tautulli/`, `picsur/`, `privatebin/`, `thelounge/` | **Media and apps** — plain manifest bundles per deployable unit. |
@@ -55,11 +55,11 @@ style** — see [manifest-patterns.md](./manifest-patterns.md).
 
 | Concern | Where it lives |
 | --- | --- |
-| Edge proxy, Swarm observability, MCP/RAG on Swarm | `terraform/components/swarm/` — [terraform/swarm-placement.md](../terraform/swarm-placement.md) |
+| Edge proxy, central metrics storage/UI, MCP/RAG on Swarm | `terraform/components/swarm/` — [terraform/swarm-placement.md](../terraform/swarm-placement.md) |
 | CI/CD (Jenkins, GHA runners) | Swarm `swarm-wk-1` + `terraform/components/runners/` — not Kubernetes |
 | Production LangGraph + Agent Chat | `kubernetes/langgraph/`, `kubernetes/langchain-agent-chat/` |
 | Media *arr stack, qBittorrent, Clusterplex | `kubernetes/<app>/` |
-| Cluster ingress, CSI, MetalLB, ESO | `kubernetes/` platform add-ons |
+| Cluster ingress, CSI, MetalLB, ESO, Kubernetes metrics collection | `kubernetes/` platform add-ons |
 
 LangGraph **dev** runs in Compose (`docker/docker-compose.yml` per `AGENTS.md`);
 **prod** graph and chat run on Kubernetes only. Do not point dev chat at prod

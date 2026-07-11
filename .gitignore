@@ -185,6 +185,8 @@ kubeconfig
 !.config/scripts/*.env.example
 !.config/terraform/
 !.config/terraform/components/
+.config/terraform/components/swarm/vault/.env
+.config/terraform/components/swarm/vault/init.json
 
 # =============================================================================
 # Git

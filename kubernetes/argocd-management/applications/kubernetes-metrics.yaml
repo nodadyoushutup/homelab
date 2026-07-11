@@ -1,0 +1,69 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: kubernetes-metrics
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "28"
+spec:
+  description: Kubernetes container and workload metrics collection
+  sourceRepos:
+    - git@github.com:nodadyoushutup/homelab.git
+    - https://github.com/nodadyoushutup/homelab.git
+    - https://victoriametrics.github.io/helm-charts/
+    - https://prometheus-community.github.io/helm-charts
+  destinations:
+    - namespace: monitoring
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRole
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRoleBinding
+  namespaceResourceWhitelist:
+    - group: "*"
+      kind: "*"
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kubernetes-metrics
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "29"
+spec:
+  project: kubernetes-metrics
+  revisionHistoryLimit: 0
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  sources:
+    - repoURL: https://victoriametrics.github.io/helm-charts/
+      chart: victoria-metrics-agent
+      targetRevision: "0.43.0"
+      helm:
+        releaseName: kubernetes-metrics-agent
+        valueFiles:
+          - $values/kubernetes/kubernetes-metrics/vmagent-values.yaml
+    - repoURL: https://prometheus-community.github.io/helm-charts
+      chart: kube-state-metrics
+      targetRevision: "7.8.1"
+      helm:
+        releaseName: kube-state-metrics
+        valueFiles:
+          - $values/kubernetes/kubernetes-metrics/kube-state-metrics-values.yaml
+    - repoURL: git@github.com:nodadyoushutup/homelab.git
+      targetRevision: HEAD
+      ref: values
+    - repoURL: git@github.com:nodadyoushutup/homelab.git
+      targetRevision: HEAD
+      path: kubernetes/kubernetes-metrics/manifests
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - SkipDryRunOnMissingResource=true

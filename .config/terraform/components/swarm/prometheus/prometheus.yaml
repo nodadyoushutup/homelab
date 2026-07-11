@@ -41,8 +41,8 @@ scrape_configs:
           hostname: swarm-wk-4.local
       - targets: ['192.168.1.36:9100']
         labels:
-          platform: machine
-          node_domain: machine
+          platform: docker
+          node_domain: swarm
           hostname: nodadyoushutup-host.local
       - targets: ['192.168.1.201:9100']
         labels:
@@ -138,6 +138,11 @@ scrape_configs:
           platform: docker
           node_domain: swarm
           hostname: swarm-wk-4.local
+      - targets: ['192.168.1.36:8080']
+        labels:
+          platform: docker
+          node_domain: swarm
+          hostname: nodadyoushutup-host.local
 
 
   # Velero metrics: NodePort on k8s nodes (ClusterIP is not reachable from Swarm).

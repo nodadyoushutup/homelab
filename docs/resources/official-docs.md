@@ -52,6 +52,8 @@ When a project does not maintain a standalone docs site, this file links to the 
 | Grafana | `terraform/components/swarm/grafana/{app,config,database}` | [Grafana docs](https://grafana.com/docs/) |
 | Prometheus | `terraform/components/swarm/prometheus/app` | [Prometheus docs](https://prometheus.io/docs/introduction/overview/) |
 | VictoriaMetrics | `terraform/components/swarm/victoriametrics/app` | [VictoriaMetrics docs](https://docs.victoriametrics.com/) |
+| VictoriaMetrics vmagent | `kubernetes/kubernetes-metrics/vmagent-values.yaml` | [vmagent docs](https://docs.victoriametrics.com/victoriametrics/vmagent/) |
+| kube-state-metrics | `kubernetes/kubernetes-metrics/kube-state-metrics-values.yaml` | [kube-state-metrics docs](https://github.com/kubernetes/kube-state-metrics/tree/main/docs) |
 | Graylog | `terraform/components/swarm/graylog/{database,app}` | [Graylog docs](https://go2docs.graylog.org/current/) |
 | Graphite | `terraform/components/swarm/graphite/app` | [Graphite docs](https://graphite.readthedocs.io/en/latest/) |
 | cAdvisor | `terraform/components/swarm/cadvisor/app` | [cAdvisor docs](https://github.com/google/cadvisor/blob/master/docs/runtime_options.md) |

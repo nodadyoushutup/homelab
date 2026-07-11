@@ -47,12 +47,13 @@
         "datasource": { "type": "prometheus", "uid": "prometheus" },
         "definition": "label_values(pve_guest_info{job=\"pve\",instance=~\"$instance\",type=~\"qemu|lxc\"}, id)",
         "query": "label_values(pve_guest_info{job=\"pve\",instance=~\"$instance\",type=~\"qemu|lxc\"}, id)",
-        "includeAll": false,
+        "includeAll": true,
+        "allValue": ".*",
         "multi": false,
         "refresh": 2,
         "sort": 1,
         "regex": "",
-        "current": { "selected": true, "text": "qemu/1100", "value": "qemu/1100" }
+        "current": { "selected": true, "text": "All", "value": "$__all" }
       }
     ]
   },
@@ -243,7 +244,7 @@
       },
       "targets": [
         {
-          "expr": "pve_up{job=\"pve\",instance=~\"$instance\",id=\"$vm\"}",
+          "expr": "pve_up{job=\"pve\",instance=~\"$instance\",id=~\"$vm\"}",
           "instant": true,
           "refId": "A"
         }
@@ -267,7 +268,7 @@
       },
       "targets": [
         {
-          "expr": "pve_guest_info{job=\"pve\",instance=~\"$instance\",id=\"$vm\"}",
+          "expr": "pve_guest_info{job=\"pve\",instance=~\"$instance\",id=~\"$vm\"}",
           "instant": true,
           "legendFormat": "{{name}}",
           "refId": "A"
@@ -294,7 +295,7 @@
       },
       "targets": [
         {
-          "expr": "pve_uptime_seconds{job=\"pve\",instance=~\"$instance\",id=\"$vm\"}",
+          "expr": "pve_uptime_seconds{job=\"pve\",instance=~\"$instance\",id=~\"$vm\"}",
           "instant": true,
           "refId": "A"
         }
@@ -342,8 +343,8 @@
       },
       "targets": [
         {
-          "expr": "pve_cpu_usage_ratio{job=\"pve\",instance=~\"$instance\",id=\"$vm\"}",
-          "legendFormat": "CPU",
+          "expr": "pve_cpu_usage_ratio{job=\"pve\",instance=~\"$instance\",id=~\"$vm\"}",
+          "legendFormat": "{{id}}",
           "refId": "A"
         }
       ],
@@ -390,8 +391,8 @@
       },
       "targets": [
         {
-          "expr": "pve_memory_usage_bytes{job=\"pve\",instance=~\"$instance\",id=\"$vm\"} / pve_memory_size_bytes{job=\"pve\",instance=~\"$instance\",id=\"$vm\"}",
-          "legendFormat": "Memory",
+          "expr": "pve_memory_usage_bytes{job=\"pve\",instance=~\"$instance\",id=~\"$vm\"} / pve_memory_size_bytes{job=\"pve\",instance=~\"$instance\",id=~\"$vm\"}",
+          "legendFormat": "{{id}}",
           "refId": "A"
         }
       ],
@@ -436,13 +437,13 @@
       },
       "targets": [
         {
-          "expr": "rate(pve_network_receive_bytes_total{job=\"pve\",instance=~\"$instance\",id=\"$vm\"}[5m])",
-          "legendFormat": "Receive",
+          "expr": "rate(pve_network_receive_bytes_total{job=\"pve\",instance=~\"$instance\",id=~\"$vm\"}[5m])",
+          "legendFormat": "{{id}} receive",
           "refId": "A"
         },
         {
-          "expr": "rate(pve_network_transmit_bytes_total{job=\"pve\",instance=~\"$instance\",id=\"$vm\"}[5m])",
-          "legendFormat": "Transmit",
+          "expr": "rate(pve_network_transmit_bytes_total{job=\"pve\",instance=~\"$instance\",id=~\"$vm\"}[5m])",
+          "legendFormat": "{{id}} transmit",
           "refId": "B"
         }
       ],
@@ -487,13 +488,13 @@
       },
       "targets": [
         {
-          "expr": "rate(pve_disk_read_bytes_total{job=\"pve\",instance=~\"$instance\",id=\"$vm\"}[5m])",
-          "legendFormat": "Read",
+          "expr": "rate(pve_disk_read_bytes_total{job=\"pve\",instance=~\"$instance\",id=~\"$vm\"}[5m])",
+          "legendFormat": "{{id}} read",
           "refId": "A"
         },
         {
-          "expr": "rate(pve_disk_written_bytes_total{job=\"pve\",instance=~\"$instance\",id=\"$vm\"}[5m])",
-          "legendFormat": "Write",
+          "expr": "rate(pve_disk_written_bytes_total{job=\"pve\",instance=~\"$instance\",id=~\"$vm\"}[5m])",
+          "legendFormat": "{{id}} write",
           "refId": "B"
         }
       ],
@@ -624,7 +625,7 @@
       },
       "targets": [
         {
-          "expr": "1 - pve_not_backed_up_info{job=\"pve\",instance=~\"$instance\",id=\"$vm\"}",
+          "expr": "1 - pve_not_backed_up_info{job=\"pve\",instance=~\"$instance\",id=~\"$vm\"}",
           "instant": true,
           "refId": "A"
         }

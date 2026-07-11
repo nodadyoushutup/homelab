@@ -11,14 +11,6 @@ locals {
   truenas_file_hash = filemd5(local.truenas_file_path)
   truenas_content   = file(local.truenas_file_path)
 
-  proxmox_qemu_overview_file_path = "${path.module}/dashboards/proxmox-qemu-overview.json"
-  proxmox_qemu_overview_file_hash = filemd5(local.proxmox_qemu_overview_file_path)
-  proxmox_qemu_overview_content   = file(local.proxmox_qemu_overview_file_path)
-
-  proxmox_storage_overview_file_path = "${path.module}/dashboards/proxmox-storage-overview.json"
-  proxmox_storage_overview_file_hash = filemd5(local.proxmox_storage_overview_file_path)
-  proxmox_storage_overview_content   = file(local.proxmox_storage_overview_file_path)
-
   velero_overview_file_path = "${path.module}/dashboards/velero-overview.json"
   velero_overview_file_hash = filemd5(local.velero_overview_file_path)
   velero_overview_content   = file(local.velero_overview_file_path)
@@ -30,8 +22,4 @@ locals {
   proxmox_file_path = "${path.module}/dashboards/proxmox.json"
   proxmox_file_hash = filemd5(local.proxmox_file_path)
   proxmox_content   = file(local.proxmox_file_path)
-
-  proxmox_graphite_overview_file_path = "${path.module}/dashboards/proxmox-graphite-overview.json"
-  proxmox_graphite_overview_file_hash = filemd5(local.proxmox_graphite_overview_file_path)
-  proxmox_graphite_overview_content   = file(local.proxmox_graphite_overview_file_path)
 }

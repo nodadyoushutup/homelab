@@ -2,6 +2,10 @@ data "docker_network" "grafana_postgres" {
   name = "grafana-postgres"
 }
 
+data "docker_network" "victoriametrics" {
+  name = "victoriametrics-net"
+}
+
 resource "docker_network" "grafana_app" {
   name   = "grafana-app"
   driver = "overlay"
@@ -51,6 +55,11 @@ resource "docker_service" "grafana" {
 
     networks_advanced {
       name    = data.docker_network.grafana_postgres.id
+      aliases = []
+    }
+
+    networks_advanced {
+      name    = data.docker_network.victoriametrics.id
       aliases = []
     }
 

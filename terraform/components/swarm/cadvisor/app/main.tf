@@ -30,7 +30,7 @@ resource "docker_service" "cadvisor" {
     }
 
     container_spec {
-      image = "ghcr.io/google/cadvisor:v0.57.0"
+      image = "ghcr.io/google/cadvisor:v0.57.0@sha256:e75bdb03b74b0b6995f208f166fead2e6e555dde73e44200113bb26f41b1981d"
 
       args = [
         "--docker=unix:///var/run/docker.sock",

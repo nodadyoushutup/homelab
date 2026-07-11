@@ -1,0 +1,67 @@
+fullnameOverride: kube-state-metrics
+
+prometheusScrape: false
+
+serviceAccount:
+  create: true
+  name: kube-state-metrics
+  automountServiceAccountToken: true
+
+rbac:
+  create: true
+  useClusterRole: true
+
+collectors:
+  - daemonsets
+  - deployments
+  - jobs
+  - namespaces
+  - nodes
+  - pods
+  - replicasets
+  - statefulsets
+
+metricLabelsAllowlist:
+  - pods=[app.kubernetes.io/name,app.kubernetes.io/instance,app.kubernetes.io/part-of]
+
+metricAllowlist:
+  - kube_pod_info
+  - kube_pod_owner
+  - kube_pod_labels
+  - kube_pod_status_phase
+  - kube_pod_container_info
+  - kube_pod_container_status_ready
+  - kube_pod_container_status_restarts_total
+  - kube_replicaset_owner
+  - kube_deployment_spec_replicas
+  - kube_deployment_status_replicas
+  - kube_deployment_status_replicas_available
+  - kube_deployment_status_replicas_unavailable
+  - kube_deployment_status_replicas_updated
+  - kube_statefulset_replicas
+  - kube_statefulset_status_replicas_ready
+  - kube_daemonset_status_desired_number_scheduled
+  - kube_daemonset_status_number_ready
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 96Mi
+  limits:
+    memory: 256Mi
+
+securityContext:
+  enabled: true
+  runAsNonRoot: true
+  runAsUser: 65534
+  runAsGroup: 65534
+  fsGroup: 65534
+  seccompProfile:
+    type: RuntimeDefault
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
