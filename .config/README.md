@@ -1,6 +1,6 @@
 # Site-local configuration (tfvars, backends, keys)
 
-This directory is the single site-local source of truth: Terraform/Kubernetes tfvars, backends, keys, and split Docker dotenv files under **`docker/`**. It mirrors the layout that used to live under a separate `CONFIG_DIR` on disk (for example `/mnt/eapp/config`). **Terraform pipelines and `scripts/terraform/load_root_env.sh` default `CONFIG_DIR` and `TFVARS_HOME_DIR` to `<repo>/.config`** when they are unset after loading **`.config/docker/*.env`**.
+This directory is the single site-local source of truth: Terraform/Kubernetes tfvars, backends, keys, and split Docker dotenv files under **`docker/`**. Its Terraform tree mirrors the repo under **`terraform/components/`** (for example `.config/terraform/components/swarm/grafana/app.tfvars`). **Terraform pipelines and `scripts/terraform/load_root_env.sh` default `CONFIG_DIR` and `TFVARS_HOME_DIR` to `<repo>/.config`** when they are unset after loading **`.config/docker/*.env`**.
 
 ## homelab-config tags (required)
 
@@ -44,13 +44,13 @@ Canonical mirrored paths (for example `terraform/components/swarm/<svc>/app.tfva
 - `docker/` — split `*.env` for Compose, LangGraph, and host scripts (see `docker/README.md` and `docker/*.env.example`)
 - `scripts/` — host-only script dotenv (see `scripts/rag.env.example` for `scripts/rag/backfill.sh`); RAG backfill script lives under **`scripts/rag/`**
 - `minio.backend.hcl` — shared remote state backend config for Swarm/remote Terraform stages
-- `terraform/` — merged tfvars, per-stack `app.tfvars` / `config.tfvars`, shared components under **`terraform/components/{swarm,runners}/`**, secrets slices where used. Copy from **`terraform/components/**/*.tfvars.example`** into matching paths under **`.config/terraform/components/`**.
+- `terraform/components/` — site tfvars mirroring **`terraform/components/`** in the repo (`swarm/`, `cluster/`, `remote/`, `network/`, `runners/`). Copy from **`terraform/components/**/*.tfvars.example`** into the matching path under **`.config/terraform/components/`**.
 - `kubernetes/` — optional cluster tfvars if your site keeps them here
 - `.ssh/` — keys and `known_hosts` for optional SSH workflows
 
 ## Overrides
 
-Set **`CONFIG_DIR`** in **`docker/site.env`** to point at another tree if this host keeps tfvars elsewhere (CI workspace, NFS-only path). Legacy read-only copies may live under **`/mnt/eapp/config/_old`** on the host; active tfvars should remain under **`<repo>/.config`** (or an explicit **`CONFIG_DIR`**).
+Set **`CONFIG_DIR`** in **`docker/site.env`** only when this host keeps the site config tree somewhere other than **`<repo>/.config`** (for example a CI bind-mount). The canonical layout is still **`$CONFIG_DIR/terraform/components/...`**.
 
 ## Git
 

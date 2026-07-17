@@ -8,6 +8,9 @@
 .codex/
 .vscode
 
+# Archived docs / agents / cursor snapshots — not live source of truth
+.old/
+
 .idea/
 .fleet/
 .zed/

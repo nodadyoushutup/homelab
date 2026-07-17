@@ -10,7 +10,7 @@ DEFAULT_RAG_PATHS_DISALLOWED = (
     "htmlcov,.eggs,.npm,.yarn,.pnpm-store,__MACOSX,.cache,coverage,"
     "odoo-base,.tx,i18n,.terraform,output,keys,"
     ".langgraph_api,.runtime,.config,.vite,.git,.direnv,.cursor,.vscode,.codex,.secrets,"
-    ".github,.idea,.claude,.continue,.specstory,.fleet,.zed,"
+    ".github,.idea,.claude,.continue,.specstory,.fleet,.zed,.old,"
     "playwright-report,test-results,blob-report"
 )
 

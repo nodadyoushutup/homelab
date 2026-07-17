@@ -8,6 +8,9 @@
 .codex/
 .vscode
 
+# Archived repo docs / Cursor config — do not index or treat as live agents/rules
+.old/
+
 .idea/
 .fleet/
 .zed/

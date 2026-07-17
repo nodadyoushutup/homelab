@@ -127,10 +127,8 @@ emit_shared_config_hint() {
   fi
 
   echo "[ERR] TFVARS home directory not found: ${home_dir}" >&2
-  if [[ "${home_dir}" == "/mnt/eapp/config"* ]] || [[ "${home_dir}" == *"/homelab/.config"* ]]; then
-    echo "[ERR] Expected TFVARS_HOME_DIR / CONFIG_DIR (default: <homelab>/.config) to exist." >&2
-    echo "[ERR] On Jenkins agents, bind-mount that host directory to match TFVARS_HOME_DIR." >&2
-  fi
+  echo "[ERR] Expected TFVARS_HOME_DIR / CONFIG_DIR (default: <homelab>/.config) to exist." >&2
+  echo "[ERR] On Jenkins agents, bind-mount that host directory to match TFVARS_HOME_DIR." >&2
 }
 
 TFVARS_PATH=""

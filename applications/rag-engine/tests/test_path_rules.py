@@ -55,6 +55,7 @@ class PathRulesDefaultsTests(unittest.TestCase):
         self.assertTrue(path_has_disallowed_segment("applications/foo/.venv/lib/site.py"))
         self.assertTrue(path_has_disallowed_segment("applications/langgraph/.langgraph_api/checkpoints/x"))
         self.assertTrue(path_has_disallowed_segment(".config/docker/rag.env"))
+        self.assertTrue(path_has_disallowed_segment(".old/docs/README.md"))
         self.assertFalse(path_has_disallowed_segment("applications/foo/src/main.py"))
         os.environ["RAG_EXTENSIONS_IGNORE"] = ".png,.iso,.qcow2"
         self.assertTrue(file_has_excluded_suffix("docs/image.png"))

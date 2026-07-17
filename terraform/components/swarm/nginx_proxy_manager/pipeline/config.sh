@@ -3,7 +3,8 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="$(cd "${SCRIPT_DIR}/../../../.." && pwd)"
+# pipeline -> nginx_proxy_manager -> swarm -> components -> terraform -> repo root
+ROOT_DIR="$(cd "${SCRIPT_DIR}/../../../../.." && pwd)"
 TERRAFORM_DIR="${ROOT_DIR}/terraform/components/swarm/nginx_proxy_manager/config"
 APP_TERRAFORM_DIR="${ROOT_DIR}/terraform/components/swarm/nginx_proxy_manager/app"
 
