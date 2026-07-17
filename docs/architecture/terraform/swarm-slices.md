@@ -48,7 +48,7 @@ radius or matches a separate lifecycle.
 - **VictoriaMetrics** is a standalone `app` (not a `prometheus` database slice).
   Prometheus attaches to its overlay for `remote_write`.
 - **App only:** most `mcp-*` stacks, `rag-engine`, `chromadb`, `cadvisor`,
-  `prometheus`, etc.
+  `container-housekeeping`, `prometheus`, etc.
 
 ## Container images and published ports
 

@@ -66,6 +66,9 @@ second metric allowlist before remote write.
 The dashboard joins cAdvisor usage series to `kube_pod_labels` by
 `namespace,pod`. Pods without `app.kubernetes.io/name` remain visible through
 namespace/pod selectors but are not included in application-grouped panels.
+The Application placement panel includes only `Pending` and `Running` pods;
+terminal `Succeeded` and `Failed` Job history is not an offline application
+instance.
 
 ## Rollout
 

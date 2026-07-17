@@ -80,9 +80,16 @@ container visibility, and similar **operator-facing** observability.
 `victoriametrics`, `graphite`, `graylog` (+ `database`), `dozzle`,
 `prometheus-pve-exporter`, `qbittorrent-exporter`.
 
-**Exception — global daemons:** `cadvisor` and `node_exporter` run in Swarm
-**global** mode (one task per node). Do **not** pin them to `swarm-wk-0`; they
-already cover every worker.
+**Exception — per-node daemons:** `cadvisor` and `node_exporter` run in Swarm
+**global** mode. `container-housekeeping` uses a global service plus a
+role-constrained `swarm-wk-4` companion because the pinned Docker CLI OCI index
+does not resolve that node through the Docker provider. Do **not** pin these
+stacks to `swarm-wk-0`; they already cover every node.
+
+`container-housekeeping` waits one week between runs, then removes only exited
+containers whose `FinishedAt` timestamp is more than seven days old. It mounts
+the local Docker socket so each task cleans its own node; it does not prune
+images, volumes, networks, or build cache.
 
 ### CI/CD → `swarm-wk-1` and `terraform/components/runners/`
 
