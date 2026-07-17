@@ -118,8 +118,9 @@ Use **`swarm-wk-4`** for anything **AI-related**: RAG, vector databases,
 embedding/index services, MCP servers wired to agents, and other stacks whose
 primary consumers are LangGraph or operator AI tooling.
 
-**Examples in repo:** `chromadb`, `rag-engine`, `mcp-rag`, and the rest of the
-`mcp-*` Swarm family (`mcp-atlassian`, `mcp-playwright`, `mcp-kubernetes`, …).
+**Examples in repo:** `chromadb`, `rag-engine`, `mcp-rag`, `mcp-agentmemory`
+(agentmemory backend + Streamable HTTP gateway), and the rest of the `mcp-*`
+Swarm family (`mcp-atlassian`, `mcp-playwright`, `mcp-kubernetes`, …).
 
 Production **LangGraph** and **LangChain Agent Chat** run on **Kubernetes**, not
 Swarm — see [kubernetes/README.md](../kubernetes/README.md).

@@ -5,6 +5,7 @@ Each page describes **how to use** one Model Context Protocol (MCP) server defin
 | Swarm / stack name | Doc |
 | --- | --- |
 | **mcp-rag** | [mcp-rag.md](mcp-rag.md) |
+| **mcp-agentmemory** | [mcp-agentmemory.md](mcp-agentmemory.md) |
 | **mcp-github** | [mcp-github.md](mcp-github.md) |
 | **mcp-atlassian** | [mcp-atlassian.md](mcp-atlassian.md) |
 | **mcp-playwright** | [mcp-playwright.md](mcp-playwright.md) |
@@ -17,4 +18,9 @@ Each page describes **how to use** one Model Context Protocol (MCP) server defin
 
 For the pattern used when a service gets a new public name (DNS plus reverse proxy), see [edge-dns-and-nginx-proxy.md](../workflows/edge-dns-and-nginx-proxy.md).
 
-All Cursor MCP servers for this repo live in **`.cursor/mcp.json`** (project scope only—do not duplicate in **`~/.cursor/mcp.json`**). **`mcp_rag`** uses **`${env:MCP_RAG_API_KEY}`** for **`x-api-key`** (see [mcp-rag.md](mcp-rag.md)). Per-server guides use **`mcp-*.md`** filenames aligned with Swarm stack names (**`mcp-rag`**, **`mcp-playwright`**, etc.).
+Cursor MCP servers for this repo live in **`.cursor/mcp.json`** (project scope).
+**Exception:** **`mcp_agentmemory`** is user-global in **`~/.cursor/mcp.json`** for
+cross-project shared memory (see [mcp-agentmemory.md](mcp-agentmemory.md)).
+**`mcp_rag`** uses **`${env:MCP_RAG_API_KEY}`** for **`x-api-key`** (see [mcp-rag.md](mcp-rag.md)).
+Per-server guides use **`mcp-*.md`** filenames aligned with Swarm stack names
+(**`mcp-rag`**, **`mcp-playwright`**, etc.).

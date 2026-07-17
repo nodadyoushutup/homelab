@@ -75,11 +75,16 @@ Agents and humans must treat “support both for now” as **out of scope** unle
 - For this workspace, use **Cursor shell** and local file-edit tools for repository
   filesystem, git, and search work. LangGraph **Code** / **Tech Lead** specialists use
   **mcp-rag** and other HTTP MCPs from their JSON configs—not a repo filesystem MCP.
-- Repo RAG MCP URL is `https://mcp.rag.nodadyoushutup.com/mcp`. Cursor uses project-only
-  `.cursor/mcp.json` for all MCP servers (no `~/.cursor/mcp.json` entries). **`mcp_rag`**
-  uses Streamable HTTP with header **`x-api-key: ${env:MCP_RAG_API_KEY}`** — export
-  **`MCP_RAG_API_KEY`** from **`.config/docker/mcp.env`** into the environment Cursor
-  inherits (do not commit the key). LangGraph fills the header from the same file via
-  **`x_api_key_from_env`** in agent **`mcp.json`**; Codex uses **`env_http_headers`** in
-  **`.codex/config.toml`**.
+- Repo RAG MCP URL is `https://mcp.rag.nodadyoushutup.com/mcp`. Cursor uses project
+  `.cursor/mcp.json` for Homelab MCP servers. **Exception:** **`mcp_agentmemory`**
+  (shared agent memory) is configured in user-global **`~/.cursor/mcp.json`** at
+  **`https://mcp.agentmemory.nodadyoushutup.com/mcp`** with
+  **`x-api-key: ${env:MCP_AGENTMEMORY_API_KEY}`** — see
+  [`docs/mcp/mcp-agentmemory.md`](docs/mcp/mcp-agentmemory.md). Do not duplicate other
+  Homelab MCPs into **`~/.cursor/mcp.json`**. **`mcp_rag`** uses Streamable HTTP with
+  header **`x-api-key: ${env:MCP_RAG_API_KEY}`** — export **`MCP_RAG_API_KEY`** (and
+  **`MCP_AGENTMEMORY_API_KEY`** when using agentmemory) from **`.config/docker/mcp.env`**
+  into the environment Cursor inherits (do not commit keys). LangGraph fills rag headers
+  from the same file via **`x_api_key_from_env`** in agent **`mcp.json`**; Codex uses
+  **`env_http_headers`** in **`.codex/config.toml`**.
 - LangGraph Homelab runtime enforces **docs `rag_search` before every specialist delegation**, a second **code-location `rag_search` before `code` and `tech_lead` delegation**, and **read/search before writes** on the Code specialist; see `docs/workflows/rag-agent-mcp-integration-roadmap.md`. Break-glass: **`HOMELAB_DISABLE_WORKFLOW_GATES=1`** on the agent process only.

@@ -36,6 +36,8 @@ on:
           - jenkins-controller
           - langchain-agent-chat
           - langgraph
+          - agentmemory
+          - mcp-agentmemory
           - mcp-argocd
           - mcp-atlassian
           - mcp-cloudflare
@@ -132,6 +134,16 @@ jobs:
               docker_context="."
               dockerfile="applications/langgraph/docker/Dockerfile"
               supported_platforms="linux/amd64"
+              build_strategy="direct"
+              ;;
+            agentmemory)
+              image_name="agentmemory"
+              docker_context="applications/agentmemory"
+              build_strategy="direct"
+              ;;
+            mcp-agentmemory)
+              image_name="mcp-agentmemory"
+              docker_context="applications/mcp-agentmemory"
               build_strategy="direct"
               ;;
             mcp-argocd)
