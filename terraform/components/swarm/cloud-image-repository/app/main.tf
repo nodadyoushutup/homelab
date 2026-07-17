@@ -1,19 +1,22 @@
+# main.tf
+# Overlay network, data volume, and replicated cloud-image-repository Swarm service.
+
 resource "docker_network" "cloud_image_repository" {
-  name   = "cloud-image-repository"
+  name   = local.network_name
   driver = "overlay"
 }
 
 resource "docker_volume" "cloud_image_repository_data" {
-  name   = "cloud-image-repository-data"
+  name   = local.volume_name
   driver = "local"
 }
 
 resource "docker_service" "cloud_image_repository" {
-  name = "cloud-image-repository"
+  name = local.service_name
 
   task_spec {
     dynamic "placement" {
-      for_each = var.placement == null ? [] : [var.placement]
+      for_each = local.placement == null ? [] : [local.placement]
 
       content {
         constraints = try(placement.value.constraints, null)
@@ -31,20 +34,21 @@ resource "docker_service" "cloud_image_repository" {
 
     networks_advanced {
       name    = docker_network.cloud_image_repository.id
-      aliases = ["cloud-image-repository"]
+      aliases = [local.network_alias]
     }
 
     container_spec {
+      # Literal tag for Renovate (not a var/local; no digest).
       image = "ghcr.io/nodadyoushutup/cloud-image-repository:0.0.2"
 
       dns_config {
-        nameservers = var.dns_nameservers
+        nameservers = local.dns_nameservers
       }
 
       mounts {
         type   = "volume"
         source = docker_volume.cloud_image_repository_data.name
-        target = "/data"
+        target = local.data_mount
       }
     }
   }
@@ -61,8 +65,8 @@ resource "docker_service" "cloud_image_repository" {
 
   endpoint_spec {
     ports {
-      target_port    = 8080
-      published_port = 18088
+      target_port    = local.target_port
+      published_port = local.published_port
       protocol       = "tcp"
       publish_mode   = "ingress"
     }

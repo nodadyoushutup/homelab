@@ -1,14 +1,17 @@
+# main.tf
+# Overlay network and mcp-playwright Swarm service (NFS-backed browser profile volume).
+
 resource "docker_network" "mcp_playwright" {
-  name   = "mcp-playwright"
+  name   = local.network_name
   driver = "overlay"
 }
 
 resource "docker_service" "mcp_playwright" {
-  name = "mcp-playwright"
+  name = local.service_name
 
   task_spec {
     dynamic "placement" {
-      for_each = var.placement == null ? [] : [var.placement]
+      for_each = local.placement == null ? [] : [local.placement]
 
       content {
         constraints = try(placement.value.constraints, null)
@@ -26,35 +29,28 @@ resource "docker_service" "mcp_playwright" {
 
     networks_advanced {
       name    = docker_network.mcp_playwright.id
-      aliases = ["mcp-playwright"]
+      aliases = [local.network_alias]
     }
 
     container_spec {
-      image = "mcr.microsoft.com/playwright/mcp:latest"
-      env = var.env
+      # Literal tag for Renovate (not a var/local; no digest).
+      image = "mcr.microsoft.com/playwright/mcp:v0.0.78"
+      env   = local.env
 
-      args = [
-        "--headless",
-        "--browser", "chromium",
-        "--no-sandbox",
-        "--viewport-size", "1920x1080",
-        "--port", "8931",
-        "--host", "0.0.0.0",
-        "--allowed-hosts", "*",
-      ]
+      args = local.args
 
       dns_config {
-        nameservers = var.dns_nameservers
+        nameservers = local.dns_nameservers
       }
 
       mounts {
         type   = "volume"
-        source = "mcp-playwright-nfs"
-        target = var.nfs.target
+        source = local.nfs_volume_source
+        target = local.nfs.target
 
         volume_options {
           driver_name    = "local"
-          driver_options = var.nfs.driver_options
+          driver_options = local.nfs.driver_options
           no_copy        = false
         }
       }
@@ -63,7 +59,7 @@ resource "docker_service" "mcp_playwright" {
 
   mode {
     replicated {
-      replicas = var.replicas
+      replicas = local.replicas
     }
   }
 
@@ -73,10 +69,10 @@ resource "docker_service" "mcp_playwright" {
 
   endpoint_spec {
     ports {
-      target_port    = 8931
-      published_port = 18211
-      protocol       = "tcp"
-      publish_mode   = "ingress"
+      target_port    = local.service_port.target_port
+      published_port = local.service_port.published_port
+      protocol       = local.service_port.protocol
+      publish_mode   = local.service_port.publish_mode
     }
   }
 }

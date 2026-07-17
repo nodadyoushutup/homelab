@@ -1,14 +1,17 @@
+# main.tf
+# Overlay network and mcp-fortigate Swarm service.
+
 resource "docker_network" "mcp_fortigate" {
-  name   = "mcp-fortigate"
+  name   = local.network_name
   driver = "overlay"
 }
 
 resource "docker_service" "mcp_fortigate" {
-  name = "mcp-fortigate"
+  name = local.service_name
 
   task_spec {
     dynamic "placement" {
-      for_each = var.placement == null ? [] : [var.placement]
+      for_each = local.placement == null ? [] : [local.placement]
 
       content {
         constraints = try(placement.value.constraints, null)
@@ -26,22 +29,23 @@ resource "docker_service" "mcp_fortigate" {
 
     networks_advanced {
       name    = docker_network.mcp_fortigate.id
-      aliases = ["mcp-fortigate"]
+      aliases = [local.network_alias]
     }
 
     container_spec {
+      # Literal tag for Renovate (not a var/local; no digest).
       image = "ghcr.io/nodadyoushutup/mcp-fortigate:0.0.1"
-      env   = var.env
+      env   = local.env
 
       dns_config {
-        nameservers = var.dns_nameservers
+        nameservers = local.dns_nameservers
       }
     }
   }
 
   mode {
     replicated {
-      replicas = var.replicas
+      replicas = local.replicas
     }
   }
 
@@ -51,10 +55,10 @@ resource "docker_service" "mcp_fortigate" {
 
   endpoint_spec {
     ports {
-      target_port    = 8814
-      published_port = 18205
-      protocol       = "tcp"
-      publish_mode   = "ingress"
+      target_port    = local.service_port.target_port
+      published_port = local.service_port.published_port
+      protocol       = local.service_port.protocol
+      publish_mode   = local.service_port.publish_mode
     }
   }
 }

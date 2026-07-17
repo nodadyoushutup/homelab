@@ -1,3 +1,6 @@
+# main.tf
+# Overlay network, raft data volume, server config, and Vault Swarm service.
+
 resource "docker_network" "vault" {
   name   = local.network_name
   driver = "overlay"
@@ -9,7 +12,7 @@ resource "docker_volume" "vault_data" {
 }
 
 resource "docker_config" "vault_server" {
-  name = "vault-server-${local.vault_server_config_hash}.hcl"
+  name = local.vault_server_config_name
   data = base64encode(local.vault_server_config)
 
   lifecycle {
@@ -22,7 +25,7 @@ resource "docker_service" "vault" {
 
   task_spec {
     dynamic "placement" {
-      for_each = var.placement == null ? [] : [var.placement]
+      for_each = local.placement == null ? [] : [local.placement]
 
       content {
         constraints = try(placement.value.constraints, null)
@@ -44,26 +47,27 @@ resource "docker_service" "vault" {
     }
 
     container_spec {
-      image = "hashicorp/vault:1.21.4@sha256:4e33b126a59c0c333b76fb4e894722462659a6bec7c48c9ee8cea56fccfd2569"
+      # Literal tag for Renovate (not a var/local; no digest).
+      image = "hashicorp/vault:1.21.4"
       args  = ["server"]
       env = {
-        VAULT_ADDR = "http://127.0.0.1:8200"
+        VAULT_ADDR = local.local_vault_addr
       }
 
       dns_config {
-        nameservers = var.dns_nameservers
+        nameservers = local.dns_nameservers
       }
 
       mounts {
         type   = "volume"
         source = docker_volume.vault_data.name
-        target = "/vault/file"
+        target = local.data_mount
       }
 
       configs {
         config_id   = docker_config.vault_server.id
         config_name = docker_config.vault_server.name
-        file_name   = "/vault/config/vault.hcl"
+        file_name   = local.config_mount
       }
     }
   }
@@ -76,8 +80,8 @@ resource "docker_service" "vault" {
 
   endpoint_spec {
     ports {
-      target_port    = 8200
-      published_port = var.published_port
+      target_port    = local.target_port
+      published_port = local.published_port
       protocol       = "tcp"
       publish_mode   = "ingress"
     }

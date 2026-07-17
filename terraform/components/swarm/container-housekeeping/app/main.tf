@@ -1,3 +1,6 @@
+# main.tf
+# Global and swarm-wk-4-pinned container-housekeeping Swarm services.
+
 resource "docker_service" "container_housekeeping" {
   name = "container-housekeeping"
 
@@ -22,7 +25,7 @@ resource "docker_service" "container_housekeeping" {
     }
 
     container_spec {
-      image   = local.image
+      image   = "docker:29.2.1-cli" # Literal tag for Renovate (not a var/local; no digest).
       command = ["/bin/sh", "-ec"]
       args    = [local.cleanup_script]
 
@@ -64,7 +67,7 @@ resource "docker_service" "container_housekeeping_wk4" {
     }
 
     container_spec {
-      image   = local.arm64_image
+      image   = "docker:29.2.1-cli" # Literal tag for Renovate (not a var/local; no digest).
       command = ["/bin/sh", "-ec"]
       args    = [local.cleanup_script]
 

@@ -19,14 +19,9 @@ Every Terraform tfvars file, shared component tfvars, `terraform/minio.backend.h
 | `terraform/components/cluster/argocd/config.tfvars` | `terraform/components/cluster/argocd/config` |
 | `terraform/components/remote/cloudflare/config.tfvars` | `terraform/components/remote/cloudflare/config` |
 | `terraform/components/network/fortigate/config.tfvars` | `terraform/components/network/fortigate/config` |
-| `terraform/components/swarm/swarm.tfvars` | `terraform/components/swarm/swarm` |
-| `terraform/components/swarm/dns.tfvars` | `terraform/components/swarm/dns` |
-| `terraform/components/swarm/nfs.tfvars` | `terraform/components/swarm/nfs` |
-| `terraform/components/runners/amd64.tfvars` | `terraform/components/runners/amd64` |
-| `terraform/components/runners/arm64.tfvars` | `terraform/components/runners/arm64` |
 | `terraform/minio.backend.hcl` | `terraform/minio.backend` |
 
-Pipelines resolve inputs by id (indexed once per run), so you can rename or relocate files under `.config` as long as the tag stays correct. Overrides still win: `--tfvars`, Jenkins `TFVARS_FILE`, and env vars such as `SWARM_DNS_PROVIDER_TFVARS`.
+Pipelines resolve inputs by id (indexed once per run), so you can rename or relocate files under `.config` as long as the tag stays correct. Overrides still win: `--tfvars`, Jenkins `TFVARS_FILE`, and per-slice env overrides (e.g. `CADVISOR_APP_TFVARS`).
 
 Stamp or verify tags:
 
@@ -41,7 +36,7 @@ Canonical mirrored paths (for example `terraform/components/swarm/<svc>/app.tfva
 
 - `docker/` — split `*.env` for Compose, and host scripts (see `docker/README.md` and `docker/*.env.example`)
 - `terraform/minio.backend.hcl` — shared remote state backend config for Swarm/remote Terraform stages
-- `terraform/components/` — site tfvars mirroring **`terraform/components/`** in the repo (`swarm/`, `cluster/`, `remote/`, `network/`, `runners/`). Copy from **`terraform/components/**/*.tfvars.example`** into the matching path under **`.config/terraform/components/`**.
+- `terraform/components/` — site tfvars mirroring **`terraform/components/`** in the repo (`swarm/`, `cluster/`, `remote/`, `network/`). Create `<slice>.tfvars` under the matching path here (live secrets stay in `.config` only; do not add checked-in `*.tfvars.example`).
 - `kubernetes/` — optional cluster tfvars if your site keeps them here
 - `.ssh/` — keys and `known_hosts` for optional SSH workflows
 
@@ -51,4 +46,4 @@ Set **`CONFIG_DIR`** in **`docker/site.env`** only when this host keeps the site
 
 ## Git
 
-The repo **`.gitignore` ignores `.config/*` except `README.md`, `docker/README.md`, `docker/*.env.example`, `scripts/*.env.example`**, and checked-in examples under **`terraform/components/`**, so live secrets and site tfvars are not committed accidentally. Do not force-add tfvars, `docker/*.env`, or private keys.
+The repo **`.gitignore` ignores `.config/*` except `README.md`, `docker/README.md`, `docker/*.env.example`, `scripts/*.env.example`**, so live secrets and site tfvars are not committed accidentally. Do not force-add tfvars, `docker/*.env`, or private keys.

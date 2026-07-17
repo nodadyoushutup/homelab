@@ -1,14 +1,17 @@
+# main.tf
+# Overlay network and global cAdvisor Swarm service (host-published metrics).
+
 resource "docker_network" "cadvisor" {
-  name   = "cadvisor"
+  name   = local.network_name
   driver = "overlay"
 }
 
 resource "docker_service" "cadvisor" {
-  name = "cadvisor"
+  name = local.service_name
 
   task_spec {
     dynamic "placement" {
-      for_each = var.placement == null ? [] : [var.placement]
+      for_each = local.placement == null ? [] : [local.placement]
 
       content {
         constraints = try(placement.value.constraints, null)
@@ -26,62 +29,27 @@ resource "docker_service" "cadvisor" {
 
     networks_advanced {
       name    = docker_network.cadvisor.id
-      aliases = ["cadvisor"]
+      aliases = [local.network_alias]
     }
 
     container_spec {
-      image = "ghcr.io/google/cadvisor:v0.57.0@sha256:e75bdb03b74b0b6995f208f166fead2e6e555dde73e44200113bb26f41b1981d"
-
-      args = [
-        "--docker=unix:///var/run/docker.sock",
-        "--docker_only=true",
-        "--store_container_labels=false",
-        "--whitelisted_container_labels=com.docker.swarm.service.name,com.docker.swarm.task.name,com.docker.swarm.node.id",
-      ]
+      # Literal tag for Renovate (not a var/local; no digest).
+      image = "ghcr.io/google/cadvisor:v0.57.0"
+      args  = local.args
 
       dns_config {
-        nameservers = var.dns_nameservers
+        nameservers = local.dns_nameservers
       }
 
-      mounts {
-        target    = "/rootfs"
-        source    = "/"
-        type      = "bind"
-        read_only = true
-      }
+      dynamic "mounts" {
+        for_each = local.mounts
 
-      mounts {
-        target = "/var/run/docker.sock"
-        source = "/var/run/docker.sock"
-        type   = "bind"
-      }
-
-      mounts {
-        target    = "/var/run"
-        source    = "/var/run"
-        type      = "bind"
-        read_only = true
-      }
-
-      mounts {
-        target    = "/sys"
-        source    = "/sys"
-        type      = "bind"
-        read_only = true
-      }
-
-      mounts {
-        target    = "/var/lib/docker"
-        source    = "/var/lib/docker"
-        type      = "bind"
-        read_only = true
-      }
-
-      mounts {
-        target    = "/dev/disk"
-        source    = "/dev/disk"
-        type      = "bind"
-        read_only = true
+        content {
+          target    = mounts.value.target
+          source    = mounts.value.source
+          type      = mounts.value.type
+          read_only = mounts.value.read_only
+        }
       }
     }
   }
@@ -92,8 +60,8 @@ resource "docker_service" "cadvisor" {
 
   endpoint_spec {
     ports {
-      target_port    = 8080
-      published_port = 8080
+      target_port    = local.metrics_port
+      published_port = local.metrics_port
       publish_mode   = "host"
     }
   }

@@ -13,7 +13,7 @@ Single-service OCI registry using the official **`ghcr.io/project-zot/zot`** ful
 
 **`terraform/components/swarm/zot/app/files/zot-config.json.tpl`** — standard Zot config; Terraform adds `http.auth` / `accessControl` only if `fileexists(htpasswd_path)`.
 
-Usernames in **`htpasswd`** must match `registry_auths` for `zot.nodadyoushutup.com` in **`.config/terraform/components/swarm/swarm.tfvars`** and **`.config/terraform/components/runners/{amd64,arm64}.tfvars`**. Access control uses **`defaultPolicy`** (any authenticated user).
+Usernames in **`htpasswd`** must match `registry_auths` for `zot.nodadyoushutup.com` in each consuming slice’s site tfvars (e.g. **`.config/terraform/components/swarm/zot/app.tfvars`** and **`.config/terraform/components/swarm/*/app.tfvars`**). Access control uses **`defaultPolicy`** (any authenticated user).
 
 Create **`htpasswd`** (same host path on planner and `swarm-cp-0`):
 

@@ -1,7 +1,26 @@
+# locals.tf
+# Single source of truth for Jenkins controller config (folders/jobs/credentials) values (resources read local.* only).
+
 locals {
+  branch_discovery_excludes       = var.branch_discovery_excludes
+  branch_discovery_includes       = var.branch_discovery_includes
+  github_credentials_description  = var.github_credentials_description
+  github_credentials_id           = var.github_credentials_id
+  github_credentials_password     = var.github_credentials_password
+  github_credentials_scope        = var.github_credentials_scope
+  github_credentials_username     = var.github_credentials_username
+  github_repo_url                 = var.github_repo_url
+  job_definition_glob             = var.job_definition_glob
+  job_definition_root_input       = var.job_definition_root
+  manage_github_credentials_input = var.manage_github_credentials
+  orphaned_item_days_to_keep      = var.orphaned_item_days_to_keep
+  orphaned_item_num_to_keep       = var.orphaned_item_num_to_keep
+  provider_config                 = var.provider_config
+  prune_dead_branches             = var.prune_dead_branches
+
   repo_root            = abspath("${path.module}/../../../..")
-  job_definition_root  = trimsuffix(var.job_definition_root, "/")
-  job_definition_files = sort(fileset(local.repo_root, "${local.job_definition_root}/${var.job_definition_glob}"))
+  job_definition_root  = trimsuffix(local.job_definition_root_input, "/")
+  job_definition_files = sort(fileset(local.repo_root, "${local.job_definition_root}/${local.job_definition_glob}"))
 
   job_specs = {
     for repo_relative_file in local.job_definition_files :
@@ -11,7 +30,7 @@ locals {
       job_name           = trimsuffix(basename(repo_relative_file), ".jenkins")
       folder_path        = dirname(trimsuffix(trimprefix(repo_relative_file, "${local.job_definition_root}/"), ".jenkins")) == "." ? "" : dirname(trimsuffix(trimprefix(repo_relative_file, "${local.job_definition_root}/"), ".jenkins"))
       description        = "Managed by Terraform. Multibranch pipeline for ${replace(repo_relative_file, ".jenkins", ".sh")} from this repository."
-      source_id          = md5("${var.github_repo_url}:${repo_relative_file}")
+      source_id          = md5("${local.github_repo_url}:${repo_relative_file}")
     }
   }
 
@@ -51,11 +70,11 @@ locals {
   }
 
   manage_github_credentials = (
-    var.manage_github_credentials &&
-    var.github_credentials_id != "" &&
-    var.github_credentials_username != "" &&
-    var.github_credentials_password != ""
+    local.manage_github_credentials_input &&
+    local.github_credentials_id != "" &&
+    local.github_credentials_username != "" &&
+    local.github_credentials_password != ""
   )
 
-  effective_github_credentials_id = local.manage_github_credentials ? jenkins_credential_username.github[0].name : var.github_credentials_id
+  effective_github_credentials_id = local.manage_github_credentials ? jenkins_credential_username.github[0].name : local.github_credentials_id
 }

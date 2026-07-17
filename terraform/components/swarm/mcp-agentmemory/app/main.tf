@@ -1,19 +1,22 @@
+# main.tf
+# Overlay network plus agentmemory backend and mcp-agentmemory bridge Swarm services.
+
 resource "docker_network" "mcp_agentmemory" {
-  name   = "mcp-agentmemory"
+  name   = local.network_name
   driver = "overlay"
 }
 
 resource "docker_volume" "agentmemory_data" {
-  name   = "agentmemory-data"
+  name   = local.agentmemory_volume_name
   driver = "local"
 }
 
 resource "docker_service" "agentmemory" {
-  name = "agentmemory"
+  name = local.agentmemory_service_name
 
   task_spec {
     dynamic "placement" {
-      for_each = var.placement == null ? [] : [var.placement]
+      for_each = local.placement == null ? [] : [local.placement]
 
       content {
         constraints = try(placement.value.constraints, null)
@@ -31,28 +34,29 @@ resource "docker_service" "agentmemory" {
 
     networks_advanced {
       name    = docker_network.mcp_agentmemory.id
-      aliases = ["agentmemory"]
+      aliases = [local.agentmemory_network_alias]
     }
 
     container_spec {
+      # Literal tag for Renovate (not a var/local; no digest).
       image = "ghcr.io/nodadyoushutup/agentmemory:0.0.1"
       env   = local.agentmemory_env
 
       dns_config {
-        nameservers = var.dns_nameservers
+        nameservers = local.dns_nameservers
       }
 
       mounts {
         type   = "volume"
         source = docker_volume.agentmemory_data.name
-        target = "/data"
+        target = local.agentmemory_data_mount
       }
     }
   }
 
   mode {
     replicated {
-      replicas = var.replicas
+      replicas = local.replicas
     }
   }
 
@@ -62,11 +66,11 @@ resource "docker_service" "agentmemory" {
 }
 
 resource "docker_service" "mcp_agentmemory" {
-  name = "mcp-agentmemory"
+  name = local.mcp_service_name
 
   task_spec {
     dynamic "placement" {
-      for_each = var.placement == null ? [] : [var.placement]
+      for_each = local.placement == null ? [] : [local.placement]
 
       content {
         constraints = try(placement.value.constraints, null)
@@ -84,22 +88,23 @@ resource "docker_service" "mcp_agentmemory" {
 
     networks_advanced {
       name    = docker_network.mcp_agentmemory.id
-      aliases = ["mcp-agentmemory"]
+      aliases = [local.mcp_network_alias]
     }
 
     container_spec {
+      # Literal tag for Renovate (not a var/local; no digest).
       image = "ghcr.io/nodadyoushutup/mcp-agentmemory:0.0.1"
       env   = local.mcp_agentmemory_env
 
       dns_config {
-        nameservers = var.dns_nameservers
+        nameservers = local.dns_nameservers
       }
     }
   }
 
   mode {
     replicated {
-      replicas = var.replicas
+      replicas = local.replicas
     }
   }
 
@@ -109,8 +114,8 @@ resource "docker_service" "mcp_agentmemory" {
 
   endpoint_spec {
     ports {
-      target_port    = 8087
-      published_port = 18212
+      target_port    = local.mcp_target_port
+      published_port = local.mcp_published_port
       protocol       = "tcp"
       publish_mode   = "ingress"
     }

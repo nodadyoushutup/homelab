@@ -1,14 +1,17 @@
+# main.tf
+# Overlay network and global node_exporter Swarm service (host-published metrics).
+
 resource "docker_network" "node_exporter" {
-  name   = "node-exporter"
+  name   = local.network_name
   driver = "overlay"
 }
 
 resource "docker_service" "node_exporter" {
-  name = "node-exporter"
+  name = local.service_name
 
   task_spec {
     dynamic "placement" {
-      for_each = var.placement == null ? [] : [var.placement]
+      for_each = local.placement == null ? [] : [local.placement]
 
       content {
         constraints = try(placement.value.constraints, null)
@@ -26,50 +29,28 @@ resource "docker_service" "node_exporter" {
 
     networks_advanced {
       name    = docker_network.node_exporter.id
-      aliases = ["node-exporter"]
+      aliases = [local.network_alias]
     }
 
     container_spec {
-      image = "prom/node-exporter:v1.10.2@sha256:3ac34ce007accad95afed72149e0d2b927b7e42fd1c866149b945b84737c62c3"
+      # Literal tag for Renovate (not a var/local; no digest).
+      image = "prom/node-exporter:v1.10.2"
 
-      args = [
-        "--path.procfs=/host/proc",
-        "--path.sysfs=/host/sys",
-        "--path.rootfs=/host/rootfs",
-        "--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc)($|/)",
-        "--collector.filesystem.ignored-fs-types=^(autofs|proc|sysfs|tmpfs|devtmpfs|devpts|overlay|aufs)$",
-      ]
+      args = local.args
 
       dns_config {
-        nameservers = var.dns_nameservers
+        nameservers = local.dns_nameservers
       }
 
-      mounts {
-        target    = "/host/proc"
-        source    = "/proc"
-        type      = "bind"
-        read_only = true
-      }
+      dynamic "mounts" {
+        for_each = local.mounts
 
-      mounts {
-        target    = "/host/sys"
-        source    = "/sys"
-        type      = "bind"
-        read_only = true
-      }
-
-      mounts {
-        target    = "/host/rootfs"
-        source    = "/"
-        type      = "bind"
-        read_only = true
-      }
-
-      mounts {
-        target    = "/etc/host_hostname"
-        source    = "/etc/hostname"
-        type      = "bind"
-        read_only = true
+        content {
+          target    = mounts.value.target
+          source    = mounts.value.source
+          type      = mounts.value.type
+          read_only = mounts.value.read_only
+        }
       }
     }
   }
@@ -80,8 +61,8 @@ resource "docker_service" "node_exporter" {
 
   endpoint_spec {
     ports {
-      target_port    = 9100
-      published_port = 9100
+      target_port    = local.metrics_port
+      published_port = local.metrics_port
       publish_mode   = "host"
     }
   }

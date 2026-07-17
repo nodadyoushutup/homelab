@@ -1,3 +1,6 @@
+# outputs.tf
+# Exported Vault Swarm service, network, volume, and config identifiers.
+
 output "service_name" {
   description = "Docker Swarm service name for Vault"
   value       = docker_service.vault.name
@@ -25,10 +28,10 @@ output "server_config_name" {
 
 output "api_addr" {
   description = "Advertised Vault API address"
-  value       = var.api_addr
+  value       = local.api_addr
 }
 
 output "published_port" {
   description = "Published host port used for Vault HTTP/UI"
-  value       = var.published_port
+  value       = local.published_port
 }

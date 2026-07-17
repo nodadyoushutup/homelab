@@ -1,5 +1,8 @@
+# main.tf
+# Vault KV v2 mount and grouped secrets merged from tfvars payloads and secret files.
+
 resource "vault_mount" "kv" {
-  path = var.mount_path
+  path = local.mount_path
   type = "kv-v2"
 }
 

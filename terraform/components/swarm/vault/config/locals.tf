@@ -1,7 +1,14 @@
+# locals.tf
+# Single source of truth for Vault KV config (secrets) values (resources read local.* only).
+
 locals {
+  mount_path   = var.mount_path
+  secret_files = var.secret_files
+  secrets      = var.secrets
+
   flattened_secrets = {
     for item in flatten([
-      for group_name, grouped_entries in var.secrets : [
+      for group_name, grouped_entries in local.secrets : [
         for secret_name, payload in grouped_entries : {
           key         = "${group_name}/${secret_name}"
           name        = "${group_name}/${secret_name}"
@@ -15,7 +22,7 @@ locals {
 
   flattened_secret_files = {
     for item in flatten([
-      for group_name, grouped_entries in var.secret_files : [
+      for group_name, grouped_entries in local.secret_files : [
         for secret_name, files in grouped_entries : {
           key   = "${group_name}/${secret_name}"
           name  = "${group_name}/${secret_name}"

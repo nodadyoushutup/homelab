@@ -1,11 +1,14 @@
+# outputs.tf
+# Exported scrape URLs and Prometheus job snippet for prometheus-pve-exporter.
+
 output "metrics_url" {
   description = "Exporter self-metrics endpoint on the published host port."
-  value       = "http://${var.endpoint_host}:${var.published_port}/metrics"
+  value       = "http://${local.endpoint_host}:${local.published_port}/metrics"
 }
 
 output "pve_scrape_url" {
   description = "Example PVE metrics URL (Prometheus uses /pve with relabeling)."
-  value       = "http://${var.endpoint_host}:${var.published_port}/pve?target=${var.pve_targets[0]}&cluster=1&node=1"
+  value       = "http://${local.endpoint_host}:${local.published_port}/pve?target=${local.pve_targets[0]}&cluster=1&node=1"
 }
 
 output "prometheus_scrape_config_snippet" {
@@ -21,7 +24,7 @@ output "prometheus_scrape_config_snippet" {
       node    = ["1"]
     }
     static_configs = [
-      for target in var.pve_targets : {
+      for target in local.pve_targets : {
         targets = [target]
         labels = {
           platform    = "proxmox"
@@ -41,7 +44,7 @@ output "prometheus_scrape_config_snippet" {
       },
       {
         target_label = "__address__"
-        replacement  = "${var.endpoint_host}:${var.published_port}"
+        replacement  = "${local.endpoint_host}:${local.published_port}"
       },
     ]
   }

@@ -1,14 +1,17 @@
+# main.tf
+# Overlay network and Dozzle Swarm log viewer service.
+
 resource "docker_network" "dozzle" {
-  name   = "dozzle"
+  name   = local.network_name
   driver = "overlay"
 }
 
 resource "docker_service" "dozzle" {
-  name = "dozzle"
+  name = local.service_name
 
   task_spec {
     dynamic "placement" {
-      for_each = var.placement == null ? [] : [var.placement]
+      for_each = local.placement == null ? [] : [local.placement]
 
       content {
         constraints = try(placement.value.constraints, null)
@@ -26,23 +29,22 @@ resource "docker_service" "dozzle" {
 
     networks_advanced {
       name    = docker_network.dozzle.id
-      aliases = ["dozzle"]
+      aliases = [local.network_alias]
     }
 
     container_spec {
-      image = "amir20/dozzle:v9.0.1@sha256:a7529f02748a9520a4f372f7b349e099bb0bc6ae93c2be9d85945f51d45f8967"
+      # Literal tag for Renovate (not a var/local; no digest).
+      image = "amir20/dozzle:v9.0.1"
 
-      env = {
-        DOZZLE_MODE = "swarm"
-      }
+      env = local.env
 
       dns_config {
-        nameservers = var.dns_nameservers
+        nameservers = local.dns_nameservers
       }
 
       mounts {
-        target = "/var/run/docker.sock"
-        source = "/var/run/docker.sock"
+        target = local.docker_sock_path
+        source = local.docker_sock_path
         type   = "bind"
       }
     }
@@ -54,9 +56,9 @@ resource "docker_service" "dozzle" {
 
   endpoint_spec {
     ports {
-      target_port    = 8080
-      published_port = 8888
-      publish_mode   = "ingress"
+      target_port    = local.ui_port.target_port
+      published_port = local.ui_port.published_port
+      publish_mode   = local.ui_port.publish_mode
     }
   }
 }

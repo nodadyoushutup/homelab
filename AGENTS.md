@@ -36,6 +36,11 @@ user explicitly asks. Live operator config belongs under
   `terraform/components/`).
 - Docker/local dotenv lives under `<repo>/.config/docker/`.
 - Pipelines use `scripts/terraform/load_root_env.sh`.
+- Per-slice tfvars are self-contained; each slice pipeline passes **only** that
+  slice’s `-var-file` (no shared swarm/dns/nfs/amd64/arm64 bundles).
+- Container image tags are hardcoded literals on resources in `main.tf` — tag
+  only, **no** digest/`@sha256:...`, and **not** a variable or local (Renovate
+  must see the literal).
 
 ## Cursor / MCP
 

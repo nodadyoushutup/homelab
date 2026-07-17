@@ -1,10 +1,13 @@
+# main.tf
+# Overlay network, volumes, and Jenkins controller Swarm service.
+
 resource "docker_network" "jenkins_controller" {
-  name   = var.network_name
+  name   = local.network_name
   driver = "overlay"
 }
 
 resource "docker_volume" "jenkins_controller_home" {
-  name   = var.home_volume_name
+  name   = local.home_volume_name
   driver = "local"
 }
 
@@ -17,23 +20,13 @@ resource "docker_volume" "extra_mounts" {
 }
 
 resource "docker_service" "jenkins_controller" {
-  name = var.service_name
-
-  dynamic "auth" {
-    for_each = local.docker_service_pull_auth_map
-
-    content {
-      server_address = auth.value.server_address
-      username       = auth.value.username
-      password       = auth.value.password
-    }
-  }
+  name = local.service_name
 
   task_spec {
     force_update = local.config_force_update
 
     dynamic "placement" {
-      for_each = var.placement == null ? [] : [var.placement]
+      for_each = local.placement == null ? [] : [local.placement]
 
       content {
         constraints = try(placement.value.constraints, null)
@@ -51,25 +44,26 @@ resource "docker_service" "jenkins_controller" {
 
     networks_advanced {
       name    = docker_network.jenkins_controller.id
-      aliases = [var.service_dns_alias]
+      aliases = [local.service_dns_alias]
     }
 
     container_spec {
-      image = var.controller_image
+      # Literal tag for Renovate (not a var/local; no digest).
+      image = "ghcr.io/nodadyoushutup/jenkins-controller:0.0.16"
       env   = local.controller_env
 
       dns_config {
-        nameservers = var.dns_nameservers
+        nameservers = local.dns_nameservers
       }
 
       mounts {
         type   = "volume"
         source = docker_volume.jenkins_controller_home.name
-        target = var.home_mount_target
+        target = local.home_mount_target
       }
 
       dynamic "mounts" {
-        for_each = local.enable_shared_repo_mount_effective ? [var.shared_tfvars_volume_name] : []
+        for_each = local.enable_shared_repo_mount_effective ? [local.shared_tfvars_volume_name] : []
 
         content {
           type   = "volume"
@@ -77,7 +71,7 @@ resource "docker_service" "jenkins_controller" {
           target = local.repo_mount_target
 
           volume_options {
-            driver_name    = var.shared_tfvars_volume_driver
+            driver_name    = local.shared_tfvars_volume_driver
             driver_options = local.shared_repo_volume_driver_opts_effective
             no_copy        = false
           }
@@ -113,21 +107,21 @@ resource "docker_service" "jenkins_controller" {
 
   mode {
     replicated {
-      replicas = var.controller_replicas
+      replicas = local.controller_replicas
     }
   }
 
   endpoint_spec {
     ports {
-      target_port    = var.controller_target_port
-      published_port = var.controller_published_port
+      target_port    = local.controller_target_port
+      published_port = local.controller_published_port
       protocol       = "tcp"
       publish_mode   = "ingress"
     }
 
     ports {
-      target_port    = var.agent_target_port
-      published_port = var.agent_published_port
+      target_port    = local.agent_target_port
+      published_port = local.agent_published_port
       protocol       = "tcp"
       publish_mode   = "ingress"
     }

@@ -7,7 +7,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
-REGISTRY_TFVARS="${ZOT_REGISTRY_TFVARS:-${ROOT_DIR}/.config/terraform/components/swarm/swarm.tfvars}"
+REGISTRY_TFVARS="${ZOT_REGISTRY_TFVARS:-${ROOT_DIR}/.config/terraform/components/swarm/zot/app.tfvars}"
 REGISTRY_ADDRESS="${ZOT_REGISTRY_ADDRESS:-zot.nodadyoushutup.com}"
 
 while [[ $# -gt 0 ]]; do

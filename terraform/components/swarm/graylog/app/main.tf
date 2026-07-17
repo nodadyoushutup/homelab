@@ -1,26 +1,29 @@
+# main.tf
+# Overlay network, volumes, and Graylog datanode + server Swarm services.
+
 data "docker_network" "graylog_mongodb" {
-  name = "graylog-mongodb"
+  name = local.mongodb_network_name
 }
 
 resource "docker_network" "graylog_app" {
-  name   = "graylog-app"
+  name   = local.network_name
   driver = "overlay"
 }
 
 resource "docker_volume" "graylog_datanode" {
-  name = "graylog-datanode-data"
+  name = local.datanode_volume_name
 }
 
 resource "docker_volume" "graylog_server" {
-  name = "graylog-server-data"
+  name = local.server_volume_name
 }
 
 resource "docker_service" "graylog_datanode" {
-  name = "graylog-datanode"
+  name = local.datanode_service_name
 
   task_spec {
     dynamic "placement" {
-      for_each = var.placement == null ? [] : [var.placement]
+      for_each = local.placement == null ? [] : [local.placement]
 
       content {
         constraints = try(placement.value.constraints, null)
@@ -38,7 +41,7 @@ resource "docker_service" "graylog_datanode" {
 
     networks_advanced {
       name    = docker_network.graylog_app.id
-      aliases = ["datanode"]
+      aliases = [local.datanode_network_alias]
     }
 
     networks_advanced {
@@ -47,21 +50,22 @@ resource "docker_service" "graylog_datanode" {
     }
 
     container_spec {
-      hostname = "datanode"
-      image    = "graylog/graylog-datanode:7.1.1@sha256:cd5f5ec598c9f4ac5f8c856b90dda925998f0568d04b40ee928819aee747762d"
+      hostname = local.datanode_hostname
+      # Literal tag for Renovate (not a var/local; no digest).
+      image = "graylog/graylog-datanode:7.1.1"
 
       env = {
-        GRAYLOG_DATANODE_NODE_ID_FILE    = "/var/lib/graylog-datanode/node-id"
+        GRAYLOG_DATANODE_NODE_ID_FILE    = local.datanode_node_id_file
         GRAYLOG_DATANODE_PASSWORD_SECRET = local.graylog_password_secret
         GRAYLOG_DATANODE_MONGODB_URI     = local.graylog_mongodb_uri
       }
 
       dns_config {
-        nameservers = var.dns_nameservers
+        nameservers = local.dns_nameservers
       }
 
       mounts {
-        target = "/var/lib/graylog-datanode"
+        target = local.datanode_data_mount
         source = docker_volume.graylog_datanode.name
         type   = "volume"
       }
@@ -80,11 +84,11 @@ resource "docker_service" "graylog_datanode" {
 }
 
 resource "docker_service" "graylog" {
-  name = "graylog"
+  name = local.server_service_name
 
   task_spec {
     dynamic "placement" {
-      for_each = var.placement == null ? [] : [var.placement]
+      for_each = local.placement == null ? [] : [local.placement]
 
       content {
         constraints = try(placement.value.constraints, null)
@@ -102,7 +106,7 @@ resource "docker_service" "graylog" {
 
     networks_advanced {
       name    = docker_network.graylog_app.id
-      aliases = ["graylog"]
+      aliases = [local.server_network_alias]
     }
 
     networks_advanced {
@@ -111,27 +115,28 @@ resource "docker_service" "graylog" {
     }
 
     container_spec {
-      hostname = "server"
-      image    = "graylog/graylog:7.1.1@sha256:e5cdb5cda5adadc56c28ce0e34ede9875b911387a7dc87dcce7ee3282fba1ce3"
+      hostname = local.server_hostname
+      # Literal tag for Renovate (not a var/local; no digest).
+      image = "graylog/graylog:7.1.1"
 
-      command = ["/usr/bin/tini", "--", "/docker-entrypoint.sh"]
+      command = local.server_command
 
       env = {
-        GRAYLOG_NODE_ID_FILE       = "/usr/share/graylog/data/data/node-id"
+        GRAYLOG_NODE_ID_FILE       = local.server_node_id_file
         GRAYLOG_PASSWORD_SECRET    = local.graylog_password_secret
         GRAYLOG_ROOT_PASSWORD_SHA2 = local.graylog_root_password
         GRAYLOG_HTTP_BIND_ADDRESS  = local.graylog_http_bind
         GRAYLOG_HTTP_EXTERNAL_URI  = local.graylog_http_external
         GRAYLOG_MONGODB_URI        = local.graylog_mongodb_uri
-        GRAYLOG_SELFSIGNED_STARTUP = "true"
+        GRAYLOG_SELFSIGNED_STARTUP = local.graylog_selfsigned_startup
       }
 
       dns_config {
-        nameservers = var.dns_nameservers
+        nameservers = local.dns_nameservers
       }
 
       mounts {
-        target = "/usr/share/graylog/data"
+        target = local.server_data_mount
         source = docker_volume.graylog_server.name
         type   = "volume"
       }
@@ -150,22 +155,22 @@ resource "docker_service" "graylog" {
 
   endpoint_spec {
     ports {
-      target_port    = 9000
-      published_port = var.published_port_ui
+      target_port    = local.ui_target_port
+      published_port = local.published_port_ui
       protocol       = "tcp"
       publish_mode   = "ingress"
     }
 
     ports {
-      target_port    = 5140
-      published_port = var.published_port_syslog_tcp
+      target_port    = local.syslog_target_port
+      published_port = local.published_port_syslog_tcp
       protocol       = "tcp"
       publish_mode   = "ingress"
     }
 
     ports {
-      target_port    = 12201
-      published_port = var.published_port_gelf_tcp
+      target_port    = local.gelf_target_port
+      published_port = local.published_port_gelf_tcp
       protocol       = "tcp"
       publish_mode   = "ingress"
     }

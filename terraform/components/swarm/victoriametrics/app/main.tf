@@ -1,19 +1,22 @@
+# main.tf
+# Overlay network, storage volume, and VictoriaMetrics Swarm service.
+
 resource "docker_network" "victoriametrics" {
-  name   = "victoriametrics-net"
+  name   = local.network_name
   driver = "overlay"
 }
 
 resource "docker_volume" "victoriametrics_data" {
-  name   = "victoriametrics-data"
+  name   = local.volume_name
   driver = "local"
 }
 
 resource "docker_service" "victoriametrics" {
-  name = "victoriametrics"
+  name = local.service_name
 
   task_spec {
     dynamic "placement" {
-      for_each = var.placement == null ? [] : [var.placement]
+      for_each = local.placement == null ? [] : [local.placement]
 
       content {
         constraints = try(placement.value.constraints, null)
@@ -31,18 +34,19 @@ resource "docker_service" "victoriametrics" {
 
     networks_advanced {
       name    = docker_network.victoriametrics.id
-      aliases = ["victoriametrics"]
+      aliases = [local.network_alias]
     }
 
     container_spec {
+      # Literal tag for Renovate (not a var/local; no digest).
       image = "victoriametrics/victoria-metrics:v1.137.0"
 
       dns_config {
-        nameservers = var.dns_nameservers
+        nameservers = local.dns_nameservers
       }
 
       mounts {
-        target = "/victoria-metrics-data"
+        target = local.storage_mount_target
         source = docker_volume.victoriametrics_data.name
         type   = "volume"
       }
@@ -51,16 +55,16 @@ resource "docker_service" "victoriametrics" {
 
   mode {
     replicated {
-      replicas = 1
+      replicas = local.replicas
     }
   }
 
   endpoint_spec {
     ports {
-      target_port    = 8428
-      published_port = 8428
-      protocol       = "tcp"
-      publish_mode   = "ingress"
+      target_port    = local.http_port.target_port
+      published_port = local.http_port.published_port
+      protocol       = local.http_port.protocol
+      publish_mode   = local.http_port.publish_mode
     }
   }
 }

@@ -1,3 +1,6 @@
+# variables.tf
+# External input contract for the mcp-kubernetes Swarm app slice.
+
 variable "kubeconfig_path" {
   description = "Host path to the Kubernetes kubeconfig baked into a Swarm config."
   type        = string

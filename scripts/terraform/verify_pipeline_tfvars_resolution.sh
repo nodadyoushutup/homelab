@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Regression check: default TFVARS paths for all pipelines using swarm_pipeline.sh.
+# Regression check: default TFVARS paths for bespoke component pipelines (homelab-config / path resolution).
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -132,7 +132,7 @@ assert_tfvars_path "basename fallback" \
   "" \
   "${TFVARS_HOME_DIR}/foo.tfvars"
 
-# Bash quirk guard: assignment inside case must not be reintroduced in swarm_pipeline.
+# Bash quirk guard: assignment inside case must not be reintroduced in shared helpers.
 assert_case_assignment_still_broken() {
   local ROOT_DIR="/mnt/eapp/code/homelab"
   local TERRAFORM_DIR="/mnt/eapp/code/homelab/terraform/components/swarm/grafana/app"
@@ -156,7 +156,7 @@ elif [[ ! -f "${tagged}" ]]; then
   failures=$((failures + 1))
 fi
 
-# Pipeline entrypoints that source swarm_pipeline.sh (not comment-only mentions).
+# Legacy check: entrypoints that still source shared *_pipeline.sh (expect none mid-audit).
 while IFS= read -r pipeline_script; do
   pipeline_dir="$(dirname "${pipeline_script}")"
   pipeline_name="$(basename "${pipeline_script}")"
@@ -186,7 +186,7 @@ while IFS= read -r pipeline_script; do
     echo "[FAIL] ${label}: suspicious double slash: ${tfvars}" >&2
     failures=$((failures + 1))
   fi
-done < <(grep -rlE 'source .*(swarm|cluster|remote|network)_pipeline\.sh' "${ROOT_DIR}/terraform/components/swarm" "${ROOT_DIR}/terraform/components/cluster" "${ROOT_DIR}/terraform/components/remote" "${ROOT_DIR}/terraform/components/network" "${ROOT_DIR}/terraform/components/runners" --include='*.sh' 2>/dev/null | sort)
+done < <(grep -rlE 'source .*(swarm|cluster|remote|network)_pipeline\.sh' "${ROOT_DIR}/terraform/components/swarm" "${ROOT_DIR}/terraform/components/cluster" "${ROOT_DIR}/terraform/components/remote" "${ROOT_DIR}/terraform/components/network" --include='*.sh' 2>/dev/null | sort)
 
 if [[ "${failures}" -gt 0 ]]; then
   echo "[ERR] ${failures} failure(s) in ${checks} check(s)" >&2

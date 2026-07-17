@@ -1,3 +1,6 @@
+# variables.tf
+# External input contract for the Jenkins controller Swarm app slice.
+
 variable "agent_published_port" {
   description = "Published Swarm port for inbound Jenkins agent traffic."
   type        = number
@@ -31,15 +34,6 @@ variable "casc_config_path" {
   type        = string
   default     = "/mnt/eapp/code/homelab/.config/terraform/components/swarm/jenkins-controller/jenkins.yaml"
 }
-
-
-variable "controller_image" {
-  description = "Jenkins controller image reference."
-  type        = string
-  default     = "ghcr.io/nodadyoushutup/jenkins-controller:0.0.16"
-}
-
-
 variable "controller_published_port" {
   description = "Published Swarm port for Jenkins HTTP UI/API."
   type        = number

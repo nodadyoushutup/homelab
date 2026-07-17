@@ -1,18 +1,21 @@
+# main.tf
+# Nginx Proxy Manager desired-state resources: certificates, access lists, hosts, streams, defaults.
+
 resource "nginxproxymanager_certificate_letsencrypt" "this" {
-  for_each = var.certificates
+  for_each = local.certificates
 
   domain_names      = toset(each.value.domain_names)
-  letsencrypt_email = coalesce(try(each.value.letsencrypt_email, null), try(var.default.certificate_email, null))
+  letsencrypt_email = coalesce(try(each.value.letsencrypt_email, null), try(local.default.certificate_email, null))
   letsencrypt_agree = try(each.value.letsencrypt_agree, true)
 
-  dns_challenge            = try(each.value.dns_challenge.enabled, each.value.dns_challenge, try(var.default.dns_challenge.enabled, false))
-  dns_provider             = try(each.value.dns_challenge.provider, try(var.default.dns_challenge.provider, null))
-  dns_provider_credentials = try(each.value.dns_challenge.credentials, try(var.default.dns_challenge.credentials, null))
-  propagation_seconds      = try(each.value.dns_challenge.propagation_seconds, try(var.default.dns_challenge.propagation_seconds, null))
+  dns_challenge            = try(each.value.dns_challenge.enabled, each.value.dns_challenge, try(local.default.dns_challenge.enabled, false))
+  dns_provider             = try(each.value.dns_challenge.provider, try(local.default.dns_challenge.provider, null))
+  dns_provider_credentials = try(each.value.dns_challenge.credentials, try(local.default.dns_challenge.credentials, null))
+  propagation_seconds      = try(each.value.dns_challenge.propagation_seconds, try(local.default.dns_challenge.propagation_seconds, null))
 }
 
 resource "nginxproxymanager_access_list" "this" {
-  for_each = var.access_lists
+  for_each = local.access_lists
 
   name        = each.key
   satisfy_any = try(each.value.satisfy_any, null)
@@ -32,7 +35,7 @@ resource "nginxproxymanager_access_list" "this" {
 }
 
 resource "nginxproxymanager_proxy_host" "this" {
-  for_each = var.proxy_hosts
+  for_each = local.proxy_hosts
 
   domain_names   = toset(each.value.domain_names)
   forward_scheme = try(each.value.forward_scheme, each.value.scheme)
@@ -59,20 +62,20 @@ resource "nginxproxymanager_proxy_host" "this" {
   ssl_forced              = try(each.value.ssl_forced, true)
   hsts_enabled            = try(each.value.hsts_enabled, false)
   hsts_subdomains         = try(each.value.hsts_subdomains, false)
-  advanced_config         = file("${path.module}/files/advanced.conf")
+  advanced_config         = file(local.advanced_config_file)
   locations = try([
     for location in each.value.locations : {
       path            = location.path
       forward_scheme  = try(location.forward_scheme, location.scheme)
       forward_host    = location.forward_host
       forward_port    = tonumber(location.forward_port)
-      advanced_config = file("${path.module}/files/advanced.conf")
+      advanced_config = file(local.advanced_config_file)
     }
   ], null)
 }
 
 resource "nginxproxymanager_redirection_host" "this" {
-  for_each = var.redirections
+  for_each = local.redirections
 
   domain_names = toset(each.value.domain_names)
 
@@ -93,11 +96,11 @@ resource "nginxproxymanager_redirection_host" "this" {
   ssl_forced      = try(each.value.ssl_forced, true)
   hsts_enabled    = try(each.value.hsts_enabled, false)
   hsts_subdomains = try(each.value.hsts_subdomains, false)
-  advanced_config = file("${path.module}/files/advanced.conf")
+  advanced_config = file(local.advanced_config_file)
 }
 
 resource "nginxproxymanager_stream" "this" {
-  for_each = var.streams
+  for_each = local.streams
 
   incoming_port   = tonumber(each.value.incoming_port)
   forwarding_host = each.value.forwarding_host
@@ -117,6 +120,6 @@ resource "nginxproxymanager_stream" "this" {
 resource "nginxproxymanager_settings" "default_site" {
   default_site = {
     page = "html"
-    html = file("${path.module}/files/404.html")
+    html = file(local.default_site_html_file)
   }
 }

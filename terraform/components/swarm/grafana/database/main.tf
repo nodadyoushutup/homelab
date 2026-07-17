@@ -1,19 +1,22 @@
+# main.tf
+# Overlay network, data volume, and replicated grafana-postgres Swarm service.
+
 resource "docker_network" "grafana_postgres" {
-  name   = "grafana-postgres"
+  name   = local.network_name
   driver = "overlay"
 }
 
 resource "docker_volume" "grafana_postgres_data" {
-  name   = "grafana-postgres-data"
+  name   = local.volume_name
   driver = "local"
 }
 
 resource "docker_service" "grafana_postgres" {
-  name = "grafana-postgres"
+  name = local.service_name
 
   task_spec {
     dynamic "placement" {
-      for_each = var.placement == null ? [] : [var.placement]
+      for_each = local.placement == null ? [] : [local.placement]
 
       content {
         constraints = try(placement.value.constraints, null)
@@ -31,23 +34,24 @@ resource "docker_service" "grafana_postgres" {
 
     networks_advanced {
       name    = docker_network.grafana_postgres.id
-      aliases = ["postgres"]
+      aliases = [local.network_alias]
     }
 
     container_spec {
+      # Literal tag for Renovate (not a var/local; no digest).
       image = "postgres:18.3"
       env = {
-        POSTGRES_PASSWORD = var.env.POSTGRES_PASSWORD
-        POSTGRES_USER     = var.env.POSTGRES_USER
-        POSTGRES_DB       = var.env.POSTGRES_DB
+        POSTGRES_PASSWORD = local.env.POSTGRES_PASSWORD
+        POSTGRES_USER     = local.env.POSTGRES_USER
+        POSTGRES_DB       = local.env.POSTGRES_DB
       }
 
       dns_config {
-        nameservers = var.dns_nameservers
+        nameservers = local.dns_nameservers
       }
 
       mounts {
-        target = "/var/lib/postgresql"
+        target = local.data_mount
         source = docker_volume.grafana_postgres_data.name
         type   = "volume"
       }
@@ -62,8 +66,8 @@ resource "docker_service" "grafana_postgres" {
 
   endpoint_spec {
     ports {
-      target_port    = 5432
-      published_port = 5432
+      target_port    = local.postgres_port
+      published_port = local.postgres_port
       protocol       = "tcp"
       publish_mode   = "ingress"
     }

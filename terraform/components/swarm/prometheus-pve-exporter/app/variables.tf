@@ -1,3 +1,6 @@
+# variables.tf
+# External input contract for the prometheus-pve-exporter Swarm app slice.
+
 variable "disable_config_collector" {
   description = "Disable per-guest config collector (extra API calls per VM/CT)."
   type        = bool
@@ -18,15 +21,6 @@ variable "env" {
   default     = {}
   sensitive   = true
 }
-
-
-variable "image_reference" {
-  description = "Container image reference to deploy."
-  type        = string
-  default     = "prompve/prometheus-pve-exporter@sha256:4527b8080c4bd53ae8d7326ff7a3469dad0c1abb5753ff0bae9f1ef1c23cb2c9"
-}
-
-
 variable "published_port" {
   description = "Swarm ingress published port."
   type        = number

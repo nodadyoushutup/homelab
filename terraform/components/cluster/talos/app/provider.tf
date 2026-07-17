@@ -1,3 +1,6 @@
+# provider.tf
+# S3 remote state and local/talos providers for the Talos app stack.
+
 terraform {
   backend "s3" {
     key = "talos.tfstate"

@@ -1,28 +1,31 @@
+# main.tf
+# Overlay network, data/letsencrypt volumes, and nginx-proxy-manager Swarm service.
+
 data "docker_network" "nginx_proxy_manager_mysql" {
-  name = "nginx-proxy-manager-mysql"
+  name = local.mysql_network_name
 }
 
 resource "docker_network" "nginx_proxy_manager" {
-  name   = "nginx-proxy-manager"
+  name   = local.network_name
   driver = "overlay"
 }
 
 resource "docker_volume" "nginx_proxy_manager_data" {
-  name   = "nginx-proxy-manager-data"
+  name   = local.data_volume_name
   driver = "local"
 }
 
 resource "docker_volume" "nginx_proxy_manager_letsencrypt" {
-  name   = "nginx-proxy-manager-letsencrypt"
+  name   = local.letsencrypt_volume_name
   driver = "local"
 }
 
 resource "docker_service" "nginx_proxy_manager" {
-  name = "nginx-proxy-manager"
+  name = local.service_name
 
   task_spec {
     dynamic "placement" {
-      for_each = var.placement == null ? [] : [var.placement]
+      for_each = local.placement == null ? [] : [local.placement]
 
       content {
         constraints = try(placement.value.constraints, null)
@@ -40,7 +43,7 @@ resource "docker_service" "nginx_proxy_manager" {
 
     networks_advanced {
       name    = docker_network.nginx_proxy_manager.id
-      aliases = ["nginx-proxy-manager"]
+      aliases = [local.network_alias]
     }
 
     networks_advanced {
@@ -49,45 +52,46 @@ resource "docker_service" "nginx_proxy_manager" {
     }
 
     container_spec {
+      # Literal tag for Renovate (not a var/local; no digest).
       image = "jc21/nginx-proxy-manager:2.12.6"
-      env   = var.env
+      env   = local.env
 
       dns_config {
-        nameservers = var.dns_nameservers
+        nameservers = local.dns_nameservers
       }
 
       mounts {
         type   = "volume"
         source = docker_volume.nginx_proxy_manager_data.name
-        target = "/data"
+        target = local.data_mount
       }
 
       mounts {
         type   = "volume"
         source = docker_volume.nginx_proxy_manager_letsencrypt.name
-        target = "/etc/letsencrypt"
+        target = local.letsencrypt_mount
       }
     }
   }
 
   endpoint_spec {
     ports {
-      target_port    = 80
-      published_port = 80
+      target_port    = local.http_port
+      published_port = local.http_port
       protocol       = "tcp"
       publish_mode   = "ingress"
     }
 
     ports {
-      target_port    = 443
-      published_port = 443
+      target_port    = local.https_port
+      published_port = local.https_port
       protocol       = "tcp"
       publish_mode   = "ingress"
     }
 
     ports {
-      target_port    = 81
-      published_port = 81
+      target_port    = local.admin_port
+      published_port = local.admin_port
       protocol       = "tcp"
       publish_mode   = "ingress"
     }

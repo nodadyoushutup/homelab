@@ -1,3 +1,6 @@
+# outputs.tf
+# Exported KV mount path and managed secret paths for the Vault config slice.
+
 output "mount_path" {
   description = "KV v2 mount path"
   value       = vault_mount.kv.path

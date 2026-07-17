@@ -1,20 +1,23 @@
+# main.tf
+# Overlay network and per-instance qBittorrent exporter Swarm services.
+
 data "docker_network" "prometheus" {
-  name = "prometheus"
+  name = local.prometheus_network_name
 }
 
 resource "docker_network" "qbittorrent_exporter" {
-  name   = "qbittorrent-exporter"
+  name   = local.network_name
   driver = "overlay"
 }
 
 resource "docker_service" "qbittorrent_exporter" {
-  for_each = var.instances
+  for_each = local.instances
 
-  name = "qbittorrent-exporter-${each.key}"
+  name = "${local.service_name_prefix}-${each.key}"
 
   task_spec {
     dynamic "placement" {
-      for_each = var.placement == null ? [] : [var.placement]
+      for_each = local.placement == null ? [] : [local.placement]
 
       content {
         constraints = try(placement.value.constraints, null)
@@ -32,7 +35,7 @@ resource "docker_service" "qbittorrent_exporter" {
 
     networks_advanced {
       name    = docker_network.qbittorrent_exporter.id
-      aliases = ["qbittorrent-exporter-${each.key}"]
+      aliases = ["${local.service_name_prefix}-${each.key}"]
     }
 
     networks_advanced {
@@ -40,23 +43,24 @@ resource "docker_service" "qbittorrent_exporter" {
     }
 
     container_spec {
+      # Literal tag for Renovate (not a var/local; no digest).
       image = "ghcr.io/martabal/qbittorrent-exporter:v2.0.1"
       env = {
         for key, value in merge(
-          var.env,
+          local.env,
           { QBITTORRENT_BASE_URL = each.value.base_url },
         ) : key => trimspace(tostring(value))
       }
 
       dns_config {
-        nameservers = var.dns_nameservers
+        nameservers = local.dns_nameservers
       }
     }
   }
 
   mode {
     replicated {
-      replicas = 1
+      replicas = local.replicas
     }
   }
 
@@ -66,7 +70,7 @@ resource "docker_service" "qbittorrent_exporter" {
 
   endpoint_spec {
     ports {
-      target_port    = 8090
+      target_port    = local.container_port
       published_port = each.value.published_port
       protocol       = "tcp"
       publish_mode   = "host"

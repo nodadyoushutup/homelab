@@ -1,11 +1,14 @@
+# main.tf
+# Overlay network, kubeconfig Swarm config, and mcp-kubernetes Swarm service.
+
 resource "docker_network" "mcp_kubernetes" {
-  name   = "mcp-kubernetes"
+  name   = local.network_name
   driver = "overlay"
 }
 
 resource "docker_config" "kubeconfig" {
-  name = "mcp-kubernetes-kubeconfig-${local.kubeconfig_hash}"
-  data = filebase64(var.kubeconfig_path)
+  name = local.kubeconfig_config_name
+  data = filebase64(local.kubeconfig_path)
 
   lifecycle {
     create_before_destroy = true
@@ -13,13 +16,13 @@ resource "docker_config" "kubeconfig" {
 }
 
 resource "docker_service" "mcp_kubernetes" {
-  name = "mcp-kubernetes"
+  name = local.service_name
 
   task_spec {
     force_update = local.kubeconfig_force
 
     dynamic "placement" {
-      for_each = var.placement == null ? [] : [var.placement]
+      for_each = local.placement == null ? [] : [local.placement]
 
       content {
         constraints = try(placement.value.constraints, null)
@@ -37,44 +40,31 @@ resource "docker_service" "mcp_kubernetes" {
 
     networks_advanced {
       name    = docker_network.mcp_kubernetes.id
-      aliases = ["mcp-kubernetes"]
+      aliases = [local.network_alias]
     }
 
     container_spec {
-      image    = "quay.io/containers/kubernetes_mcp_server:v0.0.60@sha256:766a7282e0536d951d805f72b562d89707eefb84d35dcfd96e31c410071f6164"
-      user     = "65532"
-      cap_drop = ["ALL"]
-      args = [
-        "--port",
-        "8106",
-        "--kubeconfig",
-        "/etc/kubernetes/kubeconfig",
-        "--cluster-provider",
-        "kubeconfig",
-        "--toolsets",
-        "core,config",
-        "--list-output",
-        "yaml",
-        "--read-only",
-        "--disable-multi-cluster",
-        "--stateless",
-      ]
+      # Literal tag for Renovate (not a var/local; no digest).
+      image    = "quay.io/containers/kubernetes_mcp_server:v0.0.60"
+      user     = local.container_user
+      cap_drop = local.cap_drop
+      args     = local.args
 
       dns_config {
-        nameservers = var.dns_nameservers
+        nameservers = local.dns_nameservers
       }
 
       configs {
         config_id   = docker_config.kubeconfig.id
         config_name = docker_config.kubeconfig.name
-        file_name   = "/etc/kubernetes/kubeconfig"
+        file_name   = local.kubeconfig_mount
       }
     }
   }
 
   mode {
     replicated {
-      replicas = var.replicas
+      replicas = local.replicas
     }
   }
 
@@ -84,8 +74,8 @@ resource "docker_service" "mcp_kubernetes" {
 
   endpoint_spec {
     ports {
-      target_port    = 8106
-      published_port = 18210
+      target_port    = local.target_port
+      published_port = local.published_port
       protocol       = "tcp"
       publish_mode   = "ingress"
     }

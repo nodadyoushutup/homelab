@@ -24,8 +24,8 @@ echo "[STEP] terraform init (npm)"
 (cd "${NPM_DIR}" && terraform init -backend-config="${BACKEND_FILE}" -reconfigure >/dev/null)
 
 export CF_TFVARS CF_DIR NPM_TFVARS NPM_DIR DRY_RUN ONLY
-# Match swarm_pipeline order: shared dns/nfs first, stack tfvars last (wins on provider_config).
-NPM_EXTRA_VARFILES="${TFVARS_HOME_DIR}/terraform/components/swarm/dns.tfvars,${TFVARS_HOME_DIR}/terraform/components/swarm/nfs.tfvars"
+# Per-slice tfvars are self-contained (no shared dns/nfs bundles).
+NPM_EXTRA_VARFILES="${NPM_EXTRA_VARFILES:-}"
 export NPM_EXTRA_VARFILES
 python3 - <<'PY'
 import json

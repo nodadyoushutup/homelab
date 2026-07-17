@@ -1,15 +1,18 @@
+# main.tf
+# Overlay network, data volume, config, and zot registry Swarm service.
+
 resource "docker_network" "zot" {
-  name   = "zot"
+  name   = local.network_name
   driver = "overlay"
 }
 
 resource "docker_volume" "zot_data" {
-  name   = "zot-data"
+  name   = local.volume_name
   driver = "local"
 }
 
 resource "docker_config" "zot" {
-  name = "zot-config-${local.config_hash}"
+  name = local.config_name
   data = base64encode(local.zot_config_raw)
 
   lifecycle {
@@ -18,13 +21,13 @@ resource "docker_config" "zot" {
 }
 
 resource "docker_service" "zot" {
-  name = "zot"
+  name = local.service_name
 
   task_spec {
     force_update = local.force_update
 
     dynamic "placement" {
-      for_each = var.placement == null ? [] : [var.placement]
+      for_each = local.placement == null ? [] : [local.placement]
 
       content {
         constraints = try(placement.value.constraints, null)
@@ -42,29 +45,30 @@ resource "docker_service" "zot" {
 
     networks_advanced {
       name    = docker_network.zot.id
-      aliases = ["zot"]
+      aliases = [local.network_alias]
     }
 
     container_spec {
-      image = "ghcr.io/project-zot/zot:v2.1.15@sha256:376cb38a335bab89571af306eff481547212746aff11828043c22f32637fe17b"
+      # Literal tag for Renovate (not a var/local; no digest).
+      image = "ghcr.io/project-zot/zot:v2.1.15"
 
       dns_config {
-        nameservers = var.dns_nameservers
+        nameservers = local.dns_nameservers
       }
 
       mounts {
         type   = "volume"
         source = docker_volume.zot_data.name
-        target = "/var/lib/registry"
+        target = local.data_mount
       }
 
       dynamic "mounts" {
-        for_each = local.auth_enabled ? [var.htpasswd_path] : []
+        for_each = local.auth_enabled ? [local.htpasswd_path] : []
 
         content {
           type      = "bind"
           source    = mounts.value
-          target    = "/etc/zot/htpasswd"
+          target    = local.htpasswd_mount
           read_only = true
         }
       }
@@ -72,7 +76,7 @@ resource "docker_service" "zot" {
       configs {
         config_id   = docker_config.zot.id
         config_name = docker_config.zot.name
-        file_name   = "/etc/zot/config.json"
+        file_name   = local.config_mount
       }
     }
   }
@@ -90,7 +94,7 @@ resource "docker_service" "zot" {
   endpoint_spec {
     ports {
       target_port    = tonumber(local.zot_config.http.port)
-      published_port = 35081
+      published_port = local.published_port
       protocol       = "tcp"
       publish_mode   = "ingress"
     }

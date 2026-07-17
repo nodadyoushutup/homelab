@@ -1,3 +1,6 @@
+# variables.tf
+# External input contract for the Cloudflare DNS config slice.
+
 variable "provider_config" {
   description = "Provider configuration map for Cloudflare authentication."
   type        = any
@@ -21,13 +24,15 @@ variable "records" {
 
 # Vault KV fragments (parsed by scripts/terraform/vault_merge_config_secrets.py); unused by this module.
 variable "secrets" {
-  type      = any
-  default   = {}
-  sensitive = true
+  description = "Inline Vault KV secret fragments for vault_merge_config_secrets.py (not consumed by this Terraform root)."
+  type        = any
+  default     = {}
+  sensitive   = true
 }
 
 variable "secret_files" {
-  type      = any
-  default   = {}
-  sensitive = true
+  description = "Vault KV secret file path fragments for vault_merge_config_secrets.py (not consumed by this Terraform root)."
+  type        = any
+  default     = {}
+  sensitive   = true
 }

@@ -1,19 +1,22 @@
+# main.tf
+# Overlay network, data volume, config, and Prometheus Swarm service wired to VictoriaMetrics.
+
 data "docker_network" "victoriametrics" {
-  name = "victoriametrics-net"
+  name = local.victoriametrics_network_name
 }
 
 resource "docker_network" "prometheus" {
-  name   = "prometheus"
+  name   = local.network_name
   driver = "overlay"
 }
 
 resource "docker_volume" "prometheus_data" {
-  name = "prometheus-data"
+  name = local.volume_name
 }
 
 resource "docker_config" "prometheus" {
-  name = "prometheus-${local.config_hash}"
-  data = filebase64(var.config_path)
+  name = local.config_name
+  data = filebase64(local.config_path)
 
   lifecycle {
     create_before_destroy = true
@@ -21,13 +24,13 @@ resource "docker_config" "prometheus" {
 }
 
 resource "docker_service" "prometheus" {
-  name = "prometheus"
+  name = local.service_name
 
   task_spec {
     force_update = local.force_update
 
     dynamic "placement" {
-      for_each = var.placement == null ? [] : [var.placement]
+      for_each = local.placement == null ? [] : [local.placement]
 
       content {
         constraints = try(placement.value.constraints, null)
@@ -45,7 +48,7 @@ resource "docker_service" "prometheus" {
 
     networks_advanced {
       name    = docker_network.prometheus.id
-      aliases = ["prometheus"]
+      aliases = [local.network_alias]
     }
 
     networks_advanced {
@@ -54,22 +57,16 @@ resource "docker_service" "prometheus" {
     }
 
     container_spec {
-      image = "prom/prometheus:v3.9.1@sha256:1f0f50f06acaceb0f5670d2c8a658a599affe7b0d8e78b898c1035653849a702"
-
-      args = [
-        "--config.file=/etc/prometheus/prometheus.yml",
-        "--storage.tsdb.path=/prometheus",
-        "--storage.tsdb.retention.time=1h",
-        "--web.enable-lifecycle",
-        "--web.enable-admin-api",
-      ]
+      # Literal tag for Renovate (not a var/local; no digest).
+      image = "prom/prometheus:v3.9.1"
+      args  = local.args
 
       dns_config {
-        nameservers = var.dns_nameservers
+        nameservers = local.dns_nameservers
       }
 
       mounts {
-        target = "/prometheus"
+        target = local.data_mount
         source = docker_volume.prometheus_data.name
         type   = "volume"
       }
@@ -77,7 +74,7 @@ resource "docker_service" "prometheus" {
       configs {
         config_id   = docker_config.prometheus.id
         config_name = docker_config.prometheus.name
-        file_name   = "/etc/prometheus/prometheus.yml"
+        file_name   = local.config_mount
       }
     }
   }
@@ -94,8 +91,8 @@ resource "docker_service" "prometheus" {
 
   endpoint_spec {
     ports {
-      target_port    = 9090
-      published_port = 9090
+      target_port    = local.target_port
+      published_port = local.published_port
       publish_mode   = "ingress"
     }
   }

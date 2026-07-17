@@ -1,28 +1,21 @@
+# main.tf
+# Overlay network and prometheus-pve-exporter Swarm service wired to Prometheus.
+
 data "docker_network" "prometheus" {
-  name = "prometheus"
+  name = local.prometheus_network_name
 }
 
 resource "docker_network" "prometheus_pve_exporter" {
-  name   = "prometheus-pve-exporter"
+  name   = local.network_name
   driver = "overlay"
 }
 
 resource "docker_service" "prometheus_pve_exporter" {
   name = local.service_name
 
-  dynamic "auth" {
-    for_each = local.docker_service_pull_auth_map
-
-    content {
-      server_address = auth.value.server_address
-      username       = auth.value.username
-      password       = auth.value.password
-    }
-  }
-
   task_spec {
     dynamic "placement" {
-      for_each = var.placement == null ? [] : [var.placement]
+      for_each = local.placement == null ? [] : [local.placement]
 
       content {
         constraints = try(placement.value.constraints, null)
@@ -48,12 +41,13 @@ resource "docker_service" "prometheus_pve_exporter" {
     }
 
     container_spec {
-      image = var.image_reference
+      # Literal tag for Renovate (not a var/local; no digest).
+      image = "prompve/prometheus-pve-exporter:3.9.0"
       env   = local.exporter_env
       args  = local.exporter_args
 
       dns_config {
-        nameservers = var.dns_nameservers
+        nameservers = local.dns_nameservers
       }
     }
 
@@ -78,7 +72,7 @@ resource "docker_service" "prometheus_pve_exporter" {
   endpoint_spec {
     ports {
       target_port    = local.internal_port
-      published_port = var.published_port
+      published_port = local.published_port
       protocol       = "tcp"
       publish_mode   = "host"
     }

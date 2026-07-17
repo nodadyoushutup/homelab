@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
-# Bespoke Nginx Proxy Manager config (NPM API) deploy — no shared swarm_pipeline.
+# Bespoke Nginx Proxy Manager config (NPM API) deploy (intentional during the AGENTS.md audit campaign).
+# Bespoke self-contained entrypoint (shared *_pipeline.sh wrappers removed).
+# Single slice tfvars only (no shared swarm/dns/nfs var-files).
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -17,10 +19,13 @@ if [[ -f "${SITE_ENV}" ]]; then
 fi
 CONFIG_DIR="${CONFIG_DIR:-${ROOT_DIR}/.config}"
 export CONFIG_DIR
-# shellcheck source=../../../scripts/terraform/bespoke_swarm_defaults.sh
-source "${ROOT_DIR}/scripts/terraform/bespoke_swarm_defaults.sh"
-homelab_bespoke_swarm_set_defaults "${CONFIG_DIR}" "${TERRAFORM_DIR}" "${ROOT_DIR}"
-DEFAULT_CONFIG_TFVARS="${DEFAULT_SLICE_TFVARS}"
+
+# shellcheck source=../../../scripts/terraform/resolve_config_by_id.sh
+source "${ROOT_DIR}/scripts/terraform/resolve_config_by_id.sh"
+
+SLICE_CONFIG_ID="$(homelab_config_id_from_terraform_dir "${ROOT_DIR}" "${TERRAFORM_DIR}")"
+DEFAULT_CONFIG_TFVARS="$(homelab_resolve_config_path "${CONFIG_DIR}" "${SLICE_CONFIG_ID}")"
+DEFAULT_BACKEND="$(homelab_resolve_config_path "${CONFIG_DIR}" "terraform/minio.backend")"
 
 CONFIG_TFVARS="${NPM_CONFIG_TFVARS:-${DEFAULT_CONFIG_TFVARS}}"
 BACKEND_CONFIG="${NPM_CONFIG_BACKEND:-${DEFAULT_BACKEND}}"

@@ -1,19 +1,22 @@
+# main.tf
+# Overlay network, storage volume, and Graphite/Carbon/StatsD Swarm service.
+
 resource "docker_network" "graphite" {
-  name   = "graphite-net"
+  name   = local.network_name
   driver = "overlay"
 }
 
 resource "docker_volume" "graphite_data" {
-  name   = "graphite-data"
+  name   = local.volume_name
   driver = "local"
 }
 
 resource "docker_service" "graphite" {
-  name = "graphite"
+  name = local.service_name
 
   task_spec {
     dynamic "placement" {
-      for_each = var.placement == null ? [] : [var.placement]
+      for_each = local.placement == null ? [] : [local.placement]
 
       content {
         constraints = try(placement.value.constraints, null)
@@ -31,18 +34,19 @@ resource "docker_service" "graphite" {
 
     networks_advanced {
       name    = docker_network.graphite.id
-      aliases = ["graphite"]
+      aliases = [local.network_alias]
     }
 
     container_spec {
+      # Literal tag for Renovate (not a var/local; no digest).
       image = "graphiteapp/graphite-statsd:1.1.10-5"
 
       dns_config {
-        nameservers = var.dns_nameservers
+        nameservers = local.dns_nameservers
       }
 
       mounts {
-        target = "/opt/graphite/storage"
+        target = local.storage_mount_target
         source = docker_volume.graphite_data.name
         type   = "volume"
       }
@@ -51,44 +55,20 @@ resource "docker_service" "graphite" {
 
   mode {
     replicated {
-      replicas = 1
+      replicas = local.replicas
     }
   }
 
   endpoint_spec {
-    ports {
-      target_port    = 8080
-      published_port = 8081
-      protocol       = "tcp"
-      publish_mode   = "ingress"
-    }
+    dynamic "ports" {
+      for_each = local.ports
 
-    ports {
-      target_port    = 2003
-      published_port = 2003
-      protocol       = "tcp"
-      publish_mode   = "ingress"
-    }
-
-    ports {
-      target_port    = 2003
-      published_port = 2003
-      protocol       = "udp"
-      publish_mode   = "ingress"
-    }
-
-    ports {
-      target_port    = 2004
-      published_port = 2004
-      protocol       = "tcp"
-      publish_mode   = "ingress"
-    }
-
-    ports {
-      target_port    = 8125
-      published_port = 8125
-      protocol       = "udp"
-      publish_mode   = "ingress"
+      content {
+        target_port    = ports.value.target_port
+        published_port = ports.value.published_port
+        protocol       = ports.value.protocol
+        publish_mode   = ports.value.publish_mode
+      }
     }
   }
 }

@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
-# Bespoke cAdvisor Swarm deploy — no shared swarm_pipeline / scripts/terraform helpers.
+# Bespoke cAdvisor Swarm deploy (intentional during the AGENTS.md audit campaign).
+# Bespoke self-contained entrypoint (shared *_pipeline.sh wrappers removed).
+# Single slice tfvars carries provider + DNS + stack settings (no shared swarm/dns var-files).
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -15,13 +17,14 @@ if [[ -f "${SITE_ENV}" ]]; then
 fi
 CONFIG_DIR="${CONFIG_DIR:-${ROOT_DIR}/.config}"
 export CONFIG_DIR
-# shellcheck source=../../../scripts/terraform/bespoke_swarm_defaults.sh
-source "${ROOT_DIR}/scripts/terraform/bespoke_swarm_defaults.sh"
-homelab_bespoke_swarm_set_defaults "${CONFIG_DIR}" "${TERRAFORM_DIR}" "${ROOT_DIR}"
-DEFAULT_APP_TFVARS="${DEFAULT_SLICE_TFVARS}"
 
-DOCKER_TFVARS="${SWARM_DOCKER_PROVIDER_TFVARS:-${CADVISOR_DOCKER_TFVARS:-${DEFAULT_DOCKER_TFVARS}}}"
-DNS_TFVARS="${SWARM_DNS_PROVIDER_TFVARS:-${CADVISOR_DNS_TFVARS:-${DEFAULT_DNS_TFVARS}}}"
+# shellcheck source=../../../scripts/terraform/resolve_config_by_id.sh
+source "${ROOT_DIR}/scripts/terraform/resolve_config_by_id.sh"
+
+APP_CONFIG_ID="$(homelab_config_id_from_terraform_dir "${ROOT_DIR}" "${TERRAFORM_DIR}")"
+DEFAULT_APP_TFVARS="$(homelab_resolve_config_path "${CONFIG_DIR}" "${APP_CONFIG_ID}")"
+DEFAULT_BACKEND="$(homelab_resolve_config_path "${CONFIG_DIR}" "terraform/minio.backend")"
+
 APP_TFVARS="${CADVISOR_APP_TFVARS:-${DEFAULT_APP_TFVARS}}"
 BACKEND_CONFIG="${CADVISOR_BACKEND:-${DEFAULT_BACKEND}}"
 
@@ -32,13 +35,11 @@ Usage: terraform/components/swarm/cadvisor/pipeline/app.sh [options] [app_tfvars
 Deploy cAdvisor on Docker Swarm (terraform init, plan, apply).
 
 Options:
-  --docker-tfvars <path>    Swarm Docker provider (default: ${DEFAULT_DOCKER_TFVARS})
-  --dns-tfvars <path>       Shared dns_nameservers (default: ${DEFAULT_DNS_TFVARS})
-  --tfvars <path>           Stack settings (default: ${DEFAULT_APP_TFVARS})
+  --tfvars <path>           Slice tfvars (provider + DNS + stack; default: ${DEFAULT_APP_TFVARS})
   --backend <path>          S3 backend config (default: ${DEFAULT_BACKEND})
   -h, --help                Show this help
 
-Environment overrides: SWARM_DOCKER_PROVIDER_TFVARS, SWARM_DNS_PROVIDER_TFVARS, CADVISOR_APP_TFVARS, CADVISOR_BACKEND, CONFIG_DIR (from .config/docker/site.env)
+Environment overrides: CADVISOR_APP_TFVARS, CADVISOR_BACKEND, CONFIG_DIR (from .config/docker/site.env)
 USAGE
 }
 
@@ -61,22 +62,6 @@ require_terraform() {
 ARGS=("$@")
 while [[ ${#ARGS[@]} -gt 0 ]]; do
   case "${ARGS[0]}" in
-    --docker-tfvars)
-      [[ ${#ARGS[@]} -ge 2 ]] || {
-        echo "[ERR] --docker-tfvars requires a path" >&2
-        exit 2
-      }
-      DOCKER_TFVARS="${ARGS[1]}"
-      ARGS=("${ARGS[@]:2}")
-      ;;
-    --dns-tfvars)
-      [[ ${#ARGS[@]} -ge 2 ]] || {
-        echo "[ERR] --dns-tfvars requires a path" >&2
-        exit 2
-      }
-      DNS_TFVARS="${ARGS[1]}"
-      ARGS=("${ARGS[@]:2}")
-      ;;
     --tfvars)
       [[ ${#ARGS[@]} -ge 2 ]] || {
         echo "[ERR] --tfvars requires a path" >&2
@@ -132,14 +117,10 @@ if [[ -n "${BACKEND_FILE:-}" ]]; then
 fi
 
 require_terraform
-require_file "docker provider tfvars" "${DOCKER_TFVARS}"
-require_file "dns provider tfvars" "${DNS_TFVARS}"
 require_file "app tfvars" "${APP_TFVARS}"
 require_file "backend config" "${BACKEND_CONFIG}"
 
 echo "Terraform dir:     ${TERRAFORM_DIR}"
-echo "Docker tfvars:     ${DOCKER_TFVARS}"
-echo "DNS tfvars:        ${DNS_TFVARS}"
 echo "App tfvars:        ${APP_TFVARS}"
 echo "Backend config:    ${BACKEND_CONFIG}"
 
@@ -183,8 +164,6 @@ fi
 
 PLAN_ARGS=(
   -input=false
-  -var-file "${DOCKER_TFVARS}"
-  -var-file "${DNS_TFVARS}"
   -var-file "${APP_TFVARS}"
 )
 

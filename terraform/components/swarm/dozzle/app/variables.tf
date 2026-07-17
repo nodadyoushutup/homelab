@@ -1,3 +1,6 @@
+# variables.tf
+# External input contract for the Dozzle Swarm app slice.
+
 variable "dns_nameservers" {
   description = "DNS nameservers for Swarm task dns_config."
   type        = list(string)

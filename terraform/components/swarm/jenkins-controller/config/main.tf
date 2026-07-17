@@ -1,3 +1,6 @@
+# main.tf
+# Jenkins folders, multibranch pipeline jobs, and optional GitHub credential.
+
 resource "jenkins_folder" "pipeline_folder_level_1" {
   for_each = local.folder_specs_level_1
 
@@ -24,11 +27,11 @@ resource "jenkins_folder" "pipeline_folder_level_3" {
 resource "jenkins_credential_username" "github" {
   count = local.manage_github_credentials ? 1 : 0
 
-  name        = var.github_credentials_id
-  description = var.github_credentials_description
-  username    = var.github_credentials_username
-  password    = var.github_credentials_password
-  scope       = var.github_credentials_scope
+  name        = local.github_credentials_id
+  description = local.github_credentials_description
+  username    = local.github_credentials_username
+  password    = local.github_credentials_password
+  scope       = local.github_credentials_scope
 }
 
 resource "jenkins_job" "pipeline_job" {
@@ -44,14 +47,14 @@ resource "jenkins_job" "pipeline_job" {
 
   template = templatefile("${path.module}/job/pipeline.xml.tftpl", {
     description                = each.value.description
-    repo_url                   = var.github_repo_url
+    repo_url                   = local.github_repo_url
     script_path                = each.value.script_path
     source_id                  = each.value.source_id
     credentials_id             = local.effective_github_credentials_id
-    branch_includes            = var.branch_discovery_includes
-    branch_excludes            = var.branch_discovery_excludes
-    prune_dead_branches        = var.prune_dead_branches
-    orphaned_item_days_to_keep = var.orphaned_item_days_to_keep
-    orphaned_item_num_to_keep  = var.orphaned_item_num_to_keep
+    branch_includes            = local.branch_discovery_includes
+    branch_excludes            = local.branch_discovery_excludes
+    prune_dead_branches        = local.prune_dead_branches
+    orphaned_item_days_to_keep = local.orphaned_item_days_to_keep
+    orphaned_item_num_to_keep  = local.orphaned_item_num_to_keep
   })
 }

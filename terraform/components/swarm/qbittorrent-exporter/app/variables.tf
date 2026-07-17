@@ -1,3 +1,6 @@
+# variables.tf
+# External input contract for the qBittorrent exporter Swarm app slice.
+
 variable "env" {
   description = "Container environment variables shared by all exporter instances."
   type        = map(string)

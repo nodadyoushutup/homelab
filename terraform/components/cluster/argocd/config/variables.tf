@@ -1,3 +1,6 @@
+# variables.tf
+# External input contract for the Argo CD config slice.
+
 variable "argocd_base_url" {
   description = "Argo CD API base URL (for example https://argocd.example.com)."
   type        = string
@@ -17,13 +20,15 @@ variable "argocd_insecure_skip_verify" {
 
 # Vault KV fragments (parsed by scripts/terraform/vault_merge_config_secrets.py); unused by this module.
 variable "secrets" {
-  type      = any
-  default   = {}
-  sensitive = true
+  description = "Inline Vault KV secret fragments for vault_merge_config_secrets.py (not consumed by this Terraform root)."
+  type        = any
+  default     = {}
+  sensitive   = true
 }
 
 variable "secret_files" {
-  type      = any
-  default   = {}
-  sensitive = true
+  description = "Vault KV secret file path fragments for vault_merge_config_secrets.py (not consumed by this Terraform root)."
+  type        = any
+  default     = {}
+  sensitive   = true
 }

@@ -1,19 +1,22 @@
+# main.tf
+# Overlay network, data volume, and replicated nginx-proxy-manager-mysql Swarm service.
+
 resource "docker_network" "nginx_proxy_manager_mysql" {
-  name   = "nginx-proxy-manager-mysql"
+  name   = local.network_name
   driver = "overlay"
 }
 
 resource "docker_volume" "nginx_proxy_manager_mysql_data" {
-  name   = "nginx-proxy-manager-mysql-data"
+  name   = local.volume_name
   driver = "local"
 }
 
 resource "docker_service" "nginx_proxy_manager_mysql" {
-  name = "nginx-proxy-manager-mysql"
+  name = local.service_name
 
   task_spec {
     dynamic "placement" {
-      for_each = var.placement == null ? [] : [var.placement]
+      for_each = local.placement == null ? [] : [local.placement]
 
       content {
         constraints = try(placement.value.constraints, null)
@@ -31,19 +34,20 @@ resource "docker_service" "nginx_proxy_manager_mysql" {
 
     networks_advanced {
       name    = docker_network.nginx_proxy_manager_mysql.id
-      aliases = ["mysql"]
+      aliases = [local.network_alias]
     }
 
     container_spec {
+      # Literal tag for Renovate (not a var/local; no digest).
       image = "jc21/mariadb-aria:10.11.5"
-      env   = var.env
+      env   = local.env
 
       dns_config {
-        nameservers = var.dns_nameservers
+        nameservers = local.dns_nameservers
       }
 
       mounts {
-        target = "/var/lib/mysql"
+        target = local.data_mount
         source = docker_volume.nginx_proxy_manager_mysql_data.name
         type   = "volume"
       }
@@ -58,8 +62,8 @@ resource "docker_service" "nginx_proxy_manager_mysql" {
 
   endpoint_spec {
     ports {
-      target_port    = 3306
-      published_port = 3306
+      target_port    = local.mysql_port
+      published_port = local.mysql_port
       protocol       = "tcp"
       publish_mode   = "ingress"
     }

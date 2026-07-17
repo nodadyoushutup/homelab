@@ -1,3 +1,6 @@
+# variables.tf
+# External input contract for the Vault Swarm app slice.
+
 variable "api_addr" {
   description = "Public API address Vault advertises."
   type        = string

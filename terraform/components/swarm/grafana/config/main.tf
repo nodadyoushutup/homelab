@@ -1,3 +1,6 @@
+# main.tf
+# Grafana datasources and dashboards applied against a running Grafana instance.
+
 resource "terraform_data" "node_exporter_file_hash" {
   triggers_replace = local.node_exporter_file_hash
 }
@@ -23,7 +26,7 @@ resource "terraform_data" "proxmox_file_hash" {
 }
 
 resource "grafana_data_source" "this" {
-  for_each = { for ds in var.datasources : ds.uid => ds }
+  for_each = { for ds in local.datasources : ds.uid => ds }
 
   name              = each.value.name
   uid               = each.value.uid

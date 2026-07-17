@@ -1,3 +1,6 @@
+# variables.tf
+# External input contract for the Grafana config slice.
+
 variable "provider_config" {
   description = "Grafana API URL and credentials for this config slice."
   type = object({

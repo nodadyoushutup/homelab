@@ -1,3 +1,6 @@
+# main.tf
+# Proxmox cloud images, cloud-init snippets, and VMs for the runner and Talos k8s cluster.
+
 resource "proxmox_virtual_environment_download_file" "ubuntu_24_cloud_image" {
   node_name           = "pve"
   datastore_id        = "local"
@@ -28,7 +31,7 @@ resource "proxmox_virtual_environment_file" "runner_amd64_user_config" {
   node_name    = "pve"
 
   source_raw {
-    data      = file(var.runner_amd64_user_config_path)
+    data      = file(local.runner_amd64_user_config_path)
     file_name = "runner-amd64-user-config.yaml"
   }
 }
@@ -39,7 +42,7 @@ resource "proxmox_virtual_environment_file" "k8s_cp_0_user_config" {
   node_name    = "pve"
 
   source_raw {
-    data      = file(var.k8s_cp_0_user_config_path)
+    data      = file(local.k8s_cp_0_user_config_path)
     file_name = "k8s-cp-0-user-config.yaml"
   }
 }
@@ -50,7 +53,7 @@ resource "proxmox_virtual_environment_file" "k8s_wk_0_user_config" {
   node_name    = "pve"
 
   source_raw {
-    data      = file(var.k8s_wk_0_user_config_path)
+    data      = file(local.k8s_wk_0_user_config_path)
     file_name = "k8s-wk-0-user-config.yaml"
   }
 }
@@ -61,7 +64,7 @@ resource "proxmox_virtual_environment_file" "k8s_wk_1_user_config" {
   node_name    = "pve"
 
   source_raw {
-    data      = file(var.k8s_wk_1_user_config_path)
+    data      = file(local.k8s_wk_1_user_config_path)
     file_name = "k8s-wk-1-user-config.yaml"
   }
 }
@@ -72,7 +75,7 @@ resource "proxmox_virtual_environment_file" "k8s_wk_2_user_config" {
   node_name    = "pve"
 
   source_raw {
-    data      = file(var.k8s_wk_2_user_config_path)
+    data      = file(local.k8s_wk_2_user_config_path)
     file_name = "k8s-wk-2-user-config.yaml"
   }
 }
@@ -83,7 +86,7 @@ resource "proxmox_virtual_environment_file" "k8s_wk_3_user_config" {
   node_name    = "pve"
 
   source_raw {
-    data      = file(var.k8s_wk_3_user_config_path)
+    data      = file(local.k8s_wk_3_user_config_path)
     file_name = "k8s-wk-3-user-config.yaml"
   }
 }
@@ -94,7 +97,7 @@ resource "proxmox_virtual_environment_file" "k8s_wk_4_user_config" {
   node_name    = "pve"
 
   source_raw {
-    data      = file(var.k8s_wk_4_user_config_path)
+    data      = file(local.k8s_wk_4_user_config_path)
     file_name = "k8s-wk-4-user-config.yaml"
   }
 }
@@ -105,7 +108,7 @@ resource "proxmox_virtual_environment_file" "k8s_wk_5_user_config" {
   node_name    = "pve"
 
   source_raw {
-    data      = file(var.k8s_wk_5_user_config_path)
+    data      = file(local.k8s_wk_5_user_config_path)
     file_name = "k8s-wk-5-user-config.yaml"
   }
 }
@@ -116,7 +119,7 @@ resource "proxmox_virtual_environment_file" "k8s_wk_6_user_config" {
   node_name    = "pve"
 
   source_raw {
-    data      = file(var.k8s_wk_6_user_config_path)
+    data      = file(local.k8s_wk_6_user_config_path)
     file_name = "k8s-wk-6-user-config.yaml"
   }
 }
@@ -127,7 +130,7 @@ resource "proxmox_virtual_environment_file" "k8s_wk_7_user_config" {
   node_name    = "pve"
 
   source_raw {
-    data      = file(var.k8s_wk_7_user_config_path)
+    data      = file(local.k8s_wk_7_user_config_path)
     file_name = "k8s-wk-7-user-config.yaml"
   }
 }
@@ -138,7 +141,7 @@ resource "proxmox_virtual_environment_file" "k8s_wk_8_user_config" {
   node_name    = "pve"
 
   source_raw {
-    data      = file(var.k8s_wk_8_user_config_path)
+    data      = file(local.k8s_wk_8_user_config_path)
     file_name = "k8s-wk-8-user-config.yaml"
   }
 }
@@ -149,7 +152,7 @@ resource "proxmox_virtual_environment_file" "k8s_wk_9_user_config" {
   node_name    = "pve"
 
   source_raw {
-    data      = file(var.k8s_wk_9_user_config_path)
+    data      = file(local.k8s_wk_9_user_config_path)
     file_name = "k8s-wk-9-user-config.yaml"
   }
 }
@@ -160,7 +163,7 @@ resource "proxmox_virtual_environment_file" "k8s_wk_10_user_config" {
   node_name    = "pve"
 
   source_raw {
-    data      = file(var.k8s_wk_10_user_config_path)
+    data      = file(local.k8s_wk_10_user_config_path)
     file_name = "k8s-wk-10-user-config.yaml"
   }
 }
@@ -171,7 +174,7 @@ resource "proxmox_virtual_environment_file" "runner_amd64_network_config" {
   node_name    = "pve"
 
   source_raw {
-    data      = file(var.runner_amd64_network_config_path)
+    data      = file(local.runner_amd64_network_config_path)
     file_name = "runner-amd64-network-config.yaml"
   }
 }
@@ -182,7 +185,7 @@ resource "proxmox_virtual_environment_file" "k8s_cp_0_network_config" {
   node_name    = "pve"
 
   source_raw {
-    data      = file(var.k8s_cp_0_network_config_path)
+    data      = file(local.k8s_cp_0_network_config_path)
     file_name = "k8s-cp-0-network-config.yaml"
   }
 }
@@ -193,7 +196,7 @@ resource "proxmox_virtual_environment_file" "k8s_wk_0_network_config" {
   node_name    = "pve"
 
   source_raw {
-    data      = file(var.k8s_wk_0_network_config_path)
+    data      = file(local.k8s_wk_0_network_config_path)
     file_name = "k8s-wk-0-network-config.yaml"
   }
 }
@@ -204,7 +207,7 @@ resource "proxmox_virtual_environment_file" "k8s_wk_1_network_config" {
   node_name    = "pve"
 
   source_raw {
-    data      = file(var.k8s_wk_1_network_config_path)
+    data      = file(local.k8s_wk_1_network_config_path)
     file_name = "k8s-wk-1-network-config.yaml"
   }
 }
@@ -215,7 +218,7 @@ resource "proxmox_virtual_environment_file" "k8s_wk_2_network_config" {
   node_name    = "pve"
 
   source_raw {
-    data      = file(var.k8s_wk_2_network_config_path)
+    data      = file(local.k8s_wk_2_network_config_path)
     file_name = "k8s-wk-2-network-config.yaml"
   }
 }
@@ -226,7 +229,7 @@ resource "proxmox_virtual_environment_file" "k8s_wk_3_network_config" {
   node_name    = "pve"
 
   source_raw {
-    data      = file(var.k8s_wk_3_network_config_path)
+    data      = file(local.k8s_wk_3_network_config_path)
     file_name = "k8s-wk-3-network-config.yaml"
   }
 }
@@ -237,7 +240,7 @@ resource "proxmox_virtual_environment_file" "k8s_wk_4_network_config" {
   node_name    = "pve"
 
   source_raw {
-    data      = file(var.k8s_wk_4_network_config_path)
+    data      = file(local.k8s_wk_4_network_config_path)
     file_name = "k8s-wk-4-network-config.yaml"
   }
 }
@@ -248,7 +251,7 @@ resource "proxmox_virtual_environment_file" "k8s_wk_5_network_config" {
   node_name    = "pve"
 
   source_raw {
-    data      = file(var.k8s_wk_5_network_config_path)
+    data      = file(local.k8s_wk_5_network_config_path)
     file_name = "k8s-wk-5-network-config.yaml"
   }
 }
@@ -259,7 +262,7 @@ resource "proxmox_virtual_environment_file" "k8s_wk_6_network_config" {
   node_name    = "pve"
 
   source_raw {
-    data      = file(var.k8s_wk_6_network_config_path)
+    data      = file(local.k8s_wk_6_network_config_path)
     file_name = "k8s-wk-6-network-config.yaml"
   }
 }
@@ -270,7 +273,7 @@ resource "proxmox_virtual_environment_file" "k8s_wk_7_network_config" {
   node_name    = "pve"
 
   source_raw {
-    data      = file(var.k8s_wk_7_network_config_path)
+    data      = file(local.k8s_wk_7_network_config_path)
     file_name = "k8s-wk-7-network-config.yaml"
   }
 }
@@ -281,7 +284,7 @@ resource "proxmox_virtual_environment_file" "k8s_wk_8_network_config" {
   node_name    = "pve"
 
   source_raw {
-    data      = file(var.k8s_wk_8_network_config_path)
+    data      = file(local.k8s_wk_8_network_config_path)
     file_name = "k8s-wk-8-network-config.yaml"
   }
 }
@@ -292,7 +295,7 @@ resource "proxmox_virtual_environment_file" "k8s_wk_9_network_config" {
   node_name    = "pve"
 
   source_raw {
-    data      = file(var.k8s_wk_9_network_config_path)
+    data      = file(local.k8s_wk_9_network_config_path)
     file_name = "k8s-wk-9-network-config.yaml"
   }
 }
@@ -303,7 +306,7 @@ resource "proxmox_virtual_environment_file" "k8s_wk_10_network_config" {
   node_name    = "pve"
 
   source_raw {
-    data      = file(var.k8s_wk_10_network_config_path)
+    data      = file(local.k8s_wk_10_network_config_path)
     file_name = "k8s-wk-10-network-config.yaml"
   }
 }

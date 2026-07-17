@@ -1,3 +1,6 @@
+# variables.tf
+# External input contract for the Nginx Proxy Manager config slice.
+
 variable "provider_config" {
   description = "Nginx Proxy Manager API URL and credentials for this config slice."
   type = object({

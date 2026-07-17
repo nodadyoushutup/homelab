@@ -1,3 +1,6 @@
+# provider.tf
+# S3 remote state and Grafana provider for the Grafana config slice.
+
 terraform {
   backend "s3" {
     key = "grafana-config.tfstate"
@@ -12,6 +15,6 @@ terraform {
 }
 
 provider "grafana" {
-  url  = var.provider_config.url
-  auth = var.provider_config.auth
+  url  = local.provider_config.url
+  auth = local.provider_config.auth
 }

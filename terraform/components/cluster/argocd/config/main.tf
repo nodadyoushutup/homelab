@@ -1,3 +1,6 @@
+# main.tf
+# App-of-apps Argo CD Application that syncs the argocd-management repo path.
+
 resource "argocd_application" "argocd_management" {
   lifecycle {
     create_before_destroy = true

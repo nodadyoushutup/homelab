@@ -1,3 +1,6 @@
+# provider.tf
+# S3 remote state and Jenkins provider for the Jenkins controller config slice.
+
 terraform {
   backend "s3" {
     key = "jenkins-config.tfstate"
@@ -12,7 +15,7 @@ terraform {
 }
 
 provider "jenkins" {
-  server_url = var.provider_config.jenkins.server_url
-  username   = var.provider_config.jenkins.username
-  password   = var.provider_config.jenkins.password
+  server_url = local.provider_config.jenkins.server_url
+  username   = local.provider_config.jenkins.username
+  password   = local.provider_config.jenkins.password
 }

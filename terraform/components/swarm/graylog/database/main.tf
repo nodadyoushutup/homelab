@@ -1,22 +1,25 @@
+# main.tf
+# Overlay network, data/config volumes, and replicated graylog-mongodb Swarm service.
+
 resource "docker_network" "graylog_mongodb" {
-  name   = "graylog-mongodb"
+  name   = local.network_name
   driver = "overlay"
 }
 
 resource "docker_volume" "graylog_mongodb_data" {
-  name = "graylog-mongodb-data"
+  name = local.data_volume_name
 }
 
 resource "docker_volume" "graylog_mongodb_config" {
-  name = "graylog-mongodb-config"
+  name = local.config_volume_name
 }
 
 resource "docker_service" "graylog_mongodb" {
-  name = "graylog-mongodb"
+  name = local.service_name
 
   task_spec {
     dynamic "placement" {
-      for_each = var.placement == null ? [] : [var.placement]
+      for_each = local.placement == null ? [] : [local.placement]
 
       content {
         constraints = try(placement.value.constraints, null)
@@ -34,24 +37,25 @@ resource "docker_service" "graylog_mongodb" {
 
     networks_advanced {
       name    = docker_network.graylog_mongodb.id
-      aliases = ["mongodb"]
+      aliases = [local.network_alias]
     }
 
     container_spec {
-      image = "mongo:7.0.21@sha256:3d715950d83061ff2fbc910d12d3703212538cacf6b3003e3736fa5c7f51a2e1"
+      # Literal tag for Renovate (not a var/local; no digest).
+      image = "mongo:7.0.21"
 
       dns_config {
-        nameservers = var.dns_nameservers
+        nameservers = local.dns_nameservers
       }
 
       mounts {
-        target = "/data/db"
+        target = local.data_mount
         source = docker_volume.graylog_mongodb_data.name
         type   = "volume"
       }
 
       mounts {
-        target = "/data/configdb"
+        target = local.config_mount
         source = docker_volume.graylog_mongodb_config.name
         type   = "volume"
       }

@@ -1,3 +1,6 @@
+# variables.tf
+# External input contract for the Jenkins controller config slice.
+
 variable "branch_discovery_excludes" {
   description = "Space-separated wildcard branch patterns Jenkins should exclude when indexing multibranch jobs."
   type        = string

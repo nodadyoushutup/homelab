@@ -1,3 +1,6 @@
+# provider.tf
+# S3 remote state and Argo CD provider for the Argo CD config stack.
+
 terraform {
   backend "s3" {
     key = "argocd-config.tfstate"
@@ -13,7 +16,7 @@ terraform {
 
 provider "argocd" {
   server_addr = local.argocd_server_host
-  auth_token  = var.argocd_api_token
-  insecure    = var.argocd_insecure_skip_verify
+  auth_token  = local.argocd_api_token
+  insecure    = local.argocd_insecure_skip_verify
   grpc_web    = true
 }

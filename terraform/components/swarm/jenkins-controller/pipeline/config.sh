@@ -1,27 +1,182 @@
 #!/usr/bin/env bash
+# Bespoke Jenkins controller config Swarm deploy (intentional during the AGENTS.md audit campaign).
+# Bespoke self-contained entrypoint (shared *_pipeline.sh wrappers removed).
+# Single slice tfvars carries provider/DNS/NFS + stack settings (no shared swarm/dns/nfs var-files).
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="$(cd "${SCRIPT_DIR}/../../../.." && pwd)"
-PIPELINE_SCRIPT_ROOT="${ROOT_DIR}/scripts/terraform"
-source "${PIPELINE_SCRIPT_ROOT}/load_root_env.sh"
-
-SERVICE_NAME="jenkins-controller"
-STAGE_NAME="Jenkins config"
-# No NFS mounts; skip nfs.tfvars so the stack need not declare `nfs` variable.
-SWARM_SKIP_NFS_PROVIDER_TFVARS=1
-export SWARM_SKIP_NFS_PROVIDER_TFVARS
-# No Swarm task dns_config; skip dns.tfvars so the stack need not declare dns_nameservers.
-SWARM_SKIP_DNS_PROVIDER_TFVARS=1
-export SWARM_SKIP_DNS_PROVIDER_TFVARS
-ENTRYPOINT_RELATIVE="terraform/components/swarm/jenkins-controller/pipeline/config.sh"
+ROOT_DIR="$(cd "${SCRIPT_DIR}/../../../../.." && pwd)"
 TERRAFORM_DIR="${ROOT_DIR}/terraform/components/swarm/jenkins-controller/config"
 
-JENKINS_CONTROLLER_TFVARS_DIR="${JENKINS_CONTROLLER_TFVARS_DIR:-${CONFIG_DIR:-${ROOT_DIR}/.config}/terraform/components/swarm/jenkins-controller}"
+SITE_ENV="${ROOT_DIR}/.config/docker/site.env"
+if [[ -f "${SITE_ENV}" ]]; then
+  set -a
+  # shellcheck source=/dev/null
+  source "${SITE_ENV}"
+  set +a
+fi
+CONFIG_DIR="${CONFIG_DIR:-${ROOT_DIR}/.config}"
+export CONFIG_DIR
 
-PLAN_ARGS_EXTRA=()
-APPLY_ARGS_EXTRA=()
+# shellcheck source=../../../scripts/terraform/resolve_config_by_id.sh
+source "${ROOT_DIR}/scripts/terraform/resolve_config_by_id.sh"
 
-PIPELINE_ARGS=("$@")
+SLICE_CONFIG_ID="$(homelab_config_id_from_terraform_dir "${ROOT_DIR}" "${TERRAFORM_DIR}")"
+DEFAULT_SLICE_TFVARS="$(homelab_resolve_config_path "${CONFIG_DIR}" "${SLICE_CONFIG_ID}")"
+DEFAULT_BACKEND="$(homelab_resolve_config_path "${CONFIG_DIR}" "terraform/minio.backend")"
 
-source "${PIPELINE_SCRIPT_ROOT}/swarm_pipeline.sh"
+SLICE_TFVARS="${JENKINS_CONTROLLER_CONFIG_TFVARS:-${DEFAULT_SLICE_TFVARS}}"
+BACKEND_CONFIG="${JENKINS_CONTROLLER_CONFIG_BACKEND:-${DEFAULT_BACKEND}}"
+
+usage() {
+  cat <<USAGE
+Usage: terraform/components/swarm/jenkins-controller/pipeline/config.sh [options] [slice_tfvars] [backend_config]
+
+Deploy Jenkins controller config on Docker Swarm (terraform init, plan, apply).
+
+Options:
+  --tfvars <path>           Slice tfvars (default: ${DEFAULT_SLICE_TFVARS})
+  --backend <path>          S3 backend config (default: ${DEFAULT_BACKEND})
+  -h, --help                Show this help
+
+Environment overrides: JENKINS_CONTROLLER_CONFIG_TFVARS, JENKINS_CONTROLLER_CONFIG_BACKEND, CONFIG_DIR (from .config/docker/site.env)
+USAGE
+}
+
+require_file() {
+  local label="$1"
+  local path="$2"
+  if [[ -z "${path}" || ! -f "${path}" ]]; then
+    echo "[ERR] Missing ${label}: ${path}" >&2
+    exit 1
+  fi
+}
+
+require_terraform() {
+  if ! command -v terraform >/dev/null 2>&1; then
+    echo "[ERR] terraform not found on PATH" >&2
+    exit 1
+  fi
+}
+
+ARGS=("$@")
+while [[ ${#ARGS[@]} -gt 0 ]]; do
+  case "${ARGS[0]}" in
+    --tfvars)
+      [[ ${#ARGS[@]} -ge 2 ]] || {
+        echo "[ERR] --tfvars requires a path" >&2
+        exit 2
+      }
+      SLICE_TFVARS="${ARGS[1]}"
+      ARGS=("${ARGS[@]:2}")
+      ;;
+    --backend)
+      [[ ${#ARGS[@]} -ge 2 ]] || {
+        echo "[ERR] --backend requires a path" >&2
+        exit 2
+      }
+      BACKEND_CONFIG="${ARGS[1]}"
+      ARGS=("${ARGS[@]:2}")
+      ;;
+    -h | --help)
+      usage
+      exit 0
+      ;;
+    *)
+      if [[ "${ARGS[0]}" == --* ]]; then
+        echo "[ERR] Unknown option: ${ARGS[0]}" >&2
+        usage >&2
+        exit 2
+      fi
+      if [[ -z "${POSITIONAL_SLICE_TFVARS:-}" ]]; then
+        POSITIONAL_SLICE_TFVARS="${ARGS[0]}"
+      elif [[ -z "${POSITIONAL_BACKEND:-}" ]]; then
+        POSITIONAL_BACKEND="${ARGS[0]}"
+      else
+        echo "[ERR] Unexpected argument: ${ARGS[0]}" >&2
+        usage >&2
+        exit 2
+      fi
+      ARGS=("${ARGS[@]:1}")
+      ;;
+  esac
+done
+
+if [[ -n "${POSITIONAL_SLICE_TFVARS:-}" ]]; then
+  SLICE_TFVARS="${POSITIONAL_SLICE_TFVARS}"
+fi
+if [[ -n "${POSITIONAL_BACKEND:-}" ]]; then
+  BACKEND_CONFIG="${POSITIONAL_BACKEND}"
+fi
+
+if [[ -n "${TFVARS_FILE:-}" ]]; then
+  SLICE_TFVARS="${TFVARS_FILE}"
+fi
+if [[ -n "${BACKEND_FILE:-}" ]]; then
+  BACKEND_CONFIG="${BACKEND_FILE}"
+fi
+
+require_terraform
+require_file "slice tfvars" "${SLICE_TFVARS}"
+require_file "backend config" "${BACKEND_CONFIG}"
+
+echo "Terraform dir:     ${TERRAFORM_DIR}"
+echo "Slice tfvars:      ${SLICE_TFVARS}"
+echo "Backend config:    ${BACKEND_CONFIG}"
+
+cd "${TERRAFORM_DIR}"
+
+run_terraform_init() {
+  local init_log
+  init_log="$(mktemp -t jenkins-controller-config-terraform-init-XXXXXX)"
+
+  if terraform init -backend-config="${BACKEND_CONFIG}" "$@" \
+    > >(tee "${init_log}") \
+    2> >(tee -a "${init_log}" >&2); then
+    rm -f "${init_log}"
+    return 0
+  fi
+
+  if grep -q "Backend configuration changed" "${init_log}"; then
+    if [[ -f ".terraform/terraform.tfstate" ]]; then
+      echo "[WARN] Backend change detected; attempting state migration"
+      if terraform init -force-copy -migrate-state -backend-config="${BACKEND_CONFIG}" "$@"; then
+        rm -f "${init_log}"
+        return 0
+      fi
+    fi
+    echo "[WARN] Backend change detected; re-running terraform init -reconfigure"
+    if terraform init -reconfigure -backend-config="${BACKEND_CONFIG}" "$@"; then
+      rm -f "${init_log}"
+      return 0
+    fi
+  fi
+
+  rm -f "${init_log}"
+  return 1
+}
+
+echo "[STEP] terraform init (Jenkins controller config)"
+if ! run_terraform_init; then
+  echo "[ERR] terraform init failed" >&2
+  exit 1
+fi
+
+PLAN_ARGS=(
+  -input=false
+  -var-file "${SLICE_TFVARS}"
+)
+
+echo "[STEP] terraform plan (Jenkins controller config)"
+if ! terraform plan "${PLAN_ARGS[@]}"; then
+  echo "[ERR] terraform plan failed" >&2
+  exit 1
+fi
+
+echo "[STEP] terraform apply (Jenkins controller config)"
+if ! terraform apply -input=false -auto-approve "${PLAN_ARGS[@]}"; then
+  echo "[ERR] terraform apply failed" >&2
+  exit 1
+fi
+
+echo "[DONE] Jenkins controller config apply complete."

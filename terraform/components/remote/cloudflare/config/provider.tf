@@ -1,3 +1,6 @@
+# provider.tf
+# S3 remote state and Cloudflare provider for the Cloudflare DNS config stack.
+
 terraform {
   backend "s3" {
     key = "cloudflare-config.tfstate"
@@ -12,5 +15,5 @@ terraform {
 }
 
 provider "cloudflare" {
-  api_token = var.provider_config.cloudflare.api_token
+  api_token = local.provider_config.cloudflare.api_token
 }

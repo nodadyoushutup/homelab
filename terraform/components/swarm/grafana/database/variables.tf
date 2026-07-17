@@ -1,16 +1,17 @@
+# variables.tf
+# External input contract for the grafana-postgres Swarm database slice.
+
 variable "env" {
   description = "Container environment variables."
   type        = map(string)
   default     = null
 }
 
-
 variable "dns_nameservers" {
   description = "DNS nameservers for Swarm task dns_config."
   type        = list(string)
   sensitive   = true
 }
-
 
 variable "placement" {
   description = "Optional Swarm placement constraints and platforms."
@@ -24,9 +25,7 @@ variable "placement" {
   default = null
 }
 
-
 variable "swarm_docker_provider_config" {
   description = "Docker SSH host and registry_auths for the Swarm control plane."
   type        = any
 }
-

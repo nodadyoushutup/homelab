@@ -186,39 +186,6 @@ discover_swarm_slices() {
   printf '%s\n' "${slices[@]}" | LC_ALL=C sort
 }
 
-discover_runner_pools() {
-  local pool_dir
-  local -a pools=()
-  for pool_dir in "${ROOT_DIR}"/terraform/components/runners/*/pipeline; do
-    [[ -d "${pool_dir}" ]] || continue
-    pools+=("$(basename "$(dirname "${pool_dir}")")")
-  done
-  if [[ ${#pools[@]} -eq 0 ]]; then
-    return 1
-  fi
-  printf '%s\n' "${pools[@]}" | LC_ALL=C sort
-}
-
-discover_runner_slices() {
-  local pool="$1"
-  local pool_dir="${ROOT_DIR}/terraform/components/runners/${pool}/pipeline"
-  local script
-  local -a slices=()
-
-  [[ -d "${pool_dir}" ]] || return 1
-
-  for script in "${pool_dir}"/*.sh; do
-    [[ -f "${script}" ]] || continue
-    slices+=("$(basename "${script}" .sh)")
-  done
-
-  if [[ ${#slices[@]} -eq 0 ]]; then
-    return 1
-  fi
-
-  printf '%s\n' "${slices[@]}" | LC_ALL=C sort
-}
-
 discover_simple_pipelines() {
   local rel_dir="$1"
   local abs_dir="${ROOT_DIR}/${rel_dir}"
@@ -271,14 +238,6 @@ run_swarm_pipeline() {
   exec bash "${script}" "$@"
 }
 
-run_runner_pipeline() {
-  local pool="$1"
-  local slice="$2"
-  local script="${ROOT_DIR}/terraform/components/runners/${pool}/pipeline/${slice}.sh"
-  [[ -x "${script}" || -f "${script}" ]] || die "missing pipeline script: ${script}"
-  exec bash "${script}" "$@"
-}
-
 run_simple_pipeline() {
   local rel_dir="$1"
   local name="$2"
@@ -303,9 +262,6 @@ main() {
   fi
   if mapfile -t services < <(discover_swarm_services); then
     categories+=("Swarm stacks")
-  fi
-  if mapfile -t pools < <(discover_runner_pools); then
-    categories+=("Runner pools")
   fi
   if mapfile -t names < <(discover_simple_pipelines "scripts/docker"); then
     categories+=("Application image builds")
@@ -367,18 +323,6 @@ main() {
 
       printf '\nRunning terraform/components/swarm/%s/pipeline/%s.sh\n\n' "${service}" "${slice}"
       run_swarm_pipeline "${service}" "${slice}" "$@"
-      ;;
-    "Runner pools")
-      mapfile -t pools < <(discover_runner_pools)
-      prompt_select "Select runner pool:" "${pools[@]}"
-      service="${SELECTED}"
-
-      mapfile -t slices < <(discover_runner_slices "${service}")
-      prompt_select "Select slice for ${service}:" "${slices[@]}"
-      slice="${SELECTED}"
-
-      printf '\nRunning terraform/components/runners/%s/pipeline/%s.sh\n\n' "${service}" "${slice}"
-      run_runner_pipeline "${service}" "${slice}" "$@"
       ;;
     "Application image builds")
       mapfile -t names < <(discover_simple_pipelines "scripts/docker")

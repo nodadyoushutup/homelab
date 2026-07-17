@@ -1,3 +1,6 @@
+# variables.tf
+# External input contract for the zot Swarm app slice.
+
 variable "htpasswd_path" {
   description = "Host path to htpasswd in .config; auth is enabled only when this file exists at plan time."
   type        = string

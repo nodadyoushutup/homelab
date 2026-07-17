@@ -1,3 +1,6 @@
+# variables.tf
+# External input contract for the Vault config slice.
+
 variable "mount_path" {
   description = "Path where KV v2 will be mounted."
   type        = string

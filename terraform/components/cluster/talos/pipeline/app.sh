@@ -1,9 +1,24 @@
 #!/usr/bin/env bash
+# Bespoke Talos cluster deploy (intentional during the AGENTS.md audit campaign).
+# Bespoke self-contained entrypoint (shared *_pipeline.sh wrappers removed).
+# Single slice tfvars only (no shared provider var-files).
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/../../../../.." && pwd)"
 PIPELINE_SCRIPT_ROOT="${ROOT_DIR}/scripts/terraform"
+
+SITE_ENV="${ROOT_DIR}/.config/docker/site.env"
+if [[ -f "${SITE_ENV}" ]]; then
+  set -a
+  # shellcheck source=/dev/null
+  source "${SITE_ENV}"
+  set +a
+fi
+CONFIG_DIR="${CONFIG_DIR:-${ROOT_DIR}/.config}"
+export CONFIG_DIR
+
+# shellcheck source=/dev/null
 source "${PIPELINE_SCRIPT_ROOT}/load_root_env.sh"
 
 SERVICE_NAME="talos"
@@ -31,6 +46,7 @@ TALOS_SECRETS_IMPORT_PATH="${TALOS_SECRETS_IMPORT_PATH:-}"
 GENERATED_TALOS_SECRETS_IMPORT_PATH=""
 OVERRIDE_TALOSCONFIG_OUTPUT_PATH="__UNSET__"
 OVERRIDE_KUBECONFIG_OUTPUT_PATH="__UNSET__"
+EXEC_SCRIPT="${PIPELINE_SCRIPT_ROOT}/terraform_exec.sh"
 
 NODE_SPECS=(
   "talos_machine_configuration_apply.k8s_cp_0|k8s_cp_0_node|control-plane"
@@ -543,4 +559,148 @@ pipeline_post_init() {
 
 PIPELINE_ARGS=("$@")
 
-source "${PIPELINE_SCRIPT_ROOT}/cluster_pipeline.sh"
+# shellcheck source=../../../scripts/terraform/resolve_config_by_id.sh
+source "${PIPELINE_SCRIPT_ROOT}/resolve_config_by_id.sh"
+
+SLICE_CONFIG_ID="$(homelab_config_id_from_terraform_dir "${ROOT_DIR}" "${TERRAFORM_DIR}")"
+DEFAULT_SLICE_TFVARS="$(homelab_resolve_config_path "${TFVARS_HOME_DIR}" "${SLICE_CONFIG_ID}")"
+DEFAULT_BACKEND="$(homelab_resolve_config_path "${TFVARS_HOME_DIR}" "terraform/minio.backend")"
+
+TFVARS_PATH="${TALOS_APP_TFVARS:-${DEFAULT_SLICE_TFVARS}}"
+BACKEND_CONFIG_PATH="${TALOS_APP_BACKEND:-${DEFAULT_BACKEND}}"
+
+TFVARS_ARG=""
+BACKEND_ARG=""
+ARGS=("${PIPELINE_ARGS[@]}")
+while [[ ${#ARGS[@]} -gt 0 ]]; do
+  case "${ARGS[0]}" in
+    --tfvars)
+      [[ ${#ARGS[@]} -ge 2 ]] || {
+        echo "[ERR] --tfvars requires a path" >&2
+        exit 2
+      }
+      TFVARS_ARG="${ARGS[1]}"
+      ARGS=("${ARGS[@]:2}")
+      ;;
+    --backend)
+      [[ ${#ARGS[@]} -ge 2 ]] || {
+        echo "[ERR] --backend requires a path" >&2
+        exit 2
+      }
+      BACKEND_ARG="${ARGS[1]}"
+      ARGS=("${ARGS[@]:2}")
+      ;;
+    -h | --help)
+      cat <<USAGE
+Usage: ${ENTRYPOINT_RELATIVE} [--tfvars <path>] [--backend <path>] [tfvars_path] [backend_path]
+
+Runs the ${STAGE_NAME} pipeline for ${SERVICE_NAME}.
+USAGE
+      exit 0
+      ;;
+    *)
+      if [[ "${ARGS[0]}" == --* ]]; then
+        echo "[ERR] Unknown option: ${ARGS[0]}" >&2
+        exit 2
+      fi
+      if [[ -z "${TFVARS_ARG}" ]]; then
+        TFVARS_ARG="${ARGS[0]}"
+      elif [[ -z "${BACKEND_ARG}" ]]; then
+        BACKEND_ARG="${ARGS[0]}"
+      else
+        echo "[ERR] Unexpected argument: ${ARGS[0]}" >&2
+        exit 2
+      fi
+      ARGS=("${ARGS[@]:1}")
+      ;;
+  esac
+done
+
+[[ -n "${TFVARS_ARG}" ]] && TFVARS_PATH="${TFVARS_ARG}"
+[[ -n "${BACKEND_ARG}" ]] && BACKEND_CONFIG_PATH="${BACKEND_ARG}"
+[[ -n "${TFVARS_FILE:-}" ]] && TFVARS_PATH="${TFVARS_FILE}"
+[[ -n "${BACKEND_FILE:-}" ]] && BACKEND_CONFIG_PATH="${BACKEND_FILE}"
+
+if [[ -z "${TFVARS_PATH}" || ! -f "${TFVARS_PATH}" ]]; then
+  echo "[ERR] Missing TFVARS file: ${TFVARS_PATH}" >&2
+  exit 1
+fi
+if [[ -z "${BACKEND_CONFIG_PATH}" || ! -f "${BACKEND_CONFIG_PATH}" ]]; then
+  echo "[ERR] Missing backend config file: ${BACKEND_CONFIG_PATH}" >&2
+  exit 1
+fi
+if [[ ! -x "${EXEC_SCRIPT}" ]]; then
+  echo "[ERR] Missing helper script: ${EXEC_SCRIPT}" >&2
+  exit 1
+fi
+
+echo "TFVARS file: ${TFVARS_PATH}"
+echo "Backend config: ${BACKEND_CONFIG_PATH}"
+
+if declare -F pipeline_pre_terraform > /dev/null; then
+  pipeline_pre_terraform
+fi
+
+cd "${TERRAFORM_DIR}"
+
+run_terraform_init() {
+  local init_args=("$@")
+  local init_log
+  init_log="$(mktemp -t talos-terraform-init-XXXXXX)"
+
+  if "${EXEC_SCRIPT}" init "${init_args[@]}" \
+    > >(tee "${init_log}") \
+    2> >(tee -a "${init_log}" >&2); then
+    rm -f "${init_log}"
+    return 0
+  fi
+
+  if grep -q "Backend configuration changed" "${init_log}"; then
+    if [[ -f ".terraform/terraform.tfstate" ]]; then
+      echo "[WARN] Backend change detected; attempting automatic state migration"
+      if "${EXEC_SCRIPT}" init -force-copy -migrate-state "${init_args[@]}"; then
+        rm -f "${init_log}"
+        return 0
+      fi
+    fi
+
+    echo "[WARN] Backend change detected; re-running terraform init with -reconfigure"
+    if "${EXEC_SCRIPT}" init -reconfigure "${init_args[@]}"; then
+      rm -f "${init_log}"
+      return 0
+    fi
+  fi
+
+  rm -f "${init_log}"
+  return 1
+}
+
+echo "[STEP] terraform init (${STAGE_NAME})"
+if ! run_terraform_init -backend-config="${BACKEND_CONFIG_PATH}"; then
+  echo "[ERR] terraform init failed" >&2
+  exit 1
+fi
+
+if declare -F pipeline_post_init > /dev/null; then
+  pipeline_post_init
+fi
+
+PLAN_ARGS=(-input=false -var-file "${TFVARS_PATH}")
+PLAN_ARGS+=("${PLAN_ARGS_EXTRA[@]}")
+
+APPLY_ARGS=(-input=false -auto-approve -var-file "${TFVARS_PATH}")
+APPLY_ARGS+=("${APPLY_ARGS_EXTRA[@]}")
+
+echo "[STAGE] ${STAGE_NAME} plan"
+if ! "${EXEC_SCRIPT}" plan "${PLAN_ARGS[@]}"; then
+  echo "[ERR] terraform plan (${STAGE_NAME}) failed" >&2
+  exit 1
+fi
+
+echo "[STAGE] ${STAGE_NAME} apply"
+if ! "${EXEC_SCRIPT}" apply "${APPLY_ARGS[@]}"; then
+  echo "[ERR] terraform apply (${STAGE_NAME}) failed" >&2
+  exit 1
+fi
+
+echo "[DONE] ${STAGE_NAME} apply complete."

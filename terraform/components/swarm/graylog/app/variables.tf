@@ -1,3 +1,6 @@
+# variables.tf
+# External input contract for the Graylog Swarm app slice.
+
 variable "env" {
   description = "Container environment variables."
   type = object({

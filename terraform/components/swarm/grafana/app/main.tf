@@ -1,24 +1,27 @@
+# main.tf
+# Overlay network, config, volume, and Grafana Swarm service wired to Postgres and VictoriaMetrics.
+
 data "docker_network" "grafana_postgres" {
-  name = "grafana-postgres"
+  name = local.postgres_network_name
 }
 
 data "docker_network" "victoriametrics" {
-  name = "victoriametrics-net"
+  name = local.victoriametrics_network_name
 }
 
 resource "docker_network" "grafana_app" {
-  name   = "grafana-app"
+  name   = local.network_name
   driver = "overlay"
 }
 
 resource "docker_volume" "grafana_app" {
-  name   = "grafana-app"
+  name   = local.volume_name
   driver = "local"
 }
 
 resource "docker_config" "grafana_app" {
-  name = "grafana-ini-${local.grafana_ini_hash}"
-  data = filebase64(var.ini_path)
+  name = local.config_name
+  data = filebase64(local.ini_path)
 
   lifecycle {
     create_before_destroy = true
@@ -26,13 +29,13 @@ resource "docker_config" "grafana_app" {
 }
 
 resource "docker_service" "grafana" {
-  name = "grafana"
+  name = local.service_name
 
   task_spec {
-    force_update = local.grafana_ini_force_update
+    force_update = local.ini_force_update
 
     dynamic "placement" {
-      for_each = var.placement == null ? [] : [var.placement]
+      for_each = local.placement == null ? [] : [local.placement]
 
       content {
         constraints = try(placement.value.constraints, null)
@@ -50,7 +53,7 @@ resource "docker_service" "grafana" {
 
     networks_advanced {
       name    = docker_network.grafana_app.id
-      aliases = ["grafana"]
+      aliases = [local.network_alias]
     }
 
     networks_advanced {
@@ -64,10 +67,12 @@ resource "docker_service" "grafana" {
     }
 
     container_spec {
+      # Literal tag for Renovate (not a var/local; no digest).
       image = "grafana/grafana:12.3.1"
+      env   = local.env
 
       mounts {
-        target = "/var/lib/grafana"
+        target = local.data_mount
         source = docker_volume.grafana_app.name
         type   = "volume"
       }
@@ -75,7 +80,7 @@ resource "docker_service" "grafana" {
       configs {
         config_id   = docker_config.grafana_app.id
         config_name = docker_config.grafana_app.name
-        file_name   = "/etc/grafana/grafana.ini"
+        file_name   = local.ini_mount
       }
     }
 
@@ -89,8 +94,8 @@ resource "docker_service" "grafana" {
 
   endpoint_spec {
     ports {
-      target_port    = 3000
-      published_port = 3000
+      target_port    = local.target_port
+      published_port = local.published_port
       protocol       = "tcp"
       publish_mode   = "ingress"
     }

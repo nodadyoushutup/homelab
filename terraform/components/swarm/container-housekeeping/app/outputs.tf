@@ -1,3 +1,6 @@
+# outputs.tf
+# Exported Swarm service identifiers for container-housekeeping.
+
 output "service_id" {
   description = "Swarm service ID for global container housekeeping."
   value       = docker_service.container_housekeeping.id

@@ -1,3 +1,6 @@
+# variables.tf
+# External input contract for the mcp-agentmemory Swarm app slice.
+
 variable "env" {
   description = "Shared container environment (AGENTMEMORY_SECRET, MCP_AGENTMEMORY_API_KEY, optional overrides)."
   type        = map(string)

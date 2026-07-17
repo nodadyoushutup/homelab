@@ -1,8 +1,11 @@
+# locals.tf
+# Single source of truth for container-housekeeping Swarm service values (resources read local.* only).
+
 locals {
+  swarm_docker_provider_config = var.swarm_docker_provider_config
+
   cleanup_interval_seconds = 604800
   retention_seconds        = 604800
-  image                    = "docker:29.2.1-cli@sha256:cab69e2d0a1a2ea9a1ce1060252f439e83483ae41ec09317aecb33b08a0656a5"
-  arm64_image              = "docker:29.2.1-cli@sha256:b419ff204d51c59cf7e3e01c4277dad148fc5f300f172c2f65700a1cac93e7c1"
 
   cleanup_script = <<-SCRIPT
     while :; do
@@ -21,4 +24,8 @@ locals {
         done
     done
   SCRIPT
+
+  # Fleet-common optional nested fields (post-audit: secrets/defaults double-pass).
+  registry_auths           = coalesce(try(local.swarm_docker_provider_config.registry_auths, null), [])
+  default_registry_address = "ghcr.io"
 }

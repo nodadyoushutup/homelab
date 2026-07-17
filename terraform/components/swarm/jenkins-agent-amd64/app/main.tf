@@ -1,0 +1,90 @@
+# main.tf
+# Standalone Docker containers on the AMD64 pool host (`.config/terraform/components/swarm/amd64.tfvars`).
+
+resource "docker_volume" "agent_home" {
+  for_each = local.agent_definitions
+
+  name   = "${local.home_volume_name_prefix}-${each.value.safe_name}"
+  driver = "local"
+}
+
+resource "docker_volume" "agent_repo" {
+  count = local.repo_mount_enabled ? 1 : 0
+
+  name = "${local.service_name_prefix}-nfs-homelab"
+
+  driver      = "local"
+  driver_opts = local.nfs_driver_opts
+}
+
+resource "docker_volume" "extra_mounts" {
+  for_each = local.extra_mounts_by_name
+
+  name        = each.value.name
+  driver      = each.value.driver
+  driver_opts = each.value.driver_opts
+}
+
+resource "docker_container" "jenkins_agent" {
+  for_each = local.agent_definitions
+
+  name  = each.value.name
+  image = "ghcr.io/nodadyoushutup/jenkins-agent:0.0.9"
+
+  restart = "always"
+
+  group_add = local.kvm_supplementary_groups
+
+  dns = local.dns_nameservers
+
+  env = toset([
+    for key, value in merge(local.agent_env, {
+      JENKINS_URL        = local.jenkins_url
+      JENKINS_AGENT_NAME = each.value.name
+    }) : "${key}=${value}"
+  ])
+
+  devices {
+    host_path      = "/dev/kvm"
+    container_path = "/dev/kvm"
+    permissions    = "rwm"
+  }
+
+  mounts {
+    type   = "volume"
+    source = docker_volume.agent_home[each.key].name
+    target = each.value.remote_fs
+  }
+
+  mounts {
+    type   = "bind"
+    source = "/var/run/docker.sock"
+    target = "/var/run/docker.sock"
+  }
+
+  mounts {
+    type   = "bind"
+    source = local.engine_visible_build_path
+    target = local.engine_visible_build_path
+  }
+
+  dynamic "mounts" {
+    for_each = local.repo_mount_enabled ? [1] : []
+
+    content {
+      type   = "volume"
+      source = docker_volume.agent_repo[0].name
+      target = local.repo_mount_target
+    }
+  }
+
+  dynamic "mounts" {
+    for_each = local.extra_mounts_by_name
+
+    content {
+      type   = "volume"
+      source = docker_volume.extra_mounts[mounts.key].name
+      target = mounts.value.target
+    }
+  }
+}

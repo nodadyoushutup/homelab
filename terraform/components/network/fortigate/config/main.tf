@@ -1,3 +1,6 @@
+# main.tf
+# FortiGate firewall VIPs, firewall policies, and DHCP server reservations from a declarative config payload.
+
 resource "fortios_firewall_vip" "this" {
   for_each = local.virtual_ip_specs
 
