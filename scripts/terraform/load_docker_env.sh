@@ -23,7 +23,6 @@ fi
 _homelab_docker_env_files=(
   site.env
   shared.env
-  rag.env
   mcp.env
   argocd.env
   minio.env

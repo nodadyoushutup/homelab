@@ -7,7 +7,7 @@ Tag format:
 Ids are relative to CONFIG_DIR (no leading slash), derived from each file path:
   terraform/components/swarm/grafana/app.tfvars  -> terraform/components/swarm/grafana/app
   terraform/minio.backend.hcl         -> terraform/minio.backend
-  docker/rag.env                      -> docker/rag
+  docker/mcp.env                      -> docker/mcp
 
 Skips: README.md, *.example, init.json, grafana.ini, known_hosts, .gitkeep
 """

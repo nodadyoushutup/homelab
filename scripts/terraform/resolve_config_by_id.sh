@@ -8,8 +8,6 @@
 #   terraform/components/swarm/grafana/app
 #   terraform/components/swarm/dns
 #   terraform/minio.backend
-#   docker/rag
-#   terraform/components/swarm/rag-engine/app
 
 HOMELAB_CONFIG_TAG_PREFIX='# homelab-config:'
 declare -gA HOMELAB_CONFIG_INDEX=()

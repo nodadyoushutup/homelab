@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Shared default paths for bespoke Swarm Terraform pipelines (chromadb, dozzle, …).
+# Shared default paths for bespoke Swarm Terraform pipelines (dozzle, cadvisor, …).
 # Sets: DEFAULT_DOCKER_TFVARS, DEFAULT_DNS_TFVARS, DEFAULT_SLICE_TFVARS, DEFAULT_BACKEND
 # Requires: CONFIG_DIR, TERRAFORM_DIR; optional ROOT_DIR for slice id derivation.
 
@@ -17,7 +17,7 @@ homelab_bespoke_swarm_set_defaults() {
 
   DEFAULT_DOCKER_TFVARS="$(homelab_resolve_config_path "${config_dir}" "terraform/components/swarm/swarm")"
   DEFAULT_DNS_TFVARS="$(homelab_resolve_config_path "${config_dir}" "terraform/components/swarm/dns")"
-  DEFAULT_BACKEND="$(homelab_resolve_config_path "${config_dir}" "minio.backend")"
+  DEFAULT_BACKEND="$(homelab_resolve_config_path "${config_dir}" "terraform/minio.backend")"
   DEFAULT_SLICE_TFVARS=""
 
   local app_id=""

@@ -8,7 +8,7 @@ ROOT_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 source "${SCRIPT_DIR}/load_root_env.sh"
 
 TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${CONFIG_DIR:-${ROOT_DIR}/.config}}"
-BACKEND_FILE="${BACKEND_FILE:-${TFVARS_HOME_DIR}/minio.backend.hcl}"
+BACKEND_FILE="${BACKEND_FILE:-${TFVARS_HOME_DIR}/terraform/minio.backend.hcl}"
 ONLY_PATTERN=""
 DRY_RUN="0"
 REMOTE_TERRAFORM_IMAGE="${REMOTE_TERRAFORM_IMAGE:-hashicorp/terraform:1.14.0}"

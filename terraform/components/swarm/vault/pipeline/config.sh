@@ -12,7 +12,7 @@ if [[ $# -gt 0 ]]; then
   echo "      plus merged HCL:  secrets/secret_files in <TFVARS_HOME>/terraform/**/{app,config,database}.tfvars" >&2
   echo "      and kubernetes/**/*.tfvars (legacy secrets.tfvars still merged if present;" >&2
   echo "      see scripts/terraform/vault_merge_config_secrets.py)" >&2
-  echo "      expected backend: <TFVARS_HOME>/minio.backend.hcl (default: <repo>/.config/minio.backend.hcl)" >&2
+  echo "      expected backend: <TFVARS_HOME>/terraform/minio.backend.hcl (default: <repo>/.config/terraform/minio.backend.hcl)" >&2
   exit 2
 fi
 

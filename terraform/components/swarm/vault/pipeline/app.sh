@@ -9,7 +9,7 @@ source "${PIPELINE_SCRIPT_ROOT}/load_root_env.sh"
 if [[ $# -gt 0 ]]; then
   echo "[ERR] vault app pipeline uses fixed input paths and does not accept override arguments." >&2
   echo "      expected tfvars:  first line # homelab-config: terraform/components/swarm/vault/app" >&2
-  echo "      expected backend: first line # homelab-config: minio.backend" >&2
+  echo "      expected backend: first line # homelab-config: terraform/minio.backend" >&2
   exit 2
 fi
 

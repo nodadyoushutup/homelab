@@ -27,7 +27,7 @@ TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${CONFIG_DIR:-${ROOT_DIR}/.config}}"
 
 # shellcheck source=resolve_config_by_id.sh
 source "${PIPELINE_SCRIPT_ROOT}/resolve_config_by_id.sh"
-DEFAULT_BACKEND_FILE="${DEFAULT_BACKEND_FILE:-$(homelab_resolve_config_path "${TFVARS_HOME_DIR}" "minio.backend")}"
+DEFAULT_BACKEND_FILE="${DEFAULT_BACKEND_FILE:-$(homelab_resolve_config_path "${TFVARS_HOME_DIR}" "terraform/minio.backend")}"
 SWARM_DNS_PROVIDER_TFVARS="${SWARM_DNS_PROVIDER_TFVARS:-${TFVARS_HOME_DIR}/terraform/components/swarm/dns.tfvars}"
 export SWARM_DNS_PROVIDER_TFVARS
 SWARM_NFS_PROVIDER_TFVARS="${SWARM_NFS_PROVIDER_TFVARS:-${TFVARS_HOME_DIR}/terraform/components/swarm/nfs.tfvars}"

@@ -6,7 +6,7 @@ ROOT_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 STAGE_DIR="${ROOT_DIR}/terraform/components/swarm/grafana/config"
 TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${CONFIG_DIR:-${ROOT_DIR}/.config}}"
 TFVARS_FILE="${TFVARS_FILE:-${TFVARS_HOME_DIR}/terraform/components/swarm/grafana/config.tfvars}"
-BACKEND_FILE="${BACKEND_FILE:-${TFVARS_HOME_DIR}/minio.backend.hcl}"
+BACKEND_FILE="${BACKEND_FILE:-${TFVARS_HOME_DIR}/terraform/minio.backend.hcl}"
 DRY_RUN="0"
 
 usage() {

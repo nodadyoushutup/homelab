@@ -100,12 +100,12 @@ resolve_backend() {
     return 0
   fi
 
-  if candidate="$(homelab_find_config_by_id "${home_dir}" "minio.backend" 2>/dev/null)"; then
+  if candidate="$(homelab_find_config_by_id "${home_dir}" "terraform/minio.backend" 2>/dev/null)"; then
     realpath "${candidate}"
     return 0
   fi
 
-  candidate="$(homelab_resolve_config_path "${home_dir}" "minio.backend")"
+  candidate="$(homelab_resolve_config_path "${home_dir}" "terraform/minio.backend")"
   if [[ -f "${candidate}" ]]; then
     realpath "${candidate}"
     return 0
@@ -113,7 +113,7 @@ resolve_backend() {
 
   if [[ -n "${default_path}" ]]; then
     echo "[WARN] Default backend config not found: ${default_path}" >&2
-    echo "[WARN] Expected first line: $(homelab_config_tag_line "minio.backend" | tr -d '\n')" >&2
+    echo "[WARN] Expected first line: $(homelab_config_tag_line "terraform/minio.backend" | tr -d '\n')" >&2
   fi
 
   return 1

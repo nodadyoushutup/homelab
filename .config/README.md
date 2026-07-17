@@ -4,7 +4,7 @@ This directory is the single site-local source of truth: Terraform/Kubernetes tf
 
 ## homelab-config tags (required)
 
-Every Terraform tfvars file, shared component tfvars, `minio.backend.hcl`, and live `docker/*.env` under this tree must start with a **first-line** tag:
+Every Terraform tfvars file, shared component tfvars, `terraform/minio.backend.hcl`, and live `docker/*.env` under this tree must start with a **first-line** tag:
 
 ```hcl
 # homelab-config: <config-id>
@@ -24,9 +24,7 @@ Every Terraform tfvars file, shared component tfvars, `minio.backend.hcl`, and l
 | `terraform/components/swarm/nfs.tfvars` | `terraform/components/swarm/nfs` |
 | `terraform/components/runners/amd64.tfvars` | `terraform/components/runners/amd64` |
 | `terraform/components/runners/arm64.tfvars` | `terraform/components/runners/arm64` |
-| `minio.backend.hcl` | `minio.backend` |
-| `docker/langgraph.env` | `docker/langgraph` |
-| `scripts/rag.env` | `scripts/rag` |
+| `terraform/minio.backend.hcl` | `terraform/minio.backend` |
 
 Pipelines resolve inputs by id (indexed once per run), so you can rename or relocate files under `.config` as long as the tag stays correct. Overrides still win: `--tfvars`, Jenkins `TFVARS_FILE`, and env vars such as `SWARM_DNS_PROVIDER_TFVARS`.
 
@@ -41,9 +39,8 @@ Canonical mirrored paths (for example `terraform/components/swarm/<svc>/app.tfva
 
 ## Layout (typical)
 
-- `docker/` — split `*.env` for Compose, LangGraph, and host scripts (see `docker/README.md` and `docker/*.env.example`)
-- `scripts/` — host-only script dotenv (see `scripts/rag.env.example` for `scripts/rag/backfill.sh`); RAG backfill script lives under **`scripts/rag/`**
-- `minio.backend.hcl` — shared remote state backend config for Swarm/remote Terraform stages
+- `docker/` — split `*.env` for Compose, and host scripts (see `docker/README.md` and `docker/*.env.example`)
+- `terraform/minio.backend.hcl` — shared remote state backend config for Swarm/remote Terraform stages
 - `terraform/components/` — site tfvars mirroring **`terraform/components/`** in the repo (`swarm/`, `cluster/`, `remote/`, `network/`, `runners/`). Copy from **`terraform/components/**/*.tfvars.example`** into the matching path under **`.config/terraform/components/`**.
 - `kubernetes/` — optional cluster tfvars if your site keeps them here
 - `.ssh/` — keys and `known_hosts` for optional SSH workflows

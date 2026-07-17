@@ -9,7 +9,7 @@ ROOT_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 source "${SCRIPT_DIR}/load_root_env.sh"
 
 TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${CONFIG_DIR:-${ROOT_DIR}/.config}}"
-BACKEND_FILE="${BACKEND_FILE:-${TFVARS_HOME_DIR}/minio.backend.hcl}"
+BACKEND_FILE="${BACKEND_FILE:-${TFVARS_HOME_DIR}/terraform/minio.backend.hcl}"
 CF_TFVARS="${TFVARS_HOME_DIR}/terraform/components/remote/cloudflare/config.tfvars"
 NPM_TFVARS="${TFVARS_HOME_DIR}/terraform/components/swarm/nginx_proxy_manager/config.tfvars"
 CF_DIR="${ROOT_DIR}/terraform/components/remote/cloudflare/config"

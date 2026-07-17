@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Join swarm-wk-4 to the cluster and label it for MCP / RAG placement.
+# Join swarm-wk-4 to the cluster and label it for MCP placement.
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"

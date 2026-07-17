@@ -13,7 +13,6 @@ MONOLITH = DOCKER_DIR / ".env"
 LOAD_ORDER = [
     "site.env",
     "shared.env",
-    "rag.env",
     "mcp.env",
     "argocd.env",
     "minio.env",
@@ -23,8 +22,7 @@ LOAD_ORDER = [
 SITE_KEYS = {"CONFIG_DIR"}
 ARGOCD_PREFIX = "ARGOCD_"
 MINIO_PREFIX = "MINIO_"
-MCP_PREFIXES = ("HOMELAB_MCP_", "MCP_RAG_")
-RAG_PREFIXES = ("RAG_", "RAG_ENGINE_")
+MCP_PREFIXES = ("HOMELAB_MCP_", "MCP_")
 SHARED_KEYS = {"OPENAI_API_KEY", "GOOGLE_API_KEY", "VOYAGE_API_KEY"}
 QBITTORRENT_KEYS = {
     "QBITTORRENT_BASE_URL",
@@ -58,8 +56,6 @@ def _target_file(key: str) -> str:
         return "shared.env"
     if any(key.startswith(p) for p in MCP_PREFIXES):
         return "mcp.env"
-    if any(key.startswith(p) for p in RAG_PREFIXES):
-        return "rag.env"
     if key in QBITTORRENT_KEYS or key.startswith("QBITTORRENT_"):
         return "qbittorrent.env"
     return "shared.env"
