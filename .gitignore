@@ -2,11 +2,15 @@
 # IDE & agent tooling
 # =============================================================================
 # This repo tracks a few shared defaults; ignore everything else under these dirs.
-# Tracked: .cursor/mcp.json, .cursor/skills/, .codex/config.toml,
-# .vscode/homelab.code-workspace
+# Tracked: .cursor/mcp.json, .cursor/rules/, .cursor/agents/, .cursor/skills/,
+# .codex/config.toml, .vscode/homelab.code-workspace
 
 .cursor/*
 !.cursor/mcp.json
+!.cursor/rules/
+!.cursor/rules/**
+!.cursor/agents/
+!.cursor/agents/**
 !.cursor/skills/
 !.cursor/skills/**
 .codex/

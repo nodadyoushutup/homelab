@@ -125,6 +125,11 @@ verify_install() {
 }
 
 main() {
+  if command -v plasmashell >/dev/null 2>&1; then
+    log "KDE/Plasma already installed ($(command -v plasmashell)); skipping."
+    return 0
+  fi
+
   require_cmd apt-get
   require_cmd apt-cache
   require_cmd dpkg-query

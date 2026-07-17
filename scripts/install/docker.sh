@@ -26,7 +26,13 @@ init_privilege_command() {
 }
 
 as_root() {
-  "${SUDO_CMD[@]}" "$@"
+  # sudo strips DEBIAN_FRONTEND by default; inject noninteractive env explicitly.
+  "${SUDO_CMD[@]}" env \
+    DEBIAN_FRONTEND=noninteractive \
+    DEBCONF_NONINTERACTIVE_SEEN=true \
+    NEEDRESTART_MODE=a \
+    NEEDRESTART_SUSPEND=1 \
+    "$@"
 }
 
 ensure_supported_os() {
@@ -163,7 +169,11 @@ main() {
     [[ -n "${target_user}" ]] || die "Unable to determine target user. Set TARGET_USER."
   fi
 
-  install_docker_packages "${install_profile}"
+  if command -v docker >/dev/null 2>&1; then
+    log "Docker already installed: $(docker --version 2>/dev/null || true); skipping package install."
+  else
+    install_docker_packages "${install_profile}"
+  fi
 
   if [[ "${configure_user}" == "1" ]]; then
     ensure_user_access "${target_user}"

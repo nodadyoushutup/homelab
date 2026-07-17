@@ -30,15 +30,8 @@ as_root() {
   "${SUDO_CMD[@]}" "$@"
 }
 
-ensure_supported_os() {
-  [[ -f /etc/os-release ]] || die "/etc/os-release not found; unsupported host."
-  # shellcheck disable=SC1091
-  . /etc/os-release
-
-  case "${ID:-}" in
-    ubuntu|debian) ;;
-    *) die "Unsupported distro: ${ID:-unknown}. This script supports Debian/Ubuntu only." ;;
-  esac
+ensure_linux() {
+  [[ "$(uname -s)" == "Linux" ]] || die "Unsupported OS: $(uname -s). Linux is required."
 }
 
 detect_arch() {
@@ -94,12 +87,38 @@ verify_install() {
   log "Installed $(${KUBECTL_BIN} version --client=true 2>/dev/null | head -n1 || true)"
 }
 
+already_installed() {
+  if ! command -v "${KUBECTL_BIN}" >/dev/null 2>&1; then
+    return 1
+  fi
+
+  # Unspecified/latest: any installed kubectl is enough for a fast re-run.
+  if [[ "${KUBECTL_VERSION}" == "latest" || -z "${KUBECTL_VERSION}" ]]; then
+    log "kubectl already installed: $(${KUBECTL_BIN} version --client=true 2>/dev/null | head -n1 || true); skipping."
+    return 0
+  fi
+
+  local want have
+  want="${KUBECTL_VERSION#v}"
+  have="$(${KUBECTL_BIN} version --client=true -o yaml 2>/dev/null | awk '/gitVersion:/ { print $2; exit }' || true)"
+  have="${have#v}"
+  if [[ -n "${have}" && "${have}" == "${want}" ]]; then
+    log "kubectl ${KUBECTL_VERSION} already installed; skipping."
+    return 0
+  fi
+  return 1
+}
+
 main() {
+  if already_installed; then
+    return 0
+  fi
+
   require_cmd curl
   require_cmd sha256sum
 
   init_privilege_command
-  ensure_supported_os
+  ensure_linux
   detect_arch
   resolve_version
   install_kubectl

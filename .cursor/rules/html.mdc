@@ -1,0 +1,53 @@
+---
+description: HTML standards — semantics, docs, structure, accessibility, safety
+globs: "**/*.{html,htm}"
+alwaysApply: false
+---
+
+# HTML
+
+Write clear, semantic, accessible markup from the first draft — not a monolith page to clean up later.
+
+## Docs & comments
+
+Spiritually the same bar as Python/JS: document purpose clearly, comment intent — never narrate obvious tags.
+
+- Every HTML document starts with a short top-of-file comment describing the page’s purpose
+- Section landmarks and non-obvious blocks get a brief comment when the structure isn’t clear from headings alone
+- Comments only where intent is non-obvious — never label every `<div>` or restate visible heading text
+
+```html
+<!-- dashboard.html — Operator overview: status summary and recent jobs. -->
+
+<main>
+  <!-- Live status cards; values filled by dashboard.js -->
+  <section aria-labelledby="status-heading">
+    ...
+  </section>
+</main>
+```
+
+## Structure & semantics
+
+- Prefer semantic elements (`main`, `nav`, `header`, `footer`, `section`, `article`, `button`, `label`) over generic `<div>` / `<span>` soup
+- Give elements meaningful `id`s as often as practical (hooks for JS, CSS, tests, and deep links) — prefer stable, purpose-based names; keep them unique in the document
+- One page, one `<h1>`; heading levels nest without skipping for outline clarity
+- Keep structure organized: when a page grows, split into partials/templates/components using whatever the project already uses — don’t maintain a single giant HTML file if the stack supports composition
+- Group related markup together; keep scripts and styles out of the markup when the project has external `.js` / `.css` (match existing patterns)
+- Be reasonable: don’t invent a component framework for a static two-section page
+
+## Accessibility & forms
+
+- Interactive controls must be real `<button>`, `<a href>`, or form fields — not clickable `<div>`s
+- Every form input has an associated `<label>` (or otherwise valid accessible name)
+- Images that convey meaning get meaningful `alt`; decorative images get `alt=""`
+- Use landmark roles only when native elements aren’t enough; prefer native semantics first
+- Preserve keyboard focus order; don’t remove focus outlines without an accessible replacement
+
+## Robustness & safety
+
+- Produce valid HTML5; keep nesting and closing tags correct — treat markup errors like type errors
+- Never place secrets, tokens, or credentials in HTML
+- Escape/encode untrusted content; do not inject raw user HTML unless the project has a deliberate, sanitized pipeline
+- Prefer external scripts with clear `type`/`defer`/`async` per project convention over large inline script blocks
+- When behavior is non-trivial, pair the page with JS modules that follow the JavaScript/JSX rules (tested there — not with ad-hoc inline scripts)

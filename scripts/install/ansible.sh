@@ -28,7 +28,13 @@ init_privilege_command() {
 }
 
 as_root() {
-  "${SUDO_CMD[@]}" "$@"
+  # sudo strips DEBIAN_FRONTEND by default; inject noninteractive env explicitly.
+  "${SUDO_CMD[@]}" env \
+    DEBIAN_FRONTEND=noninteractive \
+    DEBCONF_NONINTERACTIVE_SEEN=true \
+    NEEDRESTART_MODE=a \
+    NEEDRESTART_SUSPEND=1 \
+    "$@"
 }
 
 ensure_supported_os() {
@@ -56,6 +62,11 @@ verify_install() {
 }
 
 main() {
+  if command -v ansible >/dev/null 2>&1; then
+    log "ansible already installed: $(ansible --version | head -n1); skipping."
+    return 0
+  fi
+
   init_privilege_command
   ensure_supported_os
   install_ansible

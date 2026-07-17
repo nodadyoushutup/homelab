@@ -1,0 +1,159 @@
+---
+description: Terraform standards — file layout, modules, state safety, HCL style
+globs: "**/*.{tf,tfvars,tf.json}"
+alwaysApply: false
+---
+
+# Terraform
+
+Write readable, least-privilege, reviewable infrastructure code. Prefer a clear file split from the start — not one monolith `.tf`.
+
+## File layout
+
+Default root/module layout:
+
+| File | Holds |
+|------|--------|
+| `provider.tf` | `terraform` block, required providers, provider configs |
+| `variables.tf` | input `variable` blocks |
+| `locals.tf` | `locals` |
+| `main.tf` | primary resources (or the composition entrypoint) |
+| `outputs.tf` | `output` blocks |
+
+- Segregate by concern: variables, locals, providers, outputs, and resources do not share files unless a tiny module makes that silly
+- When `main.tf` grows or mixes unrelated resources, split into additional `*.tf` files named for what they hold (e.g. `network.tf`, `iam.tf`, `dns.tf`) — same idea as breaking up large Python modules
+- Be reasonable: don’t create empty stub files; do create the standard files once that concern exists
+- Prefer small reusable modules over copy-pasting whole stacks
+
+## Docs & comments
+
+Spiritually the same bar as Python: document purpose clearly, comment intent — never narrate obvious HCL.
+
+- Every `.tf` file starts with a short header comment describing what the file owns and why it exists
+- Every `variable` and `output` has a useful `description` (what it is, valid shape/values when non-obvious) — this is Terraform’s docstring equivalent for the module contract
+- Non-obvious `locals` get a brief inline or block comment (why this computation exists, not what the expression literally does)
+- Non-obvious resources, modules, and data sources get a short comment above the block (intent, coupling, or caveats)
+- Prefer a module `README.md` when the module is shared or non-trivial (purpose, required inputs, examples) — keep it short
+- Comments only where intent is non-obvious — never restate the resource type or an obvious assignment
+
+```hcl
+# network.tf
+# VPC and subnet topology for the application network plane.
+
+# Primary VPC — CIDR and naming come from locals so env swaps stay in locals.tf.
+resource "aws_vpc" "this" {
+  cidr_block = local.vpc_cidr
+  tags = {
+    Name = "${local.name_prefix}-vpc"
+  }
+}
+```
+
+## Values via locals (single source of truth)
+
+- All values consumed by resources, data sources, and modules flow through `locals` — including plain passthroughs of variables and any computed/derived values
+- Resources and modules reference `local.*` only; do not scatter `var.*` (or inline expressions) across `main.tf` and other resource files
+- Put that wiring in `locals.tf` so there is one place to change how a value is obtained or computed; swapping from a variable to a data source, remote state, or formula should usually touch `locals.tf` (and maybe `variables.tf`), not the resource graph
+- Keep `variables.tf` as the external input contract; keep `locals.tf` as the internal value catalog everything else reads
+
+```hcl
+# variables.tf — input contract
+variable "environment" {
+  type        = string
+  description = "Deployment environment name"
+}
+
+# locals.tf — single source of truth for values in use
+locals {
+  environment = var.environment
+  name_prefix = "app-${local.environment}"
+}
+
+# network.tf — resources only read locals
+resource "aws_vpc" "this" {
+  cidr_block = local.vpc_cidr
+  tags = {
+    Name = "${local.name_prefix}-vpc"
+  }
+}
+```
+## Resources & style
+
+- Use `for_each` over `count` when resources are keyed by identity (names, IDs, maps)
+- Every variable and output needs a `description`
+- Pin provider and module versions; avoid unconstrained `version = ">= ..."` in shared modules
+- Resource names: short, purpose-based snake_case labels (`aws_s3_bucket.logs`, not `aws_s3_bucket.this_bucket_1`)
+- Use consistent `tags` / `default_tags` for ownership and environment
+- Run as if `terraform fmt` and `terraform validate` are required
+
+## Templates
+
+- Prefer `templatefile()` over the legacy `template_file` data source
+- Use `*.tftpl` under a module-local `templates/` directory (e.g. `${path.module}/templates/user_data.tftpl`)
+- Pass template values from `local.*` only — build the `templatefile(..., { ... })` map from locals so templates stay on the same single source of truth
+- Keep logic in Terraform/`locals`; templates should mostly interpolate, not branch heavily
+- Prefer provider document data sources (e.g. `aws_iam_policy_document`) over hand-rolled JSON policy templates when available
+- Never hardcode secrets or environment-specific IDs inside template files; keep the template path in a local when reused
+
+```hcl
+locals {
+  user_data = templatefile("${path.module}/templates/user_data.tftpl", {
+    environment = local.environment
+    name_prefix = local.name_prefix
+  })
+}
+```
+
+## Validation
+
+- Validate constrained inputs in `variables.tf` with `validation` blocks and clear `error_message` text (what failed and what’s allowed)
+- Prefer tight `type` constraints (`object(...)`, `optional(...)`, enums via validation) over `any` or loose untyped strings
+- Validate at the variable boundary even though resources only read `local.*` — do not silently “fix” bad input in locals
+- Use `lifecycle` preconditions/postconditions when an invariant depends on locals or other resources, not only on raw input
+- Use `check` blocks (Terraform 1.5+) for cross-cutting assertions that shouldn’t live on a single resource
+- Don’t duplicate the same rule in both variable `validation` and a precondition; don’t use `validation` for things only knowable after apply
+
+```hcl
+variable "environment" {
+  type        = string
+  description = "Deployment environment name"
+
+  validation {
+    condition     = contains(["dev", "staging", "prod"], var.environment)
+    error_message = "environment must be one of: dev, staging, prod."
+  }
+}
+```
+
+## Safety
+
+- Never hardcode secrets, tokens, or private keys in `.tf` / `.tfvars`
+- Prefer data sources and remote state over duplicating IDs across stacks
+- Destructive changes (replace, destroy, force-new): call them out before applying
+- Scope IAM / security groups narrowly; avoid `*` unless required and documented
+
+## Anti-patterns
+
+```hcl
+# ❌ BAD — resources read vars/expressions directly; count + opaque index
+variable "names" { type = list(string) }
+resource "aws_s3_bucket" "b" {
+  count  = length(var.names)
+  bucket = var.names[count.index]
+}
+
+# ✅ GOOD — inputs → locals → resources; for_each by identity
+variable "buckets" {
+  type        = map(string)
+  description = "Map of logical name → bucket name"
+}
+
+locals {
+  buckets = var.buckets
+}
+
+resource "aws_s3_bucket" "this" {
+  for_each = local.buckets
+  bucket   = each.value
+}
+```

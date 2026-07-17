@@ -2,13 +2,27 @@
 set -euo pipefail
 
 log()  { echo "[INFO] $*"; }
+warn() { echo "[WARN] $*" >&2; }
 die()  { echo "[ERROR] $*" >&2; exit 1; }
 trap 'die "failed at line $LINENO"' ERR
 
+# Keep apt/debconf fully noninteractive (must also be passed through sudo; see as_root).
 export DEBIAN_FRONTEND=noninteractive
-APT_OPTS=(-y --no-install-recommends -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold")
+export DEBCONF_NONINTERACTIVE_SEEN=true
+export NEEDRESTART_MODE=a
+export NEEDRESTART_SUSPEND=1
+APT_OPTS=(
+  -y
+  --no-install-recommends
+  -o Dpkg::Options::="--force-confdef"
+  -o Dpkg::Options::="--force-confold"
+  -o APT::Get::Assume-Yes=true
+)
 SUDO_CMD=()
-PACKAGES=(
+PKG_MANAGER=""
+
+# Full baseline for Debian/Ubuntu hosts.
+APT_PACKAGES=(
   apt-transport-https
   curl
   gnupg
@@ -21,7 +35,7 @@ PACKAGES=(
   bridge-utils
   btop
   cloud-guest-utils
-  dnsutils
+  bind9-dnsutils
   duf
   ethtool
   fd-find
@@ -68,6 +82,22 @@ PACKAGES=(
   zip
 )
 
+# Portable core set for non-apt package managers (names kept intentionally common).
+CORE_PACKAGES=(
+  ca-certificates
+  curl
+  git
+  htop
+  jq
+  make
+  python3
+  rsync
+  tmux
+  tree
+  unzip
+  wget
+)
+
 require_cmd() {
   local cmd="$1"
   command -v "${cmd}" >/dev/null 2>&1 || die "Missing required command: ${cmd}"
@@ -84,31 +114,48 @@ init_privilege_command() {
 }
 
 as_root() {
-  "${SUDO_CMD[@]}" "$@"
+  # sudo strips DEBIAN_FRONTEND by default; inject noninteractive env explicitly.
+  "${SUDO_CMD[@]}" env \
+    DEBIAN_FRONTEND=noninteractive \
+    DEBCONF_NONINTERACTIVE_SEEN=true \
+    NEEDRESTART_MODE=a \
+    NEEDRESTART_SUSPEND=1 \
+    "$@"
 }
 
-ensure_supported_os() {
-  [[ -f /etc/os-release ]] || die "/etc/os-release not found; unsupported host."
-  # shellcheck disable=SC1091
-  . /etc/os-release
-
-  case "${ID:-}" in
-    ubuntu|debian) ;;
-    *) die "Unsupported distro: ${ID:-unknown}. This script supports Debian/Ubuntu only." ;;
-  esac
+ensure_linux() {
+  [[ "$(uname -s)" == "Linux" ]] || die "Unsupported OS: $(uname -s). Linux is required."
 }
 
-resolve_packages() {
+detect_package_manager() {
+  if command -v apt-get >/dev/null 2>&1; then
+    PKG_MANAGER="apt"
+  elif command -v dnf >/dev/null 2>&1; then
+    PKG_MANAGER="dnf"
+  elif command -v yum >/dev/null 2>&1; then
+    PKG_MANAGER="yum"
+  elif command -v zypper >/dev/null 2>&1; then
+    PKG_MANAGER="zypper"
+  elif command -v pacman >/dev/null 2>&1; then
+    PKG_MANAGER="pacman"
+  else
+    die "No supported package manager found (looked for apt-get, dnf, yum, zypper, pacman)."
+  fi
+  log "Detected package manager: ${PKG_MANAGER}"
+}
+
+resolve_apt_packages() {
   local arch
   arch="$(dpkg --print-architecture 2>/dev/null || uname -m)"
 
   case "${arch}" in
     amd64|x86_64)
-      PACKAGES+=(cpu-checker qemu-kvm qemu-system-x86)
+      # qemu-kvm is a virtual package on newer Ubuntu and has no install candidate;
+      # qemu-system-x86 provides the KVM-capable system emulator.
+      APT_PACKAGES+=(cpu-checker qemu-system-x86)
       ;;
     arm64|aarch64)
-      # Match AMD64 baseline: system QEMU + KVM meta where apt provides it (host still supplies /dev/kvm).
-      PACKAGES+=(cpu-checker qemu-kvm qemu-system-arm)
+      APT_PACKAGES+=(cpu-checker qemu-system-arm)
       ;;
     *)
       die "Unsupported architecture: ${arch}"
@@ -116,15 +163,143 @@ resolve_packages() {
   esac
 }
 
+apt_package_installed() {
+  local package_name="$1"
+  local installed
+  if dpkg-query -W -f='${Status}\n' "${package_name}" 2>/dev/null \
+    | grep -qx 'install ok installed'; then
+    return 0
+  fi
+  # Transitional/virtual names (e.g. dnsutils -> bind9-dnsutils) may already be
+  # satisfied even when the requested package name is not installed directly.
+  installed="$(apt-cache policy "${package_name}" 2>/dev/null | awk '/Installed:/ { print $2; exit }')"
+  [[ -n "${installed}" && "${installed}" != "(none)" ]]
+}
+
+filter_missing_apt_packages() {
+  local package_name
+  local missing=()
+  for package_name in "${APT_PACKAGES[@]}"; do
+    if apt_package_installed "${package_name}"; then
+      continue
+    fi
+    missing+=("${package_name}")
+  done
+  APT_PACKAGES=("${missing[@]}")
+}
+
+preseed_apt_debconf() {
+  # Answer known interactive package prompts up front (headless installs).
+  log "Preseeding debconf answers for noninteractive package installs"
+  as_root debconf-set-selections <<'EOF'
+iperf3 iperf3/start_daemon boolean false
+EOF
+}
+
+install_with_apt() {
+  resolve_apt_packages
+  filter_missing_apt_packages
+  if [[ ${#APT_PACKAGES[@]} -eq 0 ]]; then
+    log "All requested apt packages already installed; skipping."
+    return 0
+  fi
+  preseed_apt_debconf
+  log "Installing missing apt packages: ${APT_PACKAGES[*]}"
+  as_root apt-get update -y
+  as_root apt-get install "${APT_OPTS[@]}" "${APT_PACKAGES[@]}"
+}
+
+rpm_package_installed() {
+  local package_name="$1"
+  rpm -q "${package_name}" >/dev/null 2>&1
+}
+
+filter_missing_rpm_packages() {
+  local -n _pkgs_ref=$1
+  local package_name
+  local missing=()
+  for package_name in "${_pkgs_ref[@]}"; do
+    if rpm_package_installed "${package_name}"; then
+      continue
+    fi
+    missing+=("${package_name}")
+  done
+  _pkgs_ref=("${missing[@]}")
+}
+
+install_core_with_dnf_or_yum() {
+  local pm="$1"
+  local pkgs=("${CORE_PACKAGES[@]}" python3-pip python3-virtualenv)
+  filter_missing_rpm_packages pkgs
+  if [[ ${#pkgs[@]} -eq 0 ]]; then
+    log "All requested ${pm} packages already installed; skipping."
+    return 0
+  fi
+  log "Installing missing ${pm} packages: ${pkgs[*]}"
+  as_root "${pm}" install -y "${pkgs[@]}"
+}
+
+install_core_with_zypper() {
+  local pkgs=("${CORE_PACKAGES[@]}" python3-pip python3-venv)
+  filter_missing_rpm_packages pkgs
+  if [[ ${#pkgs[@]} -eq 0 ]]; then
+    log "All requested zypper packages already installed; skipping."
+    return 0
+  fi
+  log "Installing missing zypper packages: ${pkgs[*]}"
+  as_root zypper install -y "${pkgs[@]}"
+}
+
+pacman_package_installed() {
+  local package_name="$1"
+  pacman -Q "${package_name}" >/dev/null 2>&1
+}
+
+install_core_with_pacman() {
+  local pkgs=(
+    ca-certificates
+    curl
+    git
+    htop
+    jq
+    make
+    python
+    python-pip
+    rsync
+    tmux
+    tree
+    unzip
+    wget
+  )
+  local package_name
+  local missing=()
+  for package_name in "${pkgs[@]}"; do
+    if pacman_package_installed "${package_name}"; then
+      continue
+    fi
+    missing+=("${package_name}")
+  done
+  if [[ ${#missing[@]} -eq 0 ]]; then
+    log "All requested pacman packages already installed; skipping."
+    return 0
+  fi
+  log "Installing missing pacman packages: ${missing[*]}"
+  as_root pacman -Sy --noconfirm "${missing[@]}"
+}
+
 main() {
   init_privilege_command
-  ensure_supported_os
-  require_cmd apt-get
-  resolve_packages
+  ensure_linux
+  detect_package_manager
 
-  log "Installing apt packages: ${PACKAGES[*]}"
-  as_root apt-get update -y
-  as_root apt-get install "${APT_OPTS[@]}" "${PACKAGES[@]}"
+  case "${PKG_MANAGER}" in
+    apt) install_with_apt ;;
+    dnf) install_core_with_dnf_or_yum dnf ;;
+    yum) install_core_with_dnf_or_yum yum ;;
+    zypper) install_core_with_zypper ;;
+    pacman) install_core_with_pacman ;;
+    *) die "Unhandled package manager: ${PKG_MANAGER}" ;;
+  esac
 
   log "Done."
 }

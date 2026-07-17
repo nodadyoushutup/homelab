@@ -30,8 +30,20 @@ init_privilege_command() {
 }
 
 as_root() {
-  "${SUDO_CMD[@]}" "$@"
+  # sudo strips DEBIAN_FRONTEND by default; inject noninteractive env explicitly.
+  "${SUDO_CMD[@]}" env \
+    DEBIAN_FRONTEND=noninteractive \
+    DEBCONF_NONINTERACTIVE_SEEN=true \
+    NEEDRESTART_MODE=a \
+    NEEDRESTART_SUSPEND=1 \
+    "$@"
 }
+
+# Fast path: any installed Terraform is enough unless TF_VERSION pins a target.
+if [[ -z "${TF_VERSION}" ]] && command -v "${BIN}" >/dev/null 2>&1; then
+  log "Terraform already installed: $(${BIN} version | head -n1); skipping."
+  exit 0
+fi
 
 # --- Preflight ---
 command -v curl >/dev/null 2>&1 || die "curl is required (apt-get install -y curl)."

@@ -1,0 +1,67 @@
+---
+description: JavaScript/JSX style — JSDoc, structure, robustness, tests
+globs: "**/*.{js,jsx,mjs,cjs}"
+alwaysApply: false
+---
+
+# JavaScript / JSX
+
+## Style
+
+- Prefer modern ES modules (`import`/`export`); match the project's module system when it differs
+- Prefer `const`/`let` — never `var`; prefer `const` unless reassignment is required
+- Prefer template literals over string concatenation (same spirit as Python f-strings)
+- Use strict equality (`===` / `!==`)
+- Document with JSDoc on every module, class, function, and exported symbol; include `@param`, `@returns`, and `@throws` when relevant (Google-style spirit)
+- Prefer explicit types in JSDoc (`@param {string} id`, `@returns {Promise<User>}`) — full typing via JSDoc when TypeScript isn't in play
+- Lint/format with ESLint (and Prettier if the repo uses it); match existing config and do not fight it
+- Use `npm` for packaging/installs; do not introduce another package manager unless the repo already uses one
+- Invoke Node as `node` (and package scripts via `npm`); prefer project scripts over ad-hoc global tools
+
+## Docs & comments
+
+- Every module, class, function, and React component gets a JSDoc block (purpose + params/returns/throws as applicable)
+- File-level JSDoc at the top describing what the module owns
+- Comments only where intent is non-obvious — never narrate what the code already says
+
+```javascript
+/**
+ * Load a user by ID from the directory service.
+ *
+ * @param {string} userId - Stable external identifier for the user.
+ * @returns {Promise<User>} The matching user record.
+ * @throws {UserNotFoundError} If no user exists for `userId`.
+ * @throws {DirectoryError} If the directory service is unreachable.
+ */
+export async function fetchUser(userId) {
+  ...
+}
+```
+
+## Structure & architecture
+
+Write organized, refactored code from the first draft — do not leave monoliths “to clean up later.”
+
+- One public function/component should do one job. If it orchestrates several steps, extract helpers (prefer non-exported functions in the same module or small collaborators)
+- Prefer several small, focused units over one large function that mixes concerns (I/O, parsing, business rules, UI)
+- Prefer a sensible folder layout by responsibility over a single large `.js` / `.jsx` file
+- Default: one primary export per module (one component or one class). Keep additional exports in the same file only when tightly coupled
+- Group related modules into folders; gather shared utilities where they belong — avoid both scatter and dumping grounds
+- Be reasonable: don’t create empty layers or one-line files for their own sake; split when a file or function has more than one clear responsibility
+
+## JSX
+
+- Prefer function components over class components
+- Keep components focused; pull hooks, handlers, and presentational pieces into helpers or child components when the file grows
+- Props are part of the public contract — document them with JSDoc/`@param` (or PropTypes if the project already uses them)
+- Prefer composition over prop drilling through deep trees when a clearer structure exists
+- Keep JSX readable: extract conditional chunks and mapped lists into named helpers or components when inline logic gets noisy
+
+## Robustness
+
+- Throw specific `Error` subclasses (or project error types); never empty `catch` or swallow failures silently; prefer `cause` when rethrowing
+- Prefer plain objects with a clear shape, or classes, over ad-hoc bags of fields passed everywhere
+- Validate untrusted input at boundaries (API handlers, form submit, URL/query params)
+- Prefer `async`/`await` over raw promise chains; always handle rejections
+- Prefer structured logging over `console.log` in app/library code when a logger exists; otherwise keep console use intentional and temporary
+- Always write unit tests in the same change as the code (not as a follow-up). Aim for as close to 100% coverage as practical on new/changed code so we can test and iterate fast. This is not strict TDD — implement and test together. Use the project's runner if present (`jest`, `vitest`, etc.); skip only if no test runner is available

@@ -29,31 +29,48 @@ init_privilege_command() {
 }
 
 as_root() {
-  "${SUDO_CMD[@]}" "$@"
+  # sudo strips DEBIAN_FRONTEND by default; inject noninteractive env explicitly.
+  "${SUDO_CMD[@]}" env \
+    DEBIAN_FRONTEND=noninteractive \
+    DEBCONF_NONINTERACTIVE_SEEN=true \
+    NEEDRESTART_MODE=a \
+    NEEDRESTART_SUSPEND=1 \
+    "$@"
 }
 
-ensure_supported_os() {
-  [[ -f /etc/os-release ]] || die "/etc/os-release not found; unsupported host."
-  # shellcheck disable=SC1091
-  . /etc/os-release
+ensure_linux() {
+  [[ "$(uname -s)" == "Linux" ]] || die "Unsupported OS: $(uname -s). Linux is required."
+}
 
-  case "${ID:-}" in
-    ubuntu|debian) ;;
-    *) die "Unsupported distro: ${ID:-unknown}. This script supports Debian/Ubuntu only." ;;
-  esac
+install_host_packages() {
+  # Best-effort prerequisite install across common Linux package managers.
+  if command -v apt-get >/dev/null 2>&1; then
+    as_root apt-get update -y
+    as_root apt-get install "${APT_OPTS[@]}" "$@"
+  elif command -v dnf >/dev/null 2>&1; then
+    as_root dnf install -y "$@"
+  elif command -v yum >/dev/null 2>&1; then
+    as_root yum install -y "$@"
+  elif command -v zypper >/dev/null 2>&1; then
+    as_root zypper install -y "$@"
+  elif command -v pacman >/dev/null 2>&1; then
+    as_root pacman -Sy --noconfirm "$@"
+  else
+    die "No supported package manager found to install: $*"
+  fi
 }
 
 ensure_prereqs() {
-  if ! command -v curl >/dev/null 2>&1; then
-    log "Installing curl prerequisite..."
-    as_root apt-get update -y
-    as_root apt-get install "${APT_OPTS[@]}" ca-certificates curl
+  if command -v curl >/dev/null 2>&1; then
+    return 0
   fi
+  log "Installing curl prerequisite..."
+  install_host_packages ca-certificates curl
 }
 
 resolve_arch() {
   local arch
-  arch="$(dpkg --print-architecture 2>/dev/null || uname -m)"
+  arch="$(uname -m)"
 
   case "${arch}" in
     amd64|x86_64) echo "amd64" ;;
@@ -80,8 +97,13 @@ verify_install() {
 }
 
 main() {
+  if command -v mc >/dev/null 2>&1; then
+    log "mc already installed: $(mc --version 2>/dev/null | head -n1 || true); skipping."
+    return 0
+  fi
+
   init_privilege_command
-  ensure_supported_os
+  ensure_linux
   ensure_prereqs
   install_mc
   verify_install

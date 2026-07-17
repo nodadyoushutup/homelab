@@ -1,0 +1,61 @@
+---
+description: YAML style — structure, comments, safety, and readability
+globs: "**/*.{yml,yaml}"
+alwaysApply: false
+---
+
+# YAML
+
+Write clear, valid, reviewable YAML from the first draft — not a monolith blob to clean up later.
+
+## Style & structure
+
+- Prefer `.yaml` or match the project’s existing extension (`.yml` vs `.yaml`); don’t mix both for the same kind of file without reason
+- Use 2-space indentation (unless the project standard differs); never tabs
+- Quote strings when they can be misread as booleans/numbers/null (`"on"`, `"off"`, `"yes"`, `"no"`, versions like `"1.10"`, bare `*` paths, etc.)
+- Prefer block style for nested/structured data; use flow style (`{ }` / `[ ]`) only for short, simple inline values
+- Keep related keys together; order for readers (e.g. name/id → high-level config → nested details) consistently within a file type
+- Prefer several focused files or clear top-level sections over one huge undifferentiated document when the tool allows it
+- Be reasonable: don’t split a 15-line compose service into micro-files
+
+## Docs & comments
+
+Spiritually the same bar as Python/HTML: document purpose, comment intent — never narrate obvious keys.
+
+- Every non-trivial YAML file starts with a short header comment describing what it configures and who consumes it
+- Comment non-obvious values, coupling, or “do not change without …” caveats
+- Comments only where intent is non-obvious — never restate every key name
+
+```yaml
+# compose.yaml — local API + DB for development (volume-mounted app code).
+
+services:
+  api:
+    # Bind-mount source for fast iteration; image rebuild not required for app edits.
+    volumes:
+      - ./app:/app
+```
+
+## Correctness & safety
+
+- Produce valid YAML: consistent indentation, no tab/space mix, correct list vs map nesting
+- Prefer explicit types via quoting or schema when ambiguous; avoid relying on YAML’s implicit typing surprises
+- Never commit secrets, tokens, or private keys in YAML — use env vars, `.env` (alongside compose when applicable), or a secret store
+- For compose/K8s/CI: prefer `${ENV}` / secret refs over hard-coded credentials
+- When editing generated or schema-bound YAML (CRDs, Helm values, Actions), match the expected schema and existing project conventions before inventing new shapes
+- Keep duplicates and anchors (`&` / `*`) only when they reduce real repetition — don’t obscure readability with clever alias graphs
+
+## Anti-patterns
+
+```yaml
+# ❌ BAD — unquoted ambiguous values, secret inlined, no context
+enabled: yes
+replicas: 01
+password: s3cr3t
+
+# ✅ GOOD — quoted when needed, secret from env, brief intent comment
+# Feature gate for the beta API path.
+enabled: "yes"
+replicas: 1
+password: "${DB_PASSWORD}"
+```

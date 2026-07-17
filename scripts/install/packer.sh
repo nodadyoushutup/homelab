@@ -32,7 +32,13 @@ init_privilege_command() {
 }
 
 as_root() {
-  "${SUDO_CMD[@]}" "$@"
+  # sudo strips DEBIAN_FRONTEND by default; inject noninteractive env explicitly.
+  "${SUDO_CMD[@]}" env \
+    DEBIAN_FRONTEND=noninteractive \
+    DEBCONF_NONINTERACTIVE_SEEN=true \
+    NEEDRESTART_MODE=a \
+    NEEDRESTART_SUSPEND=1 \
+    "$@"
 }
 
 ensure_supported_os() {
@@ -167,10 +173,21 @@ install_packer() {
 
 has_apt_package() {
   local package_name="$1"
-  apt-cache show "${package_name}" >/dev/null 2>&1
+  local candidate
+  # Reject virtual packages with no install candidate (e.g. qemu-kvm on Resolute).
+  candidate="$(apt-cache policy "${package_name}" 2>/dev/null | awk '/Candidate:/ { print $2; exit }')"
+  [[ -n "${candidate}" && "${candidate}" != "(none)" ]]
 }
 
 install_qemu_kvm_dependencies() {
+  if command -v qemu-img >/dev/null 2>&1 \
+    && command -v xorriso >/dev/null 2>&1 \
+    && command -v qemu-system-x86_64 >/dev/null 2>&1 \
+    && command -v qemu-system-aarch64 >/dev/null 2>&1; then
+    log "QEMU/KVM dependencies already installed; skipping."
+    return 0
+  fi
+
   log "Installing QEMU/KVM dependencies..."
   as_root apt-get update -y -q
 
@@ -194,8 +211,13 @@ install_qemu_kvm_dependencies() {
     die "Could not find qemu-system-arm/qemu-system-misc (or all-target qemu-system) in apt repositories."
   fi
 
+  log "Installing required QEMU packages: ${packages[*]}"
+  as_root apt-get install "${APT_OPTS[@]}" "${packages[@]}" >/dev/null
+
+  # Optional extras — install independently so one missing/virtual package cannot
+  # fail the whole Packer dependency step. Do not include qemu-kvm (virtual on
+  # modern Ubuntu; qemu-system-* already provides KVM-capable emulators).
   local optional_packages=(
-    qemu-kvm
     qemu-efi-aarch64
     qemu-efi-aarch64-sb
     libvirt-daemon-system
@@ -205,14 +227,16 @@ install_qemu_kvm_dependencies() {
   )
   local package_name
   for package_name in "${optional_packages[@]}"; do
-    if has_apt_package "${package_name}"; then
-      packages+=("${package_name}")
+    if ! has_apt_package "${package_name}"; then
+      warn "Optional package not installable via apt: ${package_name}"
+      continue
+    fi
+    if as_root apt-get install "${APT_OPTS[@]}" "${package_name}" >/dev/null; then
+      log "Installed optional package: ${package_name}"
     else
-      warn "Optional package not found in apt repositories: ${package_name}"
+      warn "Optional package install failed: ${package_name}"
     fi
   done
-
-  as_root apt-get install "${APT_OPTS[@]}" "${packages[@]}" >/dev/null
 }
 
 configure_kvm_access() {
@@ -274,6 +298,14 @@ verify_install() {
   log "Installed $(${PACKER_BIN} version | head -n1)"
 }
 
+packer_stack_installed() {
+  command -v "${PACKER_BIN}" >/dev/null 2>&1 \
+    && command -v qemu-img >/dev/null 2>&1 \
+    && command -v xorriso >/dev/null 2>&1 \
+    && command -v qemu-system-x86_64 >/dev/null 2>&1 \
+    && command -v qemu-system-aarch64 >/dev/null 2>&1
+}
+
 main() {
   require_cmd apt-get
   require_cmd curl
@@ -284,13 +316,21 @@ main() {
   init_privilege_command
   ensure_supported_os
 
-  install_packer
-  install_qemu_kvm_dependencies
-
   local configure_user
   local target_user
   configure_user="${PACKER_CONFIGURE_USER:-1}"
   target_user="${TARGET_USER:-${SUDO_USER:-${USER:-}}}"
+
+  if packer_stack_installed; then
+    log "Packer and QEMU dependencies already installed ($(${PACKER_BIN} version | head -n1)); skipping package/binary installs."
+  else
+    if command -v "${PACKER_BIN}" >/dev/null 2>&1; then
+      log "Packer already installed ($(${PACKER_BIN} version | head -n1)); skipping Packer download/install."
+    else
+      install_packer
+    fi
+    install_qemu_kvm_dependencies
+  fi
 
   if [[ "${configure_user}" == "1" ]]; then
     [[ -n "${target_user}" ]] || die "Unable to determine target user. Set TARGET_USER."

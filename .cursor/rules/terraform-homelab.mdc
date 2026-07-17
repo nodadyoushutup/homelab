@@ -1,0 +1,66 @@
+---
+description: Component architecture — app/config/database slices and bespoke pipelines
+globs: "terraform/components/**/*"
+alwaysApply: false
+---
+
+# Terraform component architecture
+
+How a deployable app is laid out under `terraform/components/`. HCL style belongs in `terraform.mdc`; this rule is the **folder and pipeline contract**.
+
+## Layout
+
+```
+terraform/components/<domain>/<component>/
+├── app/                 # runtime workload (optional but usual)
+├── config/              # post-deploy API / desired config (as needed)
+├── database/            # separate DB/data-plane service (as needed)
+└── pipeline/
+    ├── app.sh           # + app.jenkins when Jenkins-driven
+    ├── config.sh        # + config.jenkins (only if config/ exists)
+    └── database.sh      # + database.jenkins (only if database/ exists)
+```
+
+Domains today: `swarm/`, `cluster/`, `remote/`, `network/`.
+
+## Slices (optional, include only when needed)
+
+| Slice | Owns | Add when |
+|-------|------|----------|
+| `app/` | Runtime service (e.g. Swarm `docker_service`, networks, volumes) | There is a workload to run |
+| `config/` | Provider API / desired state after the service is up | Grafana dashboards, NPM hosts, Vault KV, Jenkins jobs, etc. |
+| `database/` | Separate DB service with its own lifecycle | Postgres/MySQL/Mongo (or similar) as its own Swarm service |
+
+- Each present slice is its **own Terraform root** with its **own remote state** (unique `backend "s3"` key in that slice’s `provider.tf`).
+- Do **not** create empty stub `app/`, `config/`, or `database/` directories.
+- Typical examples: app-only (`cadvisor`); app+config (`vault`); app+database (`graylog`); all three (`grafana`, `nginx_proxy_manager`).
+
+## Pipelines
+
+- Every slice has a matching **bespoke** entrypoint: `pipeline/<slice>.sh`.
+- Every Jenkins-driven slice also has `pipeline/<slice>.jenkins` that calls that script.
+- One script/Jenkinsfile per slice — do not fold app+config+database into a single shared orchestrator during the audit campaign (see `AGENTS.md`).
+- Prefer self-contained `pipeline/*.sh` (extractable later); do not migrate onto `swarm_pipeline.sh` / `cluster_pipeline.sh` / etc. mid-audit.
+- Implied apply order when multiple slices exist: **database → app → config** (separate jobs/scripts, not one mega-pipeline).
+
+## Site config
+
+- Operator tfvars live under `.config/terraform/components/<domain>/<component>/<slice>.tfvars` (mirrors the repo path).
+- Each slice deploy passes **only that slice’s** `-var-file` (self-contained; no shared swarm/dns/nfs bundles mid-audit).
+- Backend config stays separate (`-backend-config`); do not add checked-in `*.tfvars.example`.
+
+## Anti-patterns
+
+```
+# ❌ BAD — one Terraform root mixing runtime, DB, and API config
+terraform/components/swarm/myapp/main.tf
+
+# ❌ BAD — config slice with no pipeline, or pipeline without a slice
+…/myapp/config/          # resources exist
+…/myapp/pipeline/app.sh  # only app wired
+
+# ✅ GOOD — slices as needed, each with its own TF root + pipeline pair
+…/myapp/app/ + pipeline/app.sh + pipeline/app.jenkins
+…/myapp/database/ + pipeline/database.sh + pipeline/database.jenkins
+…/myapp/config/ + pipeline/config.sh + pipeline/config.jenkins
+```

@@ -1,0 +1,26 @@
+---
+description: Use mcp_agentmemory for shared long-term agent memory
+alwaysApply: true
+---
+
+Use the mcp_agentmemory MCP (server user-mcp_agentmemory) for shared long-term agent memory across chats and projects.
+
+## When to recall
+- At the start of a topical or recurring task, call memory_recall (or memory_smart_search) with a concrete query before deep work.
+- Before diagnosing a failure you may have hit before, recall with the error signature or topic.
+- Treat hits as hints — verify against the current repo/state before acting.
+
+## When to save
+- After a failure is observed and fixed on the current task, memory_save the durable lesson (type: bug or workflow).
+- When the user says "remember", "save this", "note for later", or equivalent, memory_save that fact/preference/decision.
+- Save important architecture decisions, stable preferences, and reusable patterns (type: architecture, preference, pattern, fact, or workflow).
+
+## Do not save
+- Chat summaries, step-by-step narration, or successful routine tool calls
+- Secrets, API keys, tokens, passwords, or private personal data
+- Transient noise that will not help a future session
+
+## Usage notes
+- Prefer a few focused recall/save calls over dumping context.
+- Include concepts and relevant files on save when known.
+- If memory tools fail (auth/network), say so briefly and continue without blocking the task.

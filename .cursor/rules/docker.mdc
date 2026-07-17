@@ -1,0 +1,45 @@
+---
+description: Docker — local volume mounts for fast iteration vs deployed images
+globs: "**/Dockerfile*,**/docker-compose*.{yml,yaml},**/compose*.{yml,yaml}"
+alwaysApply: false
+---
+
+# Docker
+
+## Local development vs deployed
+
+Distinguish **local development** containers from **deployed** ones (Swarm, Kubernetes, production compose stacks).
+
+### Local development
+
+When Docker is used so we can develop/iterate on an app locally:
+
+- **Volume-mount application source** into the container (bind mount the project/app code) so code changes appear without rebuilding the image
+- Prefer **restart/reload** the process or container after edits — not `docker build` on every change
+- Mount only what you need to iterate (app code); keep dependencies in the image unless the project already mounts a venv/node_modules pattern
+- Use compose `volumes:` for the app path; keep a `.env` file **next to the compose file** (same directory) so Compose auto-loads it for variable substitution and service env — don’t put `.env` somewhere Compose won’t find it unless you explicitly pass `--env-file`
+- Prefer compose `env_file: .env` on services when the app should receive those vars inside the container; keep keys in sync with `.env.example` per project/Python env rules
+- Hot-reload/watch modes (Flask reloader, etc.) are welcome when they fit the stack
+
+```yaml
+# ✅ Local dev — code mounted for fast iteration
+services:
+  api:
+    build: .
+    volumes:
+      - ./app:/app
+    env_file: .env
+    command: python3 -m flask run --host=0.0.0.0 --reload
+```
+
+### Deployed (Swarm / cluster / prod-like)
+
+- **Do not** rely on bind-mounting live app source for deployed services — bake code into the image
+- Prefer immutable images, pinned tags, and the project’s normal deploy pipeline
+- Local-dev volume mounts must not silently become the deploy pattern
+
+## General
+
+- Prefer clear service names and one concern per service
+- Keep secrets out of the Dockerfile and out of committed compose overlays; use env files / secret stores
+- Match existing Dockerfiles and compose layouts in the repo before inventing a new structure

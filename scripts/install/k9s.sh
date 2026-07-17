@@ -30,15 +30,8 @@ as_root() {
   "${SUDO_CMD[@]}" "$@"
 }
 
-ensure_supported_os() {
-  [[ -f /etc/os-release ]] || die "/etc/os-release not found; unsupported host."
-  # shellcheck disable=SC1091
-  . /etc/os-release
-
-  case "${ID:-}" in
-    ubuntu|debian) ;;
-    *) die "Unsupported distro: ${ID:-unknown}. This script supports Debian/Ubuntu only." ;;
-  esac
+ensure_linux() {
+  [[ "$(uname -s)" == "Linux" ]] || die "Unsupported OS: $(uname -s). Linux is required."
 }
 
 detect_arch() {
@@ -95,12 +88,37 @@ verify_install() {
   log "Installed $(${K9S_BIN} version --short 2>/dev/null | head -n1 || ${K9S_BIN} version 2>/dev/null | head -n1 || true)"
 }
 
+already_installed() {
+  if ! command -v "${K9S_BIN}" >/dev/null 2>&1; then
+    return 1
+  fi
+
+  if [[ "${K9S_VERSION}" == "latest" || -z "${K9S_VERSION}" ]]; then
+    log "k9s already installed: $(${K9S_BIN} version --short 2>/dev/null | head -n1 || ${K9S_BIN} version 2>/dev/null | head -n1 || true); skipping."
+    return 0
+  fi
+
+  local want have
+  want="${K9S_VERSION#v}"
+  have="$(${K9S_BIN} version --short 2>/dev/null | head -n1 || true)"
+  have="${have#v}"
+  if [[ -n "${have}" && "${have}" == "${want}" ]]; then
+    log "k9s v${want} already installed; skipping."
+    return 0
+  fi
+  return 1
+}
+
 main() {
+  if already_installed; then
+    return 0
+  fi
+
   require_cmd curl
   require_cmd tar
 
   init_privilege_command
-  ensure_supported_os
+  ensure_linux
   detect_arch
   resolve_version
   install_k9s

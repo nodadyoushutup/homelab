@@ -1,0 +1,71 @@
+---
+description: Python style — PEP 8, Google docstrings, typing, structure
+globs: "**/*.{py,pyi}"
+alwaysApply: false
+---
+
+# Python
+
+## Style
+
+- Follow PEP 8 (layout, naming, imports, line length per project config)
+- Prefer f-strings over `%` formatting or `str.format()`
+- Use full type hints on all function parameters, return values, and class attributes where typed
+- Lint/format with ruff; match existing ruff config and do not fight it
+- Use `pip` for packaging/installs; do not introduce another package manager
+- Invoke the interpreter as `python3` (not `python`)
+- Prefer Flask and SQLAlchemy for web servers and persistence — do not introduce another web framework or ORM unless the project already uses one or the user explicitly asks
+
+## Docstrings & comments
+
+- Every module, class, and function/method gets a docstring
+- Use Google-style docstrings: summarize purpose, then `Args:`, `Returns:`, `Raises:` (and `Yields:` / `Attributes:` when relevant)
+- Comments only where intent is non-obvious — never narrate what the code already says
+
+```python
+def fetch_user(user_id: str) -> User:
+    """Load a user by ID from the directory service.
+
+    Args:
+        user_id: Stable external identifier for the user.
+
+    Returns:
+        The matching User record.
+
+    Raises:
+        UserNotFoundError: If no user exists for `user_id`.
+        DirectoryError: If the directory service is unreachable.
+    """
+    ...
+```
+
+## Structure & architecture
+
+Write organized, refactored code from the first draft — do not leave monoliths “to clean up later.”
+
+- Prefer well-designed OOP: lean object-oriented by default (classes for stateful collaborators, clear responsibilities, and cohesive behavior), without being ridiculous or over-engineered — skip ceremony when a plain function or small module is the clearer fit
+- One public function/method should do one job. If it orchestrates several steps, extract helpers (prefer private `_`-prefixed functions or small collaborators)
+- Prefer several small, focused units over one large function that mixes concerns (I/O, parsing, business rules, formatting)
+- Prefer a sensible package layout (`package/`, modules by responsibility) over a single large `.py` file
+- Package `__init__.py` files should usually only declare `__all__` and re-export imports — do not put business logic, side effects, or non-trivial setup in `__init__`
+- Default: one primary class per module. Keep additional classes in the same file only when they are tightly coupled (e.g. a small helper enum/dataclass used only by that class)
+- Group related modules into folders/packages; gather shared utilities where they belong — avoid both scatter and dumping grounds
+- Be reasonable: don’t create empty layers or one-line files for their own sake; split when a file or function has more than one clear responsibility
+
+## Robustness
+
+- Raise specific exception types; chain with `raise ... from e`; never bare `except:` or swallow errors silently
+- Prefer `dataclass` (frozen when immutable) and `Enum` over ad-hoc dicts for structured data
+- Import order: stdlib → third-party → local; prefer absolute imports; never `from module import *`
+- Use context managers (`with`) for files, network clients, locks, and other resources
+- Prefer `logging` over `print` in library/app code; log with useful context, not only a bare message
+- Always write `pytest` unit tests in the same change as the code (not as a follow-up). Aim for as close to 100% coverage as practical on new/changed code so we can test and iterate fast. This is not strict TDD — implement and test together, keeping tests focused and fast. Skip only if pytest is unavailable in the environment (it usually is)
+
+## Configuration & environment
+
+- True constants (fixed domain values, enums, non-tunable literals) may live in code — that is fine
+- Configuration-related values (URLs, hosts, ports, credentials, feature flags, timeouts, paths, environment names, third-party endpoints, etc.) should usually come from environment variables when practical — not hard-coded knobs at the top of a module
+- Read and validate config at boundaries (startup / settings module); fail fast with clear errors when required env vars are missing
+- Prefer a small settings/config module over scattering `os.environ` calls throughout the app
+- Keep `.env` and `.env.example` in sync whenever env vars are added, renamed, or removed: update `.env.example` with the same keys (placeholder or empty values, no real secrets) so newcomers can see every variable in use
+- Never commit real secrets in `.env.example` or source; `.env` stays local/untracked
