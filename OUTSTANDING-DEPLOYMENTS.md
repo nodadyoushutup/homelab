@@ -59,7 +59,6 @@ Swarm:
 | **jenkins-controller** | `swarm-wk-1` | [`jenkins-controller/app.sh`](terraform/components/swarm/jenkins-controller/pipeline/app.sh) → [`jenkins-controller/config.sh`](terraform/components/swarm/jenkins-controller/pipeline/config.sh) | Fix Terraform syntax in [`terraform/components/swarm/jenkins-controller/app/main.tf`](terraform/components/swarm/jenkins-controller/app/main.tf) (`Missing newline after block definition` near dynamic `mounts`) before apply |
 | **jenkins-agent-amd64** | pool / any | [`jenkins-agent-amd64/pipeline/app.sh`](terraform/components/runners/jenkins-agent-amd64/pipeline/app.sh) | Depends on controller |
 | **jenkins-agent-arm64** | pool / any | [`jenkins-agent-arm64/pipeline/app.sh`](terraform/components/runners/jenkins-agent-arm64/pipeline/app.sh) | Depends on controller |
-| **langchain-agent-chat** | Kubernetes | Argo CD / cluster apply | Production pair is **Kubernetes** only — see [`docs/architecture/kubernetes/README.md`](docs/architecture/kubernetes/README.md) and [`applications/langchain-agent-chat/README.md`](applications/langchain-agent-chat/README.md) |
 
 ## Removed / out of scope
 
