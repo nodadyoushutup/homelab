@@ -144,19 +144,6 @@ resolve_build_target() {
       DOCKERFILE="applications/jenkins-controller/Dockerfile"
       BUILD_STRATEGY="direct"
       ;;
-    langchain-agent-chat)
-      IMAGE_NAME="langchain-agent-chat"
-      DOCKER_CONTEXT="applications/langchain-agent-chat"
-      SUPPORTED_PLATFORMS="linux/amd64"
-      BUILD_STRATEGY="direct"
-      ;;
-    langgraph)
-      IMAGE_NAME="langgraph"
-      DOCKER_CONTEXT="applications/langgraph"
-      DOCKERFILE="applications/langgraph/docker/Dockerfile"
-      SUPPORTED_PLATFORMS="linux/amd64"
-      BUILD_STRATEGY="direct"
-      ;;
     mcp-argocd)
       IMAGE_NAME="mcp-argocd"
       DOCKER_CONTEXT="applications/mcp-argocd"
@@ -187,24 +174,9 @@ resolve_build_target() {
       DOCKER_CONTEXT="applications/mcp-google-workspace"
       BUILD_STRATEGY="direct"
       ;;
-    mcp-rag)
-      IMAGE_NAME="mcp-rag"
-      DOCKER_CONTEXT="applications/mcp-rag"
-      BUILD_STRATEGY="direct"
-      ;;
     mcp-terraform)
       IMAGE_NAME="mcp-terraform"
       DOCKER_CONTEXT="applications/mcp-terraform"
-      BUILD_STRATEGY="direct"
-      ;;
-    rag-engine)
-      IMAGE_NAME="rag-engine"
-      DOCKER_CONTEXT="applications/rag-engine"
-      BUILD_STRATEGY="direct"
-      ;;
-    torrent-manager)
-      IMAGE_NAME="torrent-manager"
-      DOCKER_CONTEXT="applications/torrent-manager"
       BUILD_STRATEGY="direct"
       ;;
     *)

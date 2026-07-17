@@ -27,7 +27,6 @@ applicable):
 | --- | --- |
 | Edge | Nginx Proxy Manager (app + database), cloud-image-repository |
 | Observability | Grafana (+ postgres, config), Prometheus, VictoriaMetrics, Graphite, **Graylog** (+ mongodb, datanode on `swarm-wk-0`), prometheus-pve-exporter, qbittorrent-exporter, node_exporter, cadvisor, dozzle |
-| RAG | chromadb, rag-engine, mcp-rag |
 | MCPs | mcp-argocd, mcp-atlassian, mcp-cloudflare, mcp-fortigate, mcp-github, mcp-google-workspace, mcp-kubernetes, mcp-playwright |
 | Registry | **zot** (OCI registry on `swarm-cp-0`, port `35081`) |
 | Secrets | vault (app + config on `swarm-cp-0`; unsealed, `vault-auto-unseal.service` on manager) |

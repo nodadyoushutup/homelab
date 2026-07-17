@@ -1,8 +1,0 @@
-{
-  "dependencies": [
-    "../../"
-  ],
-  "graphs": {
-    "github": "./agent.py:agent"
-  }
-}

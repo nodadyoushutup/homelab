@@ -14,8 +14,6 @@ pipeline {
     choice(name: 'TARGET_REGISTRY', choices: ['both', 'zot', 'github'], description: 'Registry target for this publish')
     choice(name: 'BUILD_PLATFORMS', choices: ['both', 'amd64', 'arm64'], description: 'Architectures to build')
     choice(name: 'BUILD_TARGET', choices: [
-      'langchain-agent-chat',
-      'langgraph',
       'mcp-argocd',
       'mcp-atlassian',
       'mcp-cloudflare',

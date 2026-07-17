@@ -23,11 +23,8 @@ fi
 _homelab_docker_env_files=(
   site.env
   shared.env
-  postgres.env
   rag.env
   mcp.env
-  langgraph.env
-  agents.env
   argocd.env
   minio.env
   qbittorrent.env

@@ -3,7 +3,6 @@
 
 from __future__ import annotations
 
-import re
 import sys
 from pathlib import Path
 
@@ -14,11 +13,8 @@ MONOLITH = DOCKER_DIR / ".env"
 LOAD_ORDER = [
     "site.env",
     "shared.env",
-    "postgres.env",
     "rag.env",
     "mcp.env",
-    "langgraph.env",
-    "agents.env",
     "argocd.env",
     "minio.env",
     "qbittorrent.env",
@@ -27,35 +23,8 @@ LOAD_ORDER = [
 SITE_KEYS = {"CONFIG_DIR"}
 ARGOCD_PREFIX = "ARGOCD_"
 MINIO_PREFIX = "MINIO_"
-POSTGRES_PREFIX = "POSTGRES_"
 MCP_PREFIXES = ("HOMELAB_MCP_", "MCP_RAG_")
-RAG_PREFIXES = ("RAG_",)
-AGENTS_KEYS = {
-    "CODE_AGENT_URL",
-    "CODE_AGENT_GRAPH_ID",
-    "CODE_AGENT_ASSISTANT_ID",
-    "CODE_AGENT_API_KEY",
-    "JIRA_AGENT_URL",
-    "JIRA_AGENT_GRAPH_ID",
-    "JIRA_AGENT_ASSISTANT_ID",
-    "JIRA_AGENT_API_KEY",
-}
-LANGGRAPH_KEYS = {
-    "SUPERVISOR_MODEL",
-    "CODE_MODEL",
-    "JIRA_MODEL",
-    "TECH_LEAD_MODEL",
-    "GITHUB_MODEL",
-    "CREATE_ISSUE_DEFAULT_PROJECT",
-    "LANGSMITH_TRACING",
-    "HOMELAB_DISABLE_WORKFLOW_GATES",
-    "HOMELAB_MCP_BOOTSTRAP_RETRIES",
-    "HOMELAB_MCP_BOOTSTRAP_RETRY_DELAY_SEC",
-    "CODE_REPOSITORY_ROOT",
-    "TECH_LEAD_REPOSITORY_ROOT",
-    "HOMELAB_CONFIG_ENV",
-    "HOMELAB_CONFIG_ENV_DIR",
-}
+RAG_PREFIXES = ("RAG_", "RAG_ENGINE_")
 SHARED_KEYS = {"OPENAI_API_KEY", "GOOGLE_API_KEY", "VOYAGE_API_KEY"}
 QBITTORRENT_KEYS = {
     "QBITTORRENT_BASE_URL",
@@ -78,27 +47,22 @@ QBITTORRENT_KEYS = {
 
 
 def _target_file(key: str) -> str:
+    """Return the split dotenv filename for an environment variable key."""
     if key in SITE_KEYS:
         return "site.env"
     if key.startswith(ARGOCD_PREFIX):
         return "argocd.env"
     if key.startswith(MINIO_PREFIX):
         return "minio.env"
-    if key.startswith(POSTGRES_PREFIX):
-        return "postgres.env"
     if key in SHARED_KEYS:
         return "shared.env"
     if any(key.startswith(p) for p in MCP_PREFIXES):
         return "mcp.env"
     if any(key.startswith(p) for p in RAG_PREFIXES):
         return "rag.env"
-    if key in AGENTS_KEYS:
-        return "agents.env"
-    if key in LANGGRAPH_KEYS:
-        return "langgraph.env"
     if key in QBITTORRENT_KEYS or key.startswith("QBITTORRENT_"):
         return "qbittorrent.env"
-    return "langgraph.env"
+    return "shared.env"
 
 
 def _parse_env(path: Path) -> list[tuple[str | None, str]]:
@@ -127,6 +91,7 @@ def _parse_env(path: Path) -> list[tuple[str | None, str]]:
 
 
 def main() -> int:
+    """Split a monolithic dotenv into the canonical per-service files."""
     if not MONOLITH.is_file():
         print(f"No monolithic file at {MONOLITH}; nothing to split.", file=sys.stderr)
         return 0
@@ -146,8 +111,6 @@ def main() -> int:
         out = DOCKER_DIR / name
         lines = buckets[name]
         if not lines:
-            if out.exists():
-                continue
             continue
         body = "\n".join(lines).strip() + "\n"
         out.write_text(body)

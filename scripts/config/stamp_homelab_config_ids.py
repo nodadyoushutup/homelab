@@ -6,8 +6,8 @@ Tag format:
 
 Ids are relative to CONFIG_DIR (no leading slash), derived from each file path:
   terraform/components/swarm/grafana/app.tfvars  -> terraform/components/swarm/grafana/app
-  minio.backend.hcl                   -> minio.backend
-  docker/langgraph.env                -> docker/langgraph
+  terraform/minio.backend.hcl         -> terraform/minio.backend
+  docker/rag.env                      -> docker/rag
 
 Skips: README.md, *.example, init.json, grafana.ini, known_hosts, .gitkeep
 """
@@ -30,9 +30,6 @@ def config_id_for_file(config_dir: Path, path: Path) -> str | None:
     if name in SKIP_NAMES or name.endswith(".example"):
         return None
 
-    if name == "minio.backend.hcl":
-        return "minio.backend"
-
     if name.endswith(".tfvars"):
         return rel[: -len(".tfvars")]
 
@@ -41,7 +38,6 @@ def config_id_for_file(config_dir: Path, path: Path) -> str | None:
 
     if name.endswith(".hcl"):
         return rel[: -len(".hcl")]
-
     return None
 
 

@@ -34,8 +34,6 @@ on:
           - gha-runner
           - jenkins-agent
           - jenkins-controller
-          - langchain-agent-chat
-          - langgraph
           - agentmemory
           - mcp-agentmemory
           - mcp-argocd
@@ -44,10 +42,7 @@ on:
           - mcp-fortigate
           - mcp-github
           - mcp-google-workspace
-          - mcp-rag
           - mcp-terraform
-          - rag-engine
-          - torrent-manager
 
 permissions:
   contents: write
@@ -123,19 +118,6 @@ jobs:
               dockerfile="applications/jenkins-controller/Dockerfile"
               build_strategy="direct"
               ;;
-            langchain-agent-chat)
-              image_name="langchain-agent-chat"
-              docker_context="applications/langchain-agent-chat"
-              supported_platforms="linux/amd64"
-              build_strategy="direct"
-              ;;
-            langgraph)
-              image_name="langgraph"
-              docker_context="."
-              dockerfile="applications/langgraph/docker/Dockerfile"
-              supported_platforms="linux/amd64"
-              build_strategy="direct"
-              ;;
             agentmemory)
               image_name="agentmemory"
               docker_context="applications/agentmemory"
@@ -176,24 +158,9 @@ jobs:
               docker_context="applications/mcp-google-workspace"
               build_strategy="direct"
               ;;
-            mcp-rag)
-              image_name="mcp-rag"
-              docker_context="applications/mcp-rag"
-              build_strategy="direct"
-              ;;
             mcp-terraform)
               image_name="mcp-terraform"
               docker_context="applications/mcp-terraform"
-              build_strategy="direct"
-              ;;
-            rag-engine)
-              image_name="rag-engine"
-              docker_context="applications/rag-engine"
-              build_strategy="direct"
-              ;;
-            torrent-manager)
-              image_name="torrent-manager"
-              docker_context="applications/torrent-manager"
               build_strategy="direct"
               ;;
             *)

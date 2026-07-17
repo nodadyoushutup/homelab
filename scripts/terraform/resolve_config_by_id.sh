@@ -7,9 +7,9 @@
 # <config-id> mirrors repo layout, relative to CONFIG_DIR (no leading slash):
 #   terraform/components/swarm/grafana/app
 #   terraform/components/swarm/dns
-#   kubernetes/langgraph/app
-#   minio.backend
-#   docker/langgraph
+#   terraform/minio.backend
+#   docker/rag
+#   terraform/components/swarm/rag-engine/app
 
 HOMELAB_CONFIG_TAG_PREFIX='# homelab-config:'
 declare -gA HOMELAB_CONFIG_INDEX=()
@@ -85,8 +85,8 @@ homelab_config_canonical_path() {
   local config_id="$2"
 
   case "${config_id}" in
-    minio.backend)
-      printf '%s/minio.backend.hcl\n' "${config_dir}"
+    terraform/minio.backend)
+      printf '%s/terraform/minio.backend.hcl\n' "${config_dir}"
       ;;
     docker/*)
       printf '%s/%s.env\n' "${config_dir}" "${config_id}"

@@ -6,40 +6,34 @@ Split env files under this directory so Compose can mount only what each service
 ## Load order
 
 1. `site.env` — `CONFIG_DIR` (Terraform tfvars root; not injected into app containers)
-2. `shared.env` — API keys shared across LangGraph and RAG (`OPENAI_API_KEY`, …)
-3. `postgres.env` — LangGraph dev Postgres (`POSTGRES_*`)
-4. `rag.env` — RAG engine, hooks, Chroma/embed (`RAG_*`, `RAG_ENGINE_*`)
-5. `mcp.env` — MCP HTTP URLs and auth (`HOMELAB_MCP_*`, `MCP_RAG_*`, mounts)
-6. `langgraph.env` — LangGraph runtime (models, tracing, workflow gates)
-7. `agents.env` — Host scripts / optional remote agent endpoints
-8. `argocd.env` — `scripts/install/argocd.sh`
-9. `minio.env` — `docker/docker-compose.minio.yaml`, Velero installer
-10. `qbittorrent.env` — `docker/docker-compose.yaml` exporter dev
+2. `shared.env` — API keys shared across RAG and related tools (`OPENAI_API_KEY`, …)
+3. `rag.env` — RAG engine, hooks, Chroma/embed (`RAG_*`, `RAG_ENGINE_*`)
+4. `mcp.env` — MCP HTTP URLs and auth (`HOMELAB_MCP_*`, `MCP_RAG_*`, mounts)
+5. `argocd.env` — `scripts/install/argocd.sh`
+6. `minio.env` — `docker/docker-compose.minio.yaml`, Velero installer
+7. `qbittorrent.env` — `docker/docker-compose.yaml` exporter dev
 
 Copy each `*.env.example` to the matching `*.env` and fill secrets. Do not use a monolithic `.env` here.
 
-## Docker Compose (`homelab-dev`)
+## Docker Compose (`homelab-rag-dev`)
 
 | Service | `env_file` |
 |---------|------------|
-| `langgraph-postgres` | `postgres.env` |
-| `langgraph-dev` | `postgres.env`, `shared.env`, `langgraph.env`, `mcp.env` |
 | `rag-engine-dev` | `shared.env`, `rag.env` |
 | `mcp-rag-dev` | `rag.env`, `mcp.env` |
 
 For **Compose variable interpolation**, pass the same files on the CLI:
 
 ```bash
-docker compose -f docker/docker-compose.langgraph.yml \
+docker compose -f docker/docker-compose.rag.yml \
   --env-file .config/docker/mcp.env \
-  --env-file .config/docker/langgraph.env \
+  --env-file .config/docker/rag.env \
   up -d --build
 ```
 
-## Host scripts and LangGraph
+## Host scripts
 
 - `scripts/terraform/load_root_env.sh` sources all present `*.env` files via `load_docker_env.sh`.
-- LangGraph `framework.configuration.merged_settings()` uses the same order.
 - Override directory: `HOMELAB_CONFIG_ENV_DIR=/path/to/.config/docker`
 
 ## Swarm Terraform

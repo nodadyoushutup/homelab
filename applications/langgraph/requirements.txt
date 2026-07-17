@@ -1,8 +1,0 @@
-deepagents
-langchain
-langchain-mcp-adapters
-langchain-openai
-langgraph-checkpoint-postgres
-langgraph-cli[inmem]
-psycopg[binary,pool]
-python-dotenv
