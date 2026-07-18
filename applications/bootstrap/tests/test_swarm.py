@@ -525,13 +525,19 @@ def test_label_skipped_when_already_present(tmp_path, caplog) -> None:
 
 
 def test_topology_loaded_from_swarm_file(tmp_path, caplog) -> None:
-    """A swarm.yaml with a control plane drives provisioning without prompts."""
+    """A swarm.yaml with nodes drives provisioning without prompts."""
     swarm_file = tmp_path / "swarm.yaml"
     swarm_file.write_text(
         "# homelab-config: docker/swarm\n"
-        "control_plane: nodadyoushutup@swarm-cp-0.local\n"
-        "workers:\n"
-        "  - operator@wk1\n",
+        "nodes:\n"
+        "  - name: swarm-cp-0\n"
+        "    host: swarm-cp-0.local\n"
+        "    user: nodadyoushutup\n"
+        "    role: manager\n"
+        "  - name: wk1\n"
+        "    host: wk1\n"
+        "    user: operator\n"
+        "    role: worker\n",
         encoding="utf-8",
     )
     cp = _manager_client(hostname="swarm-cp-0")
@@ -556,12 +562,14 @@ def test_topology_loaded_from_swarm_file(tmp_path, caplog) -> None:
 
 
 def test_topology_file_worker_defaults_username(tmp_path) -> None:
-    """A worker entry without a username defaults to the standard user."""
+    """A worker entry without a user defaults to the standard user."""
     swarm_file = tmp_path / "swarm.yaml"
     swarm_file.write_text(
-        "control_plane: nodadyoushutup@swarm-cp-0.local\n"
-        "workers:\n"
-        "  - wk1\n",
+        "nodes:\n"
+        "  - host: swarm-cp-0.local\n"
+        "    role: manager\n"
+        "  - host: wk1\n"
+        "    role: worker\n",
         encoding="utf-8",
     )
     cp = _manager_client(hostname="swarm-cp-0")
@@ -602,7 +610,12 @@ def test_interactive_capture_persists_swarm_file(tmp_path) -> None:
     assert swarm_file.is_file()
     written = swarm_file.read_text(encoding="utf-8")
     assert "# homelab-config: docker/swarm" in written
-    assert "control_plane: admin@swarm-cp-0.local" in written
-    assert "operator@wk1" in written
+    assert "nodes:" in written
+    assert "name: swarm-cp-0" in written
+    assert "host: swarm-cp-0.local" in written
+    assert "user: admin" in written
+    assert "role: manager" in written
+    assert "host: wk1" in written
+    assert "user: operator" in written
     # Password from the SSH string must never be persisted.
     assert "secret" not in written

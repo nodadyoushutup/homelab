@@ -1,10 +1,10 @@
-"""Provision the mandatory Docker Swarm control plane node (swarm-cp-0)."""
+"""Provision the Docker Swarm from the ``nodes`` topology in swarm.yaml."""
 
 from __future__ import annotations
 
 import logging
 from collections.abc import Callable
-from dataclasses import replace
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 
 from bootstrap.paths import PROJECT_ROOT, display_path
@@ -32,6 +32,10 @@ logger = logging.getLogger(__name__)
 SwarmTarget = RemoteTarget
 SwarmAuthError = RemoteAuthError
 
+ROLE_MANAGER = "manager"
+ROLE_WORKER = "worker"
+_VALID_ROLES = (ROLE_MANAGER, ROLE_WORKER)
+
 _CONTROL_PLANE_NAME = "swarm-cp-0"
 _CONTROL_PLANE_DEFAULT_HOST = "swarm-cp-0.local"
 _CONTROL_PLANE_DEFAULT_USER = "nodadyoushutup"
@@ -51,11 +55,28 @@ _SWARM_CONFIG_TAG = "# homelab-config: docker/swarm"
 
 
 class SwarmError(RemoteError):
-    """Raised when the Docker Swarm control plane cannot be provisioned."""
+    """Raised when the Docker Swarm cannot be provisioned."""
+
+
+@dataclass(frozen=True)
+class SwarmNodeSpec:
+    """A swarm machine parsed from swarm.yaml (or interactive capture).
+
+    Attributes:
+        target: SSH connection target for the node.
+        name: Human-readable node name (used for logs and persistence).
+        role: Either ``manager`` (control plane) or ``worker``.
+        labels: Extra placement labels to apply on the node.
+    """
+
+    target: RemoteTarget
+    name: str
+    role: str
+    labels: dict[str, str] = field(default_factory=dict)
 
 
 class SwarmManager:
-    """Set up the mandatory ``swarm-cp-0`` Docker Swarm control plane node."""
+    """Provision the Docker Swarm described by ``swarm.yaml``."""
 
     def __init__(
         self,
@@ -118,77 +139,95 @@ class SwarmManager:
     def run(self) -> None:
         """Provision the swarm from ``swarm.yaml`` (or interactive capture).
 
-        When ``swarm.yaml`` declares a control plane, the topology is used as-is
-        with no prompts. Otherwise the operator is prompted for the control plane
-        and worker targets, and the collected topology is written back to
+        When ``swarm.yaml`` declares ``nodes``, the topology is used as-is with
+        no prompts. Otherwise the operator is prompted for the control plane and
+        worker targets, and the collected topology is written back to
         ``swarm.yaml`` for future runs.
 
         Raises:
             SwarmError: If the control plane cannot be provisioned.
         """
-        cp_target, worker_targets = self._resolve_topology()
-        manager = self._connect(cp_target, _CONTROL_PLANE_NAME)
+        cp_spec, worker_specs = self._resolve_topology()
+        manager = self._connect(cp_spec.target, cp_spec.name)
         try:
-            self._ensure_docker(manager, _CONTROL_PLANE_NAME)
+            self._ensure_docker(manager, cp_spec.name)
             manager_sudo = sudo_prefix(manager)
-            self._ensure_swarm(manager, cp_target, manager_sudo)
+            self._ensure_swarm(manager, cp_spec.target, manager_sudo)
             # Label the control plane node itself for placement.
             cp_hostname = node_hostname(manager)
             self._ensure_node_label(manager, manager_sudo, cp_hostname)
+            self._apply_labels(manager, manager_sudo, cp_hostname, cp_spec.labels)
             logger.info(
-                "Docker Swarm control plane %s is ready", _CONTROL_PLANE_NAME
+                "Docker Swarm control plane %s is ready", cp_spec.name
             )
-            for worker in worker_targets:
+            for worker in worker_specs:
                 self._try_join_worker(worker, manager, manager_sudo)
             logger.info(
-                "Finished joining %d swarm worker node(s)", len(worker_targets)
+                "Finished joining %d swarm worker node(s)", len(worker_specs)
             )
         finally:
             manager.close()
 
-    def _resolve_topology(self) -> tuple[RemoteTarget, list[RemoteTarget]]:
-        """Resolve the control plane and worker targets for provisioning.
+    def _resolve_topology(self) -> tuple[SwarmNodeSpec, list[SwarmNodeSpec]]:
+        """Resolve the control plane and worker specs for provisioning.
 
-        Prefers a control plane declared in ``swarm.yaml``; otherwise prompts the
+        Prefers ``nodes`` declared in ``swarm.yaml``; otherwise prompts the
         operator and persists the collected topology.
 
         Returns:
-            The control-plane target and the list of worker targets.
+            The control-plane spec and the list of worker specs.
 
         Raises:
-            SwarmError: When no control-plane target can be determined.
+            SwarmError: When no manager node can be determined.
         """
         config = self._read_swarm_config()
-        cp_raw = str(config.get("control_plane") or "").strip() if config else ""
-        if cp_raw:
-            cp_target = self._ensure_username(
-                parse_target(cp_raw), _CONTROL_PLANE_DEFAULT_USER
-            )
-            worker_targets = [
-                self._ensure_username(
-                    parse_target(str(entry).strip()), _WORKER_DEFAULT_USER
+        raw_nodes = config.get("nodes") if config else None
+        if raw_nodes:
+            specs = [self._parse_node(entry) for entry in raw_nodes if entry]
+            managers = [spec for spec in specs if spec.role == ROLE_MANAGER]
+            workers = [spec for spec in specs if spec.role == ROLE_WORKER]
+            if not managers:
+                raise SwarmError(
+                    f"No manager node defined in {self._rel(self._swarm_file)}; "
+                    "exactly one node must have role: manager"
                 )
-                for entry in (config.get("workers") or [])
-                if str(entry).strip()
-            ]
+            if len(managers) > 1:
+                logger.warning(
+                    "Multiple manager nodes in %s; using %s as the control plane",
+                    self._rel(self._swarm_file),
+                    managers[0].name,
+                )
             logger.info(
                 "Loaded swarm topology from %s (control plane %s, %d worker(s))",
                 self._rel(self._swarm_file),
-                target_to_ssh(cp_target),
-                len(worker_targets),
+                managers[0].name,
+                len(workers),
             )
-            return cp_target, worker_targets
+            return managers[0], workers
 
         logger.warning(
-            "No control plane defined in %s; capturing swarm topology "
-            "interactively for the mandatory node %s.",
+            "No nodes defined in %s; capturing swarm topology interactively "
+            "for the mandatory node %s.",
             self._rel(self._swarm_file),
             _CONTROL_PLANE_NAME,
         )
         cp_target = self._prompt_target()
         worker_targets = self._prompt_worker_targets()
-        self._write_swarm_config(cp_target, worker_targets)
-        return cp_target, worker_targets
+        cp_spec = SwarmNodeSpec(
+            target=cp_target,
+            name=self._default_name(cp_target.hostname),
+            role=ROLE_MANAGER,
+        )
+        worker_specs = [
+            SwarmNodeSpec(
+                target=target,
+                name=self._default_name(target.hostname),
+                role=ROLE_WORKER,
+            )
+            for target in worker_targets
+        ]
+        self._write_swarm_config(cp_spec, worker_specs)
+        return cp_spec, worker_specs
 
     def _read_swarm_config(self) -> dict | None:
         """Read and parse the swarm topology file, if present.
@@ -217,22 +256,74 @@ class SwarmManager:
             return None
         return data
 
+    def _parse_node(self, entry: object) -> SwarmNodeSpec:
+        """Parse one ``nodes:`` entry into a :class:`SwarmNodeSpec`.
+
+        Args:
+            entry: A single mapping from the ``nodes`` list.
+
+        Returns:
+            The parsed node spec.
+
+        Raises:
+            SwarmError: When the entry is malformed.
+        """
+        if not isinstance(entry, dict):
+            raise SwarmError(
+                f"Invalid swarm node entry in {self._rel(self._swarm_file)}: "
+                f"{entry!r}"
+            )
+        host = str(entry.get("host") or "").strip()
+        if not host:
+            raise SwarmError(
+                f"Swarm node entry missing 'host' in "
+                f"{self._rel(self._swarm_file)}"
+            )
+        user = str(entry.get("user") or "").strip() or _CONTROL_PLANE_DEFAULT_USER
+        role = str(entry.get("role") or ROLE_WORKER).strip().lower()
+        if role not in _VALID_ROLES:
+            raise SwarmError(
+                f"Swarm node {host} has invalid role {role!r} "
+                f"(expected one of {', '.join(_VALID_ROLES)})"
+            )
+        raw_port = entry.get("ssh_port", 22)
+        try:
+            port = int(raw_port)
+        except (TypeError, ValueError) as exc:
+            raise SwarmError(
+                f"Swarm node {host} has invalid ssh_port {raw_port!r}"
+            ) from exc
+        name = str(entry.get("name") or "").strip() or self._default_name(host)
+        raw_labels = entry.get("labels") or {}
+        labels = (
+            {str(key): str(value) for key, value in raw_labels.items()}
+            if isinstance(raw_labels, dict)
+            else {}
+        )
+        target = RemoteTarget(hostname=host, username=user, port=port)
+        return SwarmNodeSpec(target=target, name=name, role=role, labels=labels)
+
+    @staticmethod
+    def _default_name(hostname: str) -> str:
+        """Return a node name derived from a hostname (first DNS label)."""
+        return hostname.split(".", 1)[0] or hostname
+
     def _write_swarm_config(
-        self, cp_target: RemoteTarget, worker_targets: list[RemoteTarget]
+        self, cp_spec: SwarmNodeSpec, worker_specs: list[SwarmNodeSpec]
     ) -> None:
         """Persist the captured topology to ``swarm.yaml`` (no secrets).
 
         Args:
-            cp_target: Control-plane target.
-            worker_targets: Worker targets.
+            cp_spec: Control-plane node spec.
+            worker_specs: Worker node specs.
         """
         import yaml
 
-        payload = {
-            "control_plane": target_to_ssh(cp_target),
-            "workers": [target_to_ssh(worker) for worker in worker_targets],
-        }
-        body = yaml.safe_dump(payload, sort_keys=False, default_flow_style=False)
+        nodes = [self._node_to_dict(cp_spec)]
+        nodes.extend(self._node_to_dict(worker) for worker in worker_specs)
+        body = yaml.safe_dump(
+            {"nodes": nodes}, sort_keys=False, default_flow_style=False
+        )
         self._swarm_file.parent.mkdir(parents=True, exist_ok=True)
         self._swarm_file.write_text(
             f"{_SWARM_CONFIG_TAG}\n{body}", encoding="utf-8"
@@ -242,19 +333,17 @@ class SwarmManager:
             self._rel(self._swarm_file),
         )
 
-    def _ensure_username(self, target: RemoteTarget, default: str) -> RemoteTarget:
-        """Return a target guaranteed to carry a username (no prompting).
-
-        Args:
-            target: Target that may lack a username.
-            default: Username applied when none is present.
-
-        Returns:
-            A target with a username set.
-        """
-        if target.username:
-            return target
-        return replace(target, username=default)
+    @staticmethod
+    def _node_to_dict(spec: SwarmNodeSpec) -> dict:
+        """Render a node spec as a swarm.yaml mapping (never includes secrets)."""
+        return {
+            "name": spec.name,
+            "host": spec.target.hostname,
+            "user": spec.target.username,
+            "role": spec.role,
+            "ssh_port": spec.target.port,
+            "labels": dict(spec.labels),
+        }
 
     def _prompt_target(self) -> RemoteTarget:
         """Ask the operator for the control-plane SSH target.
@@ -435,6 +524,65 @@ class SwarmManager:
             node,
         )
 
+    def _apply_labels(
+        self,
+        manager: RemoteClient,
+        sudo: str,
+        node: str,
+        labels: dict[str, str],
+    ) -> None:
+        """Apply operator-configured placement labels to a node (idempotent).
+
+        Args:
+            manager: Connected manager client.
+            sudo: Command prefix for docker commands.
+            node: Swarm node hostname.
+            labels: Extra ``key=value`` labels to ensure on the node.
+        """
+        for key, value in labels.items():
+            self._ensure_label(manager, sudo, node, key, value)
+
+    def _ensure_label(
+        self,
+        manager: RemoteClient,
+        sudo: str,
+        node: str,
+        key: str,
+        value: str,
+    ) -> None:
+        """Ensure a single ``key=value`` label on ``node`` (idempotent).
+
+        Args:
+            manager: Connected manager client.
+            sudo: Command prefix for docker commands.
+            node: Swarm node hostname.
+            key: Label key.
+            value: Label value.
+
+        Raises:
+            SwarmError: When the node cannot be inspected or updated.
+        """
+        inspect = manager.run(
+            f"{sudo}docker node inspect {node} "
+            f"--format '{{{{ index .Spec.Labels \"{key}\" }}}}'"
+        )
+        if inspect.exit_code != 0:
+            raise SwarmError(
+                f"Could not inspect swarm node {node}: {inspect.stderr.strip()}"
+            )
+        if inspect.stdout.strip() == value:
+            logger.info("Node %s already has label %s=%s", node, key, value)
+            return
+        result = manager.run(
+            f"{sudo}docker node update --label-add {key}={value} {node}"
+        )
+        if result.exit_code != 0:
+            raise SwarmError(
+                f"Failed to add label {key}={value} to node {node} "
+                f"(exit {result.exit_code}): {result.stderr.strip()}"
+            )
+        logger.info("Added label %s=%s to node %s", key, value, node)
+
     def _prompt_worker_targets(self) -> list[RemoteTarget]:
         """Prompt for worker node targets, returning the collected list.
 
@@ -485,35 +633,38 @@ class SwarmManager:
             targets.append(target)
 
     def _try_join_worker(
-        self, target: RemoteTarget, manager: RemoteClient, manager_sudo: str
+        self,
+        worker: SwarmNodeSpec,
+        manager: RemoteClient,
+        manager_sudo: str,
     ) -> None:
         """Join a single worker node, logging and swallowing worker failures.
 
         Args:
-            target: Worker connection target.
+            worker: Worker node spec.
             manager: Connected manager client (used to apply placement labels).
             manager_sudo: Command prefix for docker commands on the manager.
         """
-        label = f"{target.username}@{target.hostname}"
+        label = f"{worker.target.username}@{worker.target.hostname}"
         try:
-            self._join_worker(target, label, manager, manager_sudo)
+            self._join_worker(worker, label, manager, manager_sudo)
         except RemoteError as exc:
             logger.error("Failed to add worker %s: %s", label, exc)
 
     def _join_worker(
         self,
-        target: RemoteTarget,
+        worker: SwarmNodeSpec,
         label: str,
         manager: RemoteClient,
         manager_sudo: str,
     ) -> None:
-        """Connect to a worker, ensure Docker, join it, and apply its label.
+        """Connect to a worker, ensure Docker, join it, and apply its labels.
 
-        The placement label is ensured even when the node was already in the
+        The placement labels are ensured even when the node was already in the
         swarm.
 
         Args:
-            target: Worker connection target.
+            worker: Worker node spec.
             label: Human-readable node label for logs.
             manager: Connected manager client (used to apply placement labels).
             manager_sudo: Command prefix for docker commands on the manager.
@@ -527,7 +678,7 @@ class SwarmManager:
                 "cannot join worker nodes"
             )
         logger.info("Adding swarm worker node %s", label)
-        client = self._connect(target, label)
+        client = self._connect(worker.target, label)
         try:
             self._ensure_docker(client, label)
             self._join_swarm(client, label)
@@ -537,6 +688,7 @@ class SwarmManager:
         # Labels are applied from the manager and kept idempotent even for
         # nodes that were already members of the swarm.
         self._ensure_node_label(manager, manager_sudo, worker_hostname)
+        self._apply_labels(manager, manager_sudo, worker_hostname, worker.labels)
         logger.info("Worker node %s is ready", label)
 
     def _join_swarm(self, client: RemoteClient, label: str) -> None:
@@ -575,6 +727,7 @@ __all__ = [
     "SwarmAuthError",
     "SwarmError",
     "SwarmManager",
+    "SwarmNodeSpec",
     "SwarmTarget",
     "parse_target",
     "target_to_ssh",

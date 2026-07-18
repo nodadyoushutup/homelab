@@ -5,7 +5,7 @@ Site-local Docker inputs live under this directory. Only two files are used:
 | File | Consumed by |
 |---|---|
 | `minio.env` | `docker/docker-compose.minio.yaml`, `scripts/install/velero.sh` |
-| `swarm.yaml` | `applications/bootstrap` (Docker Swarm topology) |
+| `swarm.yaml` | `applications/bootstrap` (Docker Swarm topology); managed by the `homelab-config` web app (`applications/homelab_config`) |
 
 Copy each `*.example` to the matching live file and fill it in:
 
@@ -20,10 +20,15 @@ mounted by the MinIO compose file. Override the directory with
 
 ## `swarm.yaml`
 
-Declares the swarm control plane and worker SSH targets. Bootstrap builds the
-swarm from this file without prompting. If `control_plane` is empty, bootstrap
-prompts interactively and writes your answers back here. Passwords are never
-stored in this file (key-based SSH first, interactive password fallback).
+Declares the swarm machines under a `nodes:` list. Each node has `name`, `host`,
+`user`, `role` (`manager` or `worker`), `ssh_port`, and optional `labels`.
+Exactly one node must have `role: manager` (the control plane).
+
+Manage this file from the `homelab-config` web app (run `python config.py`) or
+edit it by hand. Bootstrap builds the swarm from it without prompting; if no
+`nodes` are defined it prompts interactively and writes your answers back here.
+Passwords are never stored in this file (key-based SSH first, interactive
+password fallback).
 
 ## Other env vars
 

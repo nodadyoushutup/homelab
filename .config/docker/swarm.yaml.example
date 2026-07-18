@@ -1,17 +1,48 @@
 # homelab-config: docker/swarm
-# Docker Swarm topology consumed by the bootstrap app (applications/bootstrap).
+# Docker Swarm topology consumed by the bootstrap app (applications/bootstrap)
+# and managed by the homelab-config web app (applications/homelab_config).
 #
-# Copy this file to swarm.yaml and set your real SSH targets, then bootstrap
-# will build the swarm from it without prompting. If control_plane is empty,
-# bootstrap prompts interactively and writes your answers back here.
+# Copy this file to swarm.yaml and set your real machines, or manage it from the
+# homelab-config UI. Each node is an SSH-reachable machine in the swarm; exactly
+# one node must have role: manager (the control plane), the rest are workers.
 #
-# Each entry is an SSH target: user@hostname (optionally user@hostname:port).
-# Passwords are never stored here; key-based auth is used first, with an
-# interactive password fallback at connect time.
-control_plane: nodadyoushutup@swarm-cp-0.local
-workers:
-  - nodadyoushutup@swarm-wk-0.local
-  - nodadyoushutup@swarm-wk-1.local
-  - nodadyoushutup@swarm-wk-2.local
-  - nodadyoushutup@swarm-wk-3.local
-  - nodadyoushutup@swarm-wk-4.local
+# If no nodes are defined, bootstrap prompts interactively and writes your
+# answers back here. Passwords are never stored here; key-based SSH auth is used
+# first, with an interactive password fallback at connect time.
+nodes:
+  - name: swarm-cp-0
+    host: swarm-cp-0.local
+    user: nodadyoushutup
+    role: manager
+    ssh_port: 22
+    labels: {}
+  - name: swarm-wk-0
+    host: swarm-wk-0.local
+    user: nodadyoushutup
+    role: worker
+    ssh_port: 22
+    labels: {}
+  - name: swarm-wk-1
+    host: swarm-wk-1.local
+    user: nodadyoushutup
+    role: worker
+    ssh_port: 22
+    labels: {}
+  - name: swarm-wk-2
+    host: swarm-wk-2.local
+    user: nodadyoushutup
+    role: worker
+    ssh_port: 22
+    labels: {}
+  - name: swarm-wk-3
+    host: swarm-wk-3.local
+    user: nodadyoushutup
+    role: worker
+    ssh_port: 22
+    labels: {}
+  - name: swarm-wk-4
+    host: swarm-wk-4.local
+    user: nodadyoushutup
+    role: worker
+    ssh_port: 22
+    labels: {}
