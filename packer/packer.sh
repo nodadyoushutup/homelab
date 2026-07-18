@@ -33,6 +33,8 @@ Options:
   --version <X.Y.Z>                       Required image version (semantic version)
   --distro <ubuntu|arch|centos>           Distro to build (default: ubuntu)
   --gui <headless|gnome|kde|xfce>         Desktop environment to install (default: headless)
+  --install_node_exporter                 Install host-level node_exporter systemd service (default: off)
+  --no_install_node_exporter              Skip host-level node_exporter install (default)
   --ubuntu_release <24.04|26.04>          Ubuntu LTS release (ubuntu only; default: 24.04)
   --centos_stream <10>                    CentOS Stream major release (centos only; default: 10)
   --arch_snapshot <snapshot>              Arch cloud image snapshot (arch only; default: template pin)
@@ -88,6 +90,7 @@ VERSION_SET=0
 
 DISTRO="ubuntu"
 GUI="headless"
+INSTALL_NODE_EXPORTER=0
 UBUNTU_RELEASE="24.04"
 CENTOS_STREAM="10"
 ARCH_SNAPSHOT=""
@@ -130,6 +133,14 @@ while [[ $# -gt 0 ]]; do
       [[ $# -ge 2 ]] || die "--gui requires a value: headless|gnome|kde|xfce"
       GUI="$2"
       shift 2
+      ;;
+    --install_node_exporter)
+      INSTALL_NODE_EXPORTER=1
+      shift
+      ;;
+    --no_install_node_exporter)
+      INSTALL_NODE_EXPORTER=0
+      shift
       ;;
     --ubuntu_release=*)
       UBUNTU_RELEASE="${1#--ubuntu_release=}"
@@ -348,10 +359,17 @@ REPO_ROOT="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
 # serves, so building publishes the artifact without a REST upload.
 OUTPUT_ROOT="${PACKER_OUTPUT_ROOT:-${REPO_ROOT}/data/packer}"
 
+if [[ "${INSTALL_NODE_EXPORTER}" -eq 1 ]]; then
+  INSTALL_NODE_EXPORTER_VAR="true"
+else
+  INSTALL_NODE_EXPORTER_VAR="false"
+fi
+
 PACKER_VAR_ARGS=(
   -var "image_version=${VERSION}"
   -var "output_root=${OUTPUT_ROOT}"
   -var "gui=${GUI}"
+  -var "install_node_exporter=${INSTALL_NODE_EXPORTER_VAR}"
   -var "amd64_accelerator=${AMD64_ACCELERATOR}"
 )
 # The arch template has no arm64 source, so it does not define arm64_accelerator.
@@ -429,6 +447,7 @@ cd "${SCRIPT_DIR}"
 log "Version: ${VERSION}"
 log "Distro: ${DISTRO}"
 log "GUI: ${GUI}"
+log "Host node_exporter: $([[ "${INSTALL_NODE_EXPORTER}" -eq 1 ]] && echo enabled || echo "disabled (swarm/k8s container exporter)")"
 case "${DISTRO}" in
   ubuntu) log "Ubuntu release: ${UBUNTU_RELEASE}" ;;
   centos) log "CentOS stream: ${CENTOS_STREAM}" ;;

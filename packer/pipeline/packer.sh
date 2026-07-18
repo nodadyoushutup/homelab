@@ -31,6 +31,7 @@ Required:
 Options:
   --distro <ubuntu|arch|centos>    Distro to build (default: ubuntu)
   --gui <headless|gnome|kde|xfce>  Desktop environment to install (default: headless)
+  --install_node_exporter          Install host-level node_exporter systemd service (default: off)
   --ubuntu_release <24.04|26.04>   Ubuntu LTS release (ubuntu only; default: 24.04)
   --centos_stream <10>             CentOS Stream major release (centos only; default: 10)
   --arch_snapshot <snapshot>       Arch cloud image snapshot (arch only; default: template pin)
@@ -48,6 +49,7 @@ EOF_USAGE
 VERSION=""
 DISTRO="ubuntu"
 GUI="headless"
+INSTALL_NODE_EXPORTER=0
 UBUNTU_RELEASE="24.04"
 CENTOS_STREAM="10"
 ARCH_SNAPSHOT=""
@@ -70,6 +72,10 @@ while [[ $# -gt 0 ]]; do
     --gui)
       GUI="$2"
       shift 2
+      ;;
+    --install_node_exporter)
+      INSTALL_NODE_EXPORTER=1
+      shift
       ;;
     --ubuntu_release)
       UBUNTU_RELEASE="$2"
@@ -158,9 +164,15 @@ case "${DISTRO}" in
   arch) [[ -n "${ARCH_SNAPSHOT}" ]] && RELEASE_ARGS=(--arch_snapshot "${ARCH_SNAPSHOT}") ;;
 esac
 
+NODE_EXPORTER_ARGS=()
+if [[ "${INSTALL_NODE_EXPORTER}" -eq 1 ]]; then
+  NODE_EXPORTER_ARGS=(--install_node_exporter)
+fi
+
 log "Version: ${VERSION}"
 log "Distro: ${DISTRO}"
 log "GUI: ${GUI}"
+log "Host node_exporter: $([[ "${INSTALL_NODE_EXPORTER}" -eq 1 ]] && echo enabled || echo "disabled (swarm/k8s container exporter)")"
 log "Target: ${TARGET}"
 log "AMD64 accelerator: ${AMD64_ACCELERATOR}"
 log "ARM64 accelerator: ${ARM64_ACCELERATOR}"
@@ -177,6 +189,7 @@ log "REST publish: $([[ "${PUBLISH}" -eq 1 ]] && echo enabled || echo "disabled 
     --build_arch "${BUILD_ARCH}" \
     --amd64_accelerator "${AMD64_ACCELERATOR}" \
     --arm64_accelerator "${ARM64_ACCELERATOR}" \
+    ${NODE_EXPORTER_ARGS[@]+"${NODE_EXPORTER_ARGS[@]}"} \
     ${RELEASE_ARGS[@]+"${RELEASE_ARGS[@]}"}
 )
 

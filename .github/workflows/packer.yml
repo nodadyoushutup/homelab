@@ -26,6 +26,11 @@ on:
           - gnome
           - kde
           - xfce
+      install_node_exporter:
+        description: "Install host-level node_exporter systemd service (off = rely on swarm/k8s container exporter)"
+        required: false
+        type: boolean
+        default: false
       target:
         description: "Publish target"
         required: true
@@ -77,6 +82,7 @@ jobs:
       os: ${{ steps.meta.outputs.os }}
       distro: ${{ steps.meta.outputs.distro }}
       gui: ${{ steps.meta.outputs.gui }}
+      install_node_exporter: ${{ steps.meta.outputs.install_node_exporter }}
       image_prefix: ${{ steps.meta.outputs.image_prefix }}
       template: ${{ steps.meta.outputs.template }}
       source_prefix: ${{ steps.meta.outputs.source_prefix }}
@@ -92,6 +98,7 @@ jobs:
       VERSION: ${{ github.event.inputs.version }}
       OS: ${{ github.event.inputs.os }}
       GUI: ${{ github.event.inputs.gui }}
+      INSTALL_NODE_EXPORTER: ${{ github.event.inputs.install_node_exporter }}
       AMD64_ACCELERATOR: ${{ github.event.inputs.amd64_accelerator }}
       ARM64_ACCELERATOR: ${{ github.event.inputs.arm64_accelerator }}
       BUILD_ARCH: ${{ github.event.inputs.build_arch }}
@@ -125,6 +132,13 @@ jobs:
           case "${GUI}" in
             headless|gnome|kde|xfce) ;;
             *) echo "Invalid gui '${GUI}'. Expected 'headless', 'gnome', 'kde', or 'xfce'." >&2; exit 1 ;;
+          esac
+          # Boolean workflow_dispatch inputs arrive as the strings "true"/"false"
+          # (empty when the workflow is not dispatched); normalize to true/false.
+          case "${INSTALL_NODE_EXPORTER:-false}" in
+            true) install_node_exporter=true ;;
+            false|"") install_node_exporter=false ;;
+            *) echo "Invalid install_node_exporter '${INSTALL_NODE_EXPORTER}'. Expected 'true' or 'false'." >&2; exit 1 ;;
           esac
           [[ "${AMD64_ACCELERATOR}" == "kvm" || "${AMD64_ACCELERATOR}" == "tcg" || "${AMD64_ACCELERATOR}" == "none" ]] || {
             echo "Invalid accelerator '${AMD64_ACCELERATOR}'. Expected 'kvm', 'tcg', or 'none'." >&2
@@ -189,6 +203,7 @@ jobs:
           echo "os=${OS}" >> "$GITHUB_OUTPUT"
           echo "distro=${DISTRO}" >> "$GITHUB_OUTPUT"
           echo "gui=${GUI}" >> "$GITHUB_OUTPUT"
+          echo "install_node_exporter=${install_node_exporter}" >> "$GITHUB_OUTPUT"
           echo "image_prefix=${image_prefix}" >> "$GITHUB_OUTPUT"
           echo "template=${template}" >> "$GITHUB_OUTPUT"
           echo "source_prefix=${source_prefix}" >> "$GITHUB_OUTPUT"
@@ -198,7 +213,7 @@ jobs:
           echo "amd64_accelerator=${AMD64_ACCELERATOR}" >> "$GITHUB_OUTPUT"
           echo "arm64_accelerator=${ARM64_ACCELERATOR}" >> "$GITHUB_OUTPUT"
 
-          echo "::notice::Packer ${OS} builds: amd64=${build_amd64} arm64=${build_arm64} gui=${GUI} (dispatch build_arch=${BUILD_ARCH})"
+          echo "::notice::Packer ${OS} builds: amd64=${build_amd64} arm64=${build_arm64} gui=${GUI} install_node_exporter=${install_node_exporter} (dispatch build_arch=${BUILD_ARCH})"
 
       - name: Resolve publish target
         id: target
@@ -237,6 +252,7 @@ jobs:
       VERSION: ${{ needs.prepare.outputs.version }}
       DISTRO: ${{ needs.prepare.outputs.distro }}
       GUI: ${{ needs.prepare.outputs.gui }}
+      INSTALL_NODE_EXPORTER: ${{ needs.prepare.outputs.install_node_exporter }}
       TEMPLATE: ${{ needs.prepare.outputs.template }}
       SOURCE_PREFIX: ${{ needs.prepare.outputs.source_prefix }}
       IMAGE_PREFIX: ${{ needs.prepare.outputs.image_prefix }}
@@ -288,6 +304,7 @@ jobs:
           var_args=(
             -var "image_version=${VERSION}"
             -var "gui=${GUI}"
+            -var "install_node_exporter=${INSTALL_NODE_EXPORTER}"
             -var "amd64_accelerator=${AMD64_ACCELERATOR}"
           )
           # The arch template has no arm64 source, so it does not define arm64_accelerator.
@@ -333,6 +350,7 @@ jobs:
       VERSION: ${{ needs.prepare.outputs.version }}
       DISTRO: ${{ needs.prepare.outputs.distro }}
       GUI: ${{ needs.prepare.outputs.gui }}
+      INSTALL_NODE_EXPORTER: ${{ needs.prepare.outputs.install_node_exporter }}
       TEMPLATE: ${{ needs.prepare.outputs.template }}
       SOURCE_PREFIX: ${{ needs.prepare.outputs.source_prefix }}
       IMAGE_PREFIX: ${{ needs.prepare.outputs.image_prefix }}
@@ -383,6 +401,7 @@ jobs:
           var_args=(
             -var "image_version=${VERSION}"
             -var "gui=${GUI}"
+            -var "install_node_exporter=${INSTALL_NODE_EXPORTER}"
             -var "amd64_accelerator=${AMD64_ACCELERATOR}"
             -var "arm64_accelerator=${ARM64_ACCELERATOR}"
           )

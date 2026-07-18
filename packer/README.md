@@ -19,7 +19,11 @@ Every build:
 - uploads and runs `scripts/install/automation_tooling.sh` for the shared
   automation toolchain (the install scripts are distro-aware: `apt` / `pacman`
   / `dnf`)
-- installs the Packer-image-only extras from `scripts/install/node_exporter.sh`
+- optionally installs the host-level Prometheus node_exporter systemd service
+  from `scripts/install/node_exporter.sh` via `--install_node_exporter`
+  (**off by default**: swarm/k8s hosts already run node_exporter as a container,
+  so a host install would double-export; enable only for hosts monitored
+  directly)
 - optionally installs a desktop environment via `--gui`
   (`headless` default, or `gnome` / `kde` / `xfce`)
 - runs a cleanup script that removes temporary SSH/provisioning access
@@ -201,7 +205,8 @@ packer/keys/packer-nodadyoushutup.pub
 - `packer/scripts/cleanup-image.sh` removes the temporary `packer` user and any temporary keys/files.
 - `packer/packer.sh` requires `--version <X.Y.Z>`.
 - `packer/packer.sh` passes version to Packer via `-var image_version=<version>`.
-- `packer/packer.sh` accepts `--distro ubuntu|arch|centos`, `--gui headless|gnome|kde|xfce`, `--ubuntu_release 24.04|26.04` (ubuntu), `--centos_stream 10` (centos), `--arch_snapshot <id>` (arch), `--target cloud-image-repository`, `--build_arch amd64|arm64|both`, `--amd64_accelerator kvm|tcg|none`, and `--arm64_accelerator kvm|tcg|none`.
+- `packer/packer.sh` accepts `--distro ubuntu|arch|centos`, `--gui headless|gnome|kde|xfce`, `--install_node_exporter` / `--no_install_node_exporter` (default off), `--ubuntu_release 24.04|26.04` (ubuntu), `--centos_stream 10` (centos), `--arch_snapshot <id>` (arch), `--target cloud-image-repository`, `--build_arch amd64|arm64|both`, `--amd64_accelerator kvm|tcg|none`, and `--arm64_accelerator kvm|tcg|none`.
+- `--install_node_exporter` is **off by default**. The host node_exporter systemd service double-exports on swarm/k8s hosts (they run node_exporter as a container), so only enable it for hosts you monitor directly. The flag maps to the `install_node_exporter` Packer var and threads through `packer/pipeline/packer.sh` (same flag), `packer/pipeline/packer.jenkins` (`INSTALL_NODE_EXPORTER` boolean param), and the GitHub Actions workflow (`install_node_exporter` boolean input).
 - **Arch is amd64-only**: `--distro arch` with `--build_arch arm64|both` fails fast with an explanatory error. **CentOS is amd64 + arm64** (full parity with Ubuntu).
 - `--gui` replaces the old `--kde_profile` flag (hard cut). Each distro ships its own `gnome.sh` / `kde.sh` / `xfce.sh` install script; `headless` installs nothing.
 - Each new distro pins its base image URL + `sha256` in the template (`arch-ndysu.pkr.hcl`, `centos-ndysu.pkr.hcl`); bump the snapshot/checksum vars together to move to a newer base image.
@@ -218,4 +223,5 @@ packer/keys/packer-nodadyoushutup.pub
   (`ubuntu-24.04` | `ubuntu-26.04` | `centos-10` | `arch`) plus `GUI` and
   `ARCH_SNAPSHOT`, and maps the OS choice to `--distro`/`--ubuntu_release`/`--centos_stream`.
 - The **Packer** GitHub Actions workflow exposes the same single **`os`** dropdown
-  plus a `gui` dropdown; the arm64 build job is gated off for `arch`.
+  plus a `gui` dropdown and an `install_node_exporter` boolean (default off); the
+  arm64 build job is gated off for `arch`.

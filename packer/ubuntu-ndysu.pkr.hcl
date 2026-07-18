@@ -40,6 +40,12 @@ variable "gui" {
   }
 }
 
+variable "install_node_exporter" {
+  type        = bool
+  default     = false
+  description = "Install the host-level Prometheus node_exporter systemd service. Default false: swarm/k8s hosts already run node_exporter as a container, so a host install would double-export. Enable only for hosts monitored directly (not in the swarm/cluster)."
+}
+
 variable "amd64_accelerator" {
   type        = string
   default     = "kvm"
@@ -168,7 +174,7 @@ build {
     inline = [
       "find /tmp/install -maxdepth 1 -type f -name '*.sh' -exec chmod 0755 {} +",
       "AUTOMATION_TARGET_USER=nodadyoushutup AUTOMATION_DOCKER_VERIFY=0 /tmp/install/automation_tooling.sh",
-      "/tmp/install/node_exporter.sh",
+      "if [ '${var.install_node_exporter}' = 'true' ]; then /tmp/install/node_exporter.sh; else echo '[INFO] host node_exporter install skipped (install_node_exporter=false; swarm/k8s container exporter handles metrics).'; fi",
       "if [ '${var.gui}' != 'headless' ]; then /tmp/install/${var.gui}.sh; else echo '[INFO] GUI install skipped (headless).'; fi",
     ]
   }
