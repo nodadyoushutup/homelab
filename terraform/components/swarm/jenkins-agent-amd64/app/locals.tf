@@ -63,14 +63,12 @@ locals {
     for mount in local.mounts : mount.name => mount
   }
 
-  nfs_device       = trimspace(local.nfs.device)
-  nfs_volume_type  = trimspace(local.nfs.volume.type)
-  nfs_volume_opts  = trimspace(local.nfs.volume.opts)
-  nfs_mount_target = local.nfs_device != "" ? trimspace(element(split(":", local.nfs_device), length(split(":", local.nfs_device)) - 1)) : ""
-  nfs_driver_opts = merge({
-    type = local.nfs_volume_type
-    o    = local.nfs_volume_opts
-  }, local.nfs_device != "" ? { device = local.nfs_device } : {})
+  nfs_driver_options = local.nfs.driver_options
+  nfs_device         = trimspace(try(local.nfs_driver_options.device, ""))
+  nfs_volume_type    = trimspace(try(local.nfs_driver_options.type, ""))
+  nfs_volume_opts    = trimspace(try(local.nfs_driver_options.o, ""))
+  nfs_mount_target   = trimspace(local.nfs.target)
+  nfs_driver_opts    = local.nfs_driver_options
   nfs_ready = nonsensitive(
     local.nfs_device != "" &&
     local.nfs_volume_type != "" &&

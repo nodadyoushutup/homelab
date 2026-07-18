@@ -42,6 +42,7 @@ on:
           - mcp-fortigate
           - mcp-github
           - mcp-google-workspace
+          - mcp-jenkins
           - mcp-terraform
 
 permissions:
@@ -156,6 +157,11 @@ jobs:
             mcp-google-workspace)
               image_name="mcp-google-workspace"
               docker_context="applications/mcp-google-workspace"
+              build_strategy="direct"
+              ;;
+            mcp-jenkins)
+              image_name="mcp-jenkins"
+              docker_context="applications/mcp-jenkins"
               build_strategy="direct"
               ;;
             mcp-terraform)

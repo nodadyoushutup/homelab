@@ -1,0 +1,48 @@
+# homelab-config: terraform/components/swarm/grafana/database
+# Self-contained slice tfvars (provider/DNS/NFS inlined; no shared swarm/dns/nfs var-files).
+
+swarm_docker_provider_config = {
+  docker = {
+    host = ""
+    ssh_opts = [
+      "", "",
+      "", "",
+      "", "",
+    ]
+  }
+
+  registry_auths = [
+    {
+      address  = ""
+      username = ""
+      password = ""
+    },
+    {
+      address  = ""
+      username = ""
+      password = ""
+    },
+  ]
+}
+
+dns_nameservers = [
+  "",
+  "",
+  "",
+]
+
+env = {
+  POSTGRES_PASSWORD = ""
+  POSTGRES_USER = ""
+  POSTGRES_DB = ""
+}
+
+placement = {
+  constraints = [""]
+  platforms = [
+    {
+      os           = ""
+      architecture = ""
+    },
+  ]
+}

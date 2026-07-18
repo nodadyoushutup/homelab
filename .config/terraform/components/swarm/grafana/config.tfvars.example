@@ -1,0 +1,26 @@
+# homelab-config: terraform/components/swarm/grafana/config
+# Grafana config slice tfvars (provider API, datasources, dashboards).
+
+provider_config = {
+  url  = ""
+  auth = ""
+}
+
+datasources = [
+  {
+    name       = ""
+    uid        = ""
+    type       = ""
+    url        = ""
+    is_default = true
+    json_data  = { httpMethod = "" }
+  },
+  {
+    name       = ""
+    uid        = ""
+    type       = ""
+    url        = ""
+    is_default = false
+    json_data  = { httpMethod = "" }
+  }
+]

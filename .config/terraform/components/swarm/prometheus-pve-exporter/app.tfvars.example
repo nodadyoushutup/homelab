@@ -1,0 +1,54 @@
+# homelab-config: terraform/components/swarm/prometheus-pve-exporter/app
+# Self-contained slice tfvars (provider/DNS/NFS inlined; no shared swarm/dns/nfs var-files).
+
+swarm_docker_provider_config = {
+  docker = {
+    host = ""
+    ssh_opts = [
+      "", "",
+      "", "",
+      "", "",
+    ]
+  }
+
+  registry_auths = [
+    {
+      address  = ""
+      username = ""
+      password = ""
+    },
+    {
+      address  = ""
+      username = ""
+      password = ""
+    },
+  ]
+}
+
+dns_nameservers = [
+  "",
+  "",
+  "",
+]
+
+endpoint_host            = ""
+published_port           = 9221
+pve_targets              = [""]
+verify_ssl               = false
+disable_config_collector = true
+
+env = {
+  PVE_USER       = ""
+  PVE_PASSWORD   = ""
+  PVE_VERIFY_SSL = ""
+}
+
+placement = {
+  constraints = [""]
+  platforms = [
+    {
+      os           = ""
+      architecture = ""
+    },
+  ]
+}

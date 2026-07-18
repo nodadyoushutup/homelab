@@ -1,0 +1,49 @@
+# homelab-config: terraform/components/swarm/nginx_proxy_manager/database
+# Self-contained slice tfvars (provider/DNS/NFS inlined; no shared swarm/dns/nfs var-files).
+
+swarm_docker_provider_config = {
+  docker = {
+    host = ""
+    ssh_opts = [
+      "", "",
+      "", "",
+      "", "",
+    ]
+  }
+
+  registry_auths = [
+    {
+      address  = ""
+      username = ""
+      password = ""
+    },
+    {
+      address  = ""
+      username = ""
+      password = ""
+    },
+  ]
+}
+
+dns_nameservers = [
+  "",
+  "",
+  "",
+]
+
+env = {
+  MYSQL_DATABASE = ""
+  MYSQL_USER = ""
+  MYSQL_PASSWORD = ""
+  MARIADB_AUTO_UPGRADE = ""
+}
+
+placement = {
+  constraints = [""]
+  platforms = [
+    {
+      os           = ""
+      architecture = ""
+    },
+  ]
+}

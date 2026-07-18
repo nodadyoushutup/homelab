@@ -8,13 +8,6 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/../../../../.." && pwd)"
 PIPELINE_SCRIPT_ROOT="${ROOT_DIR}/scripts/terraform"
 
-SITE_ENV="${ROOT_DIR}/.config/docker/site.env"
-if [[ -f "${SITE_ENV}" ]]; then
-  set -a
-  # shellcheck source=/dev/null
-  source "${SITE_ENV}"
-  set +a
-fi
 CONFIG_DIR="${CONFIG_DIR:-${ROOT_DIR}/.config}"
 export CONFIG_DIR
 

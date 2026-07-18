@@ -167,13 +167,10 @@ variable "placement" {
 
 
 variable "nfs" {
-  description = "Shared Swarm NFS homelab repo export and volume driver_opts (components/swarm/nfs.tfvars)."
+  description = "Homelab repo NFS mount (components/swarm/nfs.tfvars)."
   type = object({
-    device = string
-    volume = object({
-      type = string
-      opts = string
-    })
+    target         = string
+    driver_options = map(string)
   })
   sensitive = true
 }

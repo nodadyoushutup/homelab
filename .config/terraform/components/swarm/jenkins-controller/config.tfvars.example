@@ -1,0 +1,25 @@
+# homelab-config: terraform/components/swarm/jenkins-controller/config
+# Jenkins config stage tfvars (Jenkins provider auth).
+provider_config = {
+  jenkins = {
+    server_url = ""
+    username   = ""
+    password   = ""
+  }
+}
+
+# Jenkins SCM checkout settings for pipeline definitions stored in GitHub.
+# Replace the placeholder values below before re-running the Jenkins config
+# Terraform stage.
+job_definition_root = ""
+job_definition_glob = "**/pipeline/*.jenkins"
+
+github_repo_url    = ""
+github_repo_branch = ""
+
+github_credentials_id     = ""
+manage_github_credentials = true
+github_credentials_username = ""
+github_credentials_password = ""
+
+# Orphan key/value lines were removed here (they were not valid HCL and broke vault_merge).

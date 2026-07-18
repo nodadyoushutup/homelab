@@ -9,13 +9,6 @@ ROOT_DIR="$(cd "${SCRIPT_DIR}/../../../../.." && pwd)"
 TERRAFORM_DIR="${ROOT_DIR}/terraform/components/swarm/grafana/database"
 APP_TERRAFORM_DIR="${ROOT_DIR}/terraform/components/swarm/grafana/app"
 
-SITE_ENV="${ROOT_DIR}/.config/docker/site.env"
-if [[ -f "${SITE_ENV}" ]]; then
-  set -a
-  # shellcheck source=/dev/null
-  source "${SITE_ENV}"
-  set +a
-fi
 CONFIG_DIR="${CONFIG_DIR:-${ROOT_DIR}/.config}"
 export CONFIG_DIR
 
@@ -40,7 +33,7 @@ Options:
   --backend <path>          S3 backend config (default: ${DEFAULT_BACKEND})
   -h, --help                Show this help
 
-Environment overrides: GRAFANA_DATABASE_TFVARS, GRAFANA_DATABASE_BACKEND, CONFIG_DIR (from .config/docker/site.env)
+Environment overrides: GRAFANA_DATABASE_TFVARS, GRAFANA_DATABASE_BACKEND, CONFIG_DIR (default: <repo>/.config)
 USAGE
 }
 

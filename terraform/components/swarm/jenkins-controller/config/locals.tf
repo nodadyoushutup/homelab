@@ -18,20 +18,45 @@ locals {
   provider_config                 = var.provider_config
   prune_dead_branches             = var.prune_dead_branches
 
-  repo_root            = abspath("${path.module}/../../../..")
-  job_definition_root  = trimsuffix(local.job_definition_root_input, "/")
-  job_definition_files = sort(fileset(local.repo_root, "${local.job_definition_root}/${local.job_definition_glob}"))
+  repo_root           = abspath("${path.module}/../../../../..")
+  job_definition_root = trimsuffix(local.job_definition_root_input, "/")
+  job_folder_roots    = var.job_folder_roots
 
-  job_specs = {
-    for repo_relative_file in local.job_definition_files :
-    trimsuffix(trimprefix(repo_relative_file, "${local.job_definition_root}/"), ".jenkins") => {
+  job_definition_fileset = (
+    local.job_definition_root == "" ?
+    local.job_definition_glob :
+    "${local.job_definition_root}/${local.job_definition_glob}"
+  )
+
+  # Structural path segments dropped from the derived Jenkins folder path so the
+  # UI reads cleanly, e.g. terraform/components/swarm/grafana/pipeline/app.jenkins
+  # -> folder terraform/swarm/grafana with job "app".
+  folder_strip_segments = ["components", "pipeline"]
+
+  # Only surface pipelines under an allowed top-level tree (terraform, packer).
+  job_definition_files = [
+    for repo_relative_file in sort(fileset(local.repo_root, local.job_definition_fileset)) :
+    repo_relative_file
+    if contains(local.job_folder_roots, split("/", repo_relative_file)[0])
+  ]
+
+  job_spec_list = [
+    for repo_relative_file in local.job_definition_files : {
       repo_relative_file = repo_relative_file
       script_path        = repo_relative_file
       job_name           = trimsuffix(basename(repo_relative_file), ".jenkins")
-      folder_path        = dirname(trimsuffix(trimprefix(repo_relative_file, "${local.job_definition_root}/"), ".jenkins")) == "." ? "" : dirname(trimsuffix(trimprefix(repo_relative_file, "${local.job_definition_root}/"), ".jenkins"))
-      description        = "Managed by Terraform. Multibranch pipeline for ${replace(repo_relative_file, ".jenkins", ".sh")} from this repository."
-      source_id          = md5("${local.github_repo_url}:${repo_relative_file}")
+      folder_path = join("/", [
+        for segment in split("/", dirname(repo_relative_file)) : segment
+        if !contains(local.folder_strip_segments, segment)
+      ])
+      description = "Managed by Terraform. Multibranch pipeline for ${replace(repo_relative_file, ".jenkins", ".sh")} from this repository."
+      source_id   = md5("${local.github_repo_url}:${repo_relative_file}")
     }
+  ]
+
+  job_specs = {
+    for spec in local.job_spec_list :
+    (spec.folder_path == "" ? spec.job_name : "${spec.folder_path}/${spec.job_name}") => spec
   }
 
   folder_paths = sort(tolist(toset(flatten([
@@ -47,7 +72,7 @@ locals {
       name        = basename(folder_path)
       parent_path = length(split("/", folder_path)) > 1 ? join("/", slice(split("/", folder_path), 0, length(split("/", folder_path)) - 1)) : ""
       depth       = length(split("/", folder_path))
-      description = "Managed by Terraform from ${local.job_definition_root}/${folder_path}"
+      description = "Managed by Terraform from ${folder_path}"
     }
   }
 

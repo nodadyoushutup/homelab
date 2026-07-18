@@ -1,0 +1,32 @@
+# homelab-config: terraform/components/swarm/cadvisor/app
+# Self-contained cAdvisor slice tfvars (no shared swarm/dns var-files).
+
+dns_nameservers = [
+  "",
+  "",
+  "",
+]
+
+swarm_docker_provider_config = {
+  docker = {
+    host = ""
+    ssh_opts = [
+      "", "",
+      "", "",
+      "", "",
+    ]
+  }
+
+  registry_auths = [
+    {
+      address  = ""
+      username = ""
+      password = ""
+    },
+    {
+      address  = ""
+      username = ""
+      password = ""
+    },
+  ]
+}

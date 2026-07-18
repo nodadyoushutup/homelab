@@ -1,0 +1,47 @@
+# homelab-config: terraform/components/swarm/zot/app
+#
+# registry username in htpasswd must match registry_auths.
+# Auth turns on when htpasswd_path exists at terraform plan time.
+# Self-contained slice tfvars (provider/DNS/NFS inlined; no shared swarm/dns/nfs var-files).
+
+swarm_docker_provider_config = {
+  docker = {
+    host = ""
+    ssh_opts = [
+      "", "",
+      "", "",
+      "", "",
+    ]
+  }
+
+  registry_auths = [
+    {
+      address  = ""
+      username = ""
+      password = ""
+    },
+    {
+      address  = ""
+      username = ""
+      password = ""
+    },
+  ]
+}
+
+dns_nameservers = [
+  "",
+  "",
+  "",
+]
+
+htpasswd_path = ""
+
+placement = {
+  constraints = [""]
+  platforms = [
+    {
+      os           = ""
+      architecture = ""
+    },
+  ]
+}

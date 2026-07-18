@@ -7,7 +7,8 @@ Tag format:
 Ids are relative to CONFIG_DIR (no leading slash), derived from each file path:
   terraform/components/swarm/grafana/app.tfvars  -> terraform/components/swarm/grafana/app
   terraform/minio.backend.hcl         -> terraform/minio.backend
-  docker/mcp.env                      -> docker/mcp
+  docker/minio.env                    -> docker/minio
+  docker/swarm.yaml                   -> docker/swarm
 
 Skips: README.md, *.example, init.json, grafana.ini, known_hosts, .gitkeep
 """
@@ -33,7 +34,9 @@ def config_id_for_file(config_dir: Path, path: Path) -> str | None:
     if name.endswith(".tfvars"):
         return rel[: -len(".tfvars")]
 
-    if path.parent.name == "docker" and name.endswith(".env"):
+    if path.parent.name == "docker" and (
+        name.endswith(".env") or name.endswith((".yaml", ".yml"))
+    ):
         return f"docker/{path.stem}"
 
     if name.endswith(".hcl"):
@@ -87,7 +90,7 @@ def main() -> int:
         if not path.is_file():
             continue
         if path.suffix in {".tfvars", ".hcl"} or (
-            path.parent.name == "docker" and path.suffix == ".env"
+            path.parent.name == "docker" and path.suffix in {".env", ".yaml", ".yml"}
         ):
             files.append(path.resolve())
     files = sorted(set(files))

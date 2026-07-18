@@ -1,0 +1,42 @@
+# homelab-config: terraform/components/swarm/victoriametrics/app
+# Self-contained slice tfvars (provider/DNS/NFS inlined; no shared swarm/dns/nfs var-files).
+
+swarm_docker_provider_config = {
+  docker = {
+    host = ""
+    ssh_opts = [
+      "", "",
+      "", "",
+      "", "",
+    ]
+  }
+
+  registry_auths = [
+    {
+      address  = ""
+      username = ""
+      password = ""
+    },
+    {
+      address  = ""
+      username = ""
+      password = ""
+    },
+  ]
+}
+
+dns_nameservers = [
+  "",
+  "",
+  "",
+]
+
+placement = {
+  constraints = [""]
+  platforms = [
+    {
+      os           = ""
+      architecture = ""
+    },
+  ]
+}

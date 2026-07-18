@@ -1,0 +1,4 @@
+coloredlogs==15.0.1
+paramiko==3.5.1
+PyYAML==6.0.2
+pytest==9.0.2

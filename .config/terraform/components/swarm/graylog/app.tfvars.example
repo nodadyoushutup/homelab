@@ -1,0 +1,54 @@
+# homelab-config: terraform/components/swarm/graylog/app
+# Graylog app stage (admin bootstrap). Generated 2026-05-16T19:53:01-04:00.
+# Self-contained slice tfvars (provider/DNS/NFS inlined; no shared swarm/dns/nfs var-files).
+
+swarm_docker_provider_config = {
+  docker = {
+    host = ""
+    ssh_opts = [
+      "", "",
+      "", "",
+      "", "",
+    ]
+  }
+
+  registry_auths = [
+    {
+      address  = ""
+      username = ""
+      password = ""
+    },
+    {
+      address  = ""
+      username = ""
+      password = ""
+    },
+  ]
+}
+
+dns_nameservers = [
+  "",
+  "",
+  "",
+]
+
+env = {
+  GRAYLOG_PASSWORD_SECRET    = ""
+  GRAYLOG_ROOT_PASSWORD_SHA2 = ""
+  GRAYLOG_HTTP_EXTERNAL_URI  = ""
+  GRAYLOG_MONGODB_URI        = ""
+}
+
+published_port_ui         = 9002
+published_port_syslog_tcp = 5514
+published_port_gelf_tcp   = 12201
+
+placement = {
+  constraints = [""]
+  platforms = [
+    {
+      os           = ""
+      architecture = ""
+    },
+  ]
+}

@@ -1,0 +1,13 @@
+[auth.anonymous]
+enabled =
+
+[users]
+allow_sign_up =
+
+[database]
+type =
+host =
+name =
+user =
+password =
+ssl_mode =

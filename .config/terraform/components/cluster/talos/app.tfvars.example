@@ -1,0 +1,43 @@
+# homelab-config: terraform/components/cluster/talos/app
+provider_config = {
+  talos = {
+    cluster_name     = ""
+    cluster_endpoint = ""
+    endpoint         = ""
+    bootstrap_node   = ""
+    talos_version    = ""
+  }
+}
+
+k8s_cp_0_node  = ""
+k8s_wk_0_node  = ""
+k8s_wk_1_node  = ""
+k8s_wk_2_node  = ""
+k8s_wk_3_node  = ""
+k8s_wk_4_node  = ""
+k8s_wk_5_node  = ""
+k8s_wk_6_node  = ""
+k8s_wk_7_node  = ""
+k8s_wk_8_node  = ""
+k8s_wk_9_node  = ""
+k8s_wk_10_node = ""
+
+k8s_cp_0_config_patch_paths  = [""]
+k8s_wk_0_config_patch_paths  = [""]
+k8s_wk_1_config_patch_paths  = [""]
+k8s_wk_2_config_patch_paths  = [""]
+k8s_wk_3_config_patch_paths  = [""]
+k8s_wk_4_config_patch_paths  = [""]
+k8s_wk_5_config_patch_paths  = [""]
+k8s_wk_6_config_patch_paths  = [""]
+k8s_wk_7_config_patch_paths  = [""]
+k8s_wk_8_config_patch_paths  = [""]
+k8s_wk_9_config_patch_paths  = [""]
+k8s_wk_10_config_patch_paths = [""]
+
+client_endpoints = [
+  "",
+]
+
+talosconfig_output_path = ""
+kubeconfig_output_path = ""

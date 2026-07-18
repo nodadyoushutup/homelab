@@ -1,0 +1,12 @@
+# homelab-config: terraform/components/cluster/argocd/config
+argocd_base_url             = ""
+argocd_api_token            = ""
+argocd_insecure_skip_verify = false
+
+secrets = {
+  k8s = {
+    argocd = {
+      discord_webhook_url = ""
+    }
+  }
+}

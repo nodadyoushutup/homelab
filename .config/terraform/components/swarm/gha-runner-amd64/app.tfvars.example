@@ -1,0 +1,60 @@
+# homelab-config: terraform/components/swarm/gha-runner-amd64/app
+# AMD64 GitHub Actions runner pool: standalone `docker_container` on the pool host.
+# Provider/DNS/NFS inputs are self-contained in this slice tfvars.
+# GH_RUNNER_NAME is injected per replica in main.tf.
+# Self-contained slice tfvars (pool docker provider/DNS/NFS inlined; no shared runners/{amd64,arm64} or swarm dns/nfs var-files).
+
+swarm_docker_provider_config = {
+  docker = {
+    host = ""
+    ssh_opts = [
+      "", "",
+      "", "",
+      "", "",
+    ]
+  }
+
+  registry_auths = [
+    {
+      address  = ""
+      username = ""
+      password = ""
+    },
+    {
+      address  = ""
+      username = ""
+      password = ""
+    },
+  ]
+}
+
+dns_nameservers = [
+  "",
+  "",
+  "",
+]
+
+nfs = {
+  target = ""
+
+  driver_options = {
+    type   = ""
+    device = ""
+    o      = ""
+  }
+}
+
+replicas = 4
+
+env = {
+  GH_RUNNER_URL            = ""
+  GH_RUNNER_TOKEN          = ""
+  GH_RUNNER_ACCESS_TOKEN   = ""
+  GH_RUNNER_LABELS         = ""
+  GH_RUNNER_WORKDIR        = ""
+  GH_RUNNER_EPHEMERAL      = ""
+  GH_RUNNER_DISABLEUPDATE  = ""
+  RUNNER_ALLOW_RUNASROOT   = ""
+  GHA_ENGINE_BUILD_TMP_PARENT  = ""
+  PACKER_LOG               = ""
+}

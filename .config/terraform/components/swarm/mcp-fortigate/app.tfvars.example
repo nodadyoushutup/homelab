@@ -1,0 +1,56 @@
+# homelab-config: terraform/components/swarm/mcp-fortigate/app
+# Self-contained slice tfvars (provider/DNS/NFS inlined; no shared swarm/dns/nfs var-files).
+
+swarm_docker_provider_config = {
+  docker = {
+    host = ""
+    ssh_opts = [
+      "", "",
+      "", "",
+      "", "",
+    ]
+  }
+
+  registry_auths = [
+    {
+      address  = ""
+      username = ""
+      password = ""
+    },
+    {
+      address  = ""
+      username = ""
+      password = ""
+    },
+  ]
+}
+
+dns_nameservers = [
+  "",
+  "",
+  "",
+]
+
+env = {
+  FORTIGATE_API_TOKEN   = ""
+  FORTIGATE_HOST        = ""
+  FORTIGATE_PORT        = ""
+  FORTIGATE_TIMEOUT     = ""
+  FORTIGATE_VERIFY_SSL  = ""
+  FORTIGATE_VDOM        = ""
+  MCP_HTTP_PATH         = ""
+  MCP_SERVER_PORT       = ""
+  TZ                    = ""
+}
+
+replicas = 1
+
+placement = {
+  constraints = [""]
+  platforms = [
+    {
+      os           = ""
+      architecture = ""
+    },
+  ]
+}

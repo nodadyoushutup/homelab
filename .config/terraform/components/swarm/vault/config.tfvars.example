@@ -1,0 +1,2 @@
+# homelab-config: terraform/components/swarm/vault/config
+mount_path = ""

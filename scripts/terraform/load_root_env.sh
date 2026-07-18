@@ -65,7 +65,7 @@ if [[ "${_pipeline_existing_jenkins_controller_tfvars_dir_set}" == "1" ]]; then
 fi
 
 # Default site layout: Terraform/Kubernetes tfvars + terraform/minio.backend.hcl live under <repo>/.config/terraform/.
-# Override with CONFIG_DIR in site.env when needed.
+# Override by exporting CONFIG_DIR in the environment when needed.
 if [[ -z "${CONFIG_DIR:-}" ]]; then
   export CONFIG_DIR="${_pipeline_root_dir}/.config"
 fi

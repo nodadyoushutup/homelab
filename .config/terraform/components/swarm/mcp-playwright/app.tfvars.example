@@ -1,0 +1,58 @@
+# homelab-config: terraform/components/swarm/mcp-playwright/app
+# Self-contained slice tfvars (provider/DNS/NFS inlined; no shared swarm/dns/nfs var-files).
+
+swarm_docker_provider_config = {
+  docker = {
+    host = ""
+    ssh_opts = [
+      "", "",
+      "", "",
+      "", "",
+    ]
+  }
+
+  registry_auths = [
+    {
+      address  = ""
+      username = ""
+      password = ""
+    },
+    {
+      address  = ""
+      username = ""
+      password = ""
+    },
+  ]
+}
+
+dns_nameservers = [
+  "",
+  "",
+  "",
+]
+
+nfs = {
+  target = ""
+
+  driver_options = {
+    type   = ""
+    device = ""
+    o      = ""
+  }
+}
+
+env = {
+  PLAYWRIGHT_MCP_OUTPUT_DIR = ""
+}
+
+replicas = 1
+
+placement = {
+  constraints = [""]
+  platforms = [
+    {
+      os           = ""
+      architecture = ""
+    },
+  ]
+}

@@ -1,0 +1,537 @@
+# homelab-config: terraform/components/remote/cloudflare/config
+provider_config = {
+  cloudflare = {
+    api_token = ""
+  }
+}
+
+zone_id = ""
+
+records = [
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+  {
+    key     = ""
+    name    = ""
+    content = ""
+    ttl     = 1
+    proxied = false
+  },
+
+]

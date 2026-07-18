@@ -190,8 +190,12 @@ kubeconfig
 # (see scripts/terraform/load_root_env.sh and .config/README.md).
 .config/*
 !.config/README.md
+# Re-include the docker/ dir, re-exclude its contents, then track only templates.
+!.config/docker/
+.config/docker/*
 !.config/docker/README.md
 !.config/docker/*.env.example
+!.config/docker/*.yaml.example
 !.config/scripts/*.env.example
 !.config/terraform/
 !.config/terraform/components/

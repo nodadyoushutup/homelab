@@ -1,0 +1,1921 @@
+# homelab-config: terraform/components/network/fortigate/config
+provider_config = {
+  fortigate = {
+    host      = ""
+    port      = 443
+    vdom      = ""
+    insecure  = true
+    api_token = ""
+  }
+}
+
+config = {
+  dhcp_server_reservations = [
+    {
+      fosid  = 1
+      method = ""
+      reserved_address = [
+        { id = 1, type = "", ip = "", mac = "", action = "", description = "" },
+        { id = 2, type = "", ip = "", mac = "", action = "", description = "" },
+        { id = 3, type = "", ip = "", mac = "", action = "", description = "" },
+        { id = 4, type = "", ip = "", mac = "", action = "", description = "" },
+        { id = 5, type = "", ip = "", mac = "", action = "", description = "" },
+        { id = 6, type = "", ip = "", mac = "", action = "", description = "" },
+        { id = 7, type = "", ip = "", mac = "", action = "", description = "" },
+        { id = 8, type = "", ip = "", mac = "", action = "", description = "" }
+      ]
+    }
+  ]
+
+  virtual_ips = [
+    {
+      name        = ""
+      type        = ""
+      extintf     = ""
+      extip       = ""
+      protocol    = ""
+      extport     = ""
+      mappedport  = ""
+      status      = ""
+      portforward = ""
+      mappedip = [
+        { range = "" }
+      ]
+    },
+    {
+      name        = ""
+      type        = ""
+      extintf     = ""
+      extip       = ""
+      protocol    = ""
+      extport     = ""
+      mappedport  = ""
+      status      = ""
+      portforward = ""
+      mappedip = [
+        { range = "" }
+      ]
+    },
+    {
+      name        = ""
+      type        = ""
+      extintf     = ""
+      extip       = ""
+      protocol    = ""
+      extport     = ""
+      mappedport  = ""
+      status      = ""
+      portforward = ""
+      mappedip = [
+        { range = "" }
+      ]
+    },
+    {
+      name        = ""
+      type        = ""
+      extintf     = ""
+      extip       = ""
+      protocol    = ""
+      extport     = ""
+      mappedport  = ""
+      status      = ""
+      portforward = ""
+      mappedip = [
+        { range = "" }
+      ]
+    },
+    {
+      name        = ""
+      type        = ""
+      extintf     = ""
+      extip       = ""
+      protocol    = ""
+      extport     = ""
+      mappedport  = ""
+      status      = ""
+      portforward = ""
+      mappedip = [
+        { range = "" }
+      ]
+    },
+    {
+      name        = ""
+      type        = ""
+      extintf     = ""
+      extip       = ""
+      protocol    = ""
+      extport     = ""
+      mappedport  = ""
+      status      = ""
+      portforward = ""
+      mappedip = [
+        { range = "" }
+      ]
+    },
+    {
+      name        = ""
+      type        = ""
+      extintf     = ""
+      extip       = ""
+      protocol    = ""
+      extport     = ""
+      mappedport  = ""
+      status      = ""
+      portforward = ""
+      mappedip = [
+        { range = "" }
+      ]
+    },
+    {
+      name        = ""
+      type        = ""
+      extintf     = ""
+      extip       = ""
+      protocol    = ""
+      extport     = ""
+      mappedport  = ""
+      status      = ""
+      portforward = ""
+      mappedip = [
+        { range = "" }
+      ]
+    },
+    {
+      name        = ""
+      type        = ""
+      extintf     = ""
+      extip       = ""
+      protocol    = ""
+      extport     = ""
+      mappedport  = ""
+      status      = ""
+      portforward = ""
+      mappedip = [
+        { range = "" }
+      ]
+    },
+    {
+      name        = ""
+      type        = ""
+      extintf     = ""
+      extip       = ""
+      protocol    = ""
+      extport     = ""
+      mappedport  = ""
+      status      = ""
+      portforward = ""
+      mappedip = [
+        { range = "" }
+      ]
+    },
+    {
+      name        = ""
+      type        = ""
+      extintf     = ""
+      extip       = ""
+      protocol    = ""
+      extport     = ""
+      mappedport  = ""
+      status      = ""
+      portforward = ""
+      mappedip = [
+        { range = "" }
+      ]
+    },
+    {
+      name        = ""
+      type        = ""
+      extintf     = ""
+      extip       = ""
+      protocol    = ""
+      extport     = ""
+      mappedport  = ""
+      status      = ""
+      portforward = ""
+      mappedip = [
+        { range = "" }
+      ]
+    },
+    {
+      name        = ""
+      type        = ""
+      extintf     = ""
+      extip       = ""
+      protocol    = ""
+      extport     = ""
+      mappedport  = ""
+      status      = ""
+      portforward = ""
+      mappedip = [
+        { range = "" }
+      ]
+    },
+    {
+      name        = ""
+      type        = ""
+      extintf     = ""
+      extip       = ""
+      protocol    = ""
+      extport     = ""
+      mappedport  = ""
+      status      = ""
+      portforward = ""
+      mappedip = [
+        { range = "" }
+      ]
+    },
+    {
+      name        = ""
+      type        = ""
+      extintf     = ""
+      extip       = ""
+      protocol    = ""
+      extport     = ""
+      mappedport  = ""
+      status      = ""
+      portforward = ""
+      mappedip = [
+        { range = "" }
+      ]
+    },
+    {
+      name        = ""
+      type        = ""
+      extintf     = ""
+      extip       = ""
+      protocol    = ""
+      extport     = ""
+      mappedport  = ""
+      status      = ""
+      portforward = ""
+      mappedip = [
+        { range = "" }
+      ]
+    },
+    {
+      name        = ""
+      type        = ""
+      extintf     = ""
+      extip       = ""
+      protocol    = ""
+      extport     = ""
+      mappedport  = ""
+      status      = ""
+      portforward = ""
+      mappedip = [
+        { range = "" }
+      ]
+    },
+    {
+      name        = ""
+      type        = ""
+      extintf     = ""
+      extip       = ""
+      protocol    = ""
+      extport     = ""
+      mappedport  = ""
+      status      = ""
+      portforward = ""
+      mappedip = [
+        { range = "" }
+      ]
+    },
+    {
+      name        = ""
+      type        = ""
+      extintf     = ""
+      extip       = ""
+      protocol    = ""
+      extport     = ""
+      mappedport  = ""
+      status      = ""
+      portforward = ""
+      mappedip = [
+        { range = "" }
+      ]
+    },
+    {
+      name        = ""
+      type        = ""
+      extintf     = ""
+      extip       = ""
+      protocol    = ""
+      extport     = ""
+      mappedport  = ""
+      status      = ""
+      portforward = ""
+      mappedip = [
+        { range = "" }
+      ]
+    },
+    {
+      name        = ""
+      type        = ""
+      extintf     = ""
+      extip       = ""
+      protocol    = ""
+      extport     = ""
+      mappedport  = ""
+      status      = ""
+      portforward = ""
+      mappedip = [
+        { range = "" }
+      ]
+    },
+    {
+      name        = ""
+      type        = ""
+      extintf     = ""
+      extip       = ""
+      protocol    = ""
+      extport     = ""
+      mappedport  = ""
+      status      = ""
+      portforward = ""
+      mappedip = [
+        { range = "" }
+      ]
+    },
+    {
+      name        = ""
+      type        = ""
+      extintf     = ""
+      extip       = ""
+      protocol    = ""
+      extport     = ""
+      mappedport  = ""
+      status      = ""
+      portforward = ""
+      mappedip = [
+        { range = "" }
+      ]
+    },
+    {
+      name        = ""
+      type        = ""
+      extintf     = ""
+      extip       = ""
+      protocol    = ""
+      extport     = ""
+      mappedport  = ""
+      status      = ""
+      portforward = ""
+      mappedip = [
+        { range = "" }
+      ]
+    },
+    {
+      name        = ""
+      type        = ""
+      extintf     = ""
+      extip       = ""
+      protocol    = ""
+      extport     = ""
+      mappedport  = ""
+      status      = ""
+      portforward = ""
+      mappedip = [
+        { range = "" }
+      ]
+    },
+    {
+      name        = ""
+      type        = ""
+      extintf     = ""
+      extip       = ""
+      protocol    = ""
+      extport     = ""
+      mappedport  = ""
+      status      = ""
+      portforward = ""
+      mappedip = [
+        { range = "" }
+      ]
+    },
+    {
+      name        = ""
+      type        = ""
+      extintf     = ""
+      extip       = ""
+      protocol    = ""
+      extport     = ""
+      mappedport  = ""
+      status      = ""
+      portforward = ""
+      mappedip = [
+        { range = "" }
+      ]
+    },
+    {
+      name        = ""
+      type        = ""
+      extintf     = ""
+      extip       = ""
+      protocol    = ""
+      extport     = ""
+      mappedport  = ""
+      status      = ""
+      portforward = ""
+      mappedip = [
+        { range = "" }
+      ]
+    },
+    {
+      name        = ""
+      type        = ""
+      extintf     = ""
+      extip       = ""
+      protocol    = ""
+      extport     = ""
+      mappedport  = ""
+      status      = ""
+      portforward = ""
+      mappedip = [
+        { range = "" }
+      ]
+    },
+    {
+      name        = ""
+      type        = ""
+      extintf     = ""
+      extip       = ""
+      protocol    = ""
+      extport     = ""
+      mappedport  = ""
+      status      = ""
+      portforward = ""
+      mappedip = [
+        { range = "" }
+      ]
+    },
+    {
+      name        = ""
+      type        = ""
+      extintf     = ""
+      extip       = ""
+      protocol    = ""
+      extport     = ""
+      mappedport  = ""
+      status      = ""
+      portforward = ""
+      mappedip = [
+        { range = "" }
+      ]
+    },
+    {
+      name        = ""
+      type        = ""
+      extintf     = ""
+      extip       = ""
+      protocol    = ""
+      extport     = ""
+      mappedport  = ""
+      status      = ""
+      portforward = ""
+      mappedip = [
+        { range = "" }
+      ]
+    },
+    {
+      name            = ""
+      import_existing = false
+      type            = ""
+      extintf         = ""
+      extip           = ""
+      protocol        = ""
+      extport         = ""
+      mappedport      = ""
+      status          = ""
+      portforward     = ""
+      mappedip = [
+        { range = "" }
+      ]
+    },
+    {
+      name            = ""
+      import_existing = false
+      type            = ""
+      extintf         = ""
+      extip           = ""
+      protocol        = ""
+      extport         = ""
+      mappedport      = ""
+      status          = ""
+      portforward     = ""
+      mappedip = [
+        { range = "" }
+      ]
+    },
+    {
+      name            = ""
+      import_existing = false
+      type            = ""
+      extintf         = ""
+      extip           = ""
+      protocol        = ""
+      extport         = ""
+      mappedport      = ""
+      status          = ""
+      portforward     = ""
+      mappedip = [
+        { range = "" }
+      ]
+    },
+    {
+      name            = ""
+      import_existing = false
+      type            = ""
+      extintf         = ""
+      extip           = ""
+      protocol        = ""
+      extport         = ""
+      mappedport      = ""
+      status          = ""
+      portforward     = ""
+      mappedip = [
+        { range = "" }
+      ]
+    },
+    {
+      name            = ""
+      import_existing = false
+      type            = ""
+      extintf         = ""
+      extip           = ""
+      protocol        = ""
+      extport         = ""
+      mappedport      = ""
+      status          = ""
+      portforward     = ""
+      mappedip = [
+        { range = "" }
+      ]
+    },
+    {
+      name            = ""
+      import_existing = false
+      type            = ""
+      extintf         = ""
+      extip           = ""
+      protocol        = ""
+      extport         = ""
+      mappedport      = ""
+      status          = ""
+      portforward     = ""
+      mappedip = [
+        { range = "" }
+      ]
+    },
+    {
+      name            = ""
+      import_existing = false
+      type            = ""
+      extintf         = ""
+      extip           = ""
+      protocol        = ""
+      extport         = ""
+      mappedport      = ""
+      status          = ""
+      portforward     = ""
+      mappedip = [
+        { range = "" }
+      ]
+    },
+    {
+      name            = ""
+      import_existing = false
+      type            = ""
+      extintf         = ""
+      extip           = ""
+      protocol        = ""
+      extport         = ""
+      mappedport      = ""
+      status          = ""
+      portforward     = ""
+      mappedip = [
+        { range = "" }
+      ]
+    },
+    {
+      name            = ""
+      import_existing = false
+      type            = ""
+      extintf         = ""
+      extip           = ""
+      protocol        = ""
+      extport         = ""
+      mappedport      = ""
+      status          = ""
+      portforward     = ""
+      mappedip = [
+        { range = "" }
+      ]
+    },
+    {
+      name            = ""
+      import_existing = false
+      type            = ""
+      extintf         = ""
+      extip           = ""
+      protocol        = ""
+      extport         = ""
+      mappedport      = ""
+      status          = ""
+      portforward     = ""
+      mappedip = [
+        { range = "" }
+      ]
+    },
+    {
+      name            = ""
+      import_existing = false
+      type            = ""
+      extintf         = ""
+      extip           = ""
+      protocol        = ""
+      extport         = ""
+      mappedport      = ""
+      status          = ""
+      portforward     = ""
+      mappedip = [
+        { range = "" }
+      ]
+    },
+    {
+      name            = ""
+      import_existing = false
+      type            = ""
+      extintf         = ""
+      extip           = ""
+      protocol        = ""
+      extport         = ""
+      mappedport      = ""
+      status          = ""
+      portforward     = ""
+      mappedip = [
+        { range = "" }
+      ]
+    },
+    {
+      name            = ""
+      import_existing = false
+      type            = ""
+      extintf         = ""
+      extip           = ""
+      protocol        = ""
+      extport         = ""
+      mappedport      = ""
+      status          = ""
+      portforward     = ""
+      mappedip = [
+        { range = "" }
+      ]
+    },
+    {
+      name            = ""
+      import_existing = false
+      type            = ""
+      extintf         = ""
+      extip           = ""
+      protocol        = ""
+      extport         = ""
+      mappedport      = ""
+      status          = ""
+      portforward     = ""
+      mappedip = [
+        { range = "" }
+      ]
+    },
+    {
+      name            = ""
+      import_existing = false
+      type            = ""
+      extintf         = ""
+      extip           = ""
+      protocol        = ""
+      extport         = ""
+      mappedport      = ""
+      status          = ""
+      portforward     = ""
+      mappedip = [
+        { range = "" }
+      ]
+    },
+    {
+      name            = ""
+      import_existing = false
+      type            = ""
+      extintf         = ""
+      extip           = ""
+      protocol        = ""
+      extport         = ""
+      mappedport      = ""
+      status          = ""
+      portforward     = ""
+      mappedip = [
+        { range = "" }
+      ]
+    },
+    {
+      name            = ""
+      import_existing = false
+      type            = ""
+      extintf         = ""
+      extip           = ""
+      protocol        = ""
+      extport         = ""
+      mappedport      = ""
+      status          = ""
+      portforward     = ""
+      mappedip = [
+        { range = "" }
+      ]
+    },
+    {
+      name            = ""
+      import_existing = false
+      type            = ""
+      extintf         = ""
+      extip           = ""
+      protocol        = ""
+      extport         = ""
+      mappedport      = ""
+      status          = ""
+      portforward     = ""
+      mappedip = [
+        { range = "" }
+      ]
+    },
+    {
+      name            = ""
+      import_existing = false
+      type            = ""
+      extintf         = ""
+      extip           = ""
+      protocol        = ""
+      extport         = ""
+      mappedport      = ""
+      status          = ""
+      portforward     = ""
+      mappedip = [
+        { range = "" }
+      ]
+    },
+    {
+      name            = ""
+      import_existing = false
+      type            = ""
+      extintf         = ""
+      extip           = ""
+      protocol        = ""
+      extport         = ""
+      mappedport      = ""
+      status          = ""
+      portforward     = ""
+      mappedip = [
+        { range = "" }
+      ]
+    },
+    {
+      name            = ""
+      import_existing = false
+      type            = ""
+      extintf         = ""
+      extip           = ""
+      protocol        = ""
+      extport         = ""
+      mappedport      = ""
+      status          = ""
+      portforward     = ""
+      mappedip = [
+        { range = "" }
+      ]
+    },
+    {
+      name            = ""
+      import_existing = false
+      type            = ""
+      extintf         = ""
+      extip           = ""
+      protocol        = ""
+      extport         = ""
+      mappedport      = ""
+      status          = ""
+      portforward     = ""
+      mappedip = [
+        { range = "" }
+      ]
+    },
+    {
+      name            = ""
+      import_existing = false
+      type            = ""
+      extintf         = ""
+      extip           = ""
+      protocol        = ""
+      extport         = ""
+      mappedport      = ""
+      status          = ""
+      portforward     = ""
+      mappedip = [
+        { range = "" }
+      ]
+    },
+    {
+      name            = ""
+      import_existing = false
+      type            = ""
+      extintf         = ""
+      extip           = ""
+      protocol        = ""
+      extport         = ""
+      mappedport      = ""
+      status          = ""
+      portforward     = ""
+      mappedip = [
+        { range = "" }
+      ]
+    },
+    {
+      name            = ""
+      import_existing = false
+      type            = ""
+      extintf         = ""
+      extip           = ""
+      protocol        = ""
+      extport         = ""
+      mappedport      = ""
+      status          = ""
+      portforward     = ""
+      mappedip = [
+        { range = "" }
+      ]
+    },
+    {
+      name            = ""
+      import_existing = false
+      type            = ""
+      extintf         = ""
+      extip           = ""
+      protocol        = ""
+      extport         = ""
+      mappedport      = ""
+      status          = ""
+      portforward     = ""
+      mappedip = [
+        { range = "" }
+      ]
+    },
+    {
+      name            = ""
+      import_existing = false
+      type            = ""
+      extintf         = ""
+      extip           = ""
+      protocol        = ""
+      extport         = ""
+      mappedport      = ""
+      status          = ""
+      portforward     = ""
+      mappedip = [
+        { range = "" }
+      ]
+    },
+    {
+      name            = ""
+      import_existing = false
+      type            = ""
+      extintf         = ""
+      extip           = ""
+      protocol        = ""
+      extport         = ""
+      mappedport      = ""
+      status          = ""
+      portforward     = ""
+      mappedip = [
+        { range = "" }
+      ]
+    },
+    {
+      name            = ""
+      import_existing = false
+      type            = ""
+      extintf         = ""
+      extip           = ""
+      protocol        = ""
+      extport         = ""
+      mappedport      = ""
+      status          = ""
+      portforward     = ""
+      mappedip = [
+        { range = "" }
+      ]
+    },
+    {
+      name            = ""
+      import_existing = false
+      type            = ""
+      extintf         = ""
+      extip           = ""
+      protocol        = ""
+      extport         = ""
+      mappedport      = ""
+      status          = ""
+      portforward     = ""
+      mappedip = [
+        { range = "" }
+      ]
+    },
+    {
+      name        = ""
+      type        = ""
+      extintf     = ""
+      extip       = ""
+      protocol    = ""
+      extport     = ""
+      mappedport  = ""
+      status      = ""
+      portforward = ""
+      mappedip = [
+        { range = "" }
+      ]
+    },
+    {
+      name        = ""
+      type        = ""
+      extintf     = ""
+      extip       = ""
+      protocol    = ""
+      extport     = ""
+      mappedport  = ""
+      status      = ""
+      portforward = ""
+      mappedip = [
+        { range = "" }
+      ]
+    }
+  ]
+
+  firewall_policies = [
+    {
+      policyid        = 40096
+      name            = ""
+      import_existing = false
+      action          = ""
+      status          = ""
+      schedule        = ""
+      nat             = ""
+      logtraffic      = ""
+      match_vip       = ""
+      srcintf         = [{ name = "" }]
+      dstintf         = [{ name = "" }]
+      srcaddr         = [{ name = "" }]
+      dstaddr         = [{ name = "" }]
+      service         = [{ name = "" }]
+    },
+    {
+      policyid        = 41096
+      name            = ""
+      import_existing = false
+      action          = ""
+      status          = ""
+      schedule        = ""
+      nat             = ""
+      logtraffic      = ""
+      match_vip       = ""
+      srcintf         = [{ name = "" }]
+      dstintf         = [{ name = "" }]
+      srcaddr         = [{ name = "" }]
+      dstaddr         = [{ name = "" }]
+      service         = [{ name = "" }]
+    },
+    {
+      policyid        = 40097
+      name            = ""
+      import_existing = false
+      action          = ""
+      status          = ""
+      schedule        = ""
+      nat             = ""
+      logtraffic      = ""
+      match_vip       = ""
+      srcintf         = [{ name = "" }]
+      dstintf         = [{ name = "" }]
+      srcaddr         = [{ name = "" }]
+      dstaddr         = [{ name = "" }]
+      service         = [{ name = "" }]
+    },
+    {
+      policyid        = 41097
+      name            = ""
+      import_existing = false
+      action          = ""
+      status          = ""
+      schedule        = ""
+      nat             = ""
+      logtraffic      = ""
+      match_vip       = ""
+      srcintf         = [{ name = "" }]
+      dstintf         = [{ name = "" }]
+      srcaddr         = [{ name = "" }]
+      dstaddr         = [{ name = "" }]
+      service         = [{ name = "" }]
+    },
+    {
+      policyid        = 40098
+      name            = ""
+      import_existing = false
+      action          = ""
+      status          = ""
+      schedule        = ""
+      nat             = ""
+      logtraffic      = ""
+      match_vip       = ""
+      srcintf         = [{ name = "" }]
+      dstintf         = [{ name = "" }]
+      srcaddr         = [{ name = "" }]
+      dstaddr         = [{ name = "" }]
+      service         = [{ name = "" }]
+    },
+    {
+      policyid        = 41098
+      name            = ""
+      import_existing = false
+      action          = ""
+      status          = ""
+      schedule        = ""
+      nat             = ""
+      logtraffic      = ""
+      match_vip       = ""
+      srcintf         = [{ name = "" }]
+      dstintf         = [{ name = "" }]
+      srcaddr         = [{ name = "" }]
+      dstaddr         = [{ name = "" }]
+      service         = [{ name = "" }]
+    },
+    {
+      policyid        = 40099
+      name            = ""
+      import_existing = false
+      action          = ""
+      status          = ""
+      schedule        = ""
+      nat             = ""
+      logtraffic      = ""
+      match_vip       = ""
+      srcintf         = [{ name = "" }]
+      dstintf         = [{ name = "" }]
+      srcaddr         = [{ name = "" }]
+      dstaddr         = [{ name = "" }]
+      service         = [{ name = "" }]
+    },
+    {
+      policyid        = 41099
+      name            = ""
+      import_existing = false
+      action          = ""
+      status          = ""
+      schedule        = ""
+      nat             = ""
+      logtraffic      = ""
+      match_vip       = ""
+      srcintf         = [{ name = "" }]
+      dstintf         = [{ name = "" }]
+      srcaddr         = [{ name = "" }]
+      dstaddr         = [{ name = "" }]
+      service         = [{ name = "" }]
+    },
+    {
+      policyid        = 40100
+      name            = ""
+      import_existing = false
+      action          = ""
+      status          = ""
+      schedule        = ""
+      nat             = ""
+      logtraffic      = ""
+      match_vip       = ""
+      srcintf         = [{ name = "" }]
+      dstintf         = [{ name = "" }]
+      srcaddr         = [{ name = "" }]
+      dstaddr         = [{ name = "" }]
+      service         = [{ name = "" }]
+    },
+    {
+      policyid        = 41100
+      name            = ""
+      import_existing = false
+      action          = ""
+      status          = ""
+      schedule        = ""
+      nat             = ""
+      logtraffic      = ""
+      match_vip       = ""
+      srcintf         = [{ name = "" }]
+      dstintf         = [{ name = "" }]
+      srcaddr         = [{ name = "" }]
+      dstaddr         = [{ name = "" }]
+      service         = [{ name = "" }]
+    },
+    {
+      policyid        = 40101
+      name            = ""
+      import_existing = false
+      action          = ""
+      status          = ""
+      schedule        = ""
+      nat             = ""
+      logtraffic      = ""
+      match_vip       = ""
+      srcintf         = [{ name = "" }]
+      dstintf         = [{ name = "" }]
+      srcaddr         = [{ name = "" }]
+      dstaddr         = [{ name = "" }]
+      service         = [{ name = "" }]
+    },
+    {
+      policyid        = 41101
+      name            = ""
+      import_existing = false
+      action          = ""
+      status          = ""
+      schedule        = ""
+      nat             = ""
+      logtraffic      = ""
+      match_vip       = ""
+      srcintf         = [{ name = "" }]
+      dstintf         = [{ name = "" }]
+      srcaddr         = [{ name = "" }]
+      dstaddr         = [{ name = "" }]
+      service         = [{ name = "" }]
+    },
+    {
+      policyid        = 40102
+      name            = ""
+      import_existing = false
+      action          = ""
+      status          = ""
+      schedule        = ""
+      nat             = ""
+      logtraffic      = ""
+      match_vip       = ""
+      srcintf         = [{ name = "" }]
+      dstintf         = [{ name = "" }]
+      srcaddr         = [{ name = "" }]
+      dstaddr         = [{ name = "" }]
+      service         = [{ name = "" }]
+    },
+    {
+      policyid        = 41102
+      name            = ""
+      import_existing = false
+      action          = ""
+      status          = ""
+      schedule        = ""
+      nat             = ""
+      logtraffic      = ""
+      match_vip       = ""
+      srcintf         = [{ name = "" }]
+      dstintf         = [{ name = "" }]
+      srcaddr         = [{ name = "" }]
+      dstaddr         = [{ name = "" }]
+      service         = [{ name = "" }]
+    },
+    {
+      policyid        = 40103
+      name            = ""
+      import_existing = false
+      action          = ""
+      status          = ""
+      schedule        = ""
+      nat             = ""
+      logtraffic      = ""
+      match_vip       = ""
+      srcintf         = [{ name = "" }]
+      dstintf         = [{ name = "" }]
+      srcaddr         = [{ name = "" }]
+      dstaddr         = [{ name = "" }]
+      service         = [{ name = "" }]
+    },
+    {
+      policyid        = 41103
+      name            = ""
+      import_existing = false
+      action          = ""
+      status          = ""
+      schedule        = ""
+      nat             = ""
+      logtraffic      = ""
+      match_vip       = ""
+      srcintf         = [{ name = "" }]
+      dstintf         = [{ name = "" }]
+      srcaddr         = [{ name = "" }]
+      dstaddr         = [{ name = "" }]
+      service         = [{ name = "" }]
+    },
+    {
+      policyid        = 40104
+      name            = ""
+      import_existing = false
+      action          = ""
+      status          = ""
+      schedule        = ""
+      nat             = ""
+      logtraffic      = ""
+      match_vip       = ""
+      srcintf         = [{ name = "" }]
+      dstintf         = [{ name = "" }]
+      srcaddr         = [{ name = "" }]
+      dstaddr         = [{ name = "" }]
+      service         = [{ name = "" }]
+    },
+    {
+      policyid        = 41104
+      name            = ""
+      import_existing = false
+      action          = ""
+      status          = ""
+      schedule        = ""
+      nat             = ""
+      logtraffic      = ""
+      match_vip       = ""
+      srcintf         = [{ name = "" }]
+      dstintf         = [{ name = "" }]
+      srcaddr         = [{ name = "" }]
+      dstaddr         = [{ name = "" }]
+      service         = [{ name = "" }]
+    },
+    {
+      policyid        = 40105
+      name            = ""
+      import_existing = false
+      action          = ""
+      status          = ""
+      schedule        = ""
+      nat             = ""
+      logtraffic      = ""
+      match_vip       = ""
+      srcintf         = [{ name = "" }]
+      dstintf         = [{ name = "" }]
+      srcaddr         = [{ name = "" }]
+      dstaddr         = [{ name = "" }]
+      service         = [{ name = "" }]
+    },
+    {
+      policyid        = 41105
+      name            = ""
+      import_existing = false
+      action          = ""
+      status          = ""
+      schedule        = ""
+      nat             = ""
+      logtraffic      = ""
+      match_vip       = ""
+      srcintf         = [{ name = "" }]
+      dstintf         = [{ name = "" }]
+      srcaddr         = [{ name = "" }]
+      dstaddr         = [{ name = "" }]
+      service         = [{ name = "" }]
+    },
+    {
+      policyid        = 40106
+      name            = ""
+      import_existing = false
+      action          = ""
+      status          = ""
+      schedule        = ""
+      nat             = ""
+      logtraffic      = ""
+      match_vip       = ""
+      srcintf         = [{ name = "" }]
+      dstintf         = [{ name = "" }]
+      srcaddr         = [{ name = "" }]
+      dstaddr         = [{ name = "" }]
+      service         = [{ name = "" }]
+    },
+    {
+      policyid        = 41106
+      name            = ""
+      import_existing = false
+      action          = ""
+      status          = ""
+      schedule        = ""
+      nat             = ""
+      logtraffic      = ""
+      match_vip       = ""
+      srcintf         = [{ name = "" }]
+      dstintf         = [{ name = "" }]
+      srcaddr         = [{ name = "" }]
+      dstaddr         = [{ name = "" }]
+      service         = [{ name = "" }]
+    },
+    {
+      policyid        = 40107
+      name            = ""
+      import_existing = false
+      action          = ""
+      status          = ""
+      schedule        = ""
+      nat             = ""
+      logtraffic      = ""
+      match_vip       = ""
+      srcintf         = [{ name = "" }]
+      dstintf         = [{ name = "" }]
+      srcaddr         = [{ name = "" }]
+      dstaddr         = [{ name = "" }]
+      service         = [{ name = "" }]
+    },
+    {
+      policyid        = 41107
+      name            = ""
+      import_existing = false
+      action          = ""
+      status          = ""
+      schedule        = ""
+      nat             = ""
+      logtraffic      = ""
+      match_vip       = ""
+      srcintf         = [{ name = "" }]
+      dstintf         = [{ name = "" }]
+      srcaddr         = [{ name = "" }]
+      dstaddr         = [{ name = "" }]
+      service         = [{ name = "" }]
+    },
+    {
+      policyid        = 42100
+      name            = ""
+      import_existing = false
+      action          = ""
+      status          = ""
+      schedule        = ""
+      nat             = ""
+      logtraffic      = ""
+      match_vip       = ""
+      srcintf         = [{ name = "" }]
+      dstintf         = [{ name = "" }]
+      srcaddr         = [{ name = "" }]
+      dstaddr         = [{ name = "" }]
+      service         = [{ name = "" }]
+    },
+    {
+      policyid        = 43100
+      name            = ""
+      import_existing = false
+      action          = ""
+      status          = ""
+      schedule        = ""
+      nat             = ""
+      logtraffic      = ""
+      match_vip       = ""
+      srcintf         = [{ name = "" }]
+      dstintf         = [{ name = "" }]
+      srcaddr         = [{ name = "" }]
+      dstaddr         = [{ name = "" }]
+      service         = [{ name = "" }]
+    },
+    {
+      policyid        = 42101
+      name            = ""
+      import_existing = false
+      action          = ""
+      status          = ""
+      schedule        = ""
+      nat             = ""
+      logtraffic      = ""
+      match_vip       = ""
+      srcintf         = [{ name = "" }]
+      dstintf         = [{ name = "" }]
+      srcaddr         = [{ name = "" }]
+      dstaddr         = [{ name = "" }]
+      service         = [{ name = "" }]
+    },
+    {
+      policyid        = 43101
+      name            = ""
+      import_existing = false
+      action          = ""
+      status          = ""
+      schedule        = ""
+      nat             = ""
+      logtraffic      = ""
+      match_vip       = ""
+      srcintf         = [{ name = "" }]
+      dstintf         = [{ name = "" }]
+      srcaddr         = [{ name = "" }]
+      dstaddr         = [{ name = "" }]
+      service         = [{ name = "" }]
+    },
+    {
+      policyid        = 42102
+      name            = ""
+      import_existing = false
+      action          = ""
+      status          = ""
+      schedule        = ""
+      nat             = ""
+      logtraffic      = ""
+      match_vip       = ""
+      srcintf         = [{ name = "" }]
+      dstintf         = [{ name = "" }]
+      srcaddr         = [{ name = "" }]
+      dstaddr         = [{ name = "" }]
+      service         = [{ name = "" }]
+    },
+    {
+      policyid        = 43102
+      name            = ""
+      import_existing = false
+      action          = ""
+      status          = ""
+      schedule        = ""
+      nat             = ""
+      logtraffic      = ""
+      match_vip       = ""
+      srcintf         = [{ name = "" }]
+      dstintf         = [{ name = "" }]
+      srcaddr         = [{ name = "" }]
+      dstaddr         = [{ name = "" }]
+      service         = [{ name = "" }]
+    },
+    {
+      policyid   = 2
+      name       = ""
+      action     = ""
+      status     = ""
+      schedule   = ""
+      nat        = ""
+      logtraffic = ""
+      match_vip  = ""
+      srcintf    = [{ name = "" }]
+      dstintf    = [{ name = "" }]
+      srcaddr    = [{ name = "" }]
+      dstaddr    = [{ name = "" }]
+      service    = [{ name = "" }]
+    },
+    {
+      policyid   = 10
+      name       = ""
+      action     = ""
+      status     = ""
+      schedule   = ""
+      nat        = ""
+      logtraffic = ""
+      match_vip  = ""
+      srcintf    = [{ name = "" }]
+      dstintf    = [{ name = "" }]
+      srcaddr    = [{ name = "" }]
+      dstaddr    = [{ name = "" }]
+      service    = [{ name = "" }]
+    },
+    {
+      policyid   = 9
+      name       = ""
+      action     = ""
+      status     = ""
+      schedule   = ""
+      nat        = ""
+      logtraffic = ""
+      match_vip  = ""
+      srcintf    = [{ name = "" }]
+      dstintf    = [{ name = "" }]
+      srcaddr    = [{ name = "" }]
+      dstaddr    = [{ name = "" }]
+      service    = [{ name = "" }]
+    },
+    {
+      policyid   = 11
+      name       = ""
+      action     = ""
+      status     = ""
+      schedule   = ""
+      nat        = ""
+      logtraffic = ""
+      match_vip  = ""
+      srcintf    = [{ name = "" }]
+      dstintf    = [{ name = "" }]
+      srcaddr    = [{ name = "" }]
+      dstaddr    = [{ name = "" }]
+      service    = [{ name = "" }]
+    },
+    {
+      policyid   = 44011
+      name       = ""
+      action     = ""
+      status     = ""
+      schedule   = ""
+      nat        = ""
+      logtraffic = ""
+      match_vip  = ""
+      srcintf    = [{ name = "" }]
+      dstintf    = [{ name = "" }]
+      srcaddr    = [{ name = "" }]
+      dstaddr    = [{ name = "" }]
+      service    = [{ name = "" }]
+    },
+    {
+      policyid   = 12
+      name       = ""
+      action     = ""
+      status     = ""
+      schedule   = ""
+      nat        = ""
+      logtraffic = ""
+      match_vip  = ""
+      srcintf    = [{ name = "" }]
+      dstintf    = [{ name = "" }]
+      srcaddr    = [{ name = "" }]
+      dstaddr    = [{ name = "" }]
+      service    = [{ name = "" }]
+    },
+    {
+      policyid   = 44012
+      name       = ""
+      action     = ""
+      status     = ""
+      schedule   = ""
+      nat        = ""
+      logtraffic = ""
+      match_vip  = ""
+      srcintf    = [{ name = "" }]
+      dstintf    = [{ name = "" }]
+      srcaddr    = [{ name = "" }]
+      dstaddr    = [{ name = "" }]
+      service    = [{ name = "" }]
+    },
+    {
+      policyid   = 13
+      name       = ""
+      action     = ""
+      status     = ""
+      schedule   = ""
+      nat        = ""
+      logtraffic = ""
+      match_vip  = ""
+      srcintf    = [{ name = "" }]
+      dstintf    = [{ name = "" }]
+      srcaddr    = [{ name = "" }]
+      dstaddr    = [{ name = "" }]
+      service    = [{ name = "" }]
+    },
+    {
+      policyid   = 44013
+      name       = ""
+      action     = ""
+      status     = ""
+      schedule   = ""
+      nat        = ""
+      logtraffic = ""
+      match_vip  = ""
+      srcintf    = [{ name = "" }]
+      dstintf    = [{ name = "" }]
+      srcaddr    = [{ name = "" }]
+      dstaddr    = [{ name = "" }]
+      service    = [{ name = "" }]
+    },
+    {
+      policyid   = 14
+      name       = ""
+      action     = ""
+      status     = ""
+      schedule   = ""
+      nat        = ""
+      logtraffic = ""
+      match_vip  = ""
+      srcintf    = [{ name = "" }]
+      dstintf    = [{ name = "" }]
+      srcaddr    = [{ name = "" }]
+      dstaddr    = [{ name = "" }]
+      service    = [{ name = "" }]
+    },
+    {
+      policyid   = 44014
+      name       = ""
+      action     = ""
+      status     = ""
+      schedule   = ""
+      nat        = ""
+      logtraffic = ""
+      match_vip  = ""
+      srcintf    = [{ name = "" }]
+      dstintf    = [{ name = "" }]
+      srcaddr    = [{ name = "" }]
+      dstaddr    = [{ name = "" }]
+      service    = [{ name = "" }]
+    },
+    {
+      policyid   = 15
+      name       = ""
+      action     = ""
+      status     = ""
+      schedule   = ""
+      nat        = ""
+      logtraffic = ""
+      match_vip  = ""
+      srcintf    = [{ name = "" }]
+      dstintf    = [{ name = "" }]
+      srcaddr    = [{ name = "" }]
+      dstaddr    = [{ name = "" }]
+      service    = [{ name = "" }]
+    },
+    {
+      policyid   = 44015
+      name       = ""
+      action     = ""
+      status     = ""
+      schedule   = ""
+      nat        = ""
+      logtraffic = ""
+      match_vip  = ""
+      srcintf    = [{ name = "" }]
+      dstintf    = [{ name = "" }]
+      srcaddr    = [{ name = "" }]
+      dstaddr    = [{ name = "" }]
+      service    = [{ name = "" }]
+    },
+    {
+      policyid   = 16
+      name       = ""
+      action     = ""
+      status     = ""
+      schedule   = ""
+      nat        = ""
+      logtraffic = ""
+      match_vip  = ""
+      srcintf    = [{ name = "" }]
+      dstintf    = [{ name = "" }]
+      srcaddr    = [{ name = "" }]
+      dstaddr    = [{ name = "" }]
+      service    = [{ name = "" }]
+    },
+    {
+      policyid   = 44016
+      name       = ""
+      action     = ""
+      status     = ""
+      schedule   = ""
+      nat        = ""
+      logtraffic = ""
+      match_vip  = ""
+      srcintf    = [{ name = "" }]
+      dstintf    = [{ name = "" }]
+      srcaddr    = [{ name = "" }]
+      dstaddr    = [{ name = "" }]
+      service    = [{ name = "" }]
+    },
+    {
+      policyid   = 17
+      name       = ""
+      action     = ""
+      status     = ""
+      schedule   = ""
+      nat        = ""
+      logtraffic = ""
+      match_vip  = ""
+      srcintf    = [{ name = "" }]
+      dstintf    = [{ name = "" }]
+      srcaddr    = [{ name = "" }]
+      dstaddr    = [{ name = "" }]
+      service    = [{ name = "" }]
+    },
+    {
+      policyid   = 44017
+      name       = ""
+      action     = ""
+      status     = ""
+      schedule   = ""
+      nat        = ""
+      logtraffic = ""
+      match_vip  = ""
+      srcintf    = [{ name = "" }]
+      dstintf    = [{ name = "" }]
+      srcaddr    = [{ name = "" }]
+      dstaddr    = [{ name = "" }]
+      service    = [{ name = "" }]
+    },
+    {
+      policyid   = 18
+      name       = ""
+      action     = ""
+      status     = ""
+      schedule   = ""
+      nat        = ""
+      logtraffic = ""
+      match_vip  = ""
+      srcintf    = [{ name = "" }]
+      dstintf    = [{ name = "" }]
+      srcaddr    = [{ name = "" }]
+      dstaddr    = [{ name = "" }]
+      service    = [{ name = "" }]
+    },
+    {
+      policyid   = 44018
+      name       = ""
+      action     = ""
+      status     = ""
+      schedule   = ""
+      nat        = ""
+      logtraffic = ""
+      match_vip  = ""
+      srcintf    = [{ name = "" }]
+      dstintf    = [{ name = "" }]
+      srcaddr    = [{ name = "" }]
+      dstaddr    = [{ name = "" }]
+      service    = [{ name = "" }]
+    },
+    {
+      policyid   = 19
+      name       = ""
+      action     = ""
+      status     = ""
+      schedule   = ""
+      nat        = ""
+      logtraffic = ""
+      match_vip  = ""
+      srcintf    = [{ name = "" }]
+      dstintf    = [{ name = "" }]
+      srcaddr    = [{ name = "" }]
+      dstaddr    = [{ name = "" }]
+      service    = [{ name = "" }]
+    },
+    {
+      policyid   = 44019
+      name       = ""
+      action     = ""
+      status     = ""
+      schedule   = ""
+      nat        = ""
+      logtraffic = ""
+      match_vip  = ""
+      srcintf    = [{ name = "" }]
+      dstintf    = [{ name = "" }]
+      srcaddr    = [{ name = "" }]
+      dstaddr    = [{ name = "" }]
+      service    = [{ name = "" }]
+    },
+    {
+      policyid   = 23
+      name       = ""
+      action     = ""
+      status     = ""
+      schedule   = ""
+      nat        = ""
+      logtraffic = ""
+      match_vip  = ""
+      srcintf    = [{ name = "" }]
+      dstintf    = [{ name = "" }]
+      srcaddr    = [{ name = "" }]
+      dstaddr    = [{ name = "" }]
+      service    = [{ name = "" }]
+    },
+    {
+      policyid   = 44023
+      name       = ""
+      action     = ""
+      status     = ""
+      schedule   = ""
+      nat        = ""
+      logtraffic = ""
+      match_vip  = ""
+      srcintf    = [{ name = "" }]
+      dstintf    = [{ name = "" }]
+      srcaddr    = [{ name = "" }]
+      dstaddr    = [{ name = "" }]
+      service    = [{ name = "" }]
+    },
+    {
+      policyid   = 20
+      name       = ""
+      action     = ""
+      status     = ""
+      schedule   = ""
+      nat        = ""
+      logtraffic = ""
+      match_vip  = ""
+      srcintf    = [{ name = "" }]
+      dstintf    = [{ name = "" }]
+      srcaddr    = [{ name = "" }]
+      dstaddr    = [{ name = "" }]
+      service    = [{ name = "" }]
+    },
+    {
+      policyid   = 44020
+      name       = ""
+      action     = ""
+      status     = ""
+      schedule   = ""
+      nat        = ""
+      logtraffic = ""
+      match_vip  = ""
+      srcintf    = [{ name = "" }]
+      dstintf    = [{ name = "" }]
+      srcaddr    = [{ name = "" }]
+      dstaddr    = [{ name = "" }]
+      service    = [{ name = "" }]
+    },
+    {
+      policyid   = 25
+      name       = ""
+      action     = ""
+      status     = ""
+      schedule   = ""
+      nat        = ""
+      logtraffic = ""
+      match_vip  = ""
+      srcintf    = [{ name = "" }]
+      dstintf    = [{ name = "" }]
+      srcaddr    = [{ name = "" }]
+      dstaddr    = [{ name = "" }]
+      service    = [{ name = "" }]
+    },
+    {
+      policyid   = 44025
+      name       = ""
+      action     = ""
+      status     = ""
+      schedule   = ""
+      nat        = ""
+      logtraffic = ""
+      match_vip  = ""
+      srcintf    = [{ name = "" }]
+      dstintf    = [{ name = "" }]
+      srcaddr    = [{ name = "" }]
+      dstaddr    = [{ name = "" }]
+      service    = [{ name = "" }]
+    },
+    {
+      policyid   = 24
+      name       = ""
+      action     = ""
+      status     = ""
+      schedule   = ""
+      nat        = ""
+      logtraffic = ""
+      match_vip  = ""
+      srcintf    = [{ name = "" }]
+      dstintf    = [{ name = "" }]
+      srcaddr    = [{ name = "" }]
+      dstaddr    = [{ name = "" }]
+      service    = [{ name = "" }]
+    },
+    {
+      policyid   = 44024
+      name       = ""
+      action     = ""
+      status     = ""
+      schedule   = ""
+      nat        = ""
+      logtraffic = ""
+      match_vip  = ""
+      srcintf    = [{ name = "" }]
+      dstintf    = [{ name = "" }]
+      srcaddr    = [{ name = "" }]
+      dstaddr    = [{ name = "" }]
+      service    = [{ name = "" }]
+    },
+    {
+      policyid   = 26
+      name       = ""
+      action     = ""
+      status     = ""
+      schedule   = ""
+      nat        = ""
+      logtraffic = ""
+      match_vip  = ""
+      srcintf    = [{ name = "" }]
+      dstintf    = [{ name = "" }]
+      srcaddr    = [{ name = "" }]
+      dstaddr    = [{ name = "" }]
+      service    = [{ name = "" }]
+    },
+    {
+      policyid   = 21
+      name       = ""
+      action     = ""
+      status     = ""
+      schedule   = ""
+      nat        = ""
+      logtraffic = ""
+      match_vip  = ""
+      srcintf    = [{ name = "" }]
+      dstintf    = [{ name = "" }]
+      srcaddr    = [{ name = "" }]
+      dstaddr    = [{ name = "" }]
+      service    = [{ name = "" }]
+    },
+    {
+      policyid   = 22
+      name       = ""
+      action     = ""
+      status     = ""
+      schedule   = ""
+      nat        = ""
+      logtraffic = ""
+      match_vip  = ""
+      srcintf    = [{ name = "" }]
+      dstintf    = [{ name = "" }]
+      srcaddr    = [{ name = "" }]
+      dstaddr    = [{ name = "" }]
+      service    = [{ name = "" }]
+    }
+  ]
+}

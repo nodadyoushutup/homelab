@@ -1,0 +1,49 @@
+# homelab-config: terraform/components/swarm/grafana/app
+# Grafana app stage tfvars (Docker provider + Grafana admin bootstrap).
+# Self-contained slice tfvars (provider/DNS/NFS inlined; no shared swarm/dns/nfs var-files).
+
+swarm_docker_provider_config = {
+  docker = {
+    host = ""
+    ssh_opts = [
+      "", "",
+      "", "",
+      "", "",
+    ]
+  }
+
+  registry_auths = [
+    {
+      address  = ""
+      username = ""
+      password = ""
+    },
+    {
+      address  = ""
+      username = ""
+      password = ""
+    },
+  ]
+}
+
+ini_path = ""
+
+env = {
+  GF_SECURITY_ADMIN_USER           = ""
+  GF_SECURITY_ADMIN_PASSWORD       = ""
+  GF_SERVER_HTTP_PORT              = ""
+  GF_SERVER_ROOT_URL               = ""
+  GF_USERS_ALLOW_SIGN_UP           = ""
+  GF_SERVER_DOMAIN                 = ""
+  GF_INSTALL_PLUGINS               = ""
+}
+
+placement = {
+  constraints = [""]
+  platforms = [
+    {
+      os           = ""
+      architecture = ""
+    },
+  ]
+}

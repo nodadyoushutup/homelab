@@ -85,7 +85,9 @@ fi
 
   post {
     always {
-      cleanWs(deleteDirs: true, notFailBuild: true)
+      node("${params.AGENT_LABEL}") {
+        cleanWs(deleteDirs: true, notFailBuild: true)
+      }
     }
   }
 }

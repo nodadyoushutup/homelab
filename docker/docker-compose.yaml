@@ -6,15 +6,14 @@
 #   docker compose logs -f qbittorrent-exporter-dev
 #
 # Metrics: http://localhost:9020/metrics
-# Settings: <repo>/.config/docker/qbittorrent.env (see qbittorrent.env.example).
+# Settings: export QBITTORRENT_* / EXPORTER_* in your shell environment before
+# `docker compose up` (see the martabal/qbittorrent-exporter docs).
 name: qbittorrent-exporter-dev
 
 services:
   qbittorrent-exporter-dev:
     image: ghcr.io/martabal/qbittorrent-exporter:v2.0.1
     pull_policy: if_not_present
-    env_file:
-      - ../.config/docker/qbittorrent.env
     ports:
       - "9020:8090"
     healthcheck:

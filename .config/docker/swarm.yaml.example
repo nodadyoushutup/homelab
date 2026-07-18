@@ -1,0 +1,17 @@
+# homelab-config: docker/swarm
+# Docker Swarm topology consumed by the bootstrap app (applications/bootstrap).
+#
+# Copy this file to swarm.yaml and set your real SSH targets, then bootstrap
+# will build the swarm from it without prompting. If control_plane is empty,
+# bootstrap prompts interactively and writes your answers back here.
+#
+# Each entry is an SSH target: user@hostname (optionally user@hostname:port).
+# Passwords are never stored here; key-based auth is used first, with an
+# interactive password fallback at connect time.
+control_plane: nodadyoushutup@swarm-cp-0.local
+workers:
+  - nodadyoushutup@swarm-wk-0.local
+  - nodadyoushutup@swarm-wk-1.local
+  - nodadyoushutup@swarm-wk-2.local
+  - nodadyoushutup@swarm-wk-3.local
+  - nodadyoushutup@swarm-wk-4.local

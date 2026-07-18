@@ -1,0 +1,57 @@
+# homelab-config: terraform/components/swarm/jenkins-agent-arm64/app
+# Jenkins agent arm64 pool — standalone docker_container.
+# Provider/DNS/NFS inputs are self-contained in this slice tfvars.
+# Self-contained slice tfvars (pool docker provider/DNS/NFS inlined; no shared runners/{amd64,arm64} or swarm dns/nfs var-files).
+
+swarm_docker_provider_config = {
+  docker = {
+    host = ""
+    ssh_opts = [
+      "", "",
+      "", "",
+      "", "",
+      "", "",
+      "", "",
+      "", "",
+    ]
+  }
+
+  registry_auths = [
+    {
+      address  = ""
+      username = ""
+      password = ""
+    },
+    {
+      address  = ""
+      username = ""
+      password = ""
+    },
+  ]
+}
+
+dns_nameservers = [
+  "",
+  "",
+  "",
+]
+
+nfs = {
+  target = ""
+
+  driver_options = {
+    type   = ""
+    device = ""
+    o      = ""
+  }
+}
+jenkins_url        = ""
+agent_label_filter = [""]
+
+casc_config_path = ""
+
+env = {
+  JENKINS_SECRETS_DIR = ""
+  JENKINS_TUNNEL      = ""
+  PACKER_LOG          = ""
+}

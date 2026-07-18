@@ -1,0 +1,115 @@
+# homelab-config: terraform/components/swarm/qbittorrent-exporter/app
+# One martabal/qbittorrent-exporter Swarm service per qBittorrent overlay instance.
+# Prometheus: CONFIG_DIR/terraform/components/swarm/prometheus/prometheus.yaml job qbittorrent_exporter
+# After apply: terraform output -json prometheus_scrape_static_configs
+# Self-contained slice tfvars (provider/DNS/NFS inlined; no shared swarm/dns/nfs var-files).
+
+swarm_docker_provider_config = {
+  docker = {
+    host = ""
+    ssh_opts = [
+      "", "",
+      "", "",
+      "", "",
+    ]
+  }
+
+  registry_auths = [
+    {
+      address  = ""
+      username = ""
+      password = ""
+    },
+    {
+      address  = ""
+      username = ""
+      password = ""
+    },
+  ]
+}
+
+dns_nameservers = [
+  "",
+  "",
+  "",
+]
+
+instances = {
+  "" = {
+    base_url       = ""
+    published_port = 18300
+  }
+  "" = {
+    base_url       = ""
+    published_port = 18301
+  }
+  "" = {
+    base_url       = ""
+    published_port = 18302
+  }
+  "" = {
+    base_url       = ""
+    published_port = 18303
+  }
+  "" = {
+    base_url       = ""
+    published_port = 18304
+  }
+  "" = {
+    base_url       = ""
+    published_port = 18305
+  }
+  "" = {
+    base_url       = ""
+    published_port = 18306
+  }
+  "" = {
+    base_url       = ""
+    published_port = 18307
+  }
+  "" = {
+    base_url       = ""
+    published_port = 18308
+  }
+  "" = {
+    base_url       = ""
+    published_port = 18309
+  }
+  "" = {
+    base_url       = ""
+    published_port = 18310
+  }
+  "" = {
+    base_url       = ""
+    published_port = 18311
+  }
+  "" = {
+    base_url       = ""
+    published_port = 18312
+  }
+  "" = {
+    base_url       = ""
+    published_port = 18313
+  }
+}
+
+env = {
+  EXPORTER_HOST           = ""
+  EXPORTER_PORT           = ""
+  ENABLE_HIGH_CARDINALITY = ""
+  INSECURE_SKIP_VERIFY    = ""
+  LOG_LEVEL               = ""
+  ENABLE_TRACKER          = ""
+  QBITTORRENT_USERNAME    = ""
+  QBITTORRENT_PASSWORD    = ""
+}
+
+placement = {
+  constraints = [""]
+  platforms = [
+    {
+      os           = ""
+      architecture = ""
+    },
+  ]
+}

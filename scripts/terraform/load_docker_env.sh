@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Source split dotenv files under <repo>/.config/docker/ in a fixed order (later files win).
+# Source dotenv files under <repo>/.config/docker/ (currently minio.env only).
 # Sourced by load_root_env.sh, agent_server.sh, and other host tooling.
 
 if [[ "${HOMELAB_DOCKER_ENV_LOADED:-0}" == "1" ]]; then
@@ -21,12 +21,7 @@ if [[ -f "${_homelab_monolithic_env}" ]]; then
 fi
 
 _homelab_docker_env_files=(
-  site.env
-  shared.env
-  mcp.env
-  argocd.env
   minio.env
-  qbittorrent.env
 )
 
 _homelab_docker_env_found=0

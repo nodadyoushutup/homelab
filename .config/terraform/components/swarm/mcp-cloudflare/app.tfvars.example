@@ -1,0 +1,50 @@
+# homelab-config: terraform/components/swarm/mcp-cloudflare/app
+# Self-contained slice tfvars (provider/DNS/NFS inlined; no shared swarm/dns/nfs var-files).
+
+swarm_docker_provider_config = {
+  docker = {
+    host = ""
+    ssh_opts = [
+      "", "",
+      "", "",
+      "", "",
+    ]
+  }
+
+  registry_auths = [
+    {
+      address  = ""
+      username = ""
+      password = ""
+    },
+    {
+      address  = ""
+      username = ""
+      password = ""
+    },
+  ]
+}
+
+dns_nameservers = [
+  "",
+  "",
+  "",
+]
+
+env = {
+  CLOUDFLARE_API_TOKEN = ""
+  CLOUDFLARE_EMAIL     = ""
+  CLOUDFLARE_ZONE_ID   = ""
+}
+
+replicas = 1
+
+placement = {
+  constraints = [""]
+  platforms = [
+    {
+      os           = ""
+      architecture = ""
+    },
+  ]
+}

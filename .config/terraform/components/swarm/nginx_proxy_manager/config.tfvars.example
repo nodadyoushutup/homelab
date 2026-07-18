@@ -1,0 +1,1011 @@
+# homelab-config: terraform/components/swarm/nginx_proxy_manager/config
+provider_config = {
+  url = ""
+  username = ""
+  password = ""
+  validate_tls = false
+}
+
+default = {
+  certificate_email = ""
+  dns_challenge = {
+    enabled = true
+    provider = ""
+    credentials = ""
+    propagation_seconds = 60
+  }
+}
+
+
+
+certificates = {
+  nodadyoushutup =   {
+    domain_names = [
+      "",
+      "",
+    ]
+  }
+  nginx_proxy_manager =   {
+    domain_names = [
+      "",
+    ]
+  }
+  dozzle =   {
+    domain_names = [
+      "",
+    ]
+  }
+  grafana =   {
+    domain_names = [
+      "",
+    ]
+  }
+  graylog =   {
+    domain_names = [
+      "",
+    ]
+  }
+  minio_swarm =   {
+    domain_names = [
+      "",
+    ]
+  }
+  minio_backup =   {
+    domain_names = [
+      "",
+    ]
+  }
+  minio_swarm_s3 =   {
+    domain_names = [
+      "",
+    ]
+  }
+  minio_backup_s3 =   {
+    domain_names = [
+      "",
+    ]
+  }
+  prometheus =   {
+    domain_names = [
+      "",
+    ]
+  }
+  tautulli =   {
+    domain_names = [
+      "",
+    ]
+  }
+  graphite =   {
+    domain_names = [
+      "",
+    ]
+  }
+  jenkins =   {
+    domain_names = [
+      "",
+    ]
+  }
+  argocd =   {
+    domain_names = [
+      "",
+    ]
+  }
+  thelounge =   {
+    domain_names = [
+      "",
+    ]
+  }
+  mcp_atlassian =   {
+    domain_names = [
+      "",
+    ]
+  }
+  mcp_playwright =   {
+    domain_names = [
+      "",
+    ]
+  }
+  mcp_github =   {
+    domain_names = [
+      "",
+    ]
+  }
+  mcp_agentmemory =   {
+    domain_names = [
+      "",
+    ]
+  }
+  mcp_fortigate =   {
+    domain_names = [
+      "",
+    ]
+  }
+  mcp_argocd =   {
+    domain_names = [
+      "",
+    ]
+  }
+  mcp_kubernetes =   {
+    domain_names = [
+      "",
+    ]
+  }
+  mcp_cloudflare =   {
+    domain_names = [
+      "",
+    ]
+  }
+  mcp_google_workspace =   {
+    domain_names = [
+      "",
+    ]
+  }
+  cloud_image_repository =   {
+    domain_names = [
+      "",
+    ]
+  }
+  picsur =   {
+    domain_names = [
+      "",
+    ]
+  }
+  prowlarr =   {
+    domain_names = [
+      "",
+    ]
+  }
+  radarr =   {
+    domain_names = [
+      "",
+    ]
+  }
+  radarr_4k =   {
+    domain_names = [
+      "",
+    ]
+  }
+  sonarr =   {
+    domain_names = [
+      "",
+    ]
+  }
+  seerr =   {
+    domain_names = [
+      "",
+    ]
+  }
+  privatebin =   {
+    domain_names = [
+      "",
+    ]
+  }
+  torrent_manager =   {
+    domain_names = [
+      "",
+    ]
+  }
+  qbittorrent_movie_0 =   {
+    domain_names = [
+      "",
+    ]
+  }
+  qbittorrent_movie_1 =   {
+    domain_names = [
+      "",
+    ]
+  }
+  qbittorrent_movie_2 =   {
+    domain_names = [
+      "",
+    ]
+  }
+  qbittorrent_movie_3 =   {
+    domain_names = [
+      "",
+    ]
+  }
+  qbittorrent_movie_4 =   {
+    domain_names = [
+      "",
+    ]
+  }
+  qbittorrent_movie_5 =   {
+    domain_names = [
+      "",
+    ]
+  }
+  qbittorrent_movie_6 =   {
+    domain_names = [
+      "",
+    ]
+  }
+  qbittorrent_movie_7 =   {
+    domain_names = [
+      "",
+    ]
+  }
+  qbittorrent_movie_8 =   {
+    domain_names = [
+      "",
+    ]
+  }
+  qbittorrent_movie_9 =   {
+    domain_names = [
+      "",
+    ]
+  }
+  qbittorrent_movie_10 =   {
+    domain_names = [
+      "",
+    ]
+  }
+  qbittorrent_movie_4k =   {
+    domain_names = [
+      "",
+    ]
+  }
+  qbittorrent_television_0 =   {
+    domain_names = [
+      "",
+    ]
+  }
+  qbittorrent_television_1 =   {
+    domain_names = [
+      "",
+    ]
+  }
+  qbittorrent_television_2 =   {
+    domain_names = [
+      "",
+    ]
+  }
+  qbittorrent_cross_seed_ab =   {
+    domain_names = [
+      "",
+    ]
+  }
+  qbittorrent_cross_seed_ant =   {
+    domain_names = [
+      "",
+    ]
+  }
+  qbittorrent_cross_seed_ath =   {
+    domain_names = [
+      "",
+    ]
+  }
+  qbittorrent_cross_seed_bhd =   {
+    domain_names = [
+      "",
+    ]
+  }
+  qbittorrent_cross_seed_blu =   {
+    domain_names = [
+      "",
+    ]
+  }
+  qbittorrent_cross_seed_cg =   {
+    domain_names = [
+      "",
+    ]
+  }
+  qbittorrent_cross_seed_hdb =   {
+    domain_names = [
+      "",
+    ]
+  }
+  qbittorrent_cross_seed_kg =   {
+    domain_names = [
+      "",
+    ]
+  }
+  qbittorrent_cross_seed_sc =   {
+    domain_names = [
+      "",
+    ]
+  }
+  qbittorrent_upload =   {
+    domain_names = [
+      "",
+    ]
+  }
+  qbittorrent_books =   {
+    domain_names = [
+      "",
+    ]
+  }
+  qbittorrent_xxx =   {
+    domain_names = [
+      "",
+    ]
+  }
+  qbittorrent_freeleech =   {
+    domain_names = [
+      "",
+    ]
+  }
+  clusterplex =   {
+    domain_names = [
+      "",
+    ]
+  }
+  k10 =   {
+    domain_names = [
+      "",
+    ]
+  }
+  vui =   {
+    domain_names = [
+      "",
+    ]
+  }
+  vault =   {
+    domain_names = [
+      "",
+    ]
+  }
+  zot =   {
+    domain_names = [
+      "",
+    ]
+  }
+  publex =   {
+    domain_names = [
+      "",
+      "",
+      "",
+      "",
+      "",
+    ]
+  }
+}
+
+proxy_hosts = {
+  nodadyoushutup =   {
+    domain_names = [
+      "",
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 9055
+    certificate = ""
+  }
+  nginx_proxy_manager =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 81
+    certificate = ""
+  }
+  dozzle_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 8888
+    certificate = ""
+  }
+  grafana_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 3000
+    certificate = ""
+  }
+  graylog_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 9002
+    certificate = ""
+  }
+  minio_swarm_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 9001
+    certificate = ""
+  }
+  minio_backup_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 9001
+    certificate = ""
+  }
+  minio_swarm_s3_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 9002
+    certificate = ""
+  }
+  minio_backup_s3_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 9002
+    certificate = ""
+  }
+  prometheus_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 9090
+    certificate = ""
+  }
+  tautulli_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 80
+    certificate = ""
+  }
+  graphite_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 8081
+    certificate = ""
+  }
+  jenkins_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 18094
+    certificate = ""
+  }
+  argocd_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 80
+    certificate = ""
+  }
+  thelounge_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 80
+    certificate = ""
+  }
+  mcp_atlassian_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 18200
+    certificate = ""
+  }
+  mcp_playwright_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 18211
+    certificate = ""
+  }
+  mcp_github_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 18208
+    certificate = ""
+  }
+  mcp_agentmemory_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 18212
+    certificate = ""
+  }
+  mcp_fortigate_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 18205
+    certificate = ""
+  }
+  mcp_argocd_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 18201
+    certificate = ""
+  }
+  mcp_kubernetes_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 18210
+    certificate = ""
+  }
+  mcp_cloudflare_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 18204
+    certificate = ""
+  }
+  mcp_google_workspace_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 18209
+    certificate = ""
+  }
+  cloud_image_repository_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 18088
+    certificate = ""
+  }
+  picsur_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 80
+    certificate = ""
+  }
+  prowlarr_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 80
+    certificate = ""
+  }
+  radarr_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 80
+    certificate = ""
+  }
+  radarr_4k_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 80
+    certificate = ""
+  }
+  sonarr_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 80
+    certificate = ""
+  }
+  seerr_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 80
+    certificate = ""
+  }
+  privatebin_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 80
+    certificate = ""
+  }
+  torrent_manager_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 9030
+    certificate = ""
+  }
+  qbittorrent_movie_0_subdomain_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 80
+    certificate = ""
+  }
+  qbittorrent_movie_1_subdomain_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 80
+    certificate = ""
+  }
+  qbittorrent_movie_2_subdomain_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 80
+    certificate = ""
+  }
+  qbittorrent_movie_3_subdomain_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 80
+    certificate = ""
+  }
+  qbittorrent_movie_4_subdomain_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 80
+    certificate = ""
+  }
+  qbittorrent_movie_5_subdomain_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 80
+    certificate = ""
+  }
+  qbittorrent_movie_6_subdomain_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 80
+    certificate = ""
+  }
+  qbittorrent_movie_7_subdomain_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 80
+    certificate = ""
+  }
+  qbittorrent_movie_8_subdomain_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 80
+    certificate = ""
+  }
+  qbittorrent_movie_9_subdomain_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 80
+    certificate = ""
+  }
+  qbittorrent_movie_10_subdomain_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 80
+    certificate = ""
+  }
+  qbittorrent_movie_4k_subdomain_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 80
+    certificate = ""
+  }
+  qbittorrent_television_0_subdomain_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 80
+    certificate = ""
+  }
+  qbittorrent_television_1_subdomain_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 80
+    certificate = ""
+  }
+  qbittorrent_television_2_subdomain_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 80
+    certificate = ""
+  }
+  qbittorrent_cross_seed_ab_subdomain_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 80
+    certificate = ""
+  }
+  qbittorrent_cross_seed_ant_subdomain_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 80
+    certificate = ""
+  }
+  qbittorrent_cross_seed_ath_subdomain_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 80
+    certificate = ""
+  }
+  qbittorrent_cross_seed_bhd_subdomain_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 80
+    certificate = ""
+  }
+  qbittorrent_cross_seed_blu_subdomain_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 80
+    certificate = ""
+  }
+  qbittorrent_cross_seed_cg_subdomain_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 80
+    certificate = ""
+  }
+  qbittorrent_cross_seed_hdb_subdomain_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 80
+    certificate = ""
+  }
+  qbittorrent_cross_seed_kg_subdomain_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 80
+    certificate = ""
+  }
+  qbittorrent_cross_seed_sc_subdomain_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 80
+    certificate = ""
+  }
+  qbittorrent_upload_subdomain_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 80
+    certificate = ""
+  }
+  qbittorrent_books_subdomain_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 80
+    certificate = ""
+  }
+  qbittorrent_xxx_subdomain_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 80
+    certificate = ""
+  }
+  qbittorrent_freeleech_subdomain_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 80
+    certificate = ""
+  }
+  clusterplex_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 80
+    certificate = ""
+  }
+  k10_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 80
+    certificate = ""
+  }
+  vui_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 80
+    certificate = ""
+  }
+  vault_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 8200
+    certificate = ""
+  }
+  zot_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 35081
+    certificate = ""
+  }
+  publex_gui_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 5003
+    certificate = ""
+  }
+  publex_api_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 5001
+    certificate = ""
+  }
+  publex_transcoder_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 5000
+    certificate = ""
+  }
+  publex_cdn_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 34761
+    certificate = ""
+  }
+  publex_ingest_nodadyoushutup_com =   {
+    domain_names = [
+      "",
+    ]
+    scheme = ""
+    forward_host = ""
+    forward_port = 5002
+    certificate = ""
+  }
+}
+
+access_lists = {}
+
+streams = {}
+
+redirections = {}

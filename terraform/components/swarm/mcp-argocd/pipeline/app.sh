@@ -8,13 +8,6 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/../../../../.." && pwd)"
 TERRAFORM_DIR="${ROOT_DIR}/terraform/components/swarm/mcp-argocd/app"
 
-SITE_ENV="${ROOT_DIR}/.config/docker/site.env"
-if [[ -f "${SITE_ENV}" ]]; then
-  set -a
-  # shellcheck source=/dev/null
-  source "${SITE_ENV}"
-  set +a
-fi
 CONFIG_DIR="${CONFIG_DIR:-${ROOT_DIR}/.config}"
 export CONFIG_DIR
 
@@ -39,7 +32,7 @@ Options:
   --backend <path>          S3 backend config (default: ${DEFAULT_BACKEND})
   -h, --help                Show this help
 
-Environment overrides: MCP_ARGOCD_APP_TFVARS, MCP_ARGOCD_APP_BACKEND, CONFIG_DIR (from .config/docker/site.env)
+Environment overrides: MCP_ARGOCD_APP_TFVARS, MCP_ARGOCD_APP_BACKEND, CONFIG_DIR (default: <repo>/.config)
 USAGE
 }
 

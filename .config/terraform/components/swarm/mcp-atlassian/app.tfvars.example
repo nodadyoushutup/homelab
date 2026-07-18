@@ -1,0 +1,55 @@
+# homelab-config: terraform/components/swarm/mcp-atlassian/app
+# Self-contained slice tfvars (provider/DNS/NFS inlined; no shared swarm/dns/nfs var-files).
+
+swarm_docker_provider_config = {
+  docker = {
+    host = ""
+    ssh_opts = [
+      "", "",
+      "", "",
+      "", "",
+    ]
+  }
+
+  registry_auths = [
+    {
+      address  = ""
+      username = ""
+      password = ""
+    },
+    {
+      address  = ""
+      username = ""
+      password = ""
+    },
+  ]
+}
+
+dns_nameservers = [
+  "",
+  "",
+  "",
+]
+
+replicas        = 1
+
+env = {
+  CONFLUENCE_API_TOKEN = ""
+  CONFLUENCE_SPACES_FILTER = ""
+  CONFLUENCE_URL = ""
+  CONFLUENCE_USERNAME = ""
+  JIRA_API_TOKEN = ""
+  JIRA_PROJECTS_FILTER = ""
+  JIRA_URL = ""
+  JIRA_USERNAME = ""
+}
+
+placement = {
+  constraints = [""]
+  platforms = [
+    {
+      os           = ""
+      architecture = ""
+    },
+  ]
+}

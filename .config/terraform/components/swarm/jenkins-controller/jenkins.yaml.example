@@ -1,0 +1,66 @@
+jenkins:
+  systemMessage: ""
+  numExecutors: 0
+  mode: EXCLUSIVE
+  slaveAgentPort: 50000
+  disableRememberMe: true
+  crumbIssuer:
+    standard: {}
+  securityRealm:
+    local:
+      allowsSignup: false
+      enableCaptcha: false
+      users:
+        - id: ""
+          name: ""
+          password: ""
+  authorizationStrategy:
+    globalMatrix:
+      entries:
+        - user:
+            name: ""
+            permissions:
+              - ""
+  nodes:
+    - permanent:
+        name: ""
+        nodeDescription: ""
+        remoteFS: ""
+        numExecutors: 4
+        labelString: ""
+        mode: EXCLUSIVE
+    - permanent:
+        name: ""
+        nodeDescription: ""
+        remoteFS: ""
+        numExecutors: 4
+        labelString: ""
+        mode: EXCLUSIVE
+    - permanent:
+        name: ""
+        nodeDescription: ""
+        remoteFS: ""
+        numExecutors: 4
+        labelString: ""
+        mode: EXCLUSIVE
+    - permanent:
+        name: ""
+        nodeDescription: ""
+        remoteFS: ""
+        numExecutors: 4
+        labelString: ""
+        mode: EXCLUSIVE
+
+unclassified:
+  location:
+    url: ""
+    adminAddress: ""
+
+appearance:
+  themeManager:
+    disableUserThemes: true
+    theme: ""
+
+security:
+  contentSecurityPolicy:
+    enforce: true
