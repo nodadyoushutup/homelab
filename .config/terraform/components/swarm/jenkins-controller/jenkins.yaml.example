@@ -55,14 +55,14 @@ unclassified:
   location:
     url: ""
     adminAddress: ""
-  pipelineGraphView:
-    showGraphOnBuildPage: true
-    showGraphOnJobPage: true
 
 appearance:
   themeManager:
     disableUserThemes: true
     theme: ""
+  pipelineGraphView:
+    showGraphOnBuildPage: true
+    showGraphOnJobPage: true
 
 security:
   contentSecurityPolicy:
