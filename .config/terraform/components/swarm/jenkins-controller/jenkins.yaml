@@ -55,6 +55,9 @@ unclassified:
   location:
     url: "https://jenkins.nodadyoushutup.com/"
     adminAddress: "jenkins@nodadyoushutup.com"
+  pipelineGraphView:
+    showGraphOnBuildPage: true
+    showGraphOnJobPage: true
 
 appearance:
   themeManager:

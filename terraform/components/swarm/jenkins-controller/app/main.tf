@@ -49,7 +49,7 @@ resource "docker_service" "jenkins_controller" {
 
     container_spec {
       # Literal tag for Renovate (not a var/local; no digest).
-      image = "ghcr.io/nodadyoushutup/jenkins-controller:0.0.16"
+      image = "ghcr.io/nodadyoushutup/jenkins-controller:0.0.17"
       env   = local.controller_env
 
       dns_config {
