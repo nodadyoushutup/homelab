@@ -29,6 +29,7 @@ Required:
   --version <X.Y.Z>                Image version to build
 
 Options:
+  --ubuntu_release <24.04|26.04>   Ubuntu LTS release to build (default: 24.04)
   --target <cloud-image-repository> Publish target (default: cloud-image-repository)
   --amd64_accelerator <value>      kvm, tcg, or none (default: kvm)
   --arm64_accelerator <value>      kvm, tcg, or none (default: kvm)
@@ -40,6 +41,7 @@ EOF_USAGE
 }
 
 VERSION=""
+UBUNTU_RELEASE="24.04"
 TARGET="cloud-image-repository"
 AMD64_ACCELERATOR="kvm"
 ARM64_ACCELERATOR="kvm"
@@ -50,6 +52,10 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --version)
       VERSION="$2"
+      shift 2
+      ;;
+    --ubuntu_release)
+      UBUNTU_RELEASE="$2"
       shift 2
       ;;
     --target)
@@ -85,6 +91,11 @@ done
 [[ -n "${VERSION}" ]] || die "--version is required"
 [[ "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || die "Invalid version '${VERSION}'. Expected semantic version like 0.0.1"
 
+case "${UBUNTU_RELEASE}" in
+  24.04|26.04) ;;
+  *) die "Invalid ubuntu_release '${UBUNTU_RELEASE}'. Expected: 24.04|26.04" ;;
+esac
+
 case "${TARGET}" in
   cloud-image-repository) ;;
   *) die "Unsupported target '${TARGET}'" ;;
@@ -106,6 +117,7 @@ case "${BUILD_ARCH}" in
 esac
 
 log "Version: ${VERSION}"
+log "Ubuntu release: ${UBUNTU_RELEASE}"
 log "Target: ${TARGET}"
 log "AMD64 accelerator: ${AMD64_ACCELERATOR}"
 log "ARM64 accelerator: ${ARM64_ACCELERATOR}"
@@ -116,6 +128,7 @@ log "REST publish: $([[ "${PUBLISH}" -eq 1 ]] && echo enabled || echo "disabled 
   cd "${ROOT_DIR}"
   ./packer/packer.sh \
     --version "${VERSION}" \
+    --ubuntu_release "${UBUNTU_RELEASE}" \
     --target "${TARGET}" \
     --build_arch "${BUILD_ARCH}" \
     --amd64_accelerator "${AMD64_ACCELERATOR}" \
@@ -126,6 +139,7 @@ if [[ "${PUBLISH}" -eq 1 ]]; then
   (
     cd "${ROOT_DIR}"
     ./packer/upload.sh "${VERSION}" \
+      --ubuntu_release "${UBUNTU_RELEASE}" \
       --target "${TARGET}" \
       --build_arch "${BUILD_ARCH}"
   )

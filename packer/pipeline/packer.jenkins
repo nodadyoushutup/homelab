@@ -11,6 +11,7 @@ pipeline {
   parameters {
     string(name: 'AGENT_LABEL', defaultValue: 'swarm && amd64 && kvm', description: 'Jenkins agent label to run this pipeline on')
     string(name: 'VERSION', defaultValue: '', description: 'Image version to build, for example 0.0.3')
+    choice(name: 'UBUNTU_RELEASE', choices: ['24.04', '26.04'], description: 'Ubuntu LTS release to build')
     string(name: 'PACKER_OUTPUT_ROOT', defaultValue: '/mnt/eapp/code/homelab/data/packer', description: 'NFS-backed serve dir the cloud image repository publishes from. Must be the repo NFS mount inside the agent, NOT the ephemeral workspace.')
     choice(name: 'PUBLISH_TARGET', choices: ['Local', 'Remote'], description: 'Local = build into the NFS-served data/packer dir only (cloud image repository serves it directly). Remote = also publish to the cloud image repository over REST.')
     choice(name: 'AMD64_ACCELERATOR', choices: ['kvm', 'tcg', 'none'], description: 'AMD64 QEMU accelerator')
@@ -49,6 +50,7 @@ fi
 
 ./packer/pipeline/packer.sh \\
   --version '${params.VERSION}' \\
+  --ubuntu_release '${params.UBUNTU_RELEASE}' \\
   --target 'cloud-image-repository' \\
   --amd64_accelerator '${params.AMD64_ACCELERATOR}' \\
   --arm64_accelerator '${params.ARM64_ACCELERATOR}' \\

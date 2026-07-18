@@ -14,6 +14,7 @@ usage() {
 Usage: ./packer/upload.sh <version> [options]
 
 Options:
+  --ubuntu_release <24.04|26.04>          Ubuntu LTS release to upload (default: 24.04)
   --target <cloud-image-repository>       Publish target (default: cloud-image-repository)
   --build_arch <amd64|arm64|both>         Upload architecture selector (default: both)
   -h, --help                              Show this help
@@ -59,8 +60,18 @@ fi
 
 TARGET="cloud-image-repository"
 BUILD_ARCH="both"
+UBUNTU_RELEASE="24.04"
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    --ubuntu_release=*)
+      UBUNTU_RELEASE="${1#--ubuntu_release=}"
+      shift
+      ;;
+    --ubuntu_release)
+      [[ $# -ge 2 ]] || die "--ubuntu_release requires a value: 24.04|26.04"
+      UBUNTU_RELEASE="$2"
+      shift 2
+      ;;
     --target=*)
       TARGET="${1#--target=}"
       shift
@@ -89,6 +100,11 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+case "${UBUNTU_RELEASE}" in
+  24.04|26.04) ;;
+  *) die "Invalid --ubuntu_release '${UBUNTU_RELEASE}'. Expected: 24.04|26.04" ;;
+esac
+
 case "${TARGET}" in
   cloud-image-repository)
     DEFAULT_UPLOAD_BASE_URL="https://cloud-image-repository.nodadyoushutup.com"
@@ -99,15 +115,16 @@ case "${TARGET}" in
     ;;
 esac
 
+IMAGE_PREFIX="ubuntu-${UBUNTU_RELEASE}-ndysu"
 case "${BUILD_ARCH}" in
   amd64)
-    PATH_FILTER="*/${VERSION}/amd64/*"
+    PATH_FILTER="*/${IMAGE_PREFIX}/${VERSION}/amd64/*"
     ;;
   arm64)
-    PATH_FILTER="*/${VERSION}/arm64/*"
+    PATH_FILTER="*/${IMAGE_PREFIX}/${VERSION}/arm64/*"
     ;;
   both)
-    PATH_FILTER="*/${VERSION}/*"
+    PATH_FILTER="*/${IMAGE_PREFIX}/${VERSION}/*"
     ;;
   *)
     die "Invalid --build_arch '${BUILD_ARCH}'. Expected: amd64|arm64|both"
@@ -154,6 +171,7 @@ upload_artifact() {
 }
 
 log "Version: ${VERSION}"
+log "Ubuntu release: ${UBUNTU_RELEASE}"
 log "Target: ${TARGET}"
 log "Build arch: ${BUILD_ARCH}"
 log "Log file: ${LOG_FILE}"

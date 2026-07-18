@@ -12,6 +12,17 @@ variable "image_version" {
   description = "Version string used in output directory and image filename (e.g. 0.0.1)."
 }
 
+variable "ubuntu_release" {
+  type        = string
+  default     = "24.04"
+  description = "Ubuntu LTS release to build (e.g. 24.04 or 26.04). Drives the cloud image URL and output naming."
+
+  validation {
+    condition     = contains(["24.04", "26.04"], var.ubuntu_release)
+    error_message = "The ubuntu_release value must be one of '24.04' or '26.04'."
+  }
+}
+
 variable "output_root" {
   type        = string
   default     = "output"
@@ -52,17 +63,26 @@ locals {
   # AArch64 hosts (e.g. Pi): "KVM is not supported for this guest CPU type". Use host
   # under KVM; use a generic model for TCG.
   arm64_qemu_cpu_model = var.arm64_accelerator == "kvm" ? "host" : "cortex-a57"
+
+  # Canonical release cloud images keyed by numeric version (no codename needed):
+  # https://cloud-images.ubuntu.com/releases/<release>/release/ubuntu-<release>-server-cloudimg-<arch>.img
+  cloud_image_base    = "https://cloud-images.ubuntu.com/releases/${var.ubuntu_release}/release"
+  cloud_image_amd64   = "${local.cloud_image_base}/ubuntu-${var.ubuntu_release}-server-cloudimg-amd64.img"
+  cloud_image_arm64   = "${local.cloud_image_base}/ubuntu-${var.ubuntu_release}-server-cloudimg-arm64.img"
+  cloud_image_sha_url = "file:${local.cloud_image_base}/SHA256SUMS"
+
+  image_prefix = "ubuntu-${var.ubuntu_release}-ndysu"
 }
 
-source "qemu" "ubuntu_24_04_amd64" {
+source "qemu" "ubuntu_amd64" {
   accelerator  = var.amd64_accelerator
   communicator = "ssh"
   cpus         = 2
   memory       = 2048
   headless     = true
 
-  iso_url          = "https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img"
-  iso_checksum     = "file:https://cloud-images.ubuntu.com/noble/current/SHA256SUMS"
+  iso_url          = local.cloud_image_amd64
+  iso_checksum     = local.cloud_image_sha_url
   disk_image       = true
   disk_size        = "12288M"
   use_backing_file = false
@@ -79,13 +99,13 @@ source "qemu" "ubuntu_24_04_amd64" {
   ssh_private_key_file = "keys/packer-nodadyoushutup"
   ssh_timeout          = "20m"
 
-  output_directory = "${var.output_root}/ubuntu-24.04-ndysu/${var.image_version}/amd64"
-  vm_name          = "ubuntu-24.04-ndysu-${var.image_version}-amd64.qcow2"
+  output_directory = "${var.output_root}/${local.image_prefix}/${var.image_version}/amd64"
+  vm_name          = "${local.image_prefix}-${var.image_version}-amd64.qcow2"
 
   shutdown_command = "sudo -E shutdown -P now"
 }
 
-source "qemu" "ubuntu_24_04_arm64" {
+source "qemu" "ubuntu_arm64" {
   accelerator = var.arm64_accelerator
   qemu_binary = "qemu-system-aarch64"
 
@@ -96,15 +116,15 @@ source "qemu" "ubuntu_24_04_arm64" {
   headless     = true
   machine_type = "virt"
 
-  iso_url          = "https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-arm64.img"
-  iso_checksum     = "file:https://cloud-images.ubuntu.com/noble/current/SHA256SUMS"
+  iso_url          = local.cloud_image_arm64
+  iso_checksum     = local.cloud_image_sha_url
   disk_image       = true
   disk_size        = "12288M"
   use_backing_file = false
   format           = "qcow2"
   disk_interface   = "virtio"
 
-  # Noble arm64 cloud images boot via UEFI on `virt`. Without AAVMF pflash, QEMU
+  # Ubuntu arm64 cloud images boot via UEFI on `virt`. Without AAVMF pflash, QEMU
   # starts but the guest never reaches sshd; PACKER_LOG then shows TCP to the
   # hostfwd port followed by "Timeout during SSH handshake" (no SSH banner).
   # Paths are from the `qemu-efi-aarch64` package (installed by scripts/install/packer.sh).
@@ -121,17 +141,17 @@ source "qemu" "ubuntu_24_04_arm64" {
   ssh_private_key_file = "keys/packer-nodadyoushutup"
   ssh_timeout          = "30m"
 
-  output_directory = "${var.output_root}/ubuntu-24.04-ndysu/${var.image_version}/arm64"
-  vm_name          = "ubuntu-24.04-ndysu-${var.image_version}-arm64.qcow2"
+  output_directory = "${var.output_root}/${local.image_prefix}/${var.image_version}/arm64"
+  vm_name          = "${local.image_prefix}-${var.image_version}-arm64.qcow2"
 
   shutdown_command = "sudo -E shutdown -P now"
 }
 
 build {
-  name = "ubuntu-24.04-ndysu"
+  name = "ubuntu-ndysu"
   sources = [
-    "source.qemu.ubuntu_24_04_amd64",
-    "source.qemu.ubuntu_24_04_arm64",
+    "source.qemu.ubuntu_amd64",
+    "source.qemu.ubuntu_arm64",
   ]
 
   provisioner "file" {

@@ -31,6 +31,7 @@ building off the homelab NFS).
 
 Options:
   --version <X.Y.Z>                       Required image version (semantic version)
+  --ubuntu_release <24.04|26.04>          Ubuntu LTS release to build (default: 24.04)
   --target <cloud-image-repository>       Publish target (default: cloud-image-repository)
   --build_arch <amd64|arm64|both>         Build architecture selector (default: amd64)
   --amd64_accelerator <kvm|tcg|none>      Accelerator for amd64 source (default: kvm)
@@ -67,7 +68,7 @@ if [[ "${EUID}" -eq 0 ]]; then
 fi
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-TEMPLATE="${SCRIPT_DIR}/ubuntu-24.04-ndysu.pkr.hcl"
+TEMPLATE="${SCRIPT_DIR}/ubuntu-ndysu.pkr.hcl"
 KEY_FILE="${SCRIPT_DIR}/keys/packer-nodadyoushutup"
 LOG_DIR="${SCRIPT_DIR}/logs"
 
@@ -82,6 +83,7 @@ fi
 VERSION=""
 VERSION_SET=0
 
+UBUNTU_RELEASE="24.04"
 TARGET="cloud-image-repository"
 BUILD_ARCH="amd64"
 AMD64_ACCELERATOR="kvm"
@@ -104,6 +106,15 @@ while [[ $# -gt 0 ]]; do
       [[ $# -ge 2 ]] || die "--version requires a value: X.Y.Z"
       VERSION="$2"
       VERSION_SET=1
+      shift 2
+      ;;
+    --ubuntu_release=*)
+      UBUNTU_RELEASE="${1#--ubuntu_release=}"
+      shift
+      ;;
+    --ubuntu_release)
+      [[ $# -ge 2 ]] || die "--ubuntu_release requires a value: 24.04|26.04"
+      UBUNTU_RELEASE="$2"
       shift 2
       ;;
     --target=*)
@@ -198,6 +209,10 @@ fi
 if [[ ! "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
   die "Invalid --version '${VERSION}'. Expected semantic version like 0.0.1."
 fi
+case "${UBUNTU_RELEASE}" in
+  24.04|26.04) ;;
+  *) die "Invalid --ubuntu_release '${UBUNTU_RELEASE}'. Expected: 24.04|26.04" ;;
+esac
 if bool_true "${PACKER_LOG_ENABLED}"; then
   PACKER_LOG_ENABLED="1"
 else
@@ -262,10 +277,10 @@ UPLOAD_FALLBACK_BASE_URL="${UPLOAD_FALLBACK_BASE_URL:-${DEFAULT_UPLOAD_FALLBACK_
 PACKER_ONLY_ARGS=()
 case "${BUILD_ARCH}" in
   amd64)
-    PACKER_ONLY_ARGS=(-only=ubuntu-24.04-ndysu.qemu.ubuntu_24_04_amd64)
+    PACKER_ONLY_ARGS=(-only=ubuntu-ndysu.qemu.ubuntu_amd64)
     ;;
   arm64)
-    PACKER_ONLY_ARGS=(-only=ubuntu-24.04-ndysu.qemu.ubuntu_24_04_arm64)
+    PACKER_ONLY_ARGS=(-only=ubuntu-ndysu.qemu.ubuntu_arm64)
     ;;
   both)
     ;;
@@ -278,6 +293,7 @@ OUTPUT_ROOT="${PACKER_OUTPUT_ROOT:-${REPO_ROOT}/data/packer}"
 
 PACKER_VAR_ARGS=(
   -var "image_version=${VERSION}"
+  -var "ubuntu_release=${UBUNTU_RELEASE}"
   -var "amd64_accelerator=${AMD64_ACCELERATOR}"
   -var "arm64_accelerator=${ARM64_ACCELERATOR}"
   -var "output_root=${OUTPUT_ROOT}"
@@ -286,7 +302,7 @@ if [[ "${KDE_PROFILE_SET}" -eq 1 ]]; then
   PACKER_VAR_ARGS+=( -var "kde_profile=${KDE_PROFILE}" )
 fi
 
-OUTPUT_DIR="${OUTPUT_ROOT}/ubuntu-24.04-ndysu/${VERSION}"
+OUTPUT_DIR="${OUTPUT_ROOT}/ubuntu-${UBUNTU_RELEASE}-ndysu/${VERSION}"
 
 mkdir -p "${LOG_DIR}"
 RUN_TS="$(date -u +%Y%m%dT%H%M%SZ)"
@@ -349,6 +365,7 @@ fi
 cd "${SCRIPT_DIR}"
 
 log "Version: ${VERSION}"
+log "Ubuntu release: ${UBUNTU_RELEASE}"
 log "Host arch: ${HOST_ARCH}"
 log "Target: ${TARGET}"
 log "Build arch: ${BUILD_ARCH}"

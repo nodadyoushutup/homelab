@@ -1,8 +1,9 @@
-# Packer: Ubuntu 24.04 + Docker + KDE (amd64 + arm64)
+# Packer: Ubuntu LTS + Docker + KDE (amd64 + arm64)
 
 This directory contains a minimal Packer build that:
 
-- starts from the official Ubuntu 24.04 cloud image (`noble`)
+- starts from an official Ubuntu LTS cloud image, selectable via
+  `--ubuntu_release` (`24.04` Noble Numbat or `26.04` Resolute Raccoon)
 - uses a temporary `packer` SSH user/key for provisioning only
 - sets `nodadyoushutup` as UID/GID `1000:1000` directly in cloud-init
 - uploads and runs `scripts/install/automation_tooling.sh` for the shared
@@ -21,16 +22,22 @@ This directory contains a minimal Packer build that:
 
 ## Build
 
-From repo root:
+From repo root (defaults to Ubuntu 24.04):
 
 ```bash
 ./packer/packer.sh --version 0.0.1
 ```
 
+Build Ubuntu 26.04 instead:
+
+```bash
+./packer/packer.sh --version 0.0.1 --ubuntu_release 26.04
+```
+
 Run the repo-native build-and-upload pipeline equivalent of the GHA workflow:
 
 ```bash
-./packer/pipeline/packer.sh --version 0.0.1
+./packer/pipeline/packer.sh --version 0.0.1 --ubuntu_release 26.04
 ```
 
 Local builds write directly into the NFS-backed `data/packer` directory that the
@@ -53,6 +60,7 @@ Build with GHA-equivalent selectors:
 
 ```bash
 ./packer/packer.sh --version 0.0.3 \
+  --ubuntu_release 24.04 \
   --target cloud-image-repository \
   --build_arch both \
   --amd64_accelerator kvm \
@@ -94,11 +102,14 @@ packer/pipeline/packer.jenkins
 ## Output
 
 Local builds write artifacts to the NFS-backed `data/packer` directory (served
-by the cloud image repository at `/`):
+by the cloud image repository at `/`). The `ubuntu-<release>-ndysu` prefix
+reflects `--ubuntu_release`:
 
 ```text
 data/packer/ubuntu-24.04-ndysu/0.0.1/amd64/ubuntu-24.04-ndysu-0.0.1-amd64.qcow2
 data/packer/ubuntu-24.04-ndysu/0.0.1/arm64/ubuntu-24.04-ndysu-0.0.1-arm64.qcow2
+data/packer/ubuntu-26.04-ndysu/0.0.1/amd64/ubuntu-26.04-ndysu-0.0.1-amd64.qcow2
+data/packer/ubuntu-26.04-ndysu/0.0.1/arm64/ubuntu-26.04-ndysu-0.0.1-arm64.qcow2
 ```
 
 Override the output base directory with `PACKER_OUTPUT_ROOT` (CI leaves the
@@ -151,10 +162,10 @@ packer/keys/packer-nodadyoushutup.pub
 - `packer/scripts/cleanup-image.sh` removes the temporary `packer` user and any temporary keys/files.
 - `packer/packer.sh` requires `--version <X.Y.Z>`.
 - `packer/packer.sh` passes version to Packer via `-var image_version=<version>`.
-- `packer/packer.sh` accepts `--target cloud-image-repository`, `--build_arch amd64|arm64|both`, `--amd64_accelerator kvm|tcg|none`, and `--arm64_accelerator kvm|tcg|none`.
+- `packer/packer.sh` accepts `--ubuntu_release 24.04|26.04`, `--target cloud-image-repository`, `--build_arch amd64|arm64|both`, `--amd64_accelerator kvm|tcg|none`, and `--arm64_accelerator kvm|tcg|none`.
 - `packer/packer.sh` reserves architecture filtering; pass `--build_arch` instead of raw Packer `-only`/`-except`.
 - `packer/packer.sh` enables Packer debug logs by default (`PACKER_LOG=1`); disable with `--no_packer_log`.
-- `packer/upload.sh` accepts `--target cloud-image-repository` and `--build_arch amd64|arm64|both`.
+- `packer/upload.sh` accepts `--ubuntu_release 24.04|26.04`, `--target cloud-image-repository`, and `--build_arch amd64|arm64|both`.
 - `packer/packer.sh` writes to the NFS-backed `data/packer` dir by default and
   only uploads over REST when `--publish` is passed.
 - `packer/pipeline/packer.sh` mirrors the GitHub Actions

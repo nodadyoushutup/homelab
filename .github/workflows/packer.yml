@@ -6,6 +6,14 @@ on:
       version:
         description: "Image version to build (e.g. 0.0.3)"
         required: true
+      ubuntu_release:
+        description: "Ubuntu LTS release to build"
+        required: true
+        type: choice
+        default: "24.04"
+        options:
+          - "24.04"
+          - "26.04"
       target:
         description: "Publish target"
         required: true
@@ -54,6 +62,7 @@ jobs:
     runs-on: [self-hosted, linux, homelab, amd64, build]
     outputs:
       version: ${{ steps.meta.outputs.version }}
+      ubuntu_release: ${{ steps.meta.outputs.ubuntu_release }}
       upload_base_url: ${{ steps.target.outputs.upload_base_url }}
       upload_fallback_base_url: ${{ steps.target.outputs.upload_fallback_base_url }}
       build_amd64: ${{ steps.meta.outputs.build_amd64 }}
@@ -63,6 +72,7 @@ jobs:
 
     env:
       VERSION: ${{ github.event.inputs.version }}
+      UBUNTU_RELEASE: ${{ github.event.inputs.ubuntu_release }}
       AMD64_ACCELERATOR: ${{ github.event.inputs.amd64_accelerator }}
       ARM64_ACCELERATOR: ${{ github.event.inputs.arm64_accelerator }}
       BUILD_ARCH: ${{ github.event.inputs.build_arch }}
@@ -80,6 +90,10 @@ jobs:
           set -euo pipefail
           [[ "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
             echo "Invalid version '${VERSION}'. Expected semantic version like 0.0.1." >&2
+            exit 1
+          }
+          [[ "${UBUNTU_RELEASE}" == "24.04" || "${UBUNTU_RELEASE}" == "26.04" ]] || {
+            echo "Invalid ubuntu_release '${UBUNTU_RELEASE}'. Expected '24.04' or '26.04'." >&2
             exit 1
           }
           [[ "${AMD64_ACCELERATOR}" == "kvm" || "${AMD64_ACCELERATOR}" == "tcg" || "${AMD64_ACCELERATOR}" == "none" ]] || {
@@ -107,6 +121,7 @@ jobs:
           esac
 
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "ubuntu_release=${UBUNTU_RELEASE}" >> "$GITHUB_OUTPUT"
           echo "build_amd64=${build_amd64}" >> "$GITHUB_OUTPUT"
           echo "build_arm64=${build_arm64}" >> "$GITHUB_OUTPUT"
           echo "amd64_accelerator=${AMD64_ACCELERATOR}" >> "$GITHUB_OUTPUT"
@@ -149,10 +164,11 @@ jobs:
     runs-on: [self-hosted, linux, homelab, amd64, build, kvm]
     env:
       VERSION: ${{ needs.prepare.outputs.version }}
+      UBUNTU_RELEASE: ${{ needs.prepare.outputs.ubuntu_release }}
       AMD64_ACCELERATOR: ${{ needs.prepare.outputs.amd64_accelerator }}
       ARM64_ACCELERATOR: ${{ needs.prepare.outputs.arm64_accelerator }}
       PACKER_DIR: packer
-      PACKER_OUTPUT_DIR: packer/output/ubuntu-24.04-ndysu/${{ needs.prepare.outputs.version }}
+      PACKER_OUTPUT_DIR: packer/output/ubuntu-${{ needs.prepare.outputs.ubuntu_release }}-ndysu/${{ needs.prepare.outputs.version }}
       # Verbose Packer + plugin logs in the job log (also set on ARM runner containers).
       PACKER_LOG: "1"
     defaults:
@@ -189,23 +205,25 @@ jobs:
       - name: Build Packer image (amd64)
         run: |
           set -euo pipefail
-          PACKER_ONLY_ARGS=(-only=ubuntu-24.04-ndysu.qemu.ubuntu_24_04_amd64)
+          PACKER_ONLY_ARGS=(-only=ubuntu-ndysu.qemu.ubuntu_amd64)
 
           cd "${PACKER_DIR}"
-          rm -rf "output/ubuntu-24.04-ndysu/${VERSION}"
+          rm -rf "output/ubuntu-${UBUNTU_RELEASE}-ndysu/${VERSION}"
 
-          packer init "ubuntu-24.04-ndysu.pkr.hcl"
-          packer fmt "ubuntu-24.04-ndysu.pkr.hcl"
+          packer init "ubuntu-ndysu.pkr.hcl"
+          packer fmt "ubuntu-ndysu.pkr.hcl"
           packer validate "${PACKER_ONLY_ARGS[@]}" \
             -var "image_version=${VERSION}" \
+            -var "ubuntu_release=${UBUNTU_RELEASE}" \
             -var "amd64_accelerator=${AMD64_ACCELERATOR}" \
             -var "arm64_accelerator=${ARM64_ACCELERATOR}" \
-            "ubuntu-24.04-ndysu.pkr.hcl"
+            "ubuntu-ndysu.pkr.hcl"
           packer build -force "${PACKER_ONLY_ARGS[@]}" \
             -var "image_version=${VERSION}" \
+            -var "ubuntu_release=${UBUNTU_RELEASE}" \
             -var "amd64_accelerator=${AMD64_ACCELERATOR}" \
             -var "arm64_accelerator=${ARM64_ACCELERATOR}" \
-            "ubuntu-24.04-ndysu.pkr.hcl"
+            "ubuntu-ndysu.pkr.hcl"
 
       - name: Verify qcow2 artifact is present
         run: |
@@ -235,10 +253,11 @@ jobs:
     runs-on: [self-hosted, linux, homelab, arm64, build, kvm]
     env:
       VERSION: ${{ needs.prepare.outputs.version }}
+      UBUNTU_RELEASE: ${{ needs.prepare.outputs.ubuntu_release }}
       AMD64_ACCELERATOR: ${{ needs.prepare.outputs.amd64_accelerator }}
       ARM64_ACCELERATOR: ${{ needs.prepare.outputs.arm64_accelerator }}
       PACKER_DIR: packer
-      PACKER_OUTPUT_DIR: packer/output/ubuntu-24.04-ndysu/${{ needs.prepare.outputs.version }}
+      PACKER_OUTPUT_DIR: packer/output/ubuntu-${{ needs.prepare.outputs.ubuntu_release }}-ndysu/${{ needs.prepare.outputs.version }}
       # Verbose Packer + plugin logs in the job log (also set on ARM runner containers).
       PACKER_LOG: "1"
     defaults:
@@ -274,23 +293,25 @@ jobs:
       - name: Build Packer image (arm64)
         run: |
           set -euo pipefail
-          PACKER_ONLY_ARGS=(-only=ubuntu-24.04-ndysu.qemu.ubuntu_24_04_arm64)
+          PACKER_ONLY_ARGS=(-only=ubuntu-ndysu.qemu.ubuntu_arm64)
 
           cd "${PACKER_DIR}"
-          rm -rf "output/ubuntu-24.04-ndysu/${VERSION}"
+          rm -rf "output/ubuntu-${UBUNTU_RELEASE}-ndysu/${VERSION}"
 
-          packer init "ubuntu-24.04-ndysu.pkr.hcl"
-          packer fmt "ubuntu-24.04-ndysu.pkr.hcl"
+          packer init "ubuntu-ndysu.pkr.hcl"
+          packer fmt "ubuntu-ndysu.pkr.hcl"
           packer validate "${PACKER_ONLY_ARGS[@]}" \
             -var "image_version=${VERSION}" \
+            -var "ubuntu_release=${UBUNTU_RELEASE}" \
             -var "amd64_accelerator=${AMD64_ACCELERATOR}" \
             -var "arm64_accelerator=${ARM64_ACCELERATOR}" \
-            "ubuntu-24.04-ndysu.pkr.hcl"
+            "ubuntu-ndysu.pkr.hcl"
           packer build -force "${PACKER_ONLY_ARGS[@]}" \
             -var "image_version=${VERSION}" \
+            -var "ubuntu_release=${UBUNTU_RELEASE}" \
             -var "amd64_accelerator=${AMD64_ACCELERATOR}" \
             -var "arm64_accelerator=${ARM64_ACCELERATOR}" \
-            "ubuntu-24.04-ndysu.pkr.hcl"
+            "ubuntu-ndysu.pkr.hcl"
 
       - name: Verify qcow2 artifact is present
         run: |
