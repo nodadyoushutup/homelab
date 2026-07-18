@@ -29,11 +29,16 @@ Required:
   --version <X.Y.Z>                Image version to build
 
 Options:
-  --ubuntu_release <24.04|26.04>   Ubuntu LTS release to build (default: 24.04)
+  --distro <ubuntu|arch|centos>    Distro to build (default: ubuntu)
+  --gui <headless|gnome|kde|xfce>  Desktop environment to install (default: headless)
+  --ubuntu_release <24.04|26.04>   Ubuntu LTS release (ubuntu only; default: 24.04)
+  --centos_stream <10>             CentOS Stream major release (centos only; default: 10)
+  --arch_snapshot <snapshot>       Arch cloud image snapshot (arch only; default: template pin)
   --target <cloud-image-repository> Publish target (default: cloud-image-repository)
   --amd64_accelerator <value>      kvm, tcg, or none (default: kvm)
   --arm64_accelerator <value>      kvm, tcg, or none (default: kvm)
   --build_arch <value>             amd64, arm64, or both (default: amd64)
+                                   arch is amd64-only (no upstream arm64 image).
   --publish                        Also upload artifacts over REST (default: off,
                                    served straight from the NFS data/packer dir)
   -h, --help                       Show this help
@@ -41,7 +46,11 @@ EOF_USAGE
 }
 
 VERSION=""
+DISTRO="ubuntu"
+GUI="headless"
 UBUNTU_RELEASE="24.04"
+CENTOS_STREAM="10"
+ARCH_SNAPSHOT=""
 TARGET="cloud-image-repository"
 AMD64_ACCELERATOR="kvm"
 ARM64_ACCELERATOR="kvm"
@@ -54,8 +63,24 @@ while [[ $# -gt 0 ]]; do
       VERSION="$2"
       shift 2
       ;;
+    --distro)
+      DISTRO="$2"
+      shift 2
+      ;;
+    --gui)
+      GUI="$2"
+      shift 2
+      ;;
     --ubuntu_release)
       UBUNTU_RELEASE="$2"
+      shift 2
+      ;;
+    --centos_stream)
+      CENTOS_STREAM="$2"
+      shift 2
+      ;;
+    --arch_snapshot)
+      ARCH_SNAPSHOT="$2"
       shift 2
       ;;
     --target)
@@ -91,9 +116,14 @@ done
 [[ -n "${VERSION}" ]] || die "--version is required"
 [[ "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || die "Invalid version '${VERSION}'. Expected semantic version like 0.0.1"
 
-case "${UBUNTU_RELEASE}" in
-  24.04|26.04) ;;
-  *) die "Invalid ubuntu_release '${UBUNTU_RELEASE}'. Expected: 24.04|26.04" ;;
+case "${DISTRO}" in
+  ubuntu|arch|centos) ;;
+  *) die "Invalid distro '${DISTRO}'. Expected: ubuntu|arch|centos" ;;
+esac
+
+case "${GUI}" in
+  headless|gnome|kde|xfce) ;;
+  *) die "Invalid gui '${GUI}'. Expected: headless|gnome|kde|xfce" ;;
 esac
 
 case "${TARGET}" in
@@ -116,8 +146,21 @@ case "${BUILD_ARCH}" in
   *) die "Invalid build_arch '${BUILD_ARCH}'" ;;
 esac
 
+if [[ "${DISTRO}" == "arch" && "${BUILD_ARCH}" != "amd64" ]]; then
+  die "Arch Linux publishes no official arm64 cloud image; arm64 Arch builds are not supported. Use --build_arch amd64."
+fi
+
+# Per-distro release/snapshot arguments.
+RELEASE_ARGS=()
+case "${DISTRO}" in
+  ubuntu) RELEASE_ARGS=(--ubuntu_release "${UBUNTU_RELEASE}") ;;
+  centos) RELEASE_ARGS=(--centos_stream "${CENTOS_STREAM}") ;;
+  arch) [[ -n "${ARCH_SNAPSHOT}" ]] && RELEASE_ARGS=(--arch_snapshot "${ARCH_SNAPSHOT}") ;;
+esac
+
 log "Version: ${VERSION}"
-log "Ubuntu release: ${UBUNTU_RELEASE}"
+log "Distro: ${DISTRO}"
+log "GUI: ${GUI}"
 log "Target: ${TARGET}"
 log "AMD64 accelerator: ${AMD64_ACCELERATOR}"
 log "ARM64 accelerator: ${ARM64_ACCELERATOR}"
@@ -128,20 +171,23 @@ log "REST publish: $([[ "${PUBLISH}" -eq 1 ]] && echo enabled || echo "disabled 
   cd "${ROOT_DIR}"
   ./packer/packer.sh \
     --version "${VERSION}" \
-    --ubuntu_release "${UBUNTU_RELEASE}" \
+    --distro "${DISTRO}" \
+    --gui "${GUI}" \
     --target "${TARGET}" \
     --build_arch "${BUILD_ARCH}" \
     --amd64_accelerator "${AMD64_ACCELERATOR}" \
-    --arm64_accelerator "${ARM64_ACCELERATOR}"
+    --arm64_accelerator "${ARM64_ACCELERATOR}" \
+    ${RELEASE_ARGS[@]+"${RELEASE_ARGS[@]}"}
 )
 
 if [[ "${PUBLISH}" -eq 1 ]]; then
   (
     cd "${ROOT_DIR}"
     ./packer/upload.sh "${VERSION}" \
-      --ubuntu_release "${UBUNTU_RELEASE}" \
+      --distro "${DISTRO}" \
       --target "${TARGET}" \
-      --build_arch "${BUILD_ARCH}"
+      --build_arch "${BUILD_ARCH}" \
+      ${RELEASE_ARGS[@]+"${RELEASE_ARGS[@]}"}
   )
 else
   log "Skipping REST upload (--publish to enable); artifacts served from NFS data/packer."

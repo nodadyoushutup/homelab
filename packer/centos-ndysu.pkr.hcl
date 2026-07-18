@@ -12,21 +12,34 @@ variable "image_version" {
   description = "Version string used in output directory and image filename (e.g. 0.0.1)."
 }
 
-variable "ubuntu_release" {
+variable "centos_stream" {
   type        = string
-  default     = "24.04"
-  description = "Ubuntu LTS release to build (e.g. 24.04 or 26.04). Drives the cloud image URL and output naming."
+  default     = "10"
+  description = "CentOS Stream major release to build (e.g. 10). Drives the cloud image URL and output naming."
+}
 
-  validation {
-    condition     = contains(["24.04", "26.04"], var.ubuntu_release)
-    error_message = "The ubuntu_release value must be one of '24.04' or '26.04'."
-  }
+variable "centos_snapshot" {
+  type        = string
+  default     = "20260630.0"
+  description = "CentOS Stream GenericCloud snapshot (dated build id). Update alongside the *_image_checksum values."
+}
+
+variable "centos_amd64_image_checksum" {
+  type        = string
+  default     = "sha256:470c034e3165ab7200c48da28cea50c5c82e7392901bf3076b6140f39780a3e1"
+  description = "SHA256 of the pinned CentOS Stream x86_64 GenericCloud qcow2. Update whenever centos_snapshot changes."
+}
+
+variable "centos_arm64_image_checksum" {
+  type        = string
+  default     = "sha256:13ec4ffa7de54246c80935a61fe2c3debf14c84685aea2652877df2b5de1b3bf"
+  description = "SHA256 of the pinned CentOS Stream aarch64 GenericCloud qcow2. Update whenever centos_snapshot changes."
 }
 
 variable "output_root" {
   type        = string
   default     = "output"
-  description = "Base directory for build output. Local builds set this to the NFS-backed data/packer directory served by the cloud image repository (so no upload is needed); CI leaves the default."
+  description = "Base directory for build output. Local builds set this to the NFS-backed data/packer directory served by the cloud image repository."
 }
 
 variable "gui" {
@@ -63,22 +76,17 @@ variable "arm64_accelerator" {
 }
 
 locals {
-  # Packer omits -cpu by default; QEMU's default guest CPU is not KVM-valid on some
-  # AArch64 hosts (e.g. Pi): "KVM is not supported for this guest CPU type". Use host
-  # under KVM; use a generic model for TCG.
+  # See ubuntu-ndysu.pkr.hcl: KVM-valid guest CPU is host under KVM, generic for TCG.
   arm64_qemu_cpu_model = var.arm64_accelerator == "kvm" ? "host" : "cortex-a57"
 
-  # Canonical release cloud images keyed by numeric version (no codename needed):
-  # https://cloud-images.ubuntu.com/releases/<release>/release/ubuntu-<release>-server-cloudimg-<arch>.img
-  cloud_image_base    = "https://cloud-images.ubuntu.com/releases/${var.ubuntu_release}/release"
-  cloud_image_amd64   = "${local.cloud_image_base}/ubuntu-${var.ubuntu_release}-server-cloudimg-amd64.img"
-  cloud_image_arm64   = "${local.cloud_image_base}/ubuntu-${var.ubuntu_release}-server-cloudimg-arm64.img"
-  cloud_image_sha_url = "file:${local.cloud_image_base}/SHA256SUMS"
+  cloud_image_base  = "https://cloud.centos.org/centos/${var.centos_stream}-stream"
+  cloud_image_amd64 = "${local.cloud_image_base}/x86_64/images/CentOS-Stream-GenericCloud-${var.centos_stream}-${var.centos_snapshot}.x86_64.qcow2"
+  cloud_image_arm64 = "${local.cloud_image_base}/aarch64/images/CentOS-Stream-GenericCloud-${var.centos_stream}-${var.centos_snapshot}.aarch64.qcow2"
 
-  image_prefix = "ubuntu-${var.ubuntu_release}-ndysu"
+  image_prefix = "centos-${var.centos_stream}-ndysu"
 }
 
-source "qemu" "ubuntu_amd64" {
+source "qemu" "centos_amd64" {
   accelerator  = var.amd64_accelerator
   communicator = "ssh"
   cpus         = 2
@@ -86,7 +94,7 @@ source "qemu" "ubuntu_amd64" {
   headless     = true
 
   iso_url          = local.cloud_image_amd64
-  iso_checksum     = local.cloud_image_sha_url
+  iso_checksum     = var.centos_amd64_image_checksum
   disk_image       = true
   disk_size        = "12288M"
   use_backing_file = false
@@ -109,7 +117,7 @@ source "qemu" "ubuntu_amd64" {
   shutdown_command = "sudo -E shutdown -P now"
 }
 
-source "qemu" "ubuntu_arm64" {
+source "qemu" "centos_arm64" {
   accelerator = var.arm64_accelerator
   qemu_binary = "qemu-system-aarch64"
 
@@ -121,17 +129,17 @@ source "qemu" "ubuntu_arm64" {
   machine_type = "virt"
 
   iso_url          = local.cloud_image_arm64
-  iso_checksum     = local.cloud_image_sha_url
+  iso_checksum     = var.centos_arm64_image_checksum
   disk_image       = true
   disk_size        = "12288M"
   use_backing_file = false
   format           = "qcow2"
   disk_interface   = "virtio"
 
-  # Ubuntu arm64 cloud images boot via UEFI on `virt`. Without AAVMF pflash, QEMU
-  # starts but the guest never reaches sshd; PACKER_LOG then shows TCP to the
-  # hostfwd port followed by "Timeout during SSH handshake" (no SSH banner).
-  # Paths are from the `qemu-efi-aarch64` package (installed by scripts/install/packer.sh).
+  # aarch64 cloud images boot via UEFI on the `virt` machine. AAVMF pflash is
+  # required or the guest never reaches sshd (see ubuntu-ndysu.pkr.hcl). Paths
+  # come from the qemu-efi-aarch64 (Debian/Ubuntu) / edk2-aarch64 (Arch/CentOS)
+  # firmware packages installed by scripts/install/packer.sh.
   efi_firmware_code = "/usr/share/AAVMF/AAVMF_CODE.no-secboot.fd"
   efi_firmware_vars = "/usr/share/AAVMF/AAVMF_VARS.fd"
 
@@ -152,10 +160,10 @@ source "qemu" "ubuntu_arm64" {
 }
 
 build {
-  name = "ubuntu-ndysu"
+  name = "centos-ndysu"
   sources = [
-    "source.qemu.ubuntu_amd64",
-    "source.qemu.ubuntu_arm64",
+    "source.qemu.centos_amd64",
+    "source.qemu.centos_arm64",
   ]
 
   provisioner "file" {

@@ -31,12 +31,16 @@ building off the homelab NFS).
 
 Options:
   --version <X.Y.Z>                       Required image version (semantic version)
-  --ubuntu_release <24.04|26.04>          Ubuntu LTS release to build (default: 24.04)
+  --distro <ubuntu|arch|centos>           Distro to build (default: ubuntu)
+  --gui <headless|gnome|kde|xfce>         Desktop environment to install (default: headless)
+  --ubuntu_release <24.04|26.04>          Ubuntu LTS release (ubuntu only; default: 24.04)
+  --centos_stream <10>                    CentOS Stream major release (centos only; default: 10)
+  --arch_snapshot <snapshot>              Arch cloud image snapshot (arch only; default: template pin)
   --target <cloud-image-repository>       Publish target (default: cloud-image-repository)
   --build_arch <amd64|arm64|both>         Build architecture selector (default: amd64)
+                                          arch is amd64-only (no upstream arm64 image).
   --amd64_accelerator <kvm|tcg|none>      Accelerator for amd64 source (default: kvm)
   --arm64_accelerator <kvm|tcg|none>      Accelerator for arm64 source (default: kvm)
-  --kde_profile <desktop|minimal|full>    Optional KDE profile
   --publish                               Also upload artifacts over REST (default: off)
   --packer_log                            Enable PACKER_LOG=1 for this run
   --no_packer_log                         Disable PACKER_LOG for this run
@@ -48,8 +52,9 @@ Environment:
 
 Examples:
   ./packer/packer.sh --version 0.0.3
-  ./packer/packer.sh --version 0.0.3 --build_arch both --amd64_accelerator kvm --arm64_accelerator tcg
-  ./packer/packer.sh --version 0.0.3 --build_arch arm64 --arm64_accelerator kvm --packer_log
+  ./packer/packer.sh --version 0.0.3 --distro arch --build_arch amd64
+  ./packer/packer.sh --version 0.0.3 --distro centos --build_arch both
+  ./packer/packer.sh --version 0.0.3 --distro ubuntu --gui xfce
   ./packer/packer.sh --version 0.0.3 --publish
 EOF_USAGE
 }
@@ -68,11 +73,9 @@ if [[ "${EUID}" -eq 0 ]]; then
 fi
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-TEMPLATE="${SCRIPT_DIR}/ubuntu-ndysu.pkr.hcl"
 KEY_FILE="${SCRIPT_DIR}/keys/packer-nodadyoushutup"
 LOG_DIR="${SCRIPT_DIR}/logs"
 
-[[ -f "${TEMPLATE}" ]] || die "Template not found: ${TEMPLATE}"
 [[ -f "${KEY_FILE}" ]] || die "SSH private key not found: ${KEY_FILE}"
 
 if [[ $# -lt 1 ]]; then
@@ -83,13 +86,15 @@ fi
 VERSION=""
 VERSION_SET=0
 
+DISTRO="ubuntu"
+GUI="headless"
 UBUNTU_RELEASE="24.04"
+CENTOS_STREAM="10"
+ARCH_SNAPSHOT=""
 TARGET="cloud-image-repository"
 BUILD_ARCH="amd64"
 AMD64_ACCELERATOR="kvm"
 ARM64_ACCELERATOR="kvm"
-KDE_PROFILE=""
-KDE_PROFILE_SET=0
 PUBLISH=0
 PACKER_LOG_ENABLED="${PACKER_LOG:-1}"
 PACKER_LOG_FILE="${PACKER_LOG_PATH:-}"
@@ -108,6 +113,24 @@ while [[ $# -gt 0 ]]; do
       VERSION_SET=1
       shift 2
       ;;
+    --distro=*)
+      DISTRO="${1#--distro=}"
+      shift
+      ;;
+    --distro)
+      [[ $# -ge 2 ]] || die "--distro requires a value: ubuntu|arch|centos"
+      DISTRO="$2"
+      shift 2
+      ;;
+    --gui=*)
+      GUI="${1#--gui=}"
+      shift
+      ;;
+    --gui)
+      [[ $# -ge 2 ]] || die "--gui requires a value: headless|gnome|kde|xfce"
+      GUI="$2"
+      shift 2
+      ;;
     --ubuntu_release=*)
       UBUNTU_RELEASE="${1#--ubuntu_release=}"
       shift
@@ -115,6 +138,24 @@ while [[ $# -gt 0 ]]; do
     --ubuntu_release)
       [[ $# -ge 2 ]] || die "--ubuntu_release requires a value: 24.04|26.04"
       UBUNTU_RELEASE="$2"
+      shift 2
+      ;;
+    --centos_stream=*)
+      CENTOS_STREAM="${1#--centos_stream=}"
+      shift
+      ;;
+    --centos_stream)
+      [[ $# -ge 2 ]] || die "--centos_stream requires a value: 10"
+      CENTOS_STREAM="$2"
+      shift 2
+      ;;
+    --arch_snapshot=*)
+      ARCH_SNAPSHOT="${1#--arch_snapshot=}"
+      shift
+      ;;
+    --arch_snapshot)
+      [[ $# -ge 2 ]] || die "--arch_snapshot requires a value"
+      ARCH_SNAPSHOT="$2"
       shift 2
       ;;
     --target=*)
@@ -151,17 +192,6 @@ while [[ $# -gt 0 ]]; do
     --arm64_accelerator)
       [[ $# -ge 2 ]] || die "--arm64_accelerator requires a value: kvm|tcg|none"
       ARM64_ACCELERATOR="$2"
-      shift 2
-      ;;
-    --kde_profile=*)
-      KDE_PROFILE="${1#--kde_profile=}"
-      KDE_PROFILE_SET=1
-      shift
-      ;;
-    --kde_profile)
-      [[ $# -ge 2 ]] || die "--kde_profile requires a value: desktop|minimal|full"
-      KDE_PROFILE="$2"
-      KDE_PROFILE_SET=1
       shift 2
       ;;
     --publish|--upload)
@@ -209,10 +239,28 @@ fi
 if [[ ! "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
   die "Invalid --version '${VERSION}'. Expected semantic version like 0.0.1."
 fi
-case "${UBUNTU_RELEASE}" in
-  24.04|26.04) ;;
-  *) die "Invalid --ubuntu_release '${UBUNTU_RELEASE}'. Expected: 24.04|26.04" ;;
+
+case "${DISTRO}" in
+  ubuntu|arch|centos) ;;
+  *) die "Invalid --distro '${DISTRO}'. Expected: ubuntu|arch|centos" ;;
 esac
+
+case "${GUI}" in
+  headless|gnome|kde|xfce) ;;
+  *) die "Invalid --gui '${GUI}'. Expected: headless|gnome|kde|xfce" ;;
+esac
+
+if [[ "${DISTRO}" == "ubuntu" ]]; then
+  case "${UBUNTU_RELEASE}" in
+    24.04|26.04) ;;
+    *) die "Invalid --ubuntu_release '${UBUNTU_RELEASE}'. Expected: 24.04|26.04" ;;
+  esac
+fi
+
+if [[ "${DISTRO}" == "centos" ]]; then
+  [[ "${CENTOS_STREAM}" =~ ^[0-9]+$ ]] || die "Invalid --centos_stream '${CENTOS_STREAM}'. Expected a major version like 10."
+fi
+
 if bool_true "${PACKER_LOG_ENABLED}"; then
   PACKER_LOG_ENABLED="1"
 else
@@ -230,40 +278,26 @@ case "${TARGET}" in
 esac
 
 case "${BUILD_ARCH}" in
-  amd64|arm64|both)
-    ;;
-  *)
-    die "Invalid --build_arch '${BUILD_ARCH}'. Expected: amd64|arm64|both"
-    ;;
+  amd64|arm64|both) ;;
+  *) die "Invalid --build_arch '${BUILD_ARCH}'. Expected: amd64|arm64|both" ;;
 esac
 
+# Arch upstream ships no arm64 cloud image; fail fast with the reason.
+if [[ "${DISTRO}" == "arch" && "${BUILD_ARCH}" != "amd64" ]]; then
+  die "Arch Linux publishes no official arm64 cloud image; arm64 Arch builds are not supported. Use --build_arch amd64."
+fi
+
 case "${AMD64_ACCELERATOR}" in
-  kvm|tcg|none)
-    ;;
-  *)
-    die "Invalid --amd64_accelerator '${AMD64_ACCELERATOR}'. Expected: kvm|tcg|none"
-    ;;
+  kvm|tcg|none) ;;
+  *) die "Invalid --amd64_accelerator '${AMD64_ACCELERATOR}'. Expected: kvm|tcg|none" ;;
 esac
 
 case "${ARM64_ACCELERATOR}" in
-  kvm|tcg|none)
-    ;;
-  *)
-    die "Invalid --arm64_accelerator '${ARM64_ACCELERATOR}'. Expected: kvm|tcg|none"
-    ;;
+  kvm|tcg|none) ;;
+  *) die "Invalid --arm64_accelerator '${ARM64_ACCELERATOR}'. Expected: kvm|tcg|none" ;;
 esac
 
-if [[ "${KDE_PROFILE_SET}" -eq 1 ]]; then
-  case "${KDE_PROFILE}" in
-    desktop|minimal|full)
-      ;;
-    *)
-      die "Invalid --kde_profile '${KDE_PROFILE}'. Expected: desktop|minimal|full"
-      ;;
-  esac
-fi
-
-for arg in "${PACKER_BUILD_ARGS[@]}"; do
+for arg in ${PACKER_BUILD_ARGS[@]+"${PACKER_BUILD_ARGS[@]}"}; do
   case "${arg}" in
     -only|-only=*|-except|-except=*)
       die "Do not pass ${arg} directly. Use --build_arch amd64|arm64|both instead."
@@ -271,16 +305,39 @@ for arg in "${PACKER_BUILD_ARGS[@]}"; do
   esac
 done
 
+# Resolve distro-specific template, build name, source prefix, and image prefix.
+case "${DISTRO}" in
+  ubuntu)
+    TEMPLATE="${SCRIPT_DIR}/ubuntu-ndysu.pkr.hcl"
+    BUILD_NAME="ubuntu-ndysu"
+    SOURCE_PREFIX="ubuntu"
+    IMAGE_PREFIX="ubuntu-${UBUNTU_RELEASE}-ndysu"
+    ;;
+  arch)
+    TEMPLATE="${SCRIPT_DIR}/arch-ndysu.pkr.hcl"
+    BUILD_NAME="arch-ndysu"
+    SOURCE_PREFIX="arch"
+    IMAGE_PREFIX="arch-ndysu"
+    ;;
+  centos)
+    TEMPLATE="${SCRIPT_DIR}/centos-ndysu.pkr.hcl"
+    BUILD_NAME="centos-ndysu"
+    SOURCE_PREFIX="centos"
+    IMAGE_PREFIX="centos-${CENTOS_STREAM}-ndysu"
+    ;;
+esac
+[[ -f "${TEMPLATE}" ]] || die "Template not found: ${TEMPLATE}"
+
 UPLOAD_BASE_URL="${UPLOAD_BASE_URL:-${DEFAULT_UPLOAD_BASE_URL}}"
 UPLOAD_FALLBACK_BASE_URL="${UPLOAD_FALLBACK_BASE_URL:-${DEFAULT_UPLOAD_FALLBACK_BASE_URL}}"
 
 PACKER_ONLY_ARGS=()
 case "${BUILD_ARCH}" in
   amd64)
-    PACKER_ONLY_ARGS=(-only=ubuntu-ndysu.qemu.ubuntu_amd64)
+    PACKER_ONLY_ARGS=(-only="${BUILD_NAME}.qemu.${SOURCE_PREFIX}_amd64")
     ;;
   arm64)
-    PACKER_ONLY_ARGS=(-only=ubuntu-ndysu.qemu.ubuntu_arm64)
+    PACKER_ONLY_ARGS=(-only="${BUILD_NAME}.qemu.${SOURCE_PREFIX}_arm64")
     ;;
   both)
     ;;
@@ -293,16 +350,21 @@ OUTPUT_ROOT="${PACKER_OUTPUT_ROOT:-${REPO_ROOT}/data/packer}"
 
 PACKER_VAR_ARGS=(
   -var "image_version=${VERSION}"
-  -var "ubuntu_release=${UBUNTU_RELEASE}"
-  -var "amd64_accelerator=${AMD64_ACCELERATOR}"
-  -var "arm64_accelerator=${ARM64_ACCELERATOR}"
   -var "output_root=${OUTPUT_ROOT}"
+  -var "gui=${GUI}"
+  -var "amd64_accelerator=${AMD64_ACCELERATOR}"
 )
-if [[ "${KDE_PROFILE_SET}" -eq 1 ]]; then
-  PACKER_VAR_ARGS+=( -var "kde_profile=${KDE_PROFILE}" )
+# The arch template has no arm64 source, so it does not define arm64_accelerator.
+if [[ "${DISTRO}" != "arch" ]]; then
+  PACKER_VAR_ARGS+=( -var "arm64_accelerator=${ARM64_ACCELERATOR}" )
 fi
+case "${DISTRO}" in
+  ubuntu) PACKER_VAR_ARGS+=( -var "ubuntu_release=${UBUNTU_RELEASE}" ) ;;
+  centos) PACKER_VAR_ARGS+=( -var "centos_stream=${CENTOS_STREAM}" ) ;;
+  arch) [[ -n "${ARCH_SNAPSHOT}" ]] && PACKER_VAR_ARGS+=( -var "arch_snapshot=${ARCH_SNAPSHOT}" ) ;;
+esac
 
-OUTPUT_DIR="${OUTPUT_ROOT}/ubuntu-${UBUNTU_RELEASE}-ndysu/${VERSION}"
+OUTPUT_DIR="${OUTPUT_ROOT}/${IMAGE_PREFIX}/${VERSION}"
 
 mkdir -p "${LOG_DIR}"
 RUN_TS="$(date -u +%Y%m%dT%H%M%SZ)"
@@ -365,7 +427,13 @@ fi
 cd "${SCRIPT_DIR}"
 
 log "Version: ${VERSION}"
-log "Ubuntu release: ${UBUNTU_RELEASE}"
+log "Distro: ${DISTRO}"
+log "GUI: ${GUI}"
+case "${DISTRO}" in
+  ubuntu) log "Ubuntu release: ${UBUNTU_RELEASE}" ;;
+  centos) log "CentOS stream: ${CENTOS_STREAM}" ;;
+  arch) log "Arch snapshot: ${ARCH_SNAPSHOT:-<template default>}" ;;
+esac
 log "Host arch: ${HOST_ARCH}"
 log "Target: ${TARGET}"
 log "Build arch: ${BUILD_ARCH}"
@@ -378,11 +446,6 @@ if [[ "${PACKER_LOG_ENABLED}" -eq 1 ]]; then
   log "Packer debug log: ${PACKER_LOG_PATH}"
 fi
 log "Using template: ${TEMPLATE}"
-if [[ "${KDE_PROFILE_SET}" -eq 1 ]]; then
-  log "KDE profile enabled: ${KDE_PROFILE}"
-else
-  log "KDE profile not set; GUI install will be skipped."
-fi
 
 if [[ -d "${OUTPUT_DIR}" ]]; then
   log "Removing existing output directory: ${OUTPUT_DIR}"
@@ -399,7 +462,7 @@ log "Running: packer validate"
 packer validate "${PACKER_ONLY_ARGS[@]}" "${PACKER_VAR_ARGS[@]}" "${TEMPLATE}"
 
 log "Running: packer build"
-packer build -force "${PACKER_ONLY_ARGS[@]}" "${PACKER_VAR_ARGS[@]}" "${PACKER_BUILD_ARGS[@]}" "${TEMPLATE}"
+packer build -force "${PACKER_ONLY_ARGS[@]}" "${PACKER_VAR_ARGS[@]}" ${PACKER_BUILD_ARGS[@]+"${PACKER_BUILD_ARGS[@]}"} "${TEMPLATE}"
 
 MAX_UPLOAD_BYTES="$((25 * 1024 * 1024 * 1024))"
 

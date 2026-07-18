@@ -14,7 +14,10 @@ usage() {
 Usage: ./packer/upload.sh <version> [options]
 
 Options:
-  --ubuntu_release <24.04|26.04>          Ubuntu LTS release to upload (default: 24.04)
+  --distro <ubuntu|arch|centos>           Distro to upload (default: ubuntu)
+  --ubuntu_release <24.04|26.04>          Ubuntu LTS release to upload (ubuntu only; default: 24.04)
+  --centos_stream <10>                    CentOS Stream major release (centos only; default: 10)
+  --arch_snapshot <snapshot>              Accepted and ignored (arch prefix has no snapshot)
   --target <cloud-image-repository>       Publish target (default: cloud-image-repository)
   --build_arch <amd64|arm64|both>         Upload architecture selector (default: both)
   -h, --help                              Show this help
@@ -22,6 +25,7 @@ Options:
 Examples:
   ./packer/upload.sh 0.0.3
   ./packer/upload.sh 0.0.3 --build_arch amd64
+  ./packer/upload.sh 0.0.3 --distro centos --build_arch both
 EOF_USAGE
 }
 
@@ -60,9 +64,21 @@ fi
 
 TARGET="cloud-image-repository"
 BUILD_ARCH="both"
+DISTRO="ubuntu"
 UBUNTU_RELEASE="24.04"
+CENTOS_STREAM="10"
+ARCH_SNAPSHOT=""
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    --distro=*)
+      DISTRO="${1#--distro=}"
+      shift
+      ;;
+    --distro)
+      [[ $# -ge 2 ]] || die "--distro requires a value: ubuntu|arch|centos"
+      DISTRO="$2"
+      shift 2
+      ;;
     --ubuntu_release=*)
       UBUNTU_RELEASE="${1#--ubuntu_release=}"
       shift
@@ -70,6 +86,24 @@ while [[ $# -gt 0 ]]; do
     --ubuntu_release)
       [[ $# -ge 2 ]] || die "--ubuntu_release requires a value: 24.04|26.04"
       UBUNTU_RELEASE="$2"
+      shift 2
+      ;;
+    --centos_stream=*)
+      CENTOS_STREAM="${1#--centos_stream=}"
+      shift
+      ;;
+    --centos_stream)
+      [[ $# -ge 2 ]] || die "--centos_stream requires a value: 10"
+      CENTOS_STREAM="$2"
+      shift 2
+      ;;
+    --arch_snapshot=*)
+      ARCH_SNAPSHOT="${1#--arch_snapshot=}"
+      shift
+      ;;
+    --arch_snapshot)
+      [[ $# -ge 2 ]] || die "--arch_snapshot requires a value"
+      ARCH_SNAPSHOT="$2"
       shift 2
       ;;
     --target=*)
@@ -100,10 +134,21 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-case "${UBUNTU_RELEASE}" in
-  24.04|26.04) ;;
-  *) die "Invalid --ubuntu_release '${UBUNTU_RELEASE}'. Expected: 24.04|26.04" ;;
+case "${DISTRO}" in
+  ubuntu|arch|centos) ;;
+  *) die "Invalid --distro '${DISTRO}'. Expected: ubuntu|arch|centos" ;;
 esac
+
+if [[ "${DISTRO}" == "ubuntu" ]]; then
+  case "${UBUNTU_RELEASE}" in
+    24.04|26.04) ;;
+    *) die "Invalid --ubuntu_release '${UBUNTU_RELEASE}'. Expected: 24.04|26.04" ;;
+  esac
+fi
+
+if [[ "${DISTRO}" == "centos" ]]; then
+  [[ "${CENTOS_STREAM}" =~ ^[0-9]+$ ]] || die "Invalid --centos_stream '${CENTOS_STREAM}'. Expected a major version like 10."
+fi
 
 case "${TARGET}" in
   cloud-image-repository)
@@ -115,7 +160,16 @@ case "${TARGET}" in
     ;;
 esac
 
-IMAGE_PREFIX="ubuntu-${UBUNTU_RELEASE}-ndysu"
+case "${DISTRO}" in
+  ubuntu) IMAGE_PREFIX="ubuntu-${UBUNTU_RELEASE}-ndysu" ;;
+  arch) IMAGE_PREFIX="arch-ndysu" ;;
+  centos) IMAGE_PREFIX="centos-${CENTOS_STREAM}-ndysu" ;;
+esac
+
+if [[ "${DISTRO}" == "arch" && "${BUILD_ARCH}" != "amd64" ]]; then
+  die "Arch Linux publishes no official arm64 cloud image; arm64 Arch artifacts do not exist. Use --build_arch amd64."
+fi
+
 case "${BUILD_ARCH}" in
   amd64)
     PATH_FILTER="*/${IMAGE_PREFIX}/${VERSION}/amd64/*"
@@ -171,7 +225,12 @@ upload_artifact() {
 }
 
 log "Version: ${VERSION}"
-log "Ubuntu release: ${UBUNTU_RELEASE}"
+log "Distro: ${DISTRO}"
+case "${DISTRO}" in
+  ubuntu) log "Ubuntu release: ${UBUNTU_RELEASE}" ;;
+  centos) log "CentOS stream: ${CENTOS_STREAM}" ;;
+  arch) log "Arch image prefix: ${IMAGE_PREFIX}" ;;
+esac
 log "Target: ${TARGET}"
 log "Build arch: ${BUILD_ARCH}"
 log "Log file: ${LOG_FILE}"
