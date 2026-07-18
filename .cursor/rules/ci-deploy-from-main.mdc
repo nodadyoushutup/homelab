@@ -1,0 +1,35 @@
+---
+description: CI runs from main — commit & push GHA/Jenkins changes to deploy
+globs: ".github/workflows/**,**/pipeline/*.jenkins,**/pipeline/*.sh,**/Jenkinsfile"
+alwaysApply: false
+---
+
+# CI executes from `main` — commit and push to deploy
+
+GitHub Actions and Jenkins load their pipeline definitions from the `main`
+branch and auto-deploy from there. Edits sitting on a feature branch or in the
+working tree have **no effect** — the runners never see them.
+
+## Rule
+
+When you change a GHA workflow or a Jenkins pipeline, you must land it on
+`main` for it to take effect:
+
+- Commit **all files related to the change together** (workflow/`*.jenkins`
+  plus the `pipeline/*.sh`, tfvars references, and any config it drives).
+- Push to `main`. Only then will GitHub Actions / Jenkins pick up and
+  auto-deploy the change.
+- Do **not** create commits/pushes automatically — only when the user asks
+  (see git safety rules). But always **remind the user** that the change must
+  reach `main` before it will run.
+
+## Scope
+
+- GitHub Actions: `.github/workflows/**`
+- Jenkins: `**/pipeline/*.jenkins` and the `**/pipeline/*.sh` they call
+
+## Why
+
+Jenkins jobs (SCM-driven) and GitHub Actions both check out `main`; there is no
+PR-preview or branch-based deploy path in this homelab. A change is "done" only
+once it is on `main`.
