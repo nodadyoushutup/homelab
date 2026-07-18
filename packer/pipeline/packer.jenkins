@@ -11,7 +11,7 @@ pipeline {
   parameters {
     string(name: 'AGENT_LABEL', defaultValue: 'swarm && amd64 && kvm', description: 'Jenkins agent label to run this pipeline on')
     string(name: 'VERSION', defaultValue: '', description: 'Image version to build, for example 0.0.3')
-    choice(name: 'TARGET', choices: ['cloud-image-repository'], description: 'Publish target')
+    choice(name: 'PUBLISH_TARGET', choices: ['Local', 'Remote'], description: 'Local = build into the NFS-served data/packer dir only (cloud image repository serves it directly). Remote = also publish to the cloud image repository over REST.')
     choice(name: 'AMD64_ACCELERATOR', choices: ['kvm', 'tcg', 'none'], description: 'AMD64 QEMU accelerator')
     choice(name: 'ARM64_ACCELERATOR', choices: ['kvm', 'tcg', 'none'], description: 'ARM64 QEMU accelerator')
     choice(name: 'BUILD_ARCH', choices: ['amd64', 'arm64', 'both'], description: 'Architecture to build')
@@ -37,12 +37,18 @@ pipeline {
           script: """#!/usr/bin/env bash
 set -euo pipefail
 
+PUBLISH_ARG=''
+if [[ '${params.PUBLISH_TARGET}' == 'Remote' ]]; then
+  PUBLISH_ARG='--publish'
+fi
+
 ./packer/pipeline/packer.sh \\
   --version '${params.VERSION}' \\
-  --target '${params.TARGET}' \\
+  --target 'cloud-image-repository' \\
   --amd64_accelerator '${params.AMD64_ACCELERATOR}' \\
   --arm64_accelerator '${params.ARM64_ACCELERATOR}' \\
-  --build_arch '${params.BUILD_ARCH}'
+  --build_arch '${params.BUILD_ARCH}' \\
+  \${PUBLISH_ARG}
 """
         )
       }
