@@ -58,7 +58,13 @@ fi
   post {
     always {
       node("${params.AGENT_LABEL}") {
-        cleanWs(deleteDirs: true, notFailBuild: true)
+        // data/packer is the NFS-backed serve dir the cloud image repository
+        // publishes from; wiping it would delete the image we just built.
+        cleanWs(
+          deleteDirs: true,
+          notFailBuild: true,
+          patterns: [[pattern: 'data/packer/**', type: 'EXCLUDE']]
+        )
       }
     }
   }
