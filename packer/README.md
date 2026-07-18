@@ -214,6 +214,8 @@ packer/keys/packer-nodadyoushutup.pub
   `packer` workflow inputs (`--distro`, `--gui`, per-distro release), runs
   `packer/packer.sh`, and runs `packer/upload.sh` only when `--publish` is passed.
 - `packer/pipeline/packer.jenkins` is the in-repo Jenkins Pipeline
-  wrapper for the same flow (adds `DISTRO`, `GUI`, `CENTOS_STREAM`, `ARCH_SNAPSHOT` params).
-- The **Packer** GitHub Actions workflow exposes `distro` and `gui` dropdowns; the
-  arm64 build job is gated off for `arch`.
+  wrapper for the same flow. It exposes a single **`OS`** dropdown
+  (`ubuntu-24.04` | `ubuntu-26.04` | `centos-10` | `arch`) plus `GUI` and
+  `ARCH_SNAPSHOT`, and maps the OS choice to `--distro`/`--ubuntu_release`/`--centos_stream`.
+- The **Packer** GitHub Actions workflow exposes the same single **`os`** dropdown
+  plus a `gui` dropdown; the arm64 build job is gated off for `arch`.

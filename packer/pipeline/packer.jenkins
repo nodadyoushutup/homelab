@@ -11,10 +11,8 @@ pipeline {
   parameters {
     string(name: 'AGENT_LABEL', defaultValue: 'swarm && amd64 && kvm', description: 'Jenkins agent label to run this pipeline on')
     string(name: 'VERSION', defaultValue: '', description: 'Image version to build, for example 0.0.3')
-    choice(name: 'DISTRO', choices: ['ubuntu', 'arch', 'centos'], description: 'Distro to build. arch is amd64-only (no upstream arm64 image).')
+    choice(name: 'OS', choices: ['ubuntu-24.04', 'ubuntu-26.04', 'centos-10', 'arch'], description: 'Operating system image to build. arch is amd64-only (no upstream arm64 image).')
     choice(name: 'GUI', choices: ['headless', 'gnome', 'kde', 'xfce'], description: 'Desktop environment to install (headless installs no GUI)')
-    choice(name: 'UBUNTU_RELEASE', choices: ['24.04', '26.04'], description: 'Ubuntu LTS release to build (ubuntu only)')
-    choice(name: 'CENTOS_STREAM', choices: ['10'], description: 'CentOS Stream major release (centos only)')
     string(name: 'ARCH_SNAPSHOT', defaultValue: '', description: 'Arch cloud image snapshot (arch only; blank = template default pin)')
     string(name: 'PACKER_OUTPUT_ROOT', defaultValue: '/mnt/eapp/code/homelab/data/packer', description: 'NFS-backed serve dir the cloud image repository publishes from. Must be the repo NFS mount inside the agent, NOT the ephemeral workspace.')
     choice(name: 'PUBLISH_TARGET', choices: ['Local', 'Remote'], description: 'Local = build into the NFS-served data/packer dir only (cloud image repository serves it directly). Remote = also publish to the cloud image repository over REST.')
@@ -58,17 +56,26 @@ if [[ -n '${params.ARCH_SNAPSHOT}' ]]; then
   ARCH_SNAPSHOT_ARG="--arch_snapshot ${params.ARCH_SNAPSHOT}"
 fi
 
+# Single OS selector -> distro + per-distro release flag.
+DISTRO=''
+RELEASE_ARG=''
+case '${params.OS}' in
+  ubuntu-24.04) DISTRO='ubuntu'; RELEASE_ARG='--ubuntu_release 24.04' ;;
+  ubuntu-26.04) DISTRO='ubuntu'; RELEASE_ARG='--ubuntu_release 26.04' ;;
+  centos-10) DISTRO='centos'; RELEASE_ARG='--centos_stream 10' ;;
+  arch) DISTRO='arch' ;;
+  *) echo "Invalid OS: ${params.OS}" >&2; exit 1 ;;
+esac
+
 ./packer/pipeline/packer.sh \\
   --version '${params.VERSION}' \\
-  --distro '${params.DISTRO}' \\
+  --distro "\${DISTRO}" \\
   --gui '${params.GUI}' \\
-  --ubuntu_release '${params.UBUNTU_RELEASE}' \\
-  --centos_stream '${params.CENTOS_STREAM}' \\
   --target 'cloud-image-repository' \\
   --amd64_accelerator '${params.AMD64_ACCELERATOR}' \\
   --arm64_accelerator '${params.ARM64_ACCELERATOR}' \\
   --build_arch '${params.BUILD_ARCH}' \\
-  \${ARCH_SNAPSHOT_ARG} \${PUBLISH_ARG}
+  \${RELEASE_ARG} \${ARCH_SNAPSHOT_ARG} \${PUBLISH_ARG}
 """
         )
       }

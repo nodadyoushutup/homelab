@@ -6,15 +6,16 @@ on:
       version:
         description: "Image version to build (e.g. 0.0.3)"
         required: true
-      distro:
-        description: "Distro to build (arch is amd64-only)"
+      os:
+        description: "Operating system image to build (arch is amd64-only)"
         required: true
         type: choice
-        default: ubuntu
+        default: ubuntu-24.04
         options:
-          - ubuntu
+          - ubuntu-24.04
+          - ubuntu-26.04
+          - centos-10
           - arch
-          - centos
       gui:
         description: "Desktop environment to install (headless installs no GUI)"
         required: true
@@ -25,21 +26,6 @@ on:
           - gnome
           - kde
           - xfce
-      ubuntu_release:
-        description: "Ubuntu LTS release to build (ubuntu only)"
-        required: true
-        type: choice
-        default: "24.04"
-        options:
-          - "24.04"
-          - "26.04"
-      centos_stream:
-        description: "CentOS Stream major release (centos only)"
-        required: true
-        type: choice
-        default: "10"
-        options:
-          - "10"
       target:
         description: "Publish target"
         required: true
@@ -88,10 +74,9 @@ jobs:
     runs-on: [self-hosted, linux, homelab, amd64, build]
     outputs:
       version: ${{ steps.meta.outputs.version }}
+      os: ${{ steps.meta.outputs.os }}
       distro: ${{ steps.meta.outputs.distro }}
       gui: ${{ steps.meta.outputs.gui }}
-      ubuntu_release: ${{ steps.meta.outputs.ubuntu_release }}
-      centos_stream: ${{ steps.meta.outputs.centos_stream }}
       image_prefix: ${{ steps.meta.outputs.image_prefix }}
       template: ${{ steps.meta.outputs.template }}
       source_prefix: ${{ steps.meta.outputs.source_prefix }}
@@ -105,10 +90,8 @@ jobs:
 
     env:
       VERSION: ${{ github.event.inputs.version }}
-      DISTRO: ${{ github.event.inputs.distro }}
+      OS: ${{ github.event.inputs.os }}
       GUI: ${{ github.event.inputs.gui }}
-      UBUNTU_RELEASE: ${{ github.event.inputs.ubuntu_release }}
-      CENTOS_STREAM: ${{ github.event.inputs.centos_stream }}
       AMD64_ACCELERATOR: ${{ github.event.inputs.amd64_accelerator }}
       ARM64_ACCELERATOR: ${{ github.event.inputs.arm64_accelerator }}
       BUILD_ARCH: ${{ github.event.inputs.build_arch }}
@@ -128,9 +111,16 @@ jobs:
             echo "Invalid version '${VERSION}'. Expected semantic version like 0.0.1." >&2
             exit 1
           }
-          case "${DISTRO}" in
-            ubuntu|arch|centos) ;;
-            *) echo "Invalid distro '${DISTRO}'. Expected 'ubuntu', 'arch', or 'centos'." >&2; exit 1 ;;
+
+          # Single OS selector -> distro + release.
+          UBUNTU_RELEASE=""
+          CENTOS_STREAM=""
+          case "${OS}" in
+            ubuntu-24.04) DISTRO=ubuntu; UBUNTU_RELEASE=24.04 ;;
+            ubuntu-26.04) DISTRO=ubuntu; UBUNTU_RELEASE=26.04 ;;
+            centos-10) DISTRO=centos; CENTOS_STREAM=10 ;;
+            arch) DISTRO=arch ;;
+            *) echo "Invalid os '${OS}'. Expected 'ubuntu-24.04', 'ubuntu-26.04', 'centos-10', or 'arch'." >&2; exit 1 ;;
           esac
           case "${GUI}" in
             headless|gnome|kde|xfce) ;;
@@ -196,10 +186,9 @@ jobs:
           esac
 
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "os=${OS}" >> "$GITHUB_OUTPUT"
           echo "distro=${DISTRO}" >> "$GITHUB_OUTPUT"
           echo "gui=${GUI}" >> "$GITHUB_OUTPUT"
-          echo "ubuntu_release=${UBUNTU_RELEASE}" >> "$GITHUB_OUTPUT"
-          echo "centos_stream=${CENTOS_STREAM}" >> "$GITHUB_OUTPUT"
           echo "image_prefix=${image_prefix}" >> "$GITHUB_OUTPUT"
           echo "template=${template}" >> "$GITHUB_OUTPUT"
           echo "source_prefix=${source_prefix}" >> "$GITHUB_OUTPUT"
@@ -209,7 +198,7 @@ jobs:
           echo "amd64_accelerator=${AMD64_ACCELERATOR}" >> "$GITHUB_OUTPUT"
           echo "arm64_accelerator=${ARM64_ACCELERATOR}" >> "$GITHUB_OUTPUT"
 
-          echo "::notice::Packer ${DISTRO} builds: amd64=${build_amd64} arm64=${build_arm64} gui=${GUI} (dispatch build_arch=${BUILD_ARCH})"
+          echo "::notice::Packer ${OS} builds: amd64=${build_amd64} arm64=${build_arm64} gui=${GUI} (dispatch build_arch=${BUILD_ARCH})"
 
       - name: Resolve publish target
         id: target
