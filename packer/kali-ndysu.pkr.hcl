@@ -54,10 +54,13 @@ variable "output_root" {
   description = "Base directory for build output. Local builds set this to the NFS-backed data/packer directory served by the cloud image repository."
 }
 
+# Accepted for parity with the shared packer.sh / pipeline wrappers (which always
+# pass -var gui=...), but Kali is kept raw and installs no desktop, so this is a
+# no-op here.
 variable "gui" {
   type        = string
   default     = "headless"
-  description = "Desktop environment to install (headless|gnome|kde|xfce). headless installs no GUI."
+  description = "Ignored for Kali (raw image, no desktop installed). Present only so the shared build wrappers can pass -var gui=... uniformly."
 
   validation {
     condition     = contains(["headless", "gnome", "kde", "xfce"], var.gui)
@@ -68,7 +71,7 @@ variable "gui" {
 variable "install_node_exporter" {
   type        = bool
   default     = false
-  description = "Install the host-level Prometheus node_exporter systemd service. Default false: swarm/k8s hosts already run node_exporter as a container, so a host install would double-export. Enable only for hosts monitored directly (not in the swarm/cluster)."
+  description = "Install the host-level Prometheus node_exporter systemd service. Default false. This is the only optional add-on for the otherwise-raw Kali image."
 }
 
 variable "amd64_accelerator" {
@@ -182,6 +185,10 @@ build {
     "source.qemu.kali_arm64",
   ]
 
+  # Kali is intentionally kept as a near-raw upstream cloud image: we do NOT run
+  # the shared automation toolchain (automation_tooling.sh) or install a desktop.
+  # The only optional add-on is the host node_exporter systemd service, and the
+  # cleanup pass that strips the ephemeral packer user/keys.
   provisioner "file" {
     source      = "../scripts/install"
     destination = "/tmp"
@@ -191,9 +198,7 @@ build {
     execute_command = "sudo -E bash -eux '{{ .Path }}'"
     inline = [
       "find /tmp/install -maxdepth 1 -type f -name '*.sh' -exec chmod 0755 {} +",
-      "AUTOMATION_TARGET_USER=nodadyoushutup AUTOMATION_DOCKER_VERIFY=0 /tmp/install/automation_tooling.sh",
-      "if [ '${var.install_node_exporter}' = 'true' ]; then /tmp/install/node_exporter.sh; else echo '[INFO] host node_exporter install skipped (install_node_exporter=false; swarm/k8s container exporter handles metrics).'; fi",
-      "if [ '${var.gui}' != 'headless' ]; then /tmp/install/${var.gui}.sh; else echo '[INFO] GUI install skipped (headless).'; fi",
+      "if [ '${var.install_node_exporter}' = 'true' ]; then /tmp/install/node_exporter.sh; else echo '[INFO] host node_exporter install skipped (install_node_exporter=false).'; fi",
     ]
   }
 
