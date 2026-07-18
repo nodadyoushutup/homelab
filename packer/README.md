@@ -18,10 +18,6 @@ homelab base images. Pick the distro with `--distro`:
   upstream SHA256, extracts the raw disk, and converts it to a local qcow2 that
   Packer then provisions. The pinned tarball checksums live in that script;
   bump them together with `--kali_release` to move to a newer Kali image.
-  **Kali is intentionally kept near-raw**: it does **not** run the shared
-  automation toolchain (`automation_tooling.sh`) and installs no desktop (the
-  `--gui` flag is ignored). The only optional add-on is the host
-  `--install_node_exporter` service.
 
 Every build:
 
@@ -29,14 +25,14 @@ Every build:
 - sets `nodadyoushutup` as UID/GID `1000:1000` directly in cloud-init
 - uploads and runs `scripts/install/automation_tooling.sh` for the shared
   automation toolchain (the install scripts are distro-aware: `apt` / `pacman`
-  / `dnf`) — **except `kali`, which is kept raw and skips this entirely**
+  / `dnf`)
 - optionally installs the host-level Prometheus node_exporter systemd service
   from `scripts/install/node_exporter.sh` via `--install_node_exporter`
   (**off by default**: swarm/k8s hosts already run node_exporter as a container,
   so a host install would double-export; enable only for hosts monitored
   directly)
 - optionally installs a desktop environment via `--gui`
-  (`headless` default, or `gnome` / `kde` / `xfce`) — **ignored for `kali`**
+  (`headless` default, or `gnome` / `kde` / `xfce`)
 - runs a cleanup script that removes temporary SSH/provisioning access
 
 The bootstrapping scripts share a small package-manager helper library at
