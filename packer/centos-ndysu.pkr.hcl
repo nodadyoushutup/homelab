@@ -185,7 +185,10 @@ build {
   }
 
   provisioner "shell" {
-    execute_command = "sudo -E bash -eux '{{ .Path }}'"
+    # CentOS/RHEL sudo does not put /usr/local/bin on PATH for non-login shells,
+    # so release-based installers (kubectl/k9s/mc/packer) fail their `command -v`
+    # verify even though the binary is in /usr/local/bin. Force a full PATH.
+    execute_command = "sudo -E env PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin bash -eux '{{ .Path }}'"
     inline = [
       "find /tmp/install -maxdepth 1 -type f -name '*.sh' -exec chmod 0755 {} +",
       "AUTOMATION_TARGET_USER=nodadyoushutup AUTOMATION_DOCKER_VERIFY=0 /tmp/install/automation_tooling.sh",
@@ -200,7 +203,7 @@ build {
   }
 
   provisioner "shell" {
-    execute_command = "sudo -E bash -eux '{{ .Path }}'"
+    execute_command = "sudo -E env PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin bash -eux '{{ .Path }}'"
     inline = [
       "chmod +x /tmp/cleanup-image.sh",
       "/tmp/cleanup-image.sh",
