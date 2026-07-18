@@ -241,15 +241,37 @@ install_qemu_pacman() {
     libvirt bridge-utils
 }
 
+# RHEL/CentOS ship the accelerated system emulator as /usr/libexec/qemu-kvm
+# (built for the host arch) and do not provide a qemu-system-<arch> binary on
+# PATH. Symlink it to the expected name so Packer (and verify_install) resolve it.
+ensure_rhel_qemu_symlink() {
+  local host_bin
+  host_bin="$(host_qemu_system_bin)"
+  command -v "${host_bin}" >/dev/null 2>&1 && return 0
+
+  local src
+  for src in /usr/libexec/qemu-kvm /usr/bin/qemu-kvm; do
+    if [[ -x "${src}" ]]; then
+      log "Linking ${src} -> ${INSTALL_DIR}/${host_bin}"
+      as_root install -m 0755 -d "${INSTALL_DIR}"
+      as_root ln -sf "${src}" "${INSTALL_DIR}/${host_bin}"
+      return 0
+    fi
+  done
+}
+
 install_qemu_dnf() {
   log "Installing QEMU/KVM dependencies via dnf..."
   enable_epel_and_crb
   pkg_install qemu-img xorriso
+  # qemu-kvm provides the host-arch emulator at /usr/libexec/qemu-kvm.
+  pkg_install qemu-kvm
   case "${HOST_ARCH}" in
     arm64) pkg_install_best_effort qemu-system-aarch64 qemu-system-aarch64-core edk2-aarch64 ;;
-    *) pkg_install_best_effort qemu-kvm qemu-system-x86-core ;;
+    *) pkg_install_best_effort qemu-system-x86 qemu-system-x86-core ;;
   esac
   pkg_install_best_effort libvirt libvirt-daemon-driver-qemu edk2-ovmf bridge-utils
+  ensure_rhel_qemu_symlink
 }
 
 install_qemu_apt() {
