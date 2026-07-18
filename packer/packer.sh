@@ -31,13 +31,14 @@ building off the homelab NFS).
 
 Options:
   --version <X.Y.Z>                       Required image version (semantic version)
-  --distro <ubuntu|arch|centos>           Distro to build (default: ubuntu)
+  --distro <ubuntu|arch|centos|kali>      Distro to build (default: ubuntu)
   --gui <headless|gnome|kde|xfce>         Desktop environment to install (default: headless)
   --install_node_exporter                 Install host-level node_exporter systemd service (default: off)
   --no_install_node_exporter              Skip host-level node_exporter install (default)
   --ubuntu_release <24.04|26.04>          Ubuntu LTS release (ubuntu only; default: 24.04)
   --centos_stream <10>                    CentOS Stream major release (centos only; default: 10)
   --arch_snapshot <snapshot>              Arch cloud image snapshot (arch only; default: template pin)
+  --kali_release <2026.2>                 Kali rolling release checkpoint (kali only; default: 2026.2)
   --target <cloud-image-repository>       Publish target (default: cloud-image-repository)
   --build_arch <amd64|arm64|both>         Build architecture selector (default: amd64)
                                           arch is amd64-only (no upstream arm64 image).
@@ -56,6 +57,7 @@ Examples:
   ./packer/packer.sh --version 0.0.3
   ./packer/packer.sh --version 0.0.3 --distro arch --build_arch amd64
   ./packer/packer.sh --version 0.0.3 --distro centos --build_arch both
+  ./packer/packer.sh --version 0.0.3 --distro kali --build_arch amd64
   ./packer/packer.sh --version 0.0.3 --distro ubuntu --gui xfce
   ./packer/packer.sh --version 0.0.3 --publish
 EOF_USAGE
@@ -94,6 +96,7 @@ INSTALL_NODE_EXPORTER=0
 UBUNTU_RELEASE="24.04"
 CENTOS_STREAM="10"
 ARCH_SNAPSHOT=""
+KALI_RELEASE="2026.2"
 TARGET="cloud-image-repository"
 BUILD_ARCH="amd64"
 AMD64_ACCELERATOR="kvm"
@@ -167,6 +170,15 @@ while [[ $# -gt 0 ]]; do
     --arch_snapshot)
       [[ $# -ge 2 ]] || die "--arch_snapshot requires a value"
       ARCH_SNAPSHOT="$2"
+      shift 2
+      ;;
+    --kali_release=*)
+      KALI_RELEASE="${1#--kali_release=}"
+      shift
+      ;;
+    --kali_release)
+      [[ $# -ge 2 ]] || die "--kali_release requires a value: 2026.2"
+      KALI_RELEASE="$2"
       shift 2
       ;;
     --target=*)
@@ -252,8 +264,8 @@ if [[ ! "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
 fi
 
 case "${DISTRO}" in
-  ubuntu|arch|centos) ;;
-  *) die "Invalid --distro '${DISTRO}'. Expected: ubuntu|arch|centos" ;;
+  ubuntu|arch|centos|kali) ;;
+  *) die "Invalid --distro '${DISTRO}'. Expected: ubuntu|arch|centos|kali" ;;
 esac
 
 case "${GUI}" in
@@ -336,6 +348,12 @@ case "${DISTRO}" in
     SOURCE_PREFIX="centos"
     IMAGE_PREFIX="centos-${CENTOS_STREAM}-ndysu"
     ;;
+  kali)
+    TEMPLATE="${SCRIPT_DIR}/kali-ndysu.pkr.hcl"
+    BUILD_NAME="kali-ndysu"
+    SOURCE_PREFIX="kali"
+    IMAGE_PREFIX="kali-${KALI_RELEASE}-ndysu"
+    ;;
 esac
 [[ -f "${TEMPLATE}" ]] || die "Template not found: ${TEMPLATE}"
 
@@ -390,6 +408,7 @@ case "${DISTRO}" in
   ubuntu) PACKER_VAR_ARGS+=( -var "ubuntu_release=${UBUNTU_RELEASE}" ) ;;
   centos) PACKER_VAR_ARGS+=( -var "centos_stream=${CENTOS_STREAM}" ) ;;
   arch) [[ -n "${ARCH_SNAPSHOT}" ]] && PACKER_VAR_ARGS+=( -var "arch_snapshot=${ARCH_SNAPSHOT}" ) ;;
+  kali) PACKER_VAR_ARGS+=( -var "kali_release=${KALI_RELEASE}" ) ;;
 esac
 
 OUTPUT_DIR="${OUTPUT_ROOT}/${IMAGE_PREFIX}/${VERSION}"
@@ -426,6 +445,14 @@ require_cmd xorriso
 require_cmd qemu-img
 require_cmd curl
 require_cmd jq
+
+# Kali ships a .tar.xz cloud image (raw disk inside), not a bootable qcow2, so we
+# extract + convert it locally before Packer runs.
+if [[ "${DISTRO}" == "kali" ]]; then
+  require_cmd tar
+  require_cmd xz
+  require_cmd sha256sum
+fi
 
 if [[ "${BUILD_ARCH}" == "amd64" || "${BUILD_ARCH}" == "both" ]]; then
   require_cmd qemu-system-x86_64
@@ -476,6 +503,7 @@ case "${DISTRO}" in
   ubuntu) log "Ubuntu release: ${UBUNTU_RELEASE}" ;;
   centos) log "CentOS stream: ${CENTOS_STREAM}" ;;
   arch) log "Arch snapshot: ${ARCH_SNAPSHOT:-<template default>}" ;;
+  kali) log "Kali release: ${KALI_RELEASE}" ;;
 esac
 log "Host arch: ${HOST_ARCH}"
 log "Target: ${TARGET}"
@@ -497,6 +525,30 @@ log "Using template: ${TEMPLATE}"
 if [[ -d "${STAGING_DIR}" ]]; then
   log "Removing stale staging directory: ${STAGING_DIR}"
   rm -rf "${STAGING_DIR}"
+fi
+
+# Kali: prepare (download + verify + extract + convert) the base qcow2 for each
+# selected architecture, then inject the resulting local path + checksum as vars.
+if [[ "${DISTRO}" == "kali" ]]; then
+  prepare_kali_arch() {
+    local build_arch="$1"
+    log "Preparing Kali ${KALI_RELEASE} base image (${build_arch})"
+    local out
+    out="$("${SCRIPT_DIR}/scripts/prepare-kali-image.sh" --arch "${build_arch}" --release "${KALI_RELEASE}")" \
+      || die "Failed to prepare Kali ${build_arch} base image."
+    local image_path image_checksum
+    image_path="$(printf '%s\n' "${out}" | sed -n 's/^KALI_IMAGE_PATH=//p')"
+    image_checksum="$(printf '%s\n' "${out}" | sed -n 's/^KALI_IMAGE_CHECKSUM=//p')"
+    [[ -n "${image_path}" && -n "${image_checksum}" ]] || die "prepare-kali-image.sh did not return an image path/checksum."
+    log "Prepared Kali ${build_arch} image: ${image_path} (${image_checksum})"
+    PACKER_VAR_ARGS+=( -var "kali_local_image_${build_arch}=${image_path}" -var "kali_${build_arch}_image_checksum=${image_checksum}" )
+  }
+  if [[ "${BUILD_ARCH}" == "amd64" || "${BUILD_ARCH}" == "both" ]]; then
+    prepare_kali_arch amd64
+  fi
+  if [[ "${BUILD_ARCH}" == "arm64" || "${BUILD_ARCH}" == "both" ]]; then
+    prepare_kali_arch arm64
+  fi
 fi
 
 log "Running: packer init"

@@ -11,7 +11,7 @@ pipeline {
   parameters {
     string(name: 'AGENT_LABEL', defaultValue: 'swarm && amd64 && kvm', description: 'Jenkins agent label to run this pipeline on')
     string(name: 'VERSION', defaultValue: '', description: 'Image version to build, for example 0.0.3')
-    choice(name: 'OS', choices: ['ubuntu-24.04', 'ubuntu-26.04', 'centos-10', 'arch'], description: 'Operating system image to build. arch is amd64-only (no upstream arm64 image).')
+    choice(name: 'OS', choices: ['ubuntu-24.04', 'ubuntu-26.04', 'centos-10', 'arch', 'kali-2026.2'], description: 'Operating system image to build. arch is amd64-only (no upstream arm64 image); kali builds amd64 + arm64.')
     choice(name: 'GUI', choices: ['headless', 'gnome', 'kde', 'xfce'], description: 'Desktop environment to install (headless installs no GUI)')
     booleanParam(name: 'INSTALL_NODE_EXPORTER', defaultValue: false, description: 'Install the host-level node_exporter systemd service. Leave off for swarm/k8s hosts (their container exporter handles metrics); enable only for hosts monitored directly.')
     string(name: 'ARCH_SNAPSHOT', defaultValue: '', description: 'Arch cloud image snapshot (arch only; blank = template default pin)')
@@ -70,6 +70,7 @@ case '${params.OS}' in
   ubuntu-26.04) DISTRO='ubuntu'; RELEASE_ARG='--ubuntu_release 26.04' ;;
   centos-10) DISTRO='centos'; RELEASE_ARG='--centos_stream 10' ;;
   arch) DISTRO='arch' ;;
+  kali-2026.2) DISTRO='kali'; RELEASE_ARG='--kali_release 2026.2' ;;
   *) echo "Invalid OS: ${params.OS}" >&2; exit 1 ;;
 esac
 

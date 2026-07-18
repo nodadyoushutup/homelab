@@ -47,10 +47,29 @@ ensure_supported_os() {
 
   PKG_MANAGER="$(detect_pkg_manager)"
   DISTRO_ID="${ID:-}"
+  DISTRO_ID_LIKE="${ID_LIKE:-}"
   DISTRO_CODENAME="${VERSION_CODENAME:-}"
   if [[ -z "${DISTRO_CODENAME}" ]] && [[ "${ID:-}" == "ubuntu" ]] && [[ -n "${UBUNTU_CODENAME:-}" ]]; then
     DISTRO_CODENAME="${UBUNTU_CODENAME}"
   fi
+}
+
+have_url() {
+  curl -fsSL --retry 3 --max-time 10 -o /dev/null "$1"
+}
+
+# Newest Debian suite that Docker's apt repo actually serves. Debian derivatives
+# such as Kali track Debian testing, but Docker only publishes stable suites and
+# has no repo of its own for them, so map onto the newest available Debian suite.
+docker_debian_codename() {
+  local codename
+  for codename in trixie bookworm bullseye; do
+    if have_url "https://download.docker.com/linux/debian/dists/${codename}/Release"; then
+      echo "${codename}"
+      return 0
+    fi
+  done
+  echo ""
 }
 
 install_docker_packages() {
@@ -72,10 +91,34 @@ install_docker_apt() {
   local profile="$1"
   local arch
   local package_list=()
+  local repo_os=""
+  local repo_codename=""
 
-  [[ "${DISTRO_ID}" == "ubuntu" || "${DISTRO_ID}" == "debian" ]] \
-    || die "apt Docker install supports Debian/Ubuntu only (got '${DISTRO_ID}')."
-  [[ -n "${DISTRO_CODENAME}" ]] || die "Could not determine OS codename."
+  # Docker publishes apt repos for Ubuntu and Debian only. Map Debian
+  # derivatives (e.g. Kali, whose `kali-rolling` codename is not a Docker suite)
+  # onto Docker's Debian repo with the newest Debian suite it actually serves.
+  case "${DISTRO_ID}" in
+    ubuntu)
+      repo_os="ubuntu"
+      repo_codename="${DISTRO_CODENAME}"
+      ;;
+    debian)
+      repo_os="debian"
+      repo_codename="${DISTRO_CODENAME}"
+      ;;
+    *)
+      case " ${DISTRO_ID_LIKE} " in
+        *" debian "*)
+          repo_os="debian"
+          repo_codename="$(docker_debian_codename)"
+          ;;
+        *)
+          die "apt Docker install supports Debian/Ubuntu and Debian derivatives only (got ID='${DISTRO_ID}', ID_LIKE='${DISTRO_ID_LIKE}')."
+          ;;
+      esac
+      ;;
+  esac
+  [[ -n "${repo_codename}" ]] || die "Could not resolve a Docker apt suite for ID='${DISTRO_ID}' (codename='${DISTRO_CODENAME}')."
 
   arch="$(dpkg --print-architecture)"
 
@@ -83,12 +126,12 @@ install_docker_apt() {
   as_root apt-get update -y -q
   as_root apt-get install "${APT_OPTS[@]}" ca-certificates curl gnupg lsb-release >/dev/null
 
-  log "Configuring Docker apt repository..."
+  log "Configuring Docker apt repository (os=${repo_os} suite=${repo_codename})..."
   as_root install -m 0755 -d /etc/apt/keyrings
-  as_root curl -fsSL "https://download.docker.com/linux/${DISTRO_ID}/gpg" -o /etc/apt/keyrings/docker.asc
+  as_root curl -fsSL "https://download.docker.com/linux/${repo_os}/gpg" -o /etc/apt/keyrings/docker.asc
   as_root chmod a+r /etc/apt/keyrings/docker.asc
 
-  echo "deb [arch=${arch} signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/${DISTRO_ID} ${DISTRO_CODENAME} stable" \
+  echo "deb [arch=${arch} signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/${repo_os} ${repo_codename} stable" \
     | as_root tee /etc/apt/sources.list.d/docker.list >/dev/null
 
   as_root apt-get update -y -q

@@ -7,7 +7,7 @@ on:
         description: "Image version to build (e.g. 0.0.3)"
         required: true
       os:
-        description: "Operating system image to build (arch is amd64-only)"
+        description: "Operating system image to build (arch is amd64-only; kali is amd64 + arm64)"
         required: true
         type: choice
         default: ubuntu-24.04
@@ -16,6 +16,7 @@ on:
           - ubuntu-26.04
           - centos-10
           - arch
+          - kali-2026.2
       gui:
         description: "Desktop environment to install (headless installs no GUI)"
         required: true
@@ -122,12 +123,14 @@ jobs:
           # Single OS selector -> distro + release.
           UBUNTU_RELEASE=""
           CENTOS_STREAM=""
+          KALI_RELEASE=""
           case "${OS}" in
             ubuntu-24.04) DISTRO=ubuntu; UBUNTU_RELEASE=24.04 ;;
             ubuntu-26.04) DISTRO=ubuntu; UBUNTU_RELEASE=26.04 ;;
             centos-10) DISTRO=centos; CENTOS_STREAM=10 ;;
             arch) DISTRO=arch ;;
-            *) echo "Invalid os '${OS}'. Expected 'ubuntu-24.04', 'ubuntu-26.04', 'centos-10', or 'arch'." >&2; exit 1 ;;
+            kali-2026.2) DISTRO=kali; KALI_RELEASE=2026.2 ;;
+            *) echo "Invalid os '${OS}'. Expected 'ubuntu-24.04', 'ubuntu-26.04', 'centos-10', 'arch', or 'kali-2026.2'." >&2; exit 1 ;;
           esac
           case "${GUI}" in
             headless|gnome|kde|xfce) ;;
@@ -196,6 +199,16 @@ jobs:
               source_prefix="centos"
               image_prefix="centos-${CENTOS_STREAM}-ndysu"
               release_var="centos_stream=${CENTOS_STREAM}"
+              ;;
+            kali)
+              [[ "${KALI_RELEASE}" =~ ^[0-9]+\.[0-9]+$ ]] || {
+                echo "Invalid kali_release '${KALI_RELEASE}'. Expected a checkpoint like 2026.2." >&2
+                exit 1
+              }
+              template="kali-ndysu.pkr.hcl"
+              source_prefix="kali"
+              image_prefix="kali-${KALI_RELEASE}-ndysu"
+              release_var="kali_release=${KALI_RELEASE}"
               ;;
           esac
 
@@ -294,6 +307,16 @@ jobs:
           echo "AMD64_ACCELERATOR=tcg" >> "${GITHUB_ENV}"
           echo "::warning::AMD64 kvm was requested but /dev/kvm is missing or not readable/writable (typical in unprivileged runner containers). Using tcg; expect slower builds. For kvm, pass /dev/kvm into the runner or dispatch with amd64_accelerator tcg."
 
+      # Kali ships a .tar.xz cloud image (raw disk inside), not a bootable qcow2,
+      # so extract + convert it locally before Packer runs and expose the path.
+      - name: Prepare Kali base image (amd64)
+        if: needs.prepare.outputs.distro == 'kali'
+        run: |
+          set -euo pipefail
+          release="${RELEASE_VAR#kali_release=}"
+          out="$(bash packer/scripts/prepare-kali-image.sh --arch amd64 --release "${release}" --cache-dir "${GITHUB_WORKSPACE}/packer/.cache/kali")"
+          printf '%s\n' "${out}" >> "${GITHUB_ENV}"
+
       - name: Build Packer image (amd64)
         run: |
           set -euo pipefail
@@ -313,6 +336,10 @@ jobs:
           fi
           if [[ -n "${RELEASE_VAR}" ]]; then
             var_args+=( -var "${RELEASE_VAR}" )
+          fi
+          # Kali: inject the locally-prepared base image path + checksum.
+          if [[ "${DISTRO}" == "kali" ]]; then
+            var_args+=( -var "kali_local_image_amd64=${KALI_IMAGE_PATH}" -var "kali_amd64_image_checksum=${KALI_IMAGE_CHECKSUM}" )
           fi
 
           packer init "${TEMPLATE}"
@@ -391,6 +418,16 @@ jobs:
           echo "ARM64_ACCELERATOR=tcg" >> "${GITHUB_ENV}"
           echo "::warning::ARM64 kvm was requested but /dev/kvm is missing or not readable/writable. Using tcg; expect slower builds."
 
+      # Kali ships a .tar.xz cloud image (raw disk inside), not a bootable qcow2,
+      # so extract + convert it locally before Packer runs and expose the path.
+      - name: Prepare Kali base image (arm64)
+        if: needs.prepare.outputs.distro == 'kali'
+        run: |
+          set -euo pipefail
+          release="${RELEASE_VAR#kali_release=}"
+          out="$(bash packer/scripts/prepare-kali-image.sh --arch arm64 --release "${release}" --cache-dir "${GITHUB_WORKSPACE}/packer/.cache/kali")"
+          printf '%s\n' "${out}" >> "${GITHUB_ENV}"
+
       - name: Build Packer image (arm64)
         run: |
           set -euo pipefail
@@ -407,6 +444,10 @@ jobs:
           )
           if [[ -n "${RELEASE_VAR}" ]]; then
             var_args+=( -var "${RELEASE_VAR}" )
+          fi
+          # Kali: inject the locally-prepared base image path + checksum.
+          if [[ "${DISTRO}" == "kali" ]]; then
+            var_args+=( -var "kali_local_image_arm64=${KALI_IMAGE_PATH}" -var "kali_arm64_image_checksum=${KALI_IMAGE_CHECKSUM}" )
           fi
 
           packer init "${TEMPLATE}"

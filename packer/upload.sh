@@ -14,10 +14,11 @@ usage() {
 Usage: ./packer/upload.sh <version> [options]
 
 Options:
-  --distro <ubuntu|arch|centos>           Distro to upload (default: ubuntu)
+  --distro <ubuntu|arch|centos|kali>      Distro to upload (default: ubuntu)
   --ubuntu_release <24.04|26.04>          Ubuntu LTS release to upload (ubuntu only; default: 24.04)
   --centos_stream <10>                    CentOS Stream major release (centos only; default: 10)
   --arch_snapshot <snapshot>              Accepted and ignored (arch prefix has no snapshot)
+  --kali_release <2026.2>                 Kali rolling release checkpoint (kali only; default: 2026.2)
   --target <cloud-image-repository>       Publish target (default: cloud-image-repository)
   --build_arch <amd64|arm64|both>         Upload architecture selector (default: both)
   -h, --help                              Show this help
@@ -68,6 +69,7 @@ DISTRO="ubuntu"
 UBUNTU_RELEASE="24.04"
 CENTOS_STREAM="10"
 ARCH_SNAPSHOT=""
+KALI_RELEASE="2026.2"
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --distro=*)
@@ -106,6 +108,15 @@ while [[ $# -gt 0 ]]; do
       ARCH_SNAPSHOT="$2"
       shift 2
       ;;
+    --kali_release=*)
+      KALI_RELEASE="${1#--kali_release=}"
+      shift
+      ;;
+    --kali_release)
+      [[ $# -ge 2 ]] || die "--kali_release requires a value: 2026.2"
+      KALI_RELEASE="$2"
+      shift 2
+      ;;
     --target=*)
       TARGET="${1#--target=}"
       shift
@@ -135,8 +146,8 @@ while [[ $# -gt 0 ]]; do
 done
 
 case "${DISTRO}" in
-  ubuntu|arch|centos) ;;
-  *) die "Invalid --distro '${DISTRO}'. Expected: ubuntu|arch|centos" ;;
+  ubuntu|arch|centos|kali) ;;
+  *) die "Invalid --distro '${DISTRO}'. Expected: ubuntu|arch|centos|kali" ;;
 esac
 
 if [[ "${DISTRO}" == "ubuntu" ]]; then
@@ -164,6 +175,7 @@ case "${DISTRO}" in
   ubuntu) IMAGE_PREFIX="ubuntu-${UBUNTU_RELEASE}-ndysu" ;;
   arch) IMAGE_PREFIX="arch-ndysu" ;;
   centos) IMAGE_PREFIX="centos-${CENTOS_STREAM}-ndysu" ;;
+  kali) IMAGE_PREFIX="kali-${KALI_RELEASE}-ndysu" ;;
 esac
 
 if [[ "${DISTRO}" == "arch" && "${BUILD_ARCH}" != "amd64" ]]; then
@@ -230,6 +242,7 @@ case "${DISTRO}" in
   ubuntu) log "Ubuntu release: ${UBUNTU_RELEASE}" ;;
   centos) log "CentOS stream: ${CENTOS_STREAM}" ;;
   arch) log "Arch image prefix: ${IMAGE_PREFIX}" ;;
+  kali) log "Kali release: ${KALI_RELEASE}" ;;
 esac
 log "Target: ${TARGET}"
 log "Build arch: ${BUILD_ARCH}"

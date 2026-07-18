@@ -29,12 +29,13 @@ Required:
   --version <X.Y.Z>                Image version to build
 
 Options:
-  --distro <ubuntu|arch|centos>    Distro to build (default: ubuntu)
+  --distro <ubuntu|arch|centos|kali> Distro to build (default: ubuntu)
   --gui <headless|gnome|kde|xfce>  Desktop environment to install (default: headless)
   --install_node_exporter          Install host-level node_exporter systemd service (default: off)
   --ubuntu_release <24.04|26.04>   Ubuntu LTS release (ubuntu only; default: 24.04)
   --centos_stream <10>             CentOS Stream major release (centos only; default: 10)
   --arch_snapshot <snapshot>       Arch cloud image snapshot (arch only; default: template pin)
+  --kali_release <2026.2>          Kali rolling release checkpoint (kali only; default: 2026.2)
   --target <cloud-image-repository> Publish target (default: cloud-image-repository)
   --amd64_accelerator <value>      kvm, tcg, or none (default: kvm)
   --arm64_accelerator <value>      kvm, tcg, or none (default: kvm)
@@ -53,6 +54,7 @@ INSTALL_NODE_EXPORTER=0
 UBUNTU_RELEASE="24.04"
 CENTOS_STREAM="10"
 ARCH_SNAPSHOT=""
+KALI_RELEASE="2026.2"
 TARGET="cloud-image-repository"
 AMD64_ACCELERATOR="kvm"
 ARM64_ACCELERATOR="kvm"
@@ -89,6 +91,10 @@ while [[ $# -gt 0 ]]; do
       ARCH_SNAPSHOT="$2"
       shift 2
       ;;
+    --kali_release)
+      KALI_RELEASE="$2"
+      shift 2
+      ;;
     --target)
       TARGET="$2"
       shift 2
@@ -123,8 +129,8 @@ done
 [[ "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || die "Invalid version '${VERSION}'. Expected semantic version like 0.0.1"
 
 case "${DISTRO}" in
-  ubuntu|arch|centos) ;;
-  *) die "Invalid distro '${DISTRO}'. Expected: ubuntu|arch|centos" ;;
+  ubuntu|arch|centos|kali) ;;
+  *) die "Invalid distro '${DISTRO}'. Expected: ubuntu|arch|centos|kali" ;;
 esac
 
 case "${GUI}" in
@@ -162,6 +168,7 @@ case "${DISTRO}" in
   ubuntu) RELEASE_ARGS=(--ubuntu_release "${UBUNTU_RELEASE}") ;;
   centos) RELEASE_ARGS=(--centos_stream "${CENTOS_STREAM}") ;;
   arch) [[ -n "${ARCH_SNAPSHOT}" ]] && RELEASE_ARGS=(--arch_snapshot "${ARCH_SNAPSHOT}") ;;
+  kali) RELEASE_ARGS=(--kali_release "${KALI_RELEASE}") ;;
 esac
 
 NODE_EXPORTER_ARGS=()
