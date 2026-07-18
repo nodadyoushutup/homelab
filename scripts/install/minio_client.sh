@@ -54,7 +54,7 @@ install_host_packages() {
   elif command -v zypper >/dev/null 2>&1; then
     as_root zypper install -y "$@"
   elif command -v pacman >/dev/null 2>&1; then
-    as_root pacman -Sy --noconfirm "$@"
+    as_root pacman -Syu --noconfirm "$@"
   else
     die "No supported package manager found to install: $*"
   fi

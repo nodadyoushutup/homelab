@@ -293,6 +293,14 @@ install_with_dnf() {
 
 # Full baseline for Arch Linux hosts (pacman), mapped from the apt set.
 install_with_pacman() {
+  # Arch is a rolling release: the pinned cloud image ships a pacman sync
+  # database from its snapshot date, so a bare `pacman -S` asks mirrors for
+  # package versions they have already purged (HTTP 404). Fully sync and
+  # upgrade first (never a partial `-Sy`) so the database and installed base
+  # match what the mirrors currently serve.
+  log "Refreshing pacman databases and upgrading base system"
+  as_root pacman -Syu --noconfirm
+
   local core=(
     ca-certificates
     curl

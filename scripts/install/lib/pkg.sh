@@ -70,7 +70,7 @@ pkg_update() {
   case "${pm}" in
     apt) pkg_as_root apt-get update -y -q ;;
     dnf) pkg_as_root dnf -y -q makecache || true ;;
-    pacman) pkg_as_root pacman -Sy --noconfirm ;;
+    pacman) pkg_as_root pacman -Syu --noconfirm ;;
   esac
 }
 
