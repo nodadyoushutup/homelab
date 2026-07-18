@@ -6,6 +6,10 @@ warn() { echo "[WARN] $*" >&2; }
 die()  { echo "[ERROR] $*" >&2; exit 1; }
 trap 'die "failed at line $LINENO"' ERR
 
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/pkg.sh
+. "${SCRIPT_DIR}/lib/pkg.sh"
+
 # Keep apt/debconf fully noninteractive (must also be passed through sudo; see as_root).
 export DEBIAN_FRONTEND=noninteractive
 export DEBCONF_NONINTERACTIVE_SEEN=true
@@ -250,17 +254,49 @@ install_core_with_zypper() {
   as_root zypper install -y "${pkgs[@]}"
 }
 
-pacman_package_installed() {
-  local package_name="$1"
-  pacman -Q "${package_name}" >/dev/null 2>&1
-}
+# Full baseline for CentOS Stream / RHEL-family hosts (dnf), mapped from the apt
+# set. EPEL + CRB are enabled first so the extended tools resolve.
+install_with_dnf() {
+  enable_epel_and_crb
 
-install_core_with_pacman() {
-  local pkgs=(
+  # Critical tools must install as a batch (fail fast if a core name is wrong).
+  local core=(
     ca-certificates
     curl
     git
-    htop
+    jq
+    make
+    python3
+    python3-pip
+    rsync
+    tmux
+    tree
+    unzip
+    wget
+    qemu-guest-agent
+  )
+  log "Installing core dnf packages: ${core[*]}"
+  pkg_install "${core[@]}"
+
+  # Extended baseline: install per-package so a name that is absent on this
+  # release cannot abort the whole provisioning step.
+  local extended=(
+    bash-completion bat bind-utils bridge-utils btop duf ethtool fd-find gnupg2
+    htop iotop iperf3 iptables iscsi-initiator-utils libvirt libvirt-client lshw
+    lsof mariadb nano net-tools neovim nfs-utils nmap nmap-ncat parted
+    postgresql qemu-kvm ripgrep screen smartmontools strace tcpdump traceroute
+    vim-enhanced virt-install whois xorriso zip
+  )
+  log "Installing extended dnf packages (best-effort)"
+  pkg_install_best_effort "${extended[@]}"
+}
+
+# Full baseline for Arch Linux hosts (pacman), mapped from the apt set.
+install_with_pacman() {
+  local core=(
+    ca-certificates
+    curl
+    git
     jq
     make
     python
@@ -270,21 +306,32 @@ install_core_with_pacman() {
     tree
     unzip
     wget
+    qemu-guest-agent
   )
-  local package_name
-  local missing=()
-  for package_name in "${pkgs[@]}"; do
-    if pacman_package_installed "${package_name}"; then
-      continue
-    fi
-    missing+=("${package_name}")
-  done
-  if [[ ${#missing[@]} -eq 0 ]]; then
-    log "All requested pacman packages already installed; skipping."
-    return 0
-  fi
-  log "Installing missing pacman packages: ${missing[*]}"
-  as_root pacman -Sy --noconfirm "${missing[@]}"
+  log "Installing core pacman packages: ${core[*]}"
+  pkg_install "${core[@]}"
+
+  local extended=(
+    bash-completion bat bind bridge-utils btop duf ethtool fd gnupg htop iotop
+    iperf3 iptables libisoburn libvirt lshw lsof mariadb-clients nano net-tools
+    neovim nfs-utils nmap open-iscsi openbsd-netcat parted postgresql qemu-base
+    ripgrep screen smartmontools strace tcpdump traceroute vim virt-install
+    whois zip
+  )
+  log "Installing extended pacman packages (best-effort)"
+  pkg_install_best_effort "${extended[@]}"
+}
+
+# Cloud images need the guest agent running so the hypervisor can manage them.
+enable_qemu_guest_agent() {
+  command -v systemctl >/dev/null 2>&1 || return 0
+  pacman_package_installed qemu-guest-agent 2>/dev/null || rpm -q qemu-guest-agent >/dev/null 2>&1 || return 0
+  as_root systemctl enable qemu-guest-agent >/dev/null 2>&1 || true
+}
+
+pacman_package_installed() {
+  local package_name="$1"
+  pacman -Q "${package_name}" >/dev/null 2>&1
 }
 
 main() {
@@ -294,10 +341,10 @@ main() {
 
   case "${PKG_MANAGER}" in
     apt) install_with_apt ;;
-    dnf) install_core_with_dnf_or_yum dnf ;;
+    dnf) install_with_dnf; enable_qemu_guest_agent ;;
     yum) install_core_with_dnf_or_yum yum ;;
     zypper) install_core_with_zypper ;;
-    pacman) install_core_with_pacman ;;
+    pacman) install_with_pacman; enable_qemu_guest_agent ;;
     *) die "Unhandled package manager: ${PKG_MANAGER}" ;;
   esac
 

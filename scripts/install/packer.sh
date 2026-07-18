@@ -11,6 +11,12 @@ export NEEDRESTART_MODE=a
 export NEEDRESTART_SUSPEND=1
 APT_OPTS=(-y -q --no-install-recommends -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold")
 SUDO_CMD=()
+PKG_MANAGER=""
+HOST_ARCH=""
+
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/pkg.sh
+. "${SCRIPT_DIR}/lib/pkg.sh"
 
 PACKER_VERSION="${PACKER_VERSION:-}" # empty = install current repo version, set for direct release install
 INSTALL_DIR="/usr/local/bin"
@@ -45,23 +51,46 @@ ensure_supported_os() {
   [[ -f /etc/os-release ]] || die "/etc/os-release not found; unsupported host."
   # shellcheck disable=SC1091
   . /etc/os-release
-  case "${ID:-}" in
-    ubuntu|debian) ;;
-    *) die "Unsupported distro: ${ID:-unknown}. This script supports Debian/Ubuntu only." ;;
-  esac
 
-  DISTRO_ID="${ID}"
+  PKG_MANAGER="$(detect_pkg_manager)"
+  DISTRO_ID="${ID:-}"
   OS_CODENAME="${VERSION_CODENAME:-}"
-  if [[ -z "${OS_CODENAME}" ]] && [[ "${ID}" == "ubuntu" ]] && [[ -n "${UBUNTU_CODENAME:-}" ]]; then
+  if [[ -z "${OS_CODENAME}" ]] && [[ "${ID:-}" == "ubuntu" ]] && [[ -n "${UBUNTU_CODENAME:-}" ]]; then
     OS_CODENAME="${UBUNTU_CODENAME}"
   fi
 
-  ARCH_DEB="$(dpkg --print-architecture || true)"
+  if command -v dpkg >/dev/null 2>&1; then
+    ARCH_DEB="$(dpkg --print-architecture || true)"
+  else
+    ARCH_DEB=""
+  fi
   case "${ARCH_DEB}" in
     amd64) REL_ARCH="amd64" ;;
     arm64) REL_ARCH="arm64" ;;
     armhf|armel) REL_ARCH="arm" ;;
-    *) REL_ARCH="" ;;
+    *)
+      case "$(uname -m)" in
+        x86_64|amd64) REL_ARCH="amd64" ;;
+        aarch64|arm64) REL_ARCH="arm64" ;;
+        armv7l|armv7) REL_ARCH="arm" ;;
+        *) REL_ARCH="" ;;
+      esac
+      ;;
+  esac
+
+  case "$(uname -m)" in
+    x86_64|amd64) HOST_ARCH="amd64" ;;
+    aarch64|arm64) HOST_ARCH="arm64" ;;
+    *) HOST_ARCH="" ;;
+  esac
+}
+
+# System emulator binary matching the host architecture (what a Packer build on
+# this image would actually use).
+host_qemu_system_bin() {
+  case "${HOST_ARCH}" in
+    arm64) echo "qemu-system-aarch64" ;;
+    *) echo "qemu-system-x86_64" ;;
   esac
 }
 
@@ -133,8 +162,7 @@ install_packer_via_releases() {
 
   require_cmd sha256sum
   if ! command -v unzip >/dev/null 2>&1; then
-    as_root apt-get update -y -q
-    as_root apt-get install "${APT_OPTS[@]}" unzip >/dev/null
+    pkg_install unzip >/dev/null
   fi
 
   log "Downloading Packer ${target_version} release..."
@@ -154,6 +182,13 @@ install_packer_via_releases() {
 install_packer() {
   if [[ -n "${PACKER_VERSION}" ]]; then
     log "PACKER_VERSION set (${PACKER_VERSION}); installing via direct release."
+    install_packer_via_releases
+    return 0
+  fi
+
+  # HashiCorp only ships an apt repo; other distros use the direct release zip.
+  if [[ "${PKG_MANAGER}" != "apt" ]]; then
+    log "Non-apt distro (${PKG_MANAGER}); installing Packer via direct release."
     install_packer_via_releases
     return 0
   fi
@@ -180,14 +215,44 @@ has_apt_package() {
 }
 
 install_qemu_kvm_dependencies() {
+  local host_bin
+  host_bin="$(host_qemu_system_bin)"
   if command -v qemu-img >/dev/null 2>&1 \
     && command -v xorriso >/dev/null 2>&1 \
-    && command -v qemu-system-x86_64 >/dev/null 2>&1 \
-    && command -v qemu-system-aarch64 >/dev/null 2>&1; then
+    && command -v "${host_bin}" >/dev/null 2>&1; then
     log "QEMU/KVM dependencies already installed; skipping."
     return 0
   fi
 
+  case "${PKG_MANAGER}" in
+    apt) install_qemu_apt ;;
+    pacman) install_qemu_pacman ;;
+    dnf) install_qemu_dnf ;;
+    *) die "Unsupported package manager for QEMU/KVM deps: ${PKG_MANAGER}." ;;
+  esac
+}
+
+install_qemu_pacman() {
+  log "Installing QEMU/KVM dependencies via pacman..."
+  # qemu-base provides qemu-system-x86_64 + qemu-img; libisoburn provides xorriso.
+  pkg_install qemu-base libisoburn
+  # Optional extras (arm emulation, UEFI firmware, libvirt) best-effort.
+  pkg_install_best_effort qemu-img qemu-system-aarch64 edk2-ovmf edk2-aarch64 \
+    libvirt bridge-utils
+}
+
+install_qemu_dnf() {
+  log "Installing QEMU/KVM dependencies via dnf..."
+  enable_epel_and_crb
+  pkg_install qemu-img xorriso
+  case "${HOST_ARCH}" in
+    arm64) pkg_install_best_effort qemu-system-aarch64 qemu-system-aarch64-core edk2-aarch64 ;;
+    *) pkg_install_best_effort qemu-kvm qemu-system-x86-core ;;
+  esac
+  pkg_install_best_effort libvirt libvirt-daemon-driver-qemu edk2-ovmf bridge-utils
+}
+
+install_qemu_apt() {
   log "Installing QEMU/KVM dependencies..."
   as_root apt-get update -y -q
 
@@ -273,20 +338,26 @@ configure_kvm_access() {
 }
 
 verify_install() {
+  local host_bin
+  host_bin="$(host_qemu_system_bin)"
+
   command -v "${PACKER_BIN}" >/dev/null 2>&1 || die "Packer not found after installation."
   command -v qemu-img >/dev/null 2>&1 || die "qemu-img not found after installation."
   command -v xorriso >/dev/null 2>&1 || die "xorriso not found after installation."
 
-  if command -v qemu-system-x86_64 >/dev/null 2>&1; then
-    log "qemu-system-x86_64 is installed."
+  # Require the emulator matching this host's architecture; the cross-arch
+  # emulator is optional (e.g. amd64-only Arch images do not ship aarch64).
+  if command -v "${host_bin}" >/dev/null 2>&1; then
+    log "${host_bin} is installed."
   else
-    die "qemu-system-x86_64 not found in PATH after install."
+    die "${host_bin} not found in PATH after install."
   fi
 
-  if command -v qemu-system-aarch64 >/dev/null 2>&1; then
-    log "qemu-system-aarch64 is installed."
-  else
-    die "qemu-system-aarch64 not found in PATH after install."
+  if [[ "${host_bin}" != "qemu-system-x86_64" ]] && command -v qemu-system-x86_64 >/dev/null 2>&1; then
+    log "qemu-system-x86_64 is also installed."
+  fi
+  if [[ "${host_bin}" != "qemu-system-aarch64" ]] && command -v qemu-system-aarch64 >/dev/null 2>&1; then
+    log "qemu-system-aarch64 is also installed."
   fi
 
   if [[ -e /dev/kvm ]]; then
@@ -302,14 +373,11 @@ packer_stack_installed() {
   command -v "${PACKER_BIN}" >/dev/null 2>&1 \
     && command -v qemu-img >/dev/null 2>&1 \
     && command -v xorriso >/dev/null 2>&1 \
-    && command -v qemu-system-x86_64 >/dev/null 2>&1 \
-    && command -v qemu-system-aarch64 >/dev/null 2>&1
+    && command -v "$(host_qemu_system_bin)" >/dev/null 2>&1
 }
 
 main() {
-  require_cmd apt-get
   require_cmd curl
-  require_cmd dpkg
   require_cmd getent
   require_cmd grep
 

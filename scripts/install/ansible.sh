@@ -9,6 +9,11 @@ trap 'die "failed at line $LINENO"' ERR
 export DEBIAN_FRONTEND=noninteractive
 APT_OPTS=(-y --no-install-recommends -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold")
 SUDO_CMD=()
+PKG_MANAGER=""
+
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/pkg.sh
+. "${SCRIPT_DIR}/lib/pkg.sh"
 
 ANSIBLE_PACKAGE="${ANSIBLE_PACKAGE:-ansible}"
 
@@ -39,21 +44,30 @@ as_root() {
 
 ensure_supported_os() {
   [[ -f /etc/os-release ]] || die "/etc/os-release not found; unsupported host."
-  # shellcheck disable=SC1091
-  . /etc/os-release
-
-  case "${ID:-}" in
-    ubuntu|debian) ;;
-    *) die "Unsupported distro: ${ID:-unknown}. This script supports Debian/Ubuntu only." ;;
-  esac
+  PKG_MANAGER="$(detect_pkg_manager)"
 }
 
 install_ansible() {
-  log "Refreshing apt metadata..."
-  as_root apt-get update -y
-
-  log "Installing ${ANSIBLE_PACKAGE}..."
-  as_root apt-get install "${APT_OPTS[@]}" "${ANSIBLE_PACKAGE}"
+  case "${PKG_MANAGER}" in
+    apt)
+      log "Refreshing apt metadata..."
+      as_root apt-get update -y
+      log "Installing ${ANSIBLE_PACKAGE}..."
+      as_root apt-get install "${APT_OPTS[@]}" "${ANSIBLE_PACKAGE}"
+      ;;
+    pacman)
+      log "Installing ansible via pacman..."
+      pkg_install ansible
+      ;;
+    dnf)
+      enable_epel_and_crb
+      log "Installing ansible-core via dnf..."
+      pkg_install ansible-core
+      ;;
+    *)
+      die "Unsupported package manager for Ansible: ${PKG_MANAGER}."
+      ;;
+  esac
 }
 
 verify_install() {

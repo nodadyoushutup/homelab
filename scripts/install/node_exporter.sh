@@ -7,6 +7,11 @@ die()  { echo "[ERROR] $*" >&2; exit 1; }
 trap 'die "failed at line $LINENO"' ERR
 
 SUDO_CMD=()
+PKG_MANAGER=""
+
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/pkg.sh
+. "${SCRIPT_DIR}/lib/pkg.sh"
 
 NODE_EXPORTER_VERSION="${NODE_EXPORTER_VERSION:-latest}"
 NODE_EXPORTER_INSTALL_DIR="${NODE_EXPORTER_INSTALL_DIR:-/usr/local/bin}"
@@ -63,15 +68,8 @@ ensure_supported_os() {
   [[ -f /etc/os-release ]] || die "/etc/os-release not found; unsupported host."
   # shellcheck disable=SC1091
   . /etc/os-release
-
-  case "${ID:-}" in
-    ubuntu|debian)
-      OS_ID="${ID}"
-      ;;
-    *)
-      die "Unsupported distro: ${ID:-unknown}. This script supports Debian/Ubuntu only."
-      ;;
-  esac
+  OS_ID="${ID:-}"
+  PKG_MANAGER="$(detect_pkg_manager)"
 }
 
 ensure_prerequisites() {
@@ -88,13 +86,13 @@ ensure_prerequisites() {
     return 0
   fi
 
-  if [[ "${OS_ID}" != "ubuntu" && "${OS_ID}" != "debian" ]]; then
-    die "Missing required commands: ${missing[*]}"
-  fi
-
-  log "Installing prerequisites via apt: ${missing[*]}"
-  as_root apt-get update -y -q
-  as_root apt-get install "${APT_OPTS[@]}" curl tar coreutils passwd >/dev/null
+  log "Installing prerequisites via ${PKG_MANAGER}: ${missing[*]}"
+  case "${PKG_MANAGER}" in
+    apt) pkg_install curl tar coreutils passwd >/dev/null ;;
+    pacman) pkg_install curl tar coreutils shadow >/dev/null ;;
+    dnf) pkg_install curl tar coreutils shadow-utils >/dev/null ;;
+    *) die "Missing required commands and no supported package manager: ${missing[*]}" ;;
+  esac
 }
 
 resolve_version() {

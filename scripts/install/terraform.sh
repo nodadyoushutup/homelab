@@ -18,6 +18,11 @@ export NEEDRESTART_SUSPEND=1
 APT_OPTS=(-y -q -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold")
 PHASE_OPTS=(-o APT::Get::Always-Include-Phased-Updates=true)
 SUDO_CMD=()
+PKG_MANAGER=""
+
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/pkg.sh
+. "${SCRIPT_DIR}/lib/pkg.sh"
 
 init_privilege_command() {
   if [[ "$(id -u)" -eq 0 ]]; then
@@ -49,14 +54,27 @@ fi
 command -v curl >/dev/null 2>&1 || die "curl is required (apt-get install -y curl)."
 command -v sha256sum >/dev/null 2>&1 || die "sha256sum (coreutils) required."
 init_privilege_command
-command -v unzip >/dev/null 2>&1 || { log "Installing unzip prerequisite..."; as_root apt-get update -y -q; as_root apt-get install "${APT_OPTS[@]}" unzip >/dev/null; }
+PKG_MANAGER="$(detect_pkg_manager)"
+command -v unzip >/dev/null 2>&1 || { log "Installing unzip prerequisite..."; pkg_install unzip >/dev/null; }
 
-ARCH_DEB="$(dpkg --print-architecture || echo unknown)"   # amd64, arm64, armhf, ...
+if command -v dpkg >/dev/null 2>&1; then
+  ARCH_DEB="$(dpkg --print-architecture || echo unknown)"   # amd64, arm64, armhf, ...
+else
+  ARCH_DEB=""
+fi
 case "$ARCH_DEB" in
   amd64) REL_ARCH="amd64" ;;
   arm64) REL_ARCH="arm64" ;;
   armhf|armel) REL_ARCH="arm" ;;
-  *) warn "Unsupported arch for direct releases: ${ARCH_DEB}. APT may still work."; REL_ARCH="" ;;
+  *)
+    # Non-dpkg hosts (Arch/CentOS) or unknown: derive from uname.
+    case "$(uname -m)" in
+      x86_64|amd64) REL_ARCH="amd64" ;;
+      aarch64|arm64) REL_ARCH="arm64" ;;
+      armv7l|armv7) REL_ARCH="arm" ;;
+      *) warn "Unsupported arch for direct releases: $(uname -m)."; REL_ARCH="" ;;
+    esac
+    ;;
 esac
 
 OS_CODENAME="$(. /etc/os-release 2>/dev/null && echo "${VERSION_CODENAME:-}" || true)"
@@ -198,8 +216,8 @@ EOF
   fi
 }
 
-# --- Try APT first (unless a specific version is requested), else fall back ---
-if install_via_apt; then
+# --- Try APT first on Debian/Ubuntu; other distros go straight to direct releases ---
+if [[ "${PKG_MANAGER}" == "apt" ]] && install_via_apt; then
   log "Terraform installed via APT: $(${BIN} version | head -n1)"
 else
   install_via_releases

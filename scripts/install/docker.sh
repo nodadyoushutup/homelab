@@ -9,6 +9,11 @@ trap 'die "failed at line $LINENO"' ERR
 export DEBIAN_FRONTEND=noninteractive
 APT_OPTS=(-y -q -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold")
 SUDO_CMD=()
+PKG_MANAGER=""
+
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/pkg.sh
+. "${SCRIPT_DIR}/lib/pkg.sh"
 
 require_cmd() {
   local cmd="$1"
@@ -39,23 +44,38 @@ ensure_supported_os() {
   [[ -f /etc/os-release ]] || die "/etc/os-release not found; unsupported host."
   # shellcheck disable=SC1091
   . /etc/os-release
-  case "${ID:-}" in
-    ubuntu|debian) ;;
-    *) die "Unsupported distro: ${ID:-unknown}. This script supports Debian/Ubuntu only." ;;
-  esac
 
-  DISTRO_ID="${ID}"
+  PKG_MANAGER="$(detect_pkg_manager)"
+  DISTRO_ID="${ID:-}"
   DISTRO_CODENAME="${VERSION_CODENAME:-}"
-  if [[ -z "${DISTRO_CODENAME}" ]] && [[ "${ID}" == "ubuntu" ]] && [[ -n "${UBUNTU_CODENAME:-}" ]]; then
+  if [[ -z "${DISTRO_CODENAME}" ]] && [[ "${ID:-}" == "ubuntu" ]] && [[ -n "${UBUNTU_CODENAME:-}" ]]; then
     DISTRO_CODENAME="${UBUNTU_CODENAME}"
   fi
-  [[ -n "${DISTRO_CODENAME}" ]] || die "Could not determine OS codename."
 }
 
 install_docker_packages() {
-  local arch
   local profile="$1"
+  case "${profile}" in
+    full|cli) ;;
+    *) die "Unsupported INSTALL_DOCKER_PROFILE='${profile}'. Use 'full' or 'cli'." ;;
+  esac
+
+  case "${PKG_MANAGER}" in
+    apt) install_docker_apt "${profile}" ;;
+    pacman) install_docker_pacman "${profile}" ;;
+    dnf) install_docker_dnf "${profile}" ;;
+    *) die "Unsupported package manager for Docker: ${PKG_MANAGER}." ;;
+  esac
+}
+
+install_docker_apt() {
+  local profile="$1"
+  local arch
   local package_list=()
+
+  [[ "${DISTRO_ID}" == "ubuntu" || "${DISTRO_ID}" == "debian" ]] \
+    || die "apt Docker install supports Debian/Ubuntu only (got '${DISTRO_ID}')."
+  [[ -n "${DISTRO_CODENAME}" ]] || die "Could not determine OS codename."
 
   arch="$(dpkg --print-architecture)"
 
@@ -74,19 +94,39 @@ install_docker_packages() {
   as_root apt-get update -y -q
 
   case "${profile}" in
-    full)
-      package_list=(docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin)
-      ;;
-    cli)
-      package_list=(docker-ce-cli docker-buildx-plugin docker-compose-plugin)
-      ;;
-    *)
-      die "Unsupported INSTALL_DOCKER_PROFILE='${profile}'. Use 'full' or 'cli'."
-      ;;
+    full) package_list=(docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin) ;;
+    cli)  package_list=(docker-ce-cli docker-buildx-plugin docker-compose-plugin) ;;
   esac
 
   log "Installing Docker packages (profile=${profile})..."
   as_root apt-get install "${APT_OPTS[@]}" "${package_list[@]}" >/dev/null
+}
+
+install_docker_pacman() {
+  local profile="$1"
+  # Arch ships the client and daemon in one 'docker' package; compose/buildx are
+  # separate plugins. The full/cli distinction only affects service enablement,
+  # which is handled by enable_on_boot.
+  log "Installing Docker packages via pacman (profile=${profile})..."
+  pkg_install docker docker-compose docker-buildx
+}
+
+install_docker_dnf() {
+  local profile="$1"
+  local package_list=()
+
+  log "Configuring Docker dnf repository..."
+  pkg_as_root dnf install -y dnf-plugins-core >/dev/null 2>&1 || true
+  pkg_as_root dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo >/dev/null 2>&1 \
+    || pkg_as_root curl -fsSL https://download.docker.com/linux/centos/docker-ce.repo -o /etc/yum.repos.d/docker-ce.repo
+
+  case "${profile}" in
+    full) package_list=(docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin) ;;
+    cli)  package_list=(docker-ce-cli docker-buildx-plugin docker-compose-plugin) ;;
+  esac
+
+  log "Installing Docker packages via dnf (profile=${profile})..."
+  pkg_install "${package_list[@]}"
 }
 
 ensure_user_access() {
@@ -149,7 +189,6 @@ verify_docker() {
 }
 
 main() {
-  require_cmd dpkg
   require_cmd getent
   init_privilege_command
   ensure_supported_os
