@@ -1,4 +1,4 @@
-name: Packer - Build and Push Image
+name: Packer
 
 on:
   workflow_dispatch:
@@ -40,6 +40,11 @@ on:
           - amd64
           - arm64
           - both
+      publish:
+        description: "Upload artifacts to the cloud image repository over REST (off = build only)"
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -316,6 +321,7 @@ jobs:
       - build_packer_direct_arm64
     if: >
       always() &&
+      github.event.inputs.publish == 'true' &&
       needs.prepare.result == 'success' &&
       needs.build_packer_direct_amd64.result != 'failure' &&
       needs.build_packer_direct_amd64.result != 'cancelled' &&

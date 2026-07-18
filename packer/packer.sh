@@ -22,7 +22,12 @@ require_cmd() {
 
 usage() {
   cat <<'EOF_USAGE'
-Usage: ./packer/build.sh --version <version> [options] [packer-build-args...]
+Usage: ./packer/packer.sh --version <version> [options] [packer-build-args...]
+
+Builds into the NFS-backed data/packer directory that the cloud image repository
+serves directly, so the artifact is published just by building. The REST upload
+is opt-in via --publish (use it to push through the public URL, e.g. when
+building off the homelab NFS).
 
 Options:
   --version <X.Y.Z>                       Required image version (semantic version)
@@ -31,15 +36,20 @@ Options:
   --amd64_accelerator <kvm|tcg|none>      Accelerator for amd64 source (default: kvm)
   --arm64_accelerator <kvm|tcg|none>      Accelerator for arm64 source (default: kvm)
   --kde_profile <desktop|minimal|full>    Optional KDE profile
+  --publish                               Also upload artifacts over REST (default: off)
   --packer_log                            Enable PACKER_LOG=1 for this run
   --no_packer_log                         Disable PACKER_LOG for this run
   --packer_log_path <path>                Optional PACKER_LOG_PATH file location
   -h, --help                              Show this help
 
+Environment:
+  PACKER_OUTPUT_ROOT   Override the output base dir (default: <repo>/data/packer)
+
 Examples:
-  ./packer/build.sh --version 0.0.3
-  ./packer/build.sh --version 0.0.3 --build_arch both --amd64_accelerator kvm --arm64_accelerator tcg
-  ./packer/build.sh --version 0.0.3 --build_arch arm64 --arm64_accelerator kvm --packer_log
+  ./packer/packer.sh --version 0.0.3
+  ./packer/packer.sh --version 0.0.3 --build_arch both --amd64_accelerator kvm --arm64_accelerator tcg
+  ./packer/packer.sh --version 0.0.3 --build_arch arm64 --arm64_accelerator kvm --packer_log
+  ./packer/packer.sh --version 0.0.3 --publish
 EOF_USAGE
 }
 
@@ -78,6 +88,7 @@ AMD64_ACCELERATOR="kvm"
 ARM64_ACCELERATOR="kvm"
 KDE_PROFILE=""
 KDE_PROFILE_SET=0
+PUBLISH=0
 PACKER_LOG_ENABLED="${PACKER_LOG:-1}"
 PACKER_LOG_FILE="${PACKER_LOG_PATH:-}"
 PACKER_BUILD_ARGS=()
@@ -141,6 +152,10 @@ while [[ $# -gt 0 ]]; do
       KDE_PROFILE="$2"
       KDE_PROFILE_SET=1
       shift 2
+      ;;
+    --publish|--upload)
+      PUBLISH=1
+      shift
       ;;
     --packer_log)
       PACKER_LOG_ENABLED="1"
@@ -256,17 +271,22 @@ case "${BUILD_ARCH}" in
     ;;
 esac
 
+REPO_ROOT="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
+# Output into the NFS-backed data/packer directory the cloud image repository
+# serves, so building publishes the artifact without a REST upload.
+OUTPUT_ROOT="${PACKER_OUTPUT_ROOT:-${REPO_ROOT}/data/packer}"
+
 PACKER_VAR_ARGS=(
   -var "image_version=${VERSION}"
   -var "amd64_accelerator=${AMD64_ACCELERATOR}"
   -var "arm64_accelerator=${ARM64_ACCELERATOR}"
+  -var "output_root=${OUTPUT_ROOT}"
 )
 if [[ "${KDE_PROFILE_SET}" -eq 1 ]]; then
   PACKER_VAR_ARGS+=( -var "kde_profile=${KDE_PROFILE}" )
 fi
 
-OUTPUT_SUBDIR="output/ubuntu-24.04-ndysu/${VERSION}"
-OUTPUT_DIR="${SCRIPT_DIR}/${OUTPUT_SUBDIR}"
+OUTPUT_DIR="${OUTPUT_ROOT}/ubuntu-24.04-ndysu/${VERSION}"
 
 mkdir -p "${LOG_DIR}"
 RUN_TS="$(date -u +%Y%m%dT%H%M%SZ)"
@@ -334,6 +354,8 @@ log "Target: ${TARGET}"
 log "Build arch: ${BUILD_ARCH}"
 log "amd64 accelerator: ${AMD64_ACCELERATOR}"
 log "arm64 accelerator: ${ARM64_ACCELERATOR}"
+log "Output dir: ${OUTPUT_DIR}"
+log "REST publish: $([[ "${PUBLISH}" -eq 1 ]] && echo enabled || echo "disabled (served from NFS)")"
 log "Log file: ${LOG_FILE}"
 if [[ "${PACKER_LOG_ENABLED}" -eq 1 ]]; then
   log "Packer debug log: ${PACKER_LOG_PATH}"
@@ -366,6 +388,15 @@ MAX_UPLOAD_BYTES="$((25 * 1024 * 1024 * 1024))"
 
 mapfile -t ARTIFACT_PATHS < <(find "${OUTPUT_DIR}" -type f -name '*.qcow2' | sort)
 [[ "${#ARTIFACT_PATHS[@]}" -gt 0 ]] || die "Build finished but no qcow2 artifacts found under: ${OUTPUT_DIR}"
+
+if [[ "${PUBLISH}" -ne 1 ]]; then
+  log "Artifacts written to the NFS-backed serve dir; skipping REST upload (--publish to enable):"
+  for ARTIFACT_PATH in "${ARTIFACT_PATHS[@]}"; do
+    log "  ${ARTIFACT_PATH}"
+  done
+  log "Build complete"
+  exit 0
+fi
 
 upload_artifact() {
   local artifact_path="$1"

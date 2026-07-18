@@ -20,7 +20,7 @@ die() {
 
 usage() {
   cat <<'EOF_USAGE'
-Usage: packer/pipeline/build_push.sh --version <version> [options]
+Usage: packer/pipeline/packer.sh --version <version> [options]
 
 Emulates the repo's Packer GitHub Actions workflow with a repo-native bash
 entrypoint by running the existing packer build and upload scripts in order.
@@ -33,6 +33,8 @@ Options:
   --amd64_accelerator <value>      kvm, tcg, or none (default: kvm)
   --arm64_accelerator <value>      kvm, tcg, or none (default: kvm)
   --build_arch <value>             amd64, arm64, or both (default: amd64)
+  --publish                        Also upload artifacts over REST (default: off,
+                                   served straight from the NFS data/packer dir)
   -h, --help                       Show this help
 EOF_USAGE
 }
@@ -42,6 +44,7 @@ TARGET="cloud-image-repository"
 AMD64_ACCELERATOR="kvm"
 ARM64_ACCELERATOR="kvm"
 BUILD_ARCH="amd64"
+PUBLISH=0
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -64,6 +67,10 @@ while [[ $# -gt 0 ]]; do
     --build_arch)
       BUILD_ARCH="$2"
       shift 2
+      ;;
+    --publish|--upload)
+      PUBLISH=1
+      shift
       ;;
     -h|--help)
       usage
@@ -103,10 +110,11 @@ log "Target: ${TARGET}"
 log "AMD64 accelerator: ${AMD64_ACCELERATOR}"
 log "ARM64 accelerator: ${ARM64_ACCELERATOR}"
 log "Build arch: ${BUILD_ARCH}"
+log "REST publish: $([[ "${PUBLISH}" -eq 1 ]] && echo enabled || echo "disabled (served from NFS)")"
 
 (
   cd "${ROOT_DIR}"
-  ./packer/build.sh \
+  ./packer/packer.sh \
     --version "${VERSION}" \
     --target "${TARGET}" \
     --build_arch "${BUILD_ARCH}" \
@@ -114,9 +122,13 @@ log "Build arch: ${BUILD_ARCH}"
     --arm64_accelerator "${ARM64_ACCELERATOR}"
 )
 
-(
-  cd "${ROOT_DIR}"
-  ./packer/upload.sh "${VERSION}" \
-    --target "${TARGET}" \
-    --build_arch "${BUILD_ARCH}"
-)
+if [[ "${PUBLISH}" -eq 1 ]]; then
+  (
+    cd "${ROOT_DIR}"
+    ./packer/upload.sh "${VERSION}" \
+      --target "${TARGET}" \
+      --build_arch "${BUILD_ARCH}"
+  )
+else
+  log "Skipping REST upload (--publish to enable); artifacts served from NFS data/packer."
+fi

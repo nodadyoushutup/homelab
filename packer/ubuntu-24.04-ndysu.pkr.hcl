@@ -12,6 +12,12 @@ variable "image_version" {
   description = "Version string used in output directory and image filename (e.g. 0.0.1)."
 }
 
+variable "output_root" {
+  type        = string
+  default     = "output"
+  description = "Base directory for build output. Local builds set this to the NFS-backed data/packer directory served by the cloud image repository (so no upload is needed); CI leaves the default."
+}
+
 variable "kde_profile" {
   type        = string
   default     = null
@@ -73,7 +79,7 @@ source "qemu" "ubuntu_24_04_amd64" {
   ssh_private_key_file = "keys/packer-nodadyoushutup"
   ssh_timeout          = "20m"
 
-  output_directory = "output/ubuntu-24.04-ndysu/${var.image_version}/amd64"
+  output_directory = "${var.output_root}/ubuntu-24.04-ndysu/${var.image_version}/amd64"
   vm_name          = "ubuntu-24.04-ndysu-${var.image_version}-amd64.qcow2"
 
   shutdown_command = "sudo -E shutdown -P now"
@@ -115,7 +121,7 @@ source "qemu" "ubuntu_24_04_arm64" {
   ssh_private_key_file = "keys/packer-nodadyoushutup"
   ssh_timeout          = "30m"
 
-  output_directory = "output/ubuntu-24.04-ndysu/${var.image_version}/arm64"
+  output_directory = "${var.output_root}/ubuntu-24.04-ndysu/${var.image_version}/arm64"
   vm_name          = "ubuntu-24.04-ndysu-${var.image_version}-arm64.qcow2"
 
   shutdown_command = "sudo -E shutdown -P now"

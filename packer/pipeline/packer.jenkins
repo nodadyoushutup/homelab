@@ -37,7 +37,7 @@ pipeline {
           script: """#!/usr/bin/env bash
 set -euo pipefail
 
-./packer/pipeline/build_push.sh \\
+./packer/pipeline/packer.sh \\
   --version '${params.VERSION}' \\
   --target '${params.TARGET}' \\
   --amd64_accelerator '${params.AMD64_ACCELERATOR}' \\

@@ -1,14 +1,11 @@
 # main.tf
-# Overlay network, data volume, and replicated cloud-image-repository Swarm service.
+# Overlay network and replicated cloud-image-repository Swarm service.
+# There is no persistent local data volume: the served /data directory is an NFS
+# mount of data/packer, so Packer output and REST uploads share one backing store.
 
 resource "docker_network" "cloud_image_repository" {
   name   = local.network_name
   driver = "overlay"
-}
-
-resource "docker_volume" "cloud_image_repository_data" {
-  name   = local.volume_name
-  driver = "local"
 }
 
 resource "docker_service" "cloud_image_repository" {
@@ -45,10 +42,18 @@ resource "docker_service" "cloud_image_repository" {
         nameservers = local.dns_nameservers
       }
 
+      # NFS-backed volume (no local data): serves data/packer directly so a local
+      # Packer run that writes there is published without a REST upload.
       mounts {
         type   = "volume"
-        source = docker_volume.cloud_image_repository_data.name
+        source = local.volume_name
         target = local.data_mount
+
+        volume_options {
+          driver_name    = "local"
+          driver_options = local.nfs_driver_options
+          no_copy        = true
+        }
       }
     }
   }

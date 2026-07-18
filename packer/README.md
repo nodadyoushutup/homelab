@@ -24,29 +24,35 @@ This directory contains a minimal Packer build that:
 From repo root:
 
 ```bash
-./packer/build.sh --version 0.0.1
+./packer/packer.sh --version 0.0.1
 ```
 
 Run the repo-native build-and-upload pipeline equivalent of the GHA workflow:
 
 ```bash
-./packer/pipeline/build_push.sh --version 0.0.1
+./packer/pipeline/packer.sh --version 0.0.1
 ```
 
-The **Packer - Build and Push Image** workflow (`.github/workflows/packer_build_push.yml`) follows the same **prepare → parallel per-arch jobs → publish** shape as Docker **direct** builds: **`prepare`** on `homelab,amd64,build`, then **`build_packer_direct_amd64`** and **`build_packer_direct_arm64`** (each `needs: prepare` only, so they run concurrently when **`build_arch: both`**), then **`publish_packer_artifacts`** downloads all produced artifacts and uploads every `.qcow2` to the cloud image repository host. Job-level `if` cannot use the `matrix` context, so Packer mirrors Docker with **two jobs** rather than a filtered matrix.
+Local builds write directly into the NFS-backed `data/packer` directory that the
+cloud image repository serves, so **building publishes the artifact** — no upload
+step is required. The REST upload is **opt-in** via `--publish` (use it to push
+through the public URL, e.g. when building off a host that is not on the homelab
+NFS).
+
+The **Packer** workflow (`.github/workflows/packer.yml`) follows the same **prepare → parallel per-arch jobs → publish** shape as Docker **direct** builds: **`prepare`** on `homelab,amd64,build`, then **`build_packer_direct_amd64`** and **`build_packer_direct_arm64`** (each `needs: prepare` only, so they run concurrently when **`build_arch: both`**), then **`publish_packer_artifacts`** downloads all produced artifacts and uploads every `.qcow2` to the cloud image repository host. The publish job is **optional**: it only runs when the workflow is dispatched with **`publish: true`**. Job-level `if` cannot use the `matrix` context, so Packer mirrors Docker with **two jobs** rather than a filtered matrix.
 
 If the workflow requests **`kvm`** but the runner has no usable **`/dev/kvm`** (common for Docker-in-Docker self-hosted runners), each build job **falls back to `tcg`** automatically so QEMU can start (slower). Prefer exposing KVM to the runner, or dispatch with **`tcg`** when you accept software emulation.
 
 By default, KDE is not installed (headless image). To enable KDE:
 
 ```bash
-./packer/build.sh --version 0.0.3 --kde_profile=desktop
+./packer/packer.sh --version 0.0.3 --kde_profile=desktop
 ```
 
 Build with GHA-equivalent selectors:
 
 ```bash
-./packer/build.sh --version 0.0.3 \
+./packer/packer.sh --version 0.0.3 \
   --target cloud-image-repository \
   --build_arch both \
   --amd64_accelerator kvm \
@@ -56,17 +62,23 @@ Build with GHA-equivalent selectors:
 Build only one architecture:
 
 ```bash
-./packer/build.sh --version 0.0.3 --build_arch amd64 --amd64_accelerator kvm
-./packer/build.sh --version 0.0.3 --build_arch arm64 --arm64_accelerator tcg
+./packer/packer.sh --version 0.0.3 --build_arch amd64 --amd64_accelerator kvm
+./packer/packer.sh --version 0.0.3 --build_arch arm64 --arm64_accelerator tcg
 ```
 
 Enable verbose Packer debug logs for troubleshooting:
 
 ```bash
-./packer/build.sh --version 0.0.3 --build_arch arm64 --arm64_accelerator kvm --packer_log
+./packer/packer.sh --version 0.0.3 --build_arch arm64 --arm64_accelerator kvm --packer_log
 ```
 
-Upload-only (existing built artifacts for a version):
+Build and also push over REST (opt-in publish):
+
+```bash
+./packer/packer.sh --version 0.0.3 --publish
+```
+
+Upload-only (existing built artifacts for a version, read from `data/packer`):
 
 ```bash
 ./packer/upload.sh 0.0.1 --target cloud-image-repository --build_arch both
@@ -76,17 +88,21 @@ Upload-only (existing built artifacts for a version):
 The tracked Jenkins wrapper for the same flow lives at:
 
 ```text
-packer/pipeline/build_push.jenkins
+packer/pipeline/packer.jenkins
 ```
 
 ## Output
 
-Artifacts are written to:
+Local builds write artifacts to the NFS-backed `data/packer` directory (served
+by the cloud image repository at `/`):
 
 ```text
-packer/output/ubuntu-24.04-ndysu/0.0.1/amd64/ubuntu-24.04-ndysu-0.0.1-amd64.qcow2
-packer/output/ubuntu-24.04-ndysu/0.0.1/arm64/ubuntu-24.04-ndysu-0.0.1-arm64.qcow2
+data/packer/ubuntu-24.04-ndysu/0.0.1/amd64/ubuntu-24.04-ndysu-0.0.1-amd64.qcow2
+data/packer/ubuntu-24.04-ndysu/0.0.1/arm64/ubuntu-24.04-ndysu-0.0.1-arm64.qcow2
 ```
+
+Override the output base directory with `PACKER_OUTPUT_ROOT` (CI leaves the
+Packer default of `packer/output/...` and publishes via the optional REST step).
 
 Run log is written to:
 
@@ -101,7 +117,7 @@ https://cloud-image-repository.nodadyoushutup.com/ubuntu-24.04-ndysu-0.0.1-amd64
 https://cloud-image-repository.nodadyoushutup.com/ubuntu-24.04-ndysu-0.0.1-arm64.qcow2
 ```
 
-If the HTTPS proxy returns `413`, `build.sh` retries each artifact upload directly to:
+If the HTTPS proxy returns `413`, `packer.sh` retries each artifact upload directly to:
 
 ```text
 http://192.168.1.120:18088/ubuntu-24.04-ndysu-0.0.1-amd64.qcow2
@@ -111,13 +127,13 @@ http://192.168.1.120:18088/ubuntu-24.04-ndysu-0.0.1-arm64.qcow2
 Override fallback target if needed:
 
 ```bash
-UPLOAD_FALLBACK_BASE_URL=http://<host>:<port> ./packer/build.sh --version 0.0.1
+UPLOAD_FALLBACK_BASE_URL=http://<host>:<port> ./packer/packer.sh --version 0.0.1
 ```
 
 Override primary upload target if needed:
 
 ```bash
-UPLOAD_BASE_URL=http://192.168.1.120:18088 ./packer/build.sh --version 0.0.1
+UPLOAD_BASE_URL=http://192.168.1.120:18088 ./packer/packer.sh --version 0.0.1
 ```
 
 Temporary packer SSH keypair:
@@ -133,14 +149,16 @@ packer/keys/packer-nodadyoushutup.pub
 - `cloud-init/user-data` pins `nodadyoushutup` to `1000:1000`.
 - Password SSH login is disabled (`ssh_pwauth: false`).
 - `packer/scripts/cleanup-image.sh` removes the temporary `packer` user and any temporary keys/files.
-- `packer/build.sh` requires `--version <X.Y.Z>`.
-- `packer/build.sh` passes version to Packer via `-var image_version=<version>`.
-- `packer/build.sh` accepts `--target cloud-image-repository`, `--build_arch amd64|arm64|both`, `--amd64_accelerator kvm|tcg|none`, and `--arm64_accelerator kvm|tcg|none`.
-- `packer/build.sh` reserves architecture filtering; pass `--build_arch` instead of raw Packer `-only`/`-except`.
-- `packer/build.sh` enables Packer debug logs by default (`PACKER_LOG=1`); disable with `--no_packer_log`.
+- `packer/packer.sh` requires `--version <X.Y.Z>`.
+- `packer/packer.sh` passes version to Packer via `-var image_version=<version>`.
+- `packer/packer.sh` accepts `--target cloud-image-repository`, `--build_arch amd64|arm64|both`, `--amd64_accelerator kvm|tcg|none`, and `--arm64_accelerator kvm|tcg|none`.
+- `packer/packer.sh` reserves architecture filtering; pass `--build_arch` instead of raw Packer `-only`/`-except`.
+- `packer/packer.sh` enables Packer debug logs by default (`PACKER_LOG=1`); disable with `--no_packer_log`.
 - `packer/upload.sh` accepts `--target cloud-image-repository` and `--build_arch amd64|arm64|both`.
-- `packer/pipeline/build_push.sh` mirrors the GitHub Actions
-  `packer_build_push` inputs and runs `packer/build.sh` followed by
-  `packer/upload.sh`.
-- `packer/pipeline/build_push.jenkins` is the in-repo Jenkins Pipeline
+- `packer/packer.sh` writes to the NFS-backed `data/packer` dir by default and
+  only uploads over REST when `--publish` is passed.
+- `packer/pipeline/packer.sh` mirrors the GitHub Actions
+  `packer` workflow inputs, runs `packer/packer.sh`, and runs
+  `packer/upload.sh` only when `--publish` is passed.
+- `packer/pipeline/packer.jenkins` is the in-repo Jenkins Pipeline
   wrapper for the same flow.

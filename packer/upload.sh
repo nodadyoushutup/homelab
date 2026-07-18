@@ -115,7 +115,9 @@ case "${BUILD_ARCH}" in
 esac
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-OUTPUT_DIR="${SCRIPT_DIR}/output"
+REPO_ROOT="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
+# Artifacts live in the NFS-backed data/packer dir the repository serves.
+OUTPUT_DIR="${PACKER_OUTPUT_ROOT:-${REPO_ROOT}/data/packer}"
 LOG_DIR="${SCRIPT_DIR}/logs"
 UPLOAD_BASE_URL="${UPLOAD_BASE_URL:-${DEFAULT_UPLOAD_BASE_URL}}"
 UPLOAD_FALLBACK_BASE_URL="${UPLOAD_FALLBACK_BASE_URL:-${DEFAULT_UPLOAD_FALLBACK_BASE_URL}}"
