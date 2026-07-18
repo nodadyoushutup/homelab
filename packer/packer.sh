@@ -359,6 +359,16 @@ REPO_ROOT="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
 # serves, so building publishes the artifact without a REST upload.
 OUTPUT_ROOT="${PACKER_OUTPUT_ROOT:-${REPO_ROOT}/data/packer}"
 
+# Packer's qemu builder writes directly into its output_directory and, on a
+# failed/aborted build, runs "Deleting output directory..." which removes the
+# qcow2 leaf but leaves the parent <prefix>/<version> folder behind. Because the
+# serve dir IS the output dir, that orphaned skeleton shows up on the web server
+# as an empty folder with no image. To make publishing atomic, build into a
+# hidden staging root on the SAME filesystem, then rename the finished version
+# dir into the served path only after the build succeeds. Failed/aborted builds
+# never touch the served tree.
+STAGING_ROOT="${OUTPUT_ROOT}/.staging"
+
 if [[ "${INSTALL_NODE_EXPORTER}" -eq 1 ]]; then
   INSTALL_NODE_EXPORTER_VAR="true"
 else
@@ -367,7 +377,7 @@ fi
 
 PACKER_VAR_ARGS=(
   -var "image_version=${VERSION}"
-  -var "output_root=${OUTPUT_ROOT}"
+  -var "output_root=${STAGING_ROOT}"
   -var "gui=${GUI}"
   -var "install_node_exporter=${INSTALL_NODE_EXPORTER_VAR}"
   -var "amd64_accelerator=${AMD64_ACCELERATOR}"
@@ -383,6 +393,20 @@ case "${DISTRO}" in
 esac
 
 OUTPUT_DIR="${OUTPUT_ROOT}/${IMAGE_PREFIX}/${VERSION}"
+STAGING_DIR="${STAGING_ROOT}/${IMAGE_PREFIX}/${VERSION}"
+PUBLISHED=0
+
+# On any exit before a successful atomic publish, scrub the staging tree so a
+# failed/aborted build leaves no partial artifacts and no empty folders behind
+# (neither in staging nor in the served tree). The served OUTPUT_DIR is only
+# ever created by the rename below, so it is never left empty.
+cleanup_staging() {
+  rm -rf "${STAGING_DIR}" 2>/dev/null || true
+  # Prune the staging root if it is now empty (ignore failure when not).
+  rmdir -p "$(dirname "${STAGING_DIR}")" 2>/dev/null || true
+  rmdir "${STAGING_ROOT}" 2>/dev/null || true
+}
+trap cleanup_staging EXIT
 
 mkdir -p "${LOG_DIR}"
 RUN_TS="$(date -u +%Y%m%dT%H%M%SZ)"
@@ -459,6 +483,7 @@ log "Build arch: ${BUILD_ARCH}"
 log "amd64 accelerator: ${AMD64_ACCELERATOR}"
 log "arm64 accelerator: ${ARM64_ACCELERATOR}"
 log "Output dir: ${OUTPUT_DIR}"
+log "Staging dir: ${STAGING_DIR}"
 log "REST publish: $([[ "${PUBLISH}" -eq 1 ]] && echo enabled || echo "disabled (served from NFS)")"
 log "Log file: ${LOG_FILE}"
 if [[ "${PACKER_LOG_ENABLED}" -eq 1 ]]; then
@@ -466,9 +491,12 @@ if [[ "${PACKER_LOG_ENABLED}" -eq 1 ]]; then
 fi
 log "Using template: ${TEMPLATE}"
 
-if [[ -d "${OUTPUT_DIR}" ]]; then
-  log "Removing existing output directory: ${OUTPUT_DIR}"
-  rm -rf "${OUTPUT_DIR}"
+# Clear any stale staging from a prior interrupted run. The served OUTPUT_DIR is
+# left untouched until the new build succeeds, so an existing published image
+# survives a failed rebuild.
+if [[ -d "${STAGING_DIR}" ]]; then
+  log "Removing stale staging directory: ${STAGING_DIR}"
+  rm -rf "${STAGING_DIR}"
 fi
 
 log "Running: packer init"
@@ -485,8 +513,21 @@ packer build -force "${PACKER_ONLY_ARGS[@]}" "${PACKER_VAR_ARGS[@]}" ${PACKER_BU
 
 MAX_UPLOAD_BYTES="$((25 * 1024 * 1024 * 1024))"
 
+# Build succeeded: verify the staged qcow2(s) exist, then atomically publish by
+# renaming the staged version dir into the served path. Rename is atomic within
+# the same filesystem (staging lives under OUTPUT_ROOT), so the web server never
+# observes a partial/empty version folder.
+mapfile -t STAGED_ARTIFACTS < <(find "${STAGING_DIR}" -type f -name '*.qcow2' | sort)
+[[ "${#STAGED_ARTIFACTS[@]}" -gt 0 ]] || die "Build finished but no qcow2 artifacts found under staging: ${STAGING_DIR}"
+
+log "Publishing ${#STAGED_ARTIFACTS[@]} artifact(s) to served path: ${OUTPUT_DIR}"
+rm -rf "${OUTPUT_DIR}"
+mkdir -p "$(dirname "${OUTPUT_DIR}")"
+mv "${STAGING_DIR}" "${OUTPUT_DIR}"
+PUBLISHED=1
+
 mapfile -t ARTIFACT_PATHS < <(find "${OUTPUT_DIR}" -type f -name '*.qcow2' | sort)
-[[ "${#ARTIFACT_PATHS[@]}" -gt 0 ]] || die "Build finished but no qcow2 artifacts found under: ${OUTPUT_DIR}"
+[[ "${#ARTIFACT_PATHS[@]}" -gt 0 ]] || die "Publish moved staging but no qcow2 artifacts found under: ${OUTPUT_DIR}"
 
 if [[ "${PUBLISH}" -ne 1 ]]; then
   log "Artifacts written to the NFS-backed serve dir; skipping REST upload (--publish to enable):"

@@ -193,6 +193,11 @@ class FileServerHandler(BaseHTTPRequestHandler):
         payload = []
         try:
             for name in sorted(os.listdir(directory), key=lambda value: value.lower()):
+                # Hide dotfiles/dirs (e.g. the ".staging" tree Packer builds into
+                # before atomically publishing) so in-progress builds never surface
+                # as empty folders in the listing.
+                if name.startswith("."):
+                    continue
                 full_path = os.path.join(directory, name)
                 try:
                     item_stat = os.lstat(full_path)
