@@ -76,6 +76,12 @@ variable "arm64_accelerator" {
 }
 
 locals {
+  # CentOS Stream 10 (like RHEL 10) requires an x86-64-v3 CPU baseline. QEMU's
+  # default qemu64 CPU only advertises x86-64-v1, so glibc aborts init with
+  # "CPU does not support x86-64-v2" and the guest panics before sshd starts.
+  # Pass through the host CPU under KVM; use `max` (all emulated features) for TCG.
+  amd64_qemu_cpu_model = var.amd64_accelerator == "kvm" ? "host" : "max"
+
   # See ubuntu-ndysu.pkr.hcl: KVM-valid guest CPU is host under KVM, generic for TCG.
   arm64_qemu_cpu_model = var.arm64_accelerator == "kvm" ? "host" : "cortex-a57"
 
@@ -90,6 +96,7 @@ source "qemu" "centos_amd64" {
   accelerator  = var.amd64_accelerator
   communicator = "ssh"
   cpus         = 2
+  cpu_model    = local.amd64_qemu_cpu_model
   memory       = 2048
   headless     = true
 
