@@ -9,9 +9,9 @@ variable "branch_discovery_excludes" {
 
 
 variable "branch_discovery_includes" {
-  description = "Space-separated wildcard branch patterns Jenkins should include when indexing multibranch jobs."
+  description = "Space-separated wildcard branch patterns Jenkins should include when indexing multibranch jobs. Defaults to main only so deploy pipelines never auto-build/apply feature or renovate/* branches."
   type        = string
-  default     = "*"
+  default     = "main"
 }
 
 
@@ -61,14 +61,21 @@ variable "github_repo_url" {
 variable "job_definition_glob" {
   description = "Glob matched beneath job_definition_root to discover Jenkins pipeline definitions."
   type        = string
-  default     = "**/*.jenkins"
+  default     = "**/pipeline/*.jenkins"
 }
 
 
 variable "job_definition_root" {
-  description = "Repo-relative root scanned for Jenkins pipeline definitions."
+  description = "Repo-relative root scanned for Jenkins pipeline definitions. Empty string scans from the repository root."
   type        = string
-  default     = "pipelines"
+  default     = ""
+}
+
+
+variable "job_folder_roots" {
+  description = "Top-level repo directories whose discovered pipelines become Jenkins folders (e.g. terraform, packer)."
+  type        = list(string)
+  default     = ["terraform", "packer"]
 }
 
 
