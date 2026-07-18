@@ -11,6 +11,7 @@ pipeline {
   parameters {
     string(name: 'AGENT_LABEL', defaultValue: 'swarm && amd64 && kvm', description: 'Jenkins agent label to run this pipeline on')
     string(name: 'VERSION', defaultValue: '', description: 'Image version to build, for example 0.0.3')
+    string(name: 'PACKER_OUTPUT_ROOT', defaultValue: '/mnt/eapp/code/homelab/data/packer', description: 'NFS-backed serve dir the cloud image repository publishes from. Must be the repo NFS mount inside the agent, NOT the ephemeral workspace.')
     choice(name: 'PUBLISH_TARGET', choices: ['Local', 'Remote'], description: 'Local = build into the NFS-served data/packer dir only (cloud image repository serves it directly). Remote = also publish to the cloud image repository over REST.')
     choice(name: 'AMD64_ACCELERATOR', choices: ['kvm', 'tcg', 'none'], description: 'AMD64 QEMU accelerator')
     choice(name: 'ARM64_ACCELERATOR', choices: ['kvm', 'tcg', 'none'], description: 'ARM64 QEMU accelerator')
@@ -37,6 +38,10 @@ pipeline {
           script: """#!/usr/bin/env bash
 set -euo pipefail
 
+# Write into the repo NFS mount the cloud image repository serves, not the
+# ephemeral Jenkins workspace. Building there is the publish step.
+export PACKER_OUTPUT_ROOT='${params.PACKER_OUTPUT_ROOT}'
+
 PUBLISH_ARG=''
 if [[ '${params.PUBLISH_TARGET}' == 'Remote' ]]; then
   PUBLISH_ARG='--publish'
@@ -58,13 +63,9 @@ fi
   post {
     always {
       node("${params.AGENT_LABEL}") {
-        // data/packer is the NFS-backed serve dir the cloud image repository
-        // publishes from; wiping it would delete the image we just built.
-        cleanWs(
-          deleteDirs: true,
-          notFailBuild: true,
-          patterns: [[pattern: 'data/packer/**', type: 'EXCLUDE']]
-        )
+        // Safe to wipe the workspace: build output goes to PACKER_OUTPUT_ROOT
+        // (the repo NFS mount), which lives outside the Jenkins workspace.
+        cleanWs(deleteDirs: true, notFailBuild: true)
       }
     }
   }
