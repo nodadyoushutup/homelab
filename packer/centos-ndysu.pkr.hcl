@@ -114,6 +114,12 @@ source "qemu" "centos_amd64" {
   output_directory = "${var.output_root}/${local.image_prefix}/${var.image_version}/amd64"
   vm_name          = "${local.image_prefix}-${var.image_version}-amd64.qcow2"
 
+  # DEBUG: capture the guest serial console so we can see the boot/cloud-init
+  # sequence (written to the NFS output_root so it is readable off-agent).
+  qemuargs = [
+    ["-serial", "file:${var.output_root}/centos-serial-debug-amd64.log"],
+  ]
+
   shutdown_command = "sudo -E shutdown -P now"
 }
 
