@@ -4,7 +4,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-SSH_KEY="${SSH_KEY:-${ROOT_DIR}/.config/.ssh/id_ed25519}"
+SSH_KEY="${SSH_KEY:-${ROOT_DIR}/.config/.ssh/ca/id_ed25519}"
 KNOWN_HOSTS="${KNOWN_HOSTS:-${ROOT_DIR}/.config/.ssh/known_hosts}"
 SSH_USER="${SSH_USER:-nodadyoushutup}"
 PING_INTERVAL="${PING_INTERVAL:-0.5}"

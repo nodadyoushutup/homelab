@@ -1,14 +1,15 @@
 # variables.tf
 # External input contract for the Nginx Proxy Manager config slice.
 
-variable "provider_config" {
-  description = "Nginx Proxy Manager API URL and credentials for this config slice."
+variable "nginx_proxy_manager" {
+  description = "Nginx Proxy Manager provider login (config-id terraform/providers/nginx_proxy_manager); shared -var-file managed by the homelab-config web app."
   type = object({
     url          = string
     username     = string
     password     = optional(string)
     validate_tls = optional(bool)
   })
+  sensitive = true
 }
 
 variable "default" {

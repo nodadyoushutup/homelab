@@ -1,0 +1,415 @@
+{% extends "base.html" %} {% block title %}Proxmox VMs · homelab-config{% endblock %}
+{% block content %}
+<div class="mx-auto max-w-6xl p-6 lg:p-8">
+  <header class="mb-8 flex flex-wrap items-start justify-between gap-4">
+    <div>
+      <h1 class="flex items-center gap-3 text-2xl font-bold">
+        <i class="fa-solid fa-server text-sky-400"></i> Proxmox VMs
+      </h1>
+      <p class="mt-1 text-sm text-slate-400">
+        Cloud images and virtual machines for the Proxmox cluster. Provider
+        credentials live on the separate Proxmox page. Every change is saved
+        automatically to
+        <code class="rounded bg-slate-800 px-1.5 py-0.5 text-slate-300"
+          >.config/terraform/components/cluster/proxmox/app.tfvars</code
+        >
+        (config-id
+        <code class="rounded bg-slate-800 px-1.5 py-0.5 text-slate-300"
+          >terraform/components/cluster/proxmox/app</code
+        >).
+      </p>
+    </div>
+    <div class="flex items-center gap-3">
+      <span id="save-state" class="text-sm text-slate-500" title="Auto-save on"></span>
+      <button
+        id="preview-btn"
+        class="rounded-lg border border-slate-700 px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-slate-800"
+        title="Show the rendered app.tfvars"
+      >
+        <i class="fa-solid fa-file-code mr-2"></i>Preview app.tfvars
+      </button>
+      <button
+        id="reload-btn"
+        class="rounded-lg border border-slate-700 px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-slate-800"
+        title="Re-read app.tfvars from disk"
+      >
+        <i class="fa-solid fa-rotate mr-2"></i>Reload from disk
+      </button>
+    </div>
+  </header>
+
+  <div
+    id="drift-banner"
+    style="display: none"
+    class="mb-6 flex items-center justify-between gap-4 rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-200"
+  >
+    <span>
+      <i class="fa-solid fa-triangle-exclamation mr-2"></i>
+      <span id="drift-message">app.tfvars changed on disk outside the app.</span>
+    </span>
+    <button
+      id="drift-reload"
+      class="rounded-md bg-amber-500/20 px-3 py-1 text-xs font-medium text-amber-100 hover:bg-amber-500/30"
+    >
+      Reload from disk
+    </button>
+  </div>
+
+  <!-- ============================ IMAGES ============================ -->
+  <section class="mb-10 space-y-6">
+    <h2 class="flex items-center gap-2 text-lg font-semibold text-slate-200">
+      <i class="fa-solid fa-compact-disc text-slate-400"></i> Images
+    </h2>
+
+    <div class="rounded-xl border border-slate-800 bg-slate-900/50 p-5">
+      <h3
+        id="img-form-title"
+        class="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-400"
+      >
+        Add image
+      </h3>
+      <form id="img-form" class="grid gap-4 sm:grid-cols-2">
+        <input type="hidden" id="img-orig" />
+        <label class="block text-sm">
+          <span class="mb-1 block text-slate-300">Key</span>
+          <input id="img-key" required placeholder="ubuntu_24"
+            class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 focus:border-sky-500 focus:outline-none" />
+          <span class="mt-1 block text-xs text-slate-500">Referenced by machine disk/cdrom</span>
+        </label>
+        <label class="block text-sm">
+          <span class="mb-1 block text-slate-300">File name</span>
+          <input id="img-file-name" required placeholder="ubuntu-24.04-amd64.img"
+            class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 focus:border-sky-500 focus:outline-none" />
+        </label>
+        <label class="block text-sm sm:col-span-2">
+          <span class="mb-1 block text-slate-300">URL</span>
+          <input id="img-url" required placeholder="https://.../image.qcow2"
+            class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-xs text-slate-100 focus:border-sky-500 focus:outline-none" />
+        </label>
+        <label class="block text-sm">
+          <span class="mb-1 block text-slate-300">Content type</span>
+          <input id="img-content-type" placeholder="iso"
+            class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 focus:border-sky-500 focus:outline-none" />
+        </label>
+        <label class="block text-sm">
+          <span class="mb-1 block text-slate-300">Datastore</span>
+          <input id="img-datastore" placeholder="local"
+            class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 focus:border-sky-500 focus:outline-none" />
+        </label>
+        <label class="block text-sm">
+          <span class="mb-1 block text-slate-300">Node</span>
+          <input id="img-node" placeholder="pve"
+            class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 focus:border-sky-500 focus:outline-none" />
+        </label>
+        <label class="block text-sm">
+          <span class="mb-1 block text-slate-300">Upload timeout (s)</span>
+          <input id="img-upload-timeout" type="number" placeholder="1800"
+            class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 focus:border-sky-500 focus:outline-none" />
+        </label>
+        <div class="flex flex-wrap items-center gap-5 text-sm sm:col-span-2">
+          <label class="inline-flex items-center gap-2">
+            <input id="img-verify" type="checkbox"
+              class="h-4 w-4 rounded border-slate-600 bg-slate-950 text-sky-500" />
+            <span class="text-slate-300">Verify</span>
+          </label>
+          <label class="inline-flex items-center gap-2">
+            <input id="img-overwrite" type="checkbox" checked
+              class="h-4 w-4 rounded border-slate-600 bg-slate-950 text-sky-500" />
+            <span class="text-slate-300">Overwrite</span>
+          </label>
+          <label class="inline-flex items-center gap-2">
+            <input id="img-overwrite-unmanaged" type="checkbox" checked
+              class="h-4 w-4 rounded border-slate-600 bg-slate-950 text-sky-500" />
+            <span class="text-slate-300">Overwrite unmanaged</span>
+          </label>
+        </div>
+        <div class="flex items-center gap-3 sm:col-span-2">
+          <button type="submit" id="img-save-btn"
+            class="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-400">
+            <i class="fa-solid fa-plus mr-2"></i>Add image
+          </button>
+          <button type="button" id="img-cancel" hidden
+            class="rounded-lg border border-slate-700 px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-slate-800">
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div class="overflow-hidden rounded-xl border border-slate-800 bg-slate-900/50">
+      <table class="w-full text-left text-sm">
+        <thead class="bg-slate-900/80 text-xs uppercase tracking-wide text-slate-500">
+          <tr>
+            <th class="px-4 py-3 font-semibold">Key</th>
+            <th class="px-4 py-3 font-semibold">File</th>
+            <th class="px-4 py-3 font-semibold">URL</th>
+            <th class="px-4 py-3 text-right font-semibold">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="img-rows" class="divide-y divide-slate-800"></tbody>
+      </table>
+      <p id="img-empty" hidden class="px-4 py-8 text-center text-sm text-slate-500">
+        No images defined yet. Add one above.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============================ MACHINES ============================ -->
+  <section class="space-y-6">
+    <h2 class="flex items-center gap-2 text-lg font-semibold text-slate-200">
+      <i class="fa-solid fa-microchip text-slate-400"></i> Machines
+    </h2>
+
+    <div class="rounded-xl border border-slate-800 bg-slate-900/50 p-5">
+      <h3
+        id="m-form-title"
+        class="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-400"
+      >
+        Add machine
+      </h3>
+      <form id="m-form" class="space-y-6">
+        <input type="hidden" id="m-orig" />
+
+        <div class="grid gap-4 sm:grid-cols-3">
+          <label class="block text-sm">
+            <span class="mb-1 block text-slate-300">Name</span>
+            <input id="m-name" required placeholder="k8s-wk-0"
+              class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 focus:border-sky-500 focus:outline-none" />
+          </label>
+          <label class="block text-sm">
+            <span class="mb-1 block text-slate-300">VM ID</span>
+            <input id="m-vm-id" type="number" required placeholder="2202"
+              class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 focus:border-sky-500 focus:outline-none" />
+          </label>
+          <label class="block text-sm">
+            <span class="mb-1 block text-slate-300">Node</span>
+            <input id="m-node" placeholder="pve"
+              class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 focus:border-sky-500 focus:outline-none" />
+          </label>
+          <label class="block text-sm">
+            <span class="mb-1 block text-slate-300">Cores</span>
+            <input id="m-cores" type="number" placeholder="2"
+              class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 focus:border-sky-500 focus:outline-none" />
+          </label>
+          <label class="block text-sm">
+            <span class="mb-1 block text-slate-300">Memory (MiB)</span>
+            <input id="m-memory" type="number" required placeholder="8192"
+              class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 focus:border-sky-500 focus:outline-none" />
+          </label>
+          <label class="block text-sm">
+            <span class="mb-1 block text-slate-300">CPU type</span>
+            <input id="m-cpu-type" placeholder="host"
+              class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 focus:border-sky-500 focus:outline-none" />
+          </label>
+          <label class="block text-sm">
+            <span class="mb-1 block text-slate-300">Tags <span class="text-slate-500">(comma)</span></span>
+            <input id="m-tags" placeholder="terraform, talos"
+              class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 focus:border-sky-500 focus:outline-none" />
+          </label>
+          <label class="block text-sm">
+            <span class="mb-1 block text-slate-300">Boot order <span class="text-slate-500">(comma)</span></span>
+            <input id="m-boot-order" placeholder="scsi0, ide2"
+              class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 focus:border-sky-500 focus:outline-none" />
+          </label>
+        </div>
+
+        <fieldset class="rounded-lg border border-slate-800 p-4">
+          <legend class="px-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Disk</legend>
+          <div class="grid gap-4 sm:grid-cols-4">
+            <label class="block text-sm">
+              <span class="mb-1 block text-slate-300">Datastore</span>
+              <input id="m-disk-datastore" placeholder="virtualization"
+                class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 focus:border-sky-500 focus:outline-none" />
+            </label>
+            <label class="block text-sm">
+              <span class="mb-1 block text-slate-300">Interface</span>
+              <input id="m-disk-interface" placeholder="scsi0"
+                class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 focus:border-sky-500 focus:outline-none" />
+            </label>
+            <label class="block text-sm">
+              <span class="mb-1 block text-slate-300">Size (GiB)</span>
+              <input id="m-disk-size" type="number" required placeholder="20"
+                class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 focus:border-sky-500 focus:outline-none" />
+            </label>
+            <label class="block text-sm">
+              <span class="mb-1 block text-slate-300">Image <span class="text-slate-500">(boot disk)</span></span>
+              <select id="m-disk-image"
+                class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 focus:border-sky-500 focus:outline-none"></select>
+            </label>
+          </div>
+        </fieldset>
+
+        <fieldset class="rounded-lg border border-slate-800 p-4">
+          <legend class="px-2 text-xs font-semibold uppercase tracking-wide text-slate-500">CD-ROM <span class="normal-case text-slate-600">(optional)</span></legend>
+          <div class="grid gap-4 sm:grid-cols-2">
+            <label class="block text-sm">
+              <span class="mb-1 block text-slate-300">Interface</span>
+              <input id="m-cdrom-interface" placeholder="ide2"
+                class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 focus:border-sky-500 focus:outline-none" />
+            </label>
+            <label class="block text-sm">
+              <span class="mb-1 block text-slate-300">Image</span>
+              <select id="m-cdrom-image"
+                class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 focus:border-sky-500 focus:outline-none"></select>
+            </label>
+          </div>
+        </fieldset>
+
+        <fieldset class="rounded-lg border border-slate-800 p-4">
+          <legend class="px-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Cloud-init</legend>
+          <div class="grid gap-4 sm:grid-cols-2">
+            <label class="block text-sm">
+              <span class="mb-1 block text-slate-300">Init datastore</span>
+              <input id="m-init-datastore" placeholder="local-lvm"
+                class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 focus:border-sky-500 focus:outline-none" />
+            </label>
+            <label class="block text-sm">
+              <span class="mb-1 block text-slate-300">Init interface</span>
+              <input id="m-init-interface" placeholder="ide0"
+                class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 focus:border-sky-500 focus:outline-none" />
+            </label>
+            <label class="block text-sm sm:col-span-2">
+              <span class="mb-1 block text-slate-300">User-data path</span>
+              <input id="m-user-config-path" required placeholder="/abs/path/user-config.yaml"
+                class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-xs text-slate-100 focus:border-sky-500 focus:outline-none" />
+            </label>
+            <label class="block text-sm sm:col-span-2">
+              <span class="mb-1 block text-slate-300">Network-data path</span>
+              <input id="m-network-config-path" required placeholder="/abs/path/network-config.yaml"
+                class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-xs text-slate-100 focus:border-sky-500 focus:outline-none" />
+            </label>
+          </div>
+        </fieldset>
+
+        <fieldset class="rounded-lg border border-slate-800 p-4">
+          <legend class="px-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Network</legend>
+          <div class="grid gap-4 sm:grid-cols-3">
+            <label class="block text-sm">
+              <span class="mb-1 block text-slate-300">Bridge</span>
+              <input id="m-net-bridge" placeholder="vmbr0"
+                class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 focus:border-sky-500 focus:outline-none" />
+            </label>
+            <label class="block text-sm">
+              <span class="mb-1 block text-slate-300">Model</span>
+              <input id="m-net-model" placeholder="virtio"
+                class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 focus:border-sky-500 focus:outline-none" />
+            </label>
+            <label class="block text-sm">
+              <span class="mb-1 block text-slate-300">MAC address</span>
+              <input id="m-net-mac" required placeholder="BC:24:11:F3:49:72"
+                class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-xs text-slate-100 focus:border-sky-500 focus:outline-none" />
+            </label>
+          </div>
+        </fieldset>
+
+        <fieldset class="rounded-lg border border-slate-800 p-4">
+          <legend class="px-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Advanced</legend>
+          <div class="grid gap-4 sm:grid-cols-3">
+            <label class="block text-sm">
+              <span class="mb-1 block text-slate-300">BIOS</span>
+              <input id="m-bios" placeholder="ovmf"
+                class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 focus:border-sky-500 focus:outline-none" />
+            </label>
+            <label class="block text-sm">
+              <span class="mb-1 block text-slate-300">Machine</span>
+              <input id="m-machine" placeholder="q35"
+                class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 focus:border-sky-500 focus:outline-none" />
+            </label>
+            <label class="block text-sm">
+              <span class="mb-1 block text-slate-300">OS type</span>
+              <input id="m-os-type" placeholder="l26"
+                class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 focus:border-sky-500 focus:outline-none" />
+            </label>
+            <label class="block text-sm">
+              <span class="mb-1 block text-slate-300">EFI datastore</span>
+              <input id="m-efi-datastore" placeholder="local-lvm"
+                class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 focus:border-sky-500 focus:outline-none" />
+            </label>
+            <label class="block text-sm">
+              <span class="mb-1 block text-slate-300">EFI type</span>
+              <input id="m-efi-type" placeholder="4m"
+                class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 focus:border-sky-500 focus:outline-none" />
+            </label>
+            <div class="flex flex-col justify-center gap-2 text-sm">
+              <label class="inline-flex items-center gap-2">
+                <input id="m-efi-pre-enrolled" type="checkbox"
+                  class="h-4 w-4 rounded border-slate-600 bg-slate-950 text-sky-500" />
+                <span class="text-slate-300">EFI pre-enrolled keys</span>
+              </label>
+            </div>
+            <label class="inline-flex items-center gap-2 text-sm">
+              <input id="m-started" type="checkbox" checked
+                class="h-4 w-4 rounded border-slate-600 bg-slate-950 text-sky-500" />
+              <span class="text-slate-300">Started</span>
+            </label>
+            <label class="inline-flex items-center gap-2 text-sm">
+              <input id="m-on-boot" type="checkbox" checked
+                class="h-4 w-4 rounded border-slate-600 bg-slate-950 text-sky-500" />
+              <span class="text-slate-300">Start on boot</span>
+            </label>
+          </div>
+        </fieldset>
+
+        <div class="flex items-center gap-3">
+          <button type="submit" id="m-save-btn"
+            class="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-400">
+            <i class="fa-solid fa-plus mr-2"></i>Add machine
+          </button>
+          <button type="button" id="m-cancel" hidden
+            class="rounded-lg border border-slate-700 px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-slate-800">
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div class="overflow-hidden rounded-xl border border-slate-800 bg-slate-900/50">
+      <table class="w-full text-left text-sm">
+        <thead class="bg-slate-900/80 text-xs uppercase tracking-wide text-slate-500">
+          <tr>
+            <th class="px-4 py-3 font-semibold">Machine</th>
+            <th class="px-4 py-3 font-semibold">Resources</th>
+            <th class="px-4 py-3 font-semibold">Boot</th>
+            <th class="px-4 py-3 font-semibold">MAC</th>
+            <th class="px-4 py-3 text-right font-semibold">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="m-rows" class="divide-y divide-slate-800"></tbody>
+      </table>
+      <p id="m-empty" hidden class="px-4 py-8 text-center text-sm text-slate-500">
+        No machines defined yet. Add one above.
+      </p>
+    </div>
+  </section>
+</div>
+
+<!-- app.tfvars preview modal -->
+<div
+  id="modal-preview"
+  style="display: none"
+  class="fixed inset-0 z-40 flex items-center justify-center bg-black/60 p-4"
+>
+  <div class="flex max-h-[85vh] w-full max-w-4xl flex-col rounded-xl border border-slate-800 bg-slate-900 p-6">
+    <div class="mb-3 flex items-center justify-between">
+      <h3 class="flex items-center gap-2 text-lg font-semibold">
+        <i class="fa-solid fa-file-code text-slate-400"></i>
+        <code class="text-slate-300">.config/terraform/components/cluster/proxmox/app.tfvars</code>
+      </h3>
+      <div class="flex items-center gap-2">
+        <button id="preview-copy"
+          class="rounded-md border border-slate-700 px-3 py-1 text-xs text-slate-300 hover:bg-slate-800"
+          title="Copy to clipboard">
+          <i class="fa-solid fa-copy mr-1"></i>Copy
+        </button>
+        <button type="button" data-close class="rounded-md px-2 py-1 text-slate-400 hover:bg-slate-800">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+    </div>
+    <pre id="tfvars-preview"
+      class="flex-1 overflow-auto rounded-lg bg-slate-950 p-4 text-sm leading-relaxed text-slate-300"></pre>
+  </div>
+</div>
+{% endblock %} {% block scripts %}
+<script src="{{ url_for('static', filename='js/proxmox_vms.js') }}"></script>
+{% endblock %}

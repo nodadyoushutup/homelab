@@ -19,7 +19,18 @@ variable "placement" {
   default = null
 }
 
-variable "swarm_docker_provider_config" {
-  description = "Docker SSH host and registry_auths for the Swarm control plane."
+variable "docker_providers" {
+  description = "Shared Docker provider catalog (map keyed by machine name); config-id terraform/providers/docker."
   type        = any
+}
+
+variable "registry_auths" {
+  description = "Shared container registry auths reused by every Swarm slice."
+  type        = any
+  default     = []
+}
+
+variable "docker_machine" {
+  description = "Which docker_providers entry this slice connects through."
+  type        = string
 }

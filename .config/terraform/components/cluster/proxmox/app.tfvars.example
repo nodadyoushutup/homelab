@@ -1,40 +1,39 @@
 # homelab-config: terraform/components/cluster/proxmox/app
-provider_config = {
-  proxmox = {
-    endpoint = ""
-    username = ""
-    password = ""
-    insecure = true
-    random_vm_ids = true
-    ssh = {
-      agent = true
-    }
+# Proxmox cloud images and VMs (machines), managed by the homelab-config web app
+# (config-id terraform/components/cluster/proxmox/app). Provider login
+# credentials are separate (config-id terraform/providers/proxmox ->
+# .config/terraform/providers/proxmox.tfvars) and passed as an extra -var-file.
+#
+# Machines reference images by key (disk.image / cdrom.image). Constant fields
+# (bios, machine, cpu type, efi disk, network bridge/model, ...) default in the
+# slice locals.tf, so entries only need what differs. Cloud-init user/network
+# data are absolute host file paths.
+
+proxmox_images = {
+  "ubuntu_24" = {
+    file_name = "ubuntu-24.04-amd64.img"
+    url       = "https://example.com/ubuntu-24.04-amd64.qcow2"
   }
 }
 
-runner_amd64_user_config_path    = ""
-runner_amd64_network_config_path = ""
-k8s_cp_0_user_config_path = ""
-k8s_cp_0_network_config_path = ""
-k8s_wk_0_user_config_path = ""
-k8s_wk_0_network_config_path = ""
-k8s_wk_1_user_config_path = ""
-k8s_wk_1_network_config_path = ""
-k8s_wk_2_user_config_path = ""
-k8s_wk_2_network_config_path = ""
-k8s_wk_3_user_config_path = ""
-k8s_wk_3_network_config_path = ""
-k8s_wk_4_user_config_path = ""
-k8s_wk_4_network_config_path = ""
-k8s_wk_5_user_config_path = ""
-k8s_wk_5_network_config_path = ""
-k8s_wk_6_user_config_path = ""
-k8s_wk_6_network_config_path = ""
-k8s_wk_7_user_config_path = ""
-k8s_wk_7_network_config_path = ""
-k8s_wk_8_user_config_path = ""
-k8s_wk_8_network_config_path = ""
-k8s_wk_9_user_config_path = ""
-k8s_wk_9_network_config_path = ""
-k8s_wk_10_user_config_path = ""
-k8s_wk_10_network_config_path = ""
+proxmox_machines = {
+  "example-vm" = {
+    vm_id  = 2201
+    memory = 8192
+
+    disk = {
+      size  = 20
+      image = "ubuntu_24"
+    }
+
+    initialization = {
+      interface           = "ide0"
+      user_config_path    = "/abs/path/example-vm-user-config.yaml"
+      network_config_path = "/abs/path/example-vm-network-config.yaml"
+    }
+
+    network = {
+      mac_address = "BC:24:11:00:00:01"
+    }
+  }
+}

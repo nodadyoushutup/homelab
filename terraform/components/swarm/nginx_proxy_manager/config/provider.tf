@@ -15,7 +15,7 @@ terraform {
 }
 
 provider "nginxproxymanager" {
-  url      = local.provider_config.url
-  username = local.provider_config.username
-  password = local.provider_config.password
+  url      = var.nginx_proxy_manager.url
+  username = var.nginx_proxy_manager.username
+  password = var.nginx_proxy_manager.password
 }

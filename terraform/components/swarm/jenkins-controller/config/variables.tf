@@ -100,9 +100,14 @@ variable "orphaned_item_num_to_keep" {
 }
 
 
-variable "provider_config" {
-  description = "Provider API URL and credentials for this config slice."
-  type        = any
+variable "jenkins" {
+  description = "Jenkins provider login (config-id terraform/providers/jenkins); shared -var-file managed by the homelab-config web app."
+  type = object({
+    server_url = string
+    username   = string
+    password   = string
+  })
+  sensitive = true
 }
 
 

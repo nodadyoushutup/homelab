@@ -9,7 +9,9 @@ source "${ROOT_DIR}/scripts/terraform/load_root_env.sh"
 
 TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${CONFIG_DIR:-${ROOT_DIR}/.config}}"
 PVE_EXPORTER_TFVARS="${TFVARS_HOME_DIR}/terraform/components/swarm/prometheus-pve-exporter/app.tfvars"
-CLUSTER_PROXMOX_TFVARS="${TFVARS_HOME_DIR}/terraform/components/cluster/proxmox/app.tfvars"
+# Proxmox admin creds now live in the providers catalog (config-id
+# terraform/providers/proxmox), managed by the homelab-config web app.
+CLUSTER_PROXMOX_TFVARS="${TFVARS_HOME_DIR}/terraform/providers/proxmox.tfvars"
 
 PVE_ENDPOINT="${PVE_ENDPOINT:-}"
 PVE_MONITOR_USER="${PVE_MONITOR_USER:-prometheus@pve}"
@@ -22,7 +24,7 @@ Usage: $(basename "$0") [--endpoint URL] [--tfvars PATH] [--cluster-tfvars PATH]
 Ensures ${PVE_MONITOR_USER} exists with PVEAuditor on /, creates API token ${PVE_TOKEN_ID},
 and writes PVE_* env entries into prometheus-pve-exporter app.tfvars.
 
-Admin credentials: PROXMOX_ADMIN_USER + PROXMOX_ADMIN_PASSWORD, or parsed from cluster proxmox app.tfvars.
+Admin credentials: PROXMOX_ADMIN_USER + PROXMOX_ADMIN_PASSWORD, or parsed from the Proxmox provider tfvars (terraform/providers/proxmox).
 USAGE
 }
 

@@ -106,6 +106,33 @@ PACKER_LOG_ENABLED="${PACKER_LOG:-1}"
 PACKER_LOG_FILE="${PACKER_LOG_PATH:-}"
 PACKER_BUILD_ARGS=()
 
+# Seed defaults from the homelab-config-managed .config/packer/build.pkrvars.hcl
+# (if present). Explicit CLI flags parsed below still override these.
+# shellcheck source=lib/config.sh
+source "${SCRIPT_DIR}/lib/config.sh"
+packer_config_load
+
+cfg_bool() {
+  case "${1,,}" in
+    1|true|yes|on) echo 1 ;;
+    *) echo 0 ;;
+  esac
+}
+
+[[ -n "${PKRCFG_image_version:-}" ]] && { VERSION="${PKRCFG_image_version}"; VERSION_SET=1; }
+[[ -n "${PKRCFG_distro:-}" ]] && DISTRO="${PKRCFG_distro}"
+[[ -n "${PKRCFG_gui:-}" ]] && GUI="${PKRCFG_gui}"
+[[ -n "${PKRCFG_install_node_exporter:-}" ]] && INSTALL_NODE_EXPORTER="$(cfg_bool "${PKRCFG_install_node_exporter}")"
+[[ -n "${PKRCFG_ubuntu_release:-}" ]] && UBUNTU_RELEASE="${PKRCFG_ubuntu_release}"
+[[ -n "${PKRCFG_centos_stream:-}" ]] && CENTOS_STREAM="${PKRCFG_centos_stream}"
+[[ -n "${PKRCFG_arch_snapshot:-}" ]] && ARCH_SNAPSHOT="${PKRCFG_arch_snapshot}"
+[[ -n "${PKRCFG_kali_release:-}" ]] && KALI_RELEASE="${PKRCFG_kali_release}"
+[[ -n "${PKRCFG_target:-}" ]] && TARGET="${PKRCFG_target}"
+[[ -n "${PKRCFG_build_arch:-}" ]] && BUILD_ARCH="${PKRCFG_build_arch}"
+[[ -n "${PKRCFG_amd64_accelerator:-}" ]] && AMD64_ACCELERATOR="${PKRCFG_amd64_accelerator}"
+[[ -n "${PKRCFG_arm64_accelerator:-}" ]] && ARM64_ACCELERATOR="${PKRCFG_arm64_accelerator}"
+[[ -n "${PKRCFG_publish:-}" ]] && PUBLISH="$(cfg_bool "${PKRCFG_publish}")"
+
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --version=*)

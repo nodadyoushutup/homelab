@@ -2,9 +2,13 @@
 # Single source of truth for graylog-mongodb Swarm service values (resources read local.* only).
 
 locals {
-  dns_nameservers              = var.dns_nameservers
-  placement                    = var.placement
-  swarm_docker_provider_config = var.swarm_docker_provider_config
+  dns_nameservers = var.dns_nameservers
+  placement       = var.placement
+  docker_selected = var.docker_providers[var.docker_machine]
+  swarm_docker_provider_config = {
+    docker         = { host = local.docker_selected.host, ssh_opts = local.docker_selected.ssh_opts }
+    registry_auths = var.registry_auths
+  }
 
   service_name       = "graylog-mongodb"
   network_name       = "graylog-mongodb"

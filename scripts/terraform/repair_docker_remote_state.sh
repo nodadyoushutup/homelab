@@ -14,7 +14,7 @@ DRY_RUN="0"
 REMOTE_TERRAFORM_IMAGE="${REMOTE_TERRAFORM_IMAGE:-hashicorp/terraform:1.14.0}"
 SHARED_TMP_DIR="${TFVARS_HOME_DIR}/.codex-backups/terraform-remote-imports"
 SSH_KNOWN_HOSTS="${TFVARS_HOME_DIR}/.ssh/known_hosts"
-SSH_PRIVATE_KEY="${TFVARS_HOME_DIR}/.ssh/id_ed25519"
+SSH_PRIVATE_KEY="${TFVARS_HOME_DIR}/.ssh/ca/id_ed25519"
 
 usage() {
   cat <<USAGE

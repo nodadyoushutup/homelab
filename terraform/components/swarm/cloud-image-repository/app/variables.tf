@@ -19,15 +19,43 @@ variable "placement" {
   default = null
 }
 
-variable "swarm_docker_provider_config" {
-  description = "Docker SSH host and registry_auths for the Swarm control plane."
+variable "docker_providers" {
+  description = "Shared Docker provider catalog (map keyed by machine name); config-id terraform/providers/docker."
   type        = any
 }
 
-variable "nfs" {
-  description = "NFS export backing the served /data directory (data/packer). driver_options carry the Docker local-driver NFS mount opts (type/o/device)."
-  type = object({
-    driver_options = map(string)
-  })
+variable "registry_auths" {
+  description = "Shared container registry auths reused by every Swarm slice."
+  type        = any
+  default     = []
+}
+
+variable "docker_machine" {
+  description = "Which docker_providers entry this slice connects through."
+  type        = string
+}
+
+variable "nfs_shares" {
+  description = "Catalog of existing NFS exports (config-id terraform/nfs), keyed by name."
+  type = map(object({
+    server      = string
+    export      = string
+    mount_point = string
+    options     = string
+  }))
   sensitive = true
+}
+
+
+variable "nfs_share" {
+  description = "Which nfs_shares entry backs the served /data directory (catalog key)."
+  type        = string
+  default     = "code"
+}
+
+
+variable "nfs_subpath" {
+  description = "Path under the selected share's export to mount (e.g. /homelab/.../data/packer). Empty mounts the export root."
+  type        = string
+  default     = ""
 }

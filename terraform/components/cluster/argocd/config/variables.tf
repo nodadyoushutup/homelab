@@ -1,21 +1,14 @@
 # variables.tf
 # External input contract for the Argo CD config slice.
 
-variable "argocd_base_url" {
-  description = "Argo CD API base URL (for example https://argocd.example.com)."
-  type        = string
-}
-
-variable "argocd_api_token" {
-  description = "Argo CD API token used by Terraform provider authentication."
-  type        = string
-  sensitive   = true
-}
-
-variable "argocd_insecure_skip_verify" {
-  description = "Skip TLS certificate verification for Argo CD API calls."
-  type        = bool
-  default     = false
+variable "argocd" {
+  description = "Argo CD provider login (config-id terraform/providers/argocd); shared -var-file managed by the homelab-config web app."
+  type = object({
+    base_url             = string
+    api_token            = string
+    insecure_skip_verify = optional(bool, false)
+  })
+  sensitive = true
 }
 
 # Vault KV fragments (parsed by scripts/terraform/vault_merge_config_secrets.py); unused by this module.

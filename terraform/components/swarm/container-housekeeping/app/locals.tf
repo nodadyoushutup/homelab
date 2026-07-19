@@ -2,7 +2,11 @@
 # Single source of truth for container-housekeeping Swarm service values (resources read local.* only).
 
 locals {
-  swarm_docker_provider_config = var.swarm_docker_provider_config
+  docker_selected = var.docker_providers[var.docker_machine]
+  swarm_docker_provider_config = {
+    docker         = { host = local.docker_selected.host, ssh_opts = local.docker_selected.ssh_opts }
+    registry_auths = var.registry_auths
+  }
 
   cleanup_interval_seconds = 604800
   retention_seconds        = 604800

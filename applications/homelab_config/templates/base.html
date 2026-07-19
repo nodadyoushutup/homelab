@@ -19,18 +19,217 @@
         <div class="mb-8 flex items-center gap-2 px-2">
           <i class="fa-solid fa-screwdriver-wrench text-xl text-sky-400"></i>
           <span class="text-lg font-semibold tracking-tight">homelab-config</span>
+          <span
+            id="conn-dot"
+            class="ml-auto inline-block h-2.5 w-2.5 shrink-0 rounded-full"
+            style="background-color: #fbbf24"
+            title="Connecting to the homelab-config server"
+            aria-label="Server connection status"
+          ></span>
         </div>
         <nav class="space-y-1">
           <span
             class="mb-1 block px-3 text-xs font-semibold uppercase tracking-wider text-slate-500"
-            >Settings</span
+            >SSH</span
           >
           <a
-            href="/"
+            href="/ssh"
+            class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition {% if active == 'ssh' %}bg-sky-500/10 text-sky-300{% else %}text-slate-300 hover:bg-slate-800/70{% endif %}"
+          >
+            <i class="fa-solid fa-key w-5 text-center"></i>
+            SSH Key Sets
+          </a>
+          <span
+            class="mb-1 mt-4 block px-3 text-xs font-semibold uppercase tracking-wider text-slate-500"
+            >Providers</span
+          >
+          <a
+            href="/proxmox"
+            class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition {% if active == 'proxmox' %}bg-sky-500/10 text-sky-300{% else %}text-slate-300 hover:bg-slate-800/70{% endif %}"
+          >
+            <i class="fa-solid fa-server w-5 text-center"></i>
+            Proxmox
+          </a>
+          <a
+            href="/docker"
+            class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition {% if active == 'docker' %}bg-sky-500/10 text-sky-300{% else %}text-slate-300 hover:bg-slate-800/70{% endif %}"
+          >
+            <i class="fa-brands fa-docker w-5 text-center"></i>
+            Docker
+          </a>
+          {% for provider in provider_nav if provider.group == 'Providers' %}
+          <a
+            href="/{{ provider.key }}"
+            class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition {% if active == provider.key %}bg-sky-500/10 text-sky-300{% else %}text-slate-300 hover:bg-slate-800/70{% endif %}"
+          >
+            <i class="{{ provider.icon }} w-5 text-center"></i>
+            {{ provider.title }}
+          </a>
+          {% endfor %}
+          <a
+            href="/terraform"
+            class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition {% if active == 'terraform' %}bg-sky-500/10 text-sky-300{% else %}text-slate-300 hover:bg-slate-800/70{% endif %}"
+          >
+            <i class="fa-solid fa-layer-group w-5 text-center"></i>
+            Terraform
+          </a>
+          <span
+            class="mb-1 mt-4 block px-3 text-xs font-semibold uppercase tracking-wider text-slate-500"
+            >Storage</span
+          >
+          <a
+            href="/nfs"
+            class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition {% if active == 'nfs' %}bg-sky-500/10 text-sky-300{% else %}text-slate-300 hover:bg-slate-800/70{% endif %}"
+          >
+            <i class="fa-solid fa-hard-drive w-5 text-center"></i>
+            NFS
+          </a>
+          <a
+            href="/minio"
+            class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition {% if active == 'minio' %}bg-sky-500/10 text-sky-300{% else %}text-slate-300 hover:bg-slate-800/70{% endif %}"
+          >
+            <i class="fa-solid fa-database w-5 text-center"></i>
+            MinIO
+          </a>
+          <a
+            href="/cloud-image-repository"
+            class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition {% if active == 'cloud-image-repository' %}bg-sky-500/10 text-sky-300{% else %}text-slate-300 hover:bg-slate-800/70{% endif %}"
+          >
+            <i class="fa-solid fa-box-archive w-5 text-center"></i>
+            Cloud Image Repository
+          </a>
+          <a
+            href="/storage/vault"
+            class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition {% if active == 'storage-vault' %}bg-sky-500/10 text-sky-300{% else %}text-slate-300 hover:bg-slate-800/70{% endif %}"
+          >
+            <i class="fa-solid fa-vault w-5 text-center"></i>
+            Vault
+          </a>
+          <span
+            class="mb-1 mt-4 block px-3 text-xs font-semibold uppercase tracking-wider text-slate-500"
+            >Machines</span
+          >
+          <a
+            href="/extra-hosts"
+            class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition {% if active == 'extra-hosts' %}bg-sky-500/10 text-sky-300{% else %}text-slate-300 hover:bg-slate-800/70{% endif %}"
+          >
+            <i class="fa-solid fa-server w-5 text-center"></i>
+            Extra Hosts
+          </a>
+          <a
+            href="/swarm"
             class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition {% if active == 'swarm' %}bg-sky-500/10 text-sky-300{% else %}text-slate-300 hover:bg-slate-800/70{% endif %}"
           >
             <i class="fa-brands fa-docker w-5 text-center"></i>
             Docker Swarm
+          </a>
+          <a
+            href="/proxmox-vms"
+            class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition {% if active == 'proxmox-vms' %}bg-sky-500/10 text-sky-300{% else %}text-slate-300 hover:bg-slate-800/70{% endif %}"
+          >
+            <i class="fa-solid fa-server w-5 text-center"></i>
+            Proxmox VMs
+          </a>
+          <a
+            href="/packer"
+            class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition {% if active == 'packer' %}bg-sky-500/10 text-sky-300{% else %}text-slate-300 hover:bg-slate-800/70{% endif %}"
+          >
+            <i class="fa-solid fa-hammer w-5 text-center"></i>
+            Packer
+          </a>
+          <span
+            class="mb-1 mt-4 block px-3 text-xs font-semibold uppercase tracking-wider text-slate-500"
+            >Kubernetes</span
+          >
+          {% for provider in provider_nav if provider.group == 'Kubernetes' %}
+          <a
+            href="/{{ provider.key }}"
+            class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition {% if active == provider.key %}bg-sky-500/10 text-sky-300{% else %}text-slate-300 hover:bg-slate-800/70{% endif %}"
+          >
+            <i class="{{ provider.icon }} w-5 text-center"></i>
+            {{ provider.title }}
+          </a>
+          {% endfor %}
+          <a
+            href="/talos"
+            class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition {% if active == 'talos' %}bg-sky-500/10 text-sky-300{% else %}text-slate-300 hover:bg-slate-800/70{% endif %}"
+          >
+            <i class="fa-solid fa-microchip w-5 text-center"></i>
+            Talos
+          </a>
+          <span
+            class="mb-1 mt-4 block px-3 text-xs font-semibold uppercase tracking-wider text-slate-500"
+            >CICD</span
+          >
+          <a
+            href="/cicd/jenkins"
+            class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition {% if active == 'cicd-jenkins' %}bg-sky-500/10 text-sky-300{% else %}text-slate-300 hover:bg-slate-800/70{% endif %}"
+          >
+            <i class="fa-brands fa-jenkins w-5 text-center"></i>
+            Jenkins
+          </a>
+          {% for provider in provider_nav if provider.group == 'CICD' %}
+          <a
+            href="/{{ provider.key }}"
+            class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition {% if active == provider.key %}bg-sky-500/10 text-sky-300{% else %}text-slate-300 hover:bg-slate-800/70{% endif %}"
+          >
+            <i class="{{ provider.icon }} w-5 text-center"></i>
+            {{ provider.title }}
+          </a>
+          {% endfor %}
+          <span
+            class="mb-1 mt-4 block px-3 text-xs font-semibold uppercase tracking-wider text-slate-500"
+            >Network</span
+          >
+          <a
+            href="/network/fortigate"
+            class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition {% if active == 'network-fortigate' %}bg-sky-500/10 text-sky-300{% else %}text-slate-300 hover:bg-slate-800/70{% endif %}"
+          >
+            <i class="fa-solid fa-shield-halved w-5 text-center"></i>
+            FortiGate
+          </a>
+          <a
+            href="/network/npm"
+            class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition {% if active == 'network-npm' %}bg-sky-500/10 text-sky-300{% else %}text-slate-300 hover:bg-slate-800/70{% endif %}"
+          >
+            <i class="fa-solid fa-network-wired w-5 text-center"></i>
+            Nginx Proxy Manager
+          </a>
+          <span
+            class="mb-1 mt-4 block px-3 text-xs font-semibold uppercase tracking-wider text-slate-500"
+            >Remote</span
+          >
+          <a
+            href="/remote/cloudflare"
+            class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition {% if active == 'remote-cloudflare' %}bg-sky-500/10 text-sky-300{% else %}text-slate-300 hover:bg-slate-800/70{% endif %}"
+          >
+            <i class="fa-brands fa-cloudflare w-5 text-center"></i>
+            Cloudflare
+          </a>
+          <span
+            class="mb-1 mt-4 block px-3 text-xs font-semibold uppercase tracking-wider text-slate-500"
+            >Monitoring</span
+          >
+          <a
+            href="/monitoring/grafana"
+            class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition {% if active == 'monitoring-grafana' %}bg-sky-500/10 text-sky-300{% else %}text-slate-300 hover:bg-slate-800/70{% endif %}"
+          >
+            <i class="fa-solid fa-chart-line w-5 text-center"></i>
+            Grafana
+          </a>
+          <a
+            href="/monitoring/prometheus"
+            class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition {% if active == 'monitoring-prometheus' %}bg-sky-500/10 text-sky-300{% else %}text-slate-300 hover:bg-slate-800/70{% endif %}"
+          >
+            <i class="fa-solid fa-fire w-5 text-center"></i>
+            Prometheus
+          </a>
+          <a
+            href="/monitoring/victoriametrics"
+            class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition {% if active == 'monitoring-victoriametrics' %}bg-sky-500/10 text-sky-300{% else %}text-slate-300 hover:bg-slate-800/70{% endif %}"
+          >
+            <i class="fa-solid fa-database w-5 text-center"></i>
+            Victoria Metrics
           </a>
         </nav>
         <div class="mt-auto px-3 pt-6 text-xs text-slate-600">
@@ -47,6 +246,39 @@
         {% block content %}{% endblock %}
       </main>
     </div>
+    <script>
+      // Auto-refresh the page after a server hot reload so the browser never runs
+      // stale HTML/JS. io() is multiplexed, so this shares the page's socket.
+      (function () {
+        const socket = io();
+        let bootId = null;
+        socket.on("server:hello", (data) => {
+          if (!data || !data.boot_id) return;
+          if (bootId === null) {
+            bootId = data.boot_id;
+          } else if (data.boot_id !== bootId) {
+            window.location.reload();
+          }
+        });
+
+        // Live connection indicator (dot in the sidebar header).
+        const dot = document.getElementById("conn-dot");
+        function setDot(color, title) {
+          if (!dot) return;
+          dot.style.backgroundColor = color;
+          dot.title = title;
+        }
+        socket.on("connect", () =>
+          setDot("#34d399", "Live connection to the homelab-config server")
+        );
+        socket.on("disconnect", () =>
+          setDot(
+            "#fb7185",
+            "Lost the live connection to the homelab-config server; reconnecting"
+          )
+        );
+      })();
+    </script>
     {% block scripts %}{% endblock %}
   </body>
 </html>

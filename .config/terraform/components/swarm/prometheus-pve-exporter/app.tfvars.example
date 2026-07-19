@@ -1,29 +1,10 @@
 # homelab-config: terraform/components/swarm/prometheus-pve-exporter/app
 # Self-contained slice tfvars (provider/DNS/NFS inlined; no shared swarm/dns/nfs var-files).
 
-swarm_docker_provider_config = {
-  docker = {
-    host = ""
-    ssh_opts = [
-      "", "",
-      "", "",
-      "", "",
-    ]
-  }
-
-  registry_auths = [
-    {
-      address  = ""
-      username = ""
-      password = ""
-    },
-    {
-      address  = ""
-      username = ""
-      password = ""
-    },
-  ]
-}
+# Docker provider comes from the shared catalog (config-id
+# terraform/providers/docker); the pipeline passes docker.tfvars as an extra
+# -var-file. This slice just selects a machine (and reuses shared registry_auths).
+docker_machine = "swarm-cp-0"
 
 dns_nameservers = [
   "",

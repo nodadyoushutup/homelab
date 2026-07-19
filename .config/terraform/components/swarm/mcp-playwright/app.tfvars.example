@@ -1,29 +1,10 @@
 # homelab-config: terraform/components/swarm/mcp-playwright/app
 # Self-contained slice tfvars (provider/DNS/NFS inlined; no shared swarm/dns/nfs var-files).
 
-swarm_docker_provider_config = {
-  docker = {
-    host = ""
-    ssh_opts = [
-      "", "",
-      "", "",
-      "", "",
-    ]
-  }
-
-  registry_auths = [
-    {
-      address  = ""
-      username = ""
-      password = ""
-    },
-    {
-      address  = ""
-      username = ""
-      password = ""
-    },
-  ]
-}
+# Docker provider comes from the shared catalog (config-id
+# terraform/providers/docker); the pipeline passes docker.tfvars as an extra
+# -var-file. This slice just selects a machine (and reuses shared registry_auths).
+docker_machine = "swarm-cp-0"
 
 dns_nameservers = [
   "",
@@ -31,15 +12,11 @@ dns_nameservers = [
   "",
 ]
 
-nfs = {
-  target = ""
-
-  driver_options = {
-    type   = ""
-    device = ""
-    o      = ""
-  }
-}
+# NFS comes from the shared catalog (config-id terraform/nfs); the pipeline passes
+# nfs.tfvars as an extra -var-file. This slice just selects a share + mount point.
+nfs_share        = "code"
+nfs_subpath      = "/homelab"
+nfs_mount_target = "/mnt/eapp/code/homelab"
 
 env = {
   PLAYWRIGHT_MCP_OUTPUT_DIR = ""

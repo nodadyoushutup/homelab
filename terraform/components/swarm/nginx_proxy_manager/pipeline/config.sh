@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Bespoke Nginx Proxy Manager config (NPM API) deploy (intentional during the AGENTS.md audit campaign).
 # Bespoke self-contained entrypoint (shared *_pipeline.sh wrappers removed).
-# Single slice tfvars only (no shared swarm/dns/nfs var-files).
+# Slice tfvars plus the NPM provider credentials (config-id
+# terraform/providers/nginx_proxy_manager); no other shared swarm/dns/nfs var-files.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -15,6 +16,10 @@ export CONFIG_DIR
 
 # shellcheck source=../../../scripts/terraform/resolve_config_by_id.sh
 source "${ROOT_DIR}/scripts/terraform/resolve_config_by_id.sh"
+# shellcheck source=/dev/null
+source "${ROOT_DIR}/scripts/terraform/terraform_backend_init.sh"
+# shellcheck source=../../../scripts/terraform/nginx_proxy_manager_tfvars_env.sh
+source "${ROOT_DIR}/scripts/terraform/nginx_proxy_manager_tfvars_env.sh"
 
 SLICE_CONFIG_ID="$(homelab_config_id_from_terraform_dir "${ROOT_DIR}" "${TERRAFORM_DIR}")"
 DEFAULT_CONFIG_TFVARS="$(homelab_resolve_config_path "${CONFIG_DIR}" "${SLICE_CONFIG_ID}")"
@@ -54,50 +59,9 @@ require_terraform() {
   fi
 }
 
-run_terraform_init_in_dir() {
-  local tf_dir="$1"
-  shift
-  local init_log
-  init_log="$(mktemp -t npm-terraform-init-XXXXXX)"
-
-  if (
-    cd "${tf_dir}"
-    terraform init -backend-config="${BACKEND_CONFIG}" "$@" \
-      > >(tee "${init_log}") \
-      2> >(tee -a "${init_log}" >&2)
-  ); then
-    rm -f "${init_log}"
-    return 0
-  fi
-
-  if grep -q "Backend configuration changed" "${init_log}"; then
-    if [[ -f "${tf_dir}/.terraform/terraform.tfstate" ]]; then
-      echo "[WARN] Backend change detected in ${tf_dir}; attempting state migration"
-      if (
-        cd "${tf_dir}"
-        terraform init -force-copy -migrate-state -backend-config="${BACKEND_CONFIG}" "$@"
-      ); then
-        rm -f "${init_log}"
-        return 0
-      fi
-    fi
-    echo "[WARN] Backend change detected in ${tf_dir}; re-running terraform init -reconfigure"
-    if (
-      cd "${tf_dir}"
-      terraform init -reconfigure -backend-config="${BACKEND_CONFIG}" "$@"
-    ); then
-      rm -f "${init_log}"
-      return 0
-    fi
-  fi
-
-  rm -f "${init_log}"
-  return 1
-}
-
 ensure_app_state_exists() {
   echo "[INFO] Verifying app remote state exists before running config stage"
-  if ! run_terraform_init_in_dir "${APP_TERRAFORM_DIR}"; then
+  if ! homelab_terraform_init "${APP_TERRAFORM_DIR}"; then
     echo "[ERR] Unable to initialize app Terraform state. Run the app stage before config." >&2
     exit 1
   fi
@@ -167,10 +131,11 @@ fi
 
 require_terraform
 require_file "config tfvars" "${CONFIG_TFVARS}"
-require_file "backend config" "${BACKEND_CONFIG}"
+require_file "nginx proxy manager credentials tfvars" "${NGINX_PROXY_MANAGER_TFVARS}"
 
 echo "Terraform dir:     ${TERRAFORM_DIR}"
 echo "Config tfvars:     ${CONFIG_TFVARS}"
+echo "NPM creds:         ${NGINX_PROXY_MANAGER_TFVARS}"
 echo "Backend config:    ${BACKEND_CONFIG}"
 
 ensure_app_state_exists
@@ -178,7 +143,7 @@ ensure_app_state_exists
 cd "${TERRAFORM_DIR}"
 
 echo "[STEP] terraform init (Nginx Proxy Manager config)"
-if ! run_terraform_init_in_dir "${TERRAFORM_DIR}"; then
+if ! homelab_terraform_init "${TERRAFORM_DIR}"; then
   echo "[ERR] terraform init failed" >&2
   exit 1
 fi
@@ -186,6 +151,7 @@ fi
 PLAN_ARGS=(
   -input=false
   -var-file "${CONFIG_TFVARS}"
+  -var-file "${NGINX_PROXY_MANAGER_TFVARS}"
 )
 
 echo "[STEP] terraform plan (Nginx Proxy Manager config)"

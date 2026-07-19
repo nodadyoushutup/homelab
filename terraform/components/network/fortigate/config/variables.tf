@@ -1,30 +1,28 @@
 # variables.tf
 # External input contract for the FortiGate config slice.
 
-variable "provider_config" {
-  description = "Provider/auth configuration for the fortios provider."
+variable "fortigate" {
+  description = "FortiGate (fortios) provider login (config-id terraform/providers/fortigate); shared -var-file managed by the homelab-config web app."
   type = object({
-    fortigate = object({
-      host      = string
-      port      = optional(number)
-      vdom      = optional(string)
-      insecure  = optional(bool)
-      api_token = optional(string)
-      username  = optional(string)
-      password  = optional(string)
-    })
+    host      = string
+    port      = optional(number)
+    vdom      = optional(string)
+    insecure  = optional(bool)
+    api_token = optional(string)
+    username  = optional(string)
+    password  = optional(string)
   })
   sensitive = true
 
   validation {
     condition = (
-      try(trimspace(var.provider_config.fortigate.api_token), "") != "" ||
+      try(trimspace(var.fortigate.api_token), "") != "" ||
       (
-        try(trimspace(var.provider_config.fortigate.username), "") != "" &&
-        try(trimspace(var.provider_config.fortigate.password), "") != ""
+        try(trimspace(var.fortigate.username), "") != "" &&
+        try(trimspace(var.fortigate.password), "") != ""
       )
     )
-    error_message = "Set provider_config.fortigate.api_token or both provider_config.fortigate.username and provider_config.fortigate.password."
+    error_message = "Set fortigate.api_token or both fortigate.username and fortigate.password."
   }
 }
 

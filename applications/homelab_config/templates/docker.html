@@ -1,0 +1,216 @@
+{% extends "base.html" %} {% block title %}Docker · homelab-config{% endblock %}
+{% block content %}
+<div class="mx-auto max-w-6xl p-6 lg:p-8">
+  <header class="mb-8 flex flex-wrap items-start justify-between gap-4">
+    <div>
+      <h1 class="flex items-center gap-3 text-2xl font-bold">
+        <i class="fa-brands fa-docker text-sky-400"></i> Docker
+      </h1>
+      <p class="mt-1 text-sm text-slate-400">
+        Docker provider catalog. Swarm-node providers are derived from the Swarm
+        topology and <a href="/extra-hosts" class="text-sky-400 hover:underline">Extra Hosts</a>
+        (read-only here); registry auths are editable and saved automatically to
+        <code class="rounded bg-slate-800 px-1.5 py-0.5 text-slate-300"
+          >.config/terraform/providers/docker.tfvars</code
+        >
+        (config-id
+        <code class="rounded bg-slate-800 px-1.5 py-0.5 text-slate-300"
+          >terraform/providers/docker</code
+        >). This file holds secrets and is never committed.
+      </p>
+    </div>
+    <div class="flex items-center gap-3">
+      <span id="save-state" class="text-sm text-slate-500" title="Auto-save on"></span>
+      <button
+        id="preview-btn"
+        class="rounded-lg border border-slate-700 px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-slate-800"
+        title="Show the rendered docker.tfvars"
+      >
+        <i class="fa-solid fa-file-code mr-2"></i>Preview docker.tfvars
+      </button>
+      <button
+        id="reload-btn"
+        class="rounded-lg border border-slate-700 px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-slate-800"
+        title="Re-read docker.tfvars from disk"
+      >
+        <i class="fa-solid fa-rotate mr-2"></i>Reload from disk
+      </button>
+    </div>
+  </header>
+
+  <div
+    id="drift-banner"
+    style="display: none"
+    class="mb-6 flex items-center justify-between gap-4 rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-200"
+  >
+    <span>
+      <i class="fa-solid fa-triangle-exclamation mr-2"></i>
+      <span id="drift-message">docker.tfvars changed on disk outside the app.</span>
+    </span>
+    <button
+      id="drift-reload"
+      class="rounded-md bg-amber-500/20 px-3 py-1 text-xs font-medium text-amber-100 hover:bg-amber-500/30"
+    >
+      Reload from disk
+    </button>
+  </div>
+
+  <!-- Derived swarm providers (read-only) -->
+  <section class="mb-8">
+    <h2 class="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-slate-400">
+      <i class="fa-solid fa-diagram-project"></i> Swarm-node providers
+      <span class="text-xs font-normal normal-case text-slate-500">
+        (derived from the Swarm page)
+      </span>
+    </h2>
+    <div class="overflow-hidden rounded-xl border border-slate-800 bg-slate-900/50">
+      <table class="w-full text-left text-sm">
+        <thead class="bg-slate-900/80 text-xs uppercase tracking-wide text-slate-500">
+          <tr>
+            <th class="px-4 py-3 font-semibold">Machine</th>
+            <th class="px-4 py-3 font-semibold">Role</th>
+            <th class="px-4 py-3 font-semibold">Host</th>
+            <th class="px-4 py-3 font-semibold">ssh_opts</th>
+          </tr>
+        </thead>
+        <tbody id="derived-rows" class="divide-y divide-slate-800"></tbody>
+      </table>
+      <p id="derived-empty" hidden class="px-4 py-8 text-center text-sm text-slate-500">
+        No swarm nodes defined yet. Add nodes on the Docker Swarm page.
+      </p>
+    </div>
+  </section>
+
+  <!-- Extra-host providers (read-only) -->
+  <section class="mb-8">
+    <h2 class="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-slate-400">
+      <i class="fa-solid fa-server"></i> Extra-host providers
+      <span class="text-xs font-normal normal-case text-slate-500">
+        (derived from the <a href="/extra-hosts" class="text-sky-400 hover:underline">Extra Hosts</a> page)
+      </span>
+    </h2>
+    <div class="overflow-hidden rounded-xl border border-slate-800 bg-slate-900/50">
+      <table class="w-full text-left text-sm">
+        <thead class="bg-slate-900/80 text-xs uppercase tracking-wide text-slate-500">
+          <tr>
+            <th class="px-4 py-3 font-semibold">Machine</th>
+            <th class="px-4 py-3 font-semibold">Host</th>
+            <th class="px-4 py-3 font-semibold">ssh_opts</th>
+          </tr>
+        </thead>
+        <tbody id="extra-rows" class="divide-y divide-slate-800"></tbody>
+      </table>
+      <p id="extra-empty" hidden class="px-4 py-8 text-center text-sm text-slate-500">
+        No extra (non-swarm) hosts defined yet. Add one on the Extra Hosts page.
+      </p>
+    </div>
+  </section>
+
+  <!-- Registry auths -->
+  <section class="space-y-6">
+    <div class="rounded-xl border border-slate-800 bg-slate-900/50 p-5">
+      <h2
+        id="reg-form-title"
+        class="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-slate-400"
+      >
+        <i class="fa-solid fa-box-archive"></i> Add registry auth
+      </h2>
+      <form id="reg-form" class="grid gap-4 sm:grid-cols-3">
+        <input type="hidden" id="r-id" />
+        <label class="block text-sm">
+          <span class="mb-1 block text-slate-300">Address</span>
+          <input
+            id="r-address"
+            required
+            placeholder="ghcr.io"
+            class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-xs text-slate-100 focus:border-sky-500 focus:outline-none"
+          />
+        </label>
+        <label class="block text-sm">
+          <span class="mb-1 block text-slate-300">Username</span>
+          <input
+            id="r-username"
+            class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 focus:border-sky-500 focus:outline-none"
+          />
+        </label>
+        <label class="block text-sm">
+          <span class="mb-1 block text-slate-300">Password / token</span>
+          <input
+            id="r-password"
+            type="password"
+            class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 focus:border-sky-500 focus:outline-none"
+          />
+        </label>
+        <div class="flex items-center gap-3 sm:col-span-3">
+          <button
+            type="submit"
+            id="reg-save-btn"
+            class="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-400"
+          >
+            <i class="fa-solid fa-plus mr-2"></i>Add registry
+          </button>
+          <button
+            type="button"
+            id="reg-cancel-edit"
+            hidden
+            class="rounded-lg border border-slate-700 px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-slate-800"
+          >
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div class="overflow-hidden rounded-xl border border-slate-800 bg-slate-900/50">
+      <table class="w-full text-left text-sm">
+        <thead class="bg-slate-900/80 text-xs uppercase tracking-wide text-slate-500">
+          <tr>
+            <th class="px-4 py-3 font-semibold">Address</th>
+            <th class="px-4 py-3 font-semibold">Username</th>
+            <th class="px-4 py-3 font-semibold">Password</th>
+            <th class="px-4 py-3 text-right font-semibold">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="reg-rows" class="divide-y divide-slate-800"></tbody>
+      </table>
+      <p id="reg-empty" hidden class="px-4 py-8 text-center text-sm text-slate-500">
+        No registry auths defined yet. Add one above.
+      </p>
+    </div>
+  </section>
+</div>
+
+<!-- docker.tfvars preview modal -->
+<div
+  id="modal-preview"
+  style="display: none"
+  class="fixed inset-0 z-40 flex items-center justify-center bg-black/60 p-4"
+>
+  <div class="flex max-h-[85vh] w-full max-w-4xl flex-col rounded-xl border border-slate-800 bg-slate-900 p-6">
+    <div class="mb-3 flex items-center justify-between">
+      <h3 class="flex items-center gap-2 text-lg font-semibold">
+        <i class="fa-solid fa-file-code text-slate-400"></i>
+        <code class="text-slate-300">.config/terraform/providers/docker.tfvars</code>
+      </h3>
+      <div class="flex items-center gap-2">
+        <button
+          id="preview-copy"
+          class="rounded-md border border-slate-700 px-3 py-1 text-xs text-slate-300 hover:bg-slate-800"
+          title="Copy to clipboard"
+        >
+          <i class="fa-solid fa-copy mr-1"></i>Copy
+        </button>
+        <button type="button" data-close class="rounded-md px-2 py-1 text-slate-400 hover:bg-slate-800">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+    </div>
+    <pre
+      id="tfvars-preview"
+      class="flex-1 overflow-auto rounded-lg bg-slate-950 p-4 text-sm leading-relaxed text-slate-300"
+    ></pre>
+  </div>
+</div>
+{% endblock %} {% block scripts %}
+<script src="{{ url_for('static', filename='js/docker.js') }}"></script>
+{% endblock %}

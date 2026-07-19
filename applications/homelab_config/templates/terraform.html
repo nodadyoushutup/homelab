@@ -1,0 +1,245 @@
+{% extends "base.html" %} {% block title %}Terraform · homelab-config{% endblock %}
+{% block content %}
+<div class="mx-auto max-w-4xl p-6 lg:p-8">
+  <header class="mb-8 flex flex-wrap items-start justify-between gap-4">
+    <div>
+      <h1 class="flex items-center gap-3 text-2xl font-bold">
+        <i class="fa-solid fa-layer-group text-sky-400"></i> Terraform
+      </h1>
+      <p class="mt-1 text-sm text-slate-400">
+        Terraform state backend settings. Choose local state or a remote MinIO
+        S3 backend and select one of your
+        <a href="/minio" class="text-sky-400 hover:underline">MinIO instances</a>.
+        Settings are saved to
+        <code class="rounded bg-slate-800 px-1.5 py-0.5 text-slate-300"
+          >.config/terraform/state.tfvars</code
+        >; the S3 backend is generated to
+        <code class="rounded bg-slate-800 px-1.5 py-0.5 text-slate-300"
+          >.config/terraform/minio.backend.hcl</code
+        >.
+      </p>
+    </div>
+    <div class="flex items-center gap-3">
+      <span id="save-state" class="text-sm text-slate-500" title="Auto-save on"></span>
+      <button
+        id="preview-btn"
+        class="rounded-lg border border-slate-700 px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-slate-800"
+        title="Show the rendered minio.backend.hcl"
+      >
+        <i class="fa-solid fa-file-code mr-2"></i>Preview backend
+      </button>
+      <button
+        id="reload-btn"
+        class="rounded-lg border border-slate-700 px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-slate-800"
+        title="Re-read state.tfvars from disk"
+      >
+        <i class="fa-solid fa-rotate mr-2"></i>Reload from disk
+      </button>
+    </div>
+  </header>
+
+  <div
+    id="drift-banner"
+    style="display: none"
+    class="mb-6 flex items-center justify-between gap-4 rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-200"
+  >
+    <span>
+      <i class="fa-solid fa-triangle-exclamation mr-2"></i>
+      <span id="drift-message">state.tfvars changed on disk outside the app.</span>
+    </span>
+    <button
+      id="drift-reload"
+      class="rounded-md bg-amber-500/20 px-3 py-1 text-xs font-medium text-amber-100 hover:bg-amber-500/30"
+    >
+      Reload from disk
+    </button>
+  </div>
+
+  <section class="space-y-6">
+    <div class="rounded-xl border border-slate-800 bg-slate-900/50 p-5">
+      <h2 class="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-400">
+        State backend
+      </h2>
+      <form id="terraform-form" class="grid gap-5 sm:grid-cols-2">
+        <div class="sm:col-span-2">
+          <span class="mb-2 block text-sm text-slate-300">Backend</span>
+          <div class="flex gap-3">
+            <label
+              class="flex flex-1 cursor-pointer items-center gap-3 rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 text-sm has-[:checked]:border-sky-500 has-[:checked]:bg-sky-500/10"
+            >
+              <input
+                type="radio"
+                name="backend"
+                value="local"
+                id="f-backend-local"
+                class="h-4 w-4 text-sky-500 focus:ring-sky-500"
+              />
+              <span>
+                <span class="block font-medium text-slate-200">Local</span>
+                <span class="block text-xs text-slate-500"
+                  >State stored on the local filesystem</span
+                >
+              </span>
+            </label>
+            <label
+              class="flex flex-1 cursor-pointer items-center gap-3 rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 text-sm has-[:checked]:border-sky-500 has-[:checked]:bg-sky-500/10"
+            >
+              <input
+                type="radio"
+                name="backend"
+                value="s3"
+                id="f-backend-s3"
+                class="h-4 w-4 text-sky-500 focus:ring-sky-500"
+              />
+              <span>
+                <span class="block font-medium text-slate-200">Remote S3 (MinIO)</span>
+                <span class="block text-xs text-slate-500"
+                  >Shared remote state on a MinIO bucket</span
+                >
+              </span>
+            </label>
+          </div>
+        </div>
+
+        <div id="s3-fields" class="contents">
+          <label class="block text-sm">
+            <span class="mb-1 block text-slate-300">MinIO instance</span>
+            <select
+              id="f-minio"
+              class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 focus:border-sky-500 focus:outline-none"
+            >
+              <option value="">— Select a MinIO —</option>
+            </select>
+            <span id="minio-hint" class="mt-1 block text-xs text-slate-500"
+              >Pick one of your MinIO instances for remote state</span
+            >
+          </label>
+
+          <label class="block text-sm">
+            <span class="mb-1 block text-slate-300">Bucket</span>
+            <input
+              id="f-bucket"
+              placeholder="homelab-terraform"
+              class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 focus:border-sky-500 focus:outline-none"
+            />
+          </label>
+
+          <label class="block text-sm sm:col-span-2">
+            <span class="mb-1 block text-slate-300"
+              >Region
+              <span class="text-slate-500">(optional override)</span></span
+            >
+            <input
+              id="f-region"
+              placeholder="us-east-1"
+              class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 focus:border-sky-500 focus:outline-none"
+            />
+            <span class="mt-1 block text-xs text-slate-500"
+              >Defaults to the selected MinIO's region (or us-east-1) if blank</span
+            >
+          </label>
+
+          <div class="space-y-3 sm:col-span-2">
+            <label class="flex items-center gap-3 text-sm">
+              <input
+                id="f-skip-credentials-validation"
+                type="checkbox"
+                class="h-4 w-4 rounded border-slate-600 bg-slate-950 text-sky-500 focus:ring-sky-500"
+              />
+              <span>
+                <span class="text-slate-200">skip_credentials_validation</span>
+                <span class="ml-1 text-xs text-slate-500"
+                  >Skip AWS credential validation (required for MinIO)</span
+                >
+              </span>
+            </label>
+            <label class="flex items-center gap-3 text-sm">
+              <input
+                id="f-skip-metadata-api-check"
+                type="checkbox"
+                class="h-4 w-4 rounded border-slate-600 bg-slate-950 text-sky-500 focus:ring-sky-500"
+              />
+              <span>
+                <span class="text-slate-200">skip_metadata_api_check</span>
+                <span class="ml-1 text-xs text-slate-500"
+                  >Skip the EC2 metadata API check</span
+                >
+              </span>
+            </label>
+            <label class="flex items-center gap-3 text-sm">
+              <input
+                id="f-skip-requesting-account-id"
+                type="checkbox"
+                class="h-4 w-4 rounded border-slate-600 bg-slate-950 text-sky-500 focus:ring-sky-500"
+              />
+              <span>
+                <span class="text-slate-200">skip_requesting_account_id</span>
+                <span class="ml-1 text-xs text-slate-500"
+                  >Skip requesting the AWS account ID</span
+                >
+              </span>
+            </label>
+            <label class="flex items-center gap-3 text-sm">
+              <input
+                id="f-use-path-style"
+                type="checkbox"
+                class="h-4 w-4 rounded border-slate-600 bg-slate-950 text-sky-500 focus:ring-sky-500"
+              />
+              <span>
+                <span class="text-slate-200">use_path_style</span>
+                <span class="ml-1 text-xs text-slate-500"
+                  >Use path-style S3 addressing (required for MinIO)</span
+                >
+              </span>
+            </label>
+          </div>
+        </div>
+
+        <p
+          id="local-note"
+          hidden
+          class="rounded-lg border border-slate-800 bg-slate-950 px-4 py-3 text-xs text-slate-400 sm:col-span-2"
+        >
+          Local state is selected. No remote S3 backend is generated;
+          <code class="text-slate-300">minio.backend.hcl</code> is written as an
+          empty stub.
+        </p>
+      </form>
+    </div>
+  </section>
+</div>
+
+<!-- minio.backend.hcl preview modal -->
+<div
+  id="modal-preview"
+  style="display: none"
+  class="fixed inset-0 z-40 flex items-center justify-center bg-black/60 p-4"
+>
+  <div class="flex max-h-[85vh] w-full max-w-4xl flex-col rounded-xl border border-slate-800 bg-slate-900 p-6">
+    <div class="mb-3 flex items-center justify-between">
+      <h3 class="flex items-center gap-2 text-lg font-semibold">
+        <i class="fa-solid fa-file-code text-slate-400"></i>
+        <code class="text-slate-300">.config/terraform/minio.backend.hcl</code>
+      </h3>
+      <div class="flex items-center gap-2">
+        <button
+          id="preview-copy"
+          class="rounded-md border border-slate-700 px-3 py-1 text-xs text-slate-300 hover:bg-slate-800"
+          title="Copy to clipboard"
+        >
+          <i class="fa-solid fa-copy mr-1"></i>Copy
+        </button>
+        <button type="button" data-close class="rounded-md px-2 py-1 text-slate-400 hover:bg-slate-800">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+    </div>
+    <pre
+      id="backend-preview"
+      class="flex-1 overflow-auto rounded-lg bg-slate-950 p-4 text-sm leading-relaxed text-slate-300"
+    ></pre>
+  </div>
+</div>
+{% endblock %} {% block scripts %}
+<script src="{{ url_for('static', filename='js/terraform.js') }}"></script>
+{% endblock %}

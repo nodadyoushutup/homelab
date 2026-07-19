@@ -1,0 +1,55 @@
+# homelab-config web app - local development container.
+# Source and .config are bind-mounted so edits hot-reload live inside the
+# container (Flask/SocketIO custom reloader); no rebuild needed for code changes.
+#
+# From docker/:
+#   docker compose -f docker-compose.homelab-config.yaml up -d --build
+#   docker compose -f docker-compose.homelab-config.yaml logs -f
+#
+# UI: http://localhost:8770/
+name: homelab-config
+
+services:
+  homelab-config:
+    build:
+      context: ../applications/homelab_config
+      dockerfile: Dockerfile
+    image: homelab-config:dev
+    container_name: homelab-config
+    restart: unless-stopped
+    # Run as the host user so bind-mounted files (repo lives on NFS with
+    # root-squash) stay readable/writable. Defaults match the operator (uid 1000);
+    # override HOMELAB_UID/HOMELAB_GID if yours differ (keep the Dockerfile chown
+    # in sync).
+    user: "${HOMELAB_UID:-1000}:${HOMELAB_GID:-1000}"
+    ports:
+      - "8770:8770"
+    environment:
+      HOMELAB_CONFIG_HOST: "0.0.0.0"
+      HOMELAB_CONFIG_PORT: "8770"
+      HOMELAB_CONFIG_RELOAD: "1"
+      HOMELAB_HOST_SSH_DIR: "/host-ssh"
+    volumes:
+      # App code (hot reload) and .config (source of truth) mounted so the
+      # container reads/writes the same tree the repo does. Mounted two levels
+      # deep so paths.py resolves PROJECT_ROOT=/workspace, CONFIG_DIR=/workspace/.config.
+      - ../applications/homelab_config:/workspace/applications/homelab_config
+      - ../.config:/workspace/.config
+      # Host keys for the SSH "sync from host" feature (read-only).
+      - ${HOME}/.ssh:/host-ssh:ro
+      # Host's Avahi socket so libnss-mdns (in the image) can resolve the swarm
+      # nodes' .local hostnames (e.g. swarm-cp-0.local) via the host's avahi-daemon.
+      # The container reaches the resolved LAN IPs over normal bridge NAT.
+      - /var/run/avahi-daemon/socket:/var/run/avahi-daemon/socket
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "curl",
+          "-f",
+          "http://127.0.0.1:8770/",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s

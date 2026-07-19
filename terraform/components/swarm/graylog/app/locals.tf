@@ -2,10 +2,14 @@
 # Single source of truth for Graylog Swarm service values (resources read local.* only).
 
 locals {
-  env                          = var.env
-  dns_nameservers              = var.dns_nameservers
-  placement                    = var.placement
-  swarm_docker_provider_config = var.swarm_docker_provider_config
+  env             = var.env
+  dns_nameservers = var.dns_nameservers
+  placement       = var.placement
+  docker_selected = var.docker_providers[var.docker_machine]
+  swarm_docker_provider_config = {
+    docker         = { host = local.docker_selected.host, ssh_opts = local.docker_selected.ssh_opts }
+    registry_auths = var.registry_auths
+  }
 
   published_port_ui         = var.published_port_ui
   published_port_syslog_tcp = var.published_port_syslog_tcp

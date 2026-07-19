@@ -1,0 +1,126 @@
+{% extends "base.html" %} {% block title %}Packer · homelab-config{% endblock %}
+{% block content %}
+<div class="mx-auto max-w-4xl p-6 lg:p-8">
+  <header class="mb-8 flex flex-wrap items-start justify-between gap-4">
+    <div>
+      <h1 class="flex items-center gap-3 text-2xl font-bold">
+        <i class="fa-solid fa-hammer text-orange-400"></i> Packer
+      </h1>
+      <p class="mt-1 text-sm text-slate-400">
+        Build defaults for the cloud-image Packer builds. Consumed as defaults by
+        <code class="rounded bg-slate-800 px-1.5 py-0.5 text-slate-300">packer/packer.sh</code>
+        and
+        <code class="rounded bg-slate-800 px-1.5 py-0.5 text-slate-300">packer/pipeline/packer.sh</code>
+        (explicit CLI flags still override). Saved automatically to
+        <code class="rounded bg-slate-800 px-1.5 py-0.5 text-slate-300"
+          >.config/packer/build.pkrvars.hcl</code
+        >.
+      </p>
+    </div>
+    <div class="flex items-center gap-3">
+      <span id="save-state" class="text-sm text-slate-500" title="Auto-save on"></span>
+      <button id="preview-btn" class="rounded-lg border border-slate-700 px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-slate-800"><i class="fa-solid fa-file-code mr-2"></i>Preview build.pkrvars.hcl</button>
+      <button id="reload-btn" class="rounded-lg border border-slate-700 px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-slate-800"><i class="fa-solid fa-rotate mr-2"></i>Reload from disk</button>
+    </div>
+  </header>
+
+  <div id="drift-banner" style="display: none" class="mb-6 flex items-center justify-between gap-4 rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
+    <span><i class="fa-solid fa-triangle-exclamation mr-2"></i>build.pkrvars.hcl changed on disk outside the app.</span>
+    <button id="drift-reload" class="rounded-md bg-amber-500/20 px-3 py-1 text-xs font-medium text-amber-100 hover:bg-amber-500/30">Reload from disk</button>
+  </div>
+
+  <div class="space-y-6">
+    <section class="rounded-xl border border-slate-800 bg-slate-900/50 p-5">
+      <h2 class="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-400">Image</h2>
+      <div class="grid gap-4 sm:grid-cols-2">
+        <label class="block text-sm"><span class="mb-1 block text-slate-300">Distro</span>
+          <select id="distro" class="pk-input">
+            <option value="ubuntu">ubuntu</option>
+            <option value="arch">arch</option>
+            <option value="centos">centos</option>
+            <option value="kali">kali</option>
+          </select>
+          <span class="mt-1 block text-xs text-slate-500">Base image to build. Arch is amd64-only.</span></label>
+        <label class="block text-sm"><span class="mb-1 block text-slate-300">Image version</span>
+          <input id="image_version" placeholder="0.0.1" class="pk-input font-mono" />
+          <span class="mt-1 block text-xs text-slate-500">Default semantic version; <code>--version</code> still overrides.</span></label>
+        <label class="block text-sm"><span class="mb-1 block text-slate-300">Desktop environment (gui)</span>
+          <select id="gui" class="pk-input">
+            <option value="headless">headless</option>
+            <option value="gnome">gnome</option>
+            <option value="kde">kde</option>
+            <option value="xfce">xfce</option>
+          </select></label>
+        <label class="flex items-center gap-2 pt-6 text-sm text-slate-300"><input id="install_node_exporter" type="checkbox" class="pk-check" /> Install host node_exporter</label>
+      </div>
+    </section>
+
+    <section class="rounded-xl border border-slate-800 bg-slate-900/50 p-5">
+      <h2 class="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-400">Per-distro release</h2>
+      <div class="grid gap-4 sm:grid-cols-2">
+        <label class="block text-sm"><span class="mb-1 block text-slate-300">Ubuntu release</span>
+          <select id="ubuntu_release" class="pk-input">
+            <option value="24.04">24.04</option>
+            <option value="26.04">26.04</option>
+          </select></label>
+        <label class="block text-sm"><span class="mb-1 block text-slate-300">CentOS stream</span>
+          <input id="centos_stream" placeholder="10" class="pk-input font-mono" /></label>
+        <label class="block text-sm"><span class="mb-1 block text-slate-300">Arch snapshot</span>
+          <input id="arch_snapshot" placeholder="(template default)" class="pk-input font-mono" /></label>
+        <label class="block text-sm"><span class="mb-1 block text-slate-300">Kali release</span>
+          <input id="kali_release" placeholder="2026.2" class="pk-input font-mono" /></label>
+      </div>
+    </section>
+
+    <section class="rounded-xl border border-slate-800 bg-slate-900/50 p-5">
+      <h2 class="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-400">Build &amp; publish</h2>
+      <div class="grid gap-4 sm:grid-cols-2">
+        <label class="block text-sm"><span class="mb-1 block text-slate-300">Build architecture</span>
+          <select id="build_arch" class="pk-input">
+            <option value="amd64">amd64</option>
+            <option value="arm64">arm64</option>
+            <option value="both">both</option>
+          </select></label>
+        <label class="block text-sm"><span class="mb-1 block text-slate-300">Target</span>
+          <select id="target" class="pk-input">
+            <option value="cloud-image-repository">cloud-image-repository</option>
+          </select></label>
+        <label class="block text-sm"><span class="mb-1 block text-slate-300">amd64 accelerator</span>
+          <select id="amd64_accelerator" class="pk-input">
+            <option value="kvm">kvm</option>
+            <option value="tcg">tcg</option>
+            <option value="none">none</option>
+          </select></label>
+        <label class="block text-sm"><span class="mb-1 block text-slate-300">arm64 accelerator</span>
+          <select id="arm64_accelerator" class="pk-input">
+            <option value="kvm">kvm</option>
+            <option value="tcg">tcg</option>
+            <option value="none">none</option>
+          </select></label>
+        <label class="flex items-center gap-2 pt-2 text-sm text-slate-300"><input id="publish" type="checkbox" class="pk-check" /> Publish over REST after build</label>
+      </div>
+    </section>
+  </div>
+</div>
+
+<div id="modal-preview" style="display: none" class="fixed inset-0 z-40 flex items-center justify-center bg-black/60 p-4">
+  <div class="flex max-h-[85vh] w-full max-w-3xl flex-col rounded-xl border border-slate-800 bg-slate-900 p-6">
+    <div class="mb-3 flex items-center justify-between">
+      <h3 class="flex items-center gap-2 text-lg font-semibold"><i class="fa-solid fa-file-code text-slate-400"></i><code class="text-slate-300">.config/packer/build.pkrvars.hcl</code></h3>
+      <div class="flex items-center gap-2">
+        <button id="preview-copy" class="rounded-md border border-slate-700 px-3 py-1 text-xs text-slate-300 hover:bg-slate-800"><i class="fa-solid fa-copy mr-1"></i>Copy</button>
+        <button type="button" data-close class="rounded-md px-2 py-1 text-slate-400 hover:bg-slate-800"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+    </div>
+    <pre id="tfvars-preview" class="flex-1 overflow-auto rounded-lg bg-slate-950 p-4 text-sm leading-relaxed text-slate-300"></pre>
+  </div>
+</div>
+
+<style>
+  .pk-input { width: 100%; border-radius: 0.5rem; border: 1px solid rgb(51 65 85); background-color: rgb(2 6 23); padding: 0.5rem 0.75rem; color: rgb(241 245 249); }
+  .pk-input:focus { outline: none; border-color: rgb(251 146 60); }
+  .pk-check { height: 1rem; width: 1rem; border-radius: 0.25rem; border-color: rgb(51 65 85); background-color: rgb(2 6 23); color: rgb(251 146 60); }
+</style>
+{% endblock %} {% block scripts %}
+<script src="{{ url_for('static', filename='js/packer.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,349 @@
+{% extends "base.html" %} {% block title %}FortiGate · homelab-config{% endblock %}
+{% block content %}
+<div class="mx-auto max-w-6xl p-6 lg:p-8">
+  <header class="mb-8 flex flex-wrap items-start justify-between gap-4">
+    <div>
+      <h1 class="flex items-center gap-3 text-2xl font-bold">
+        <i class="fa-solid fa-shield-halved text-rose-400"></i> FortiGate
+      </h1>
+      <p class="mt-1 text-sm text-slate-400">
+        Declarative firewall config: virtual IPs, firewall policies and DHCP
+        reservations. Provider login lives separately under Providers. Every
+        change is saved automatically to
+        <code class="rounded bg-slate-800 px-1.5 py-0.5 text-slate-300"
+          >.config/terraform/components/network/fortigate/config.tfvars</code
+        >
+        (config-id
+        <code class="rounded bg-slate-800 px-1.5 py-0.5 text-slate-300"
+          >terraform/components/network/fortigate/config</code
+        >).
+      </p>
+    </div>
+    <div class="flex items-center gap-3">
+      <span id="save-state" class="text-sm text-slate-500" title="Auto-save on"></span>
+      <button
+        id="preview-btn"
+        class="rounded-lg border border-slate-700 px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-slate-800"
+        title="Show the rendered config.tfvars"
+      >
+        <i class="fa-solid fa-file-code mr-2"></i>Preview config.tfvars
+      </button>
+      <button
+        id="reload-btn"
+        class="rounded-lg border border-slate-700 px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-slate-800"
+        title="Re-read config.tfvars from disk"
+      >
+        <i class="fa-solid fa-rotate mr-2"></i>Reload from disk
+      </button>
+    </div>
+  </header>
+
+  <div
+    id="drift-banner"
+    style="display: none"
+    class="mb-6 flex items-center justify-between gap-4 rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-200"
+  >
+    <span>
+      <i class="fa-solid fa-triangle-exclamation mr-2"></i>
+      <span>config.tfvars changed on disk outside the app.</span>
+    </span>
+    <button
+      id="drift-reload"
+      class="rounded-md bg-amber-500/20 px-3 py-1 text-xs font-medium text-amber-100 hover:bg-amber-500/30"
+    >
+      Reload from disk
+    </button>
+  </div>
+
+  <div class="space-y-8">
+    <!-- Virtual IPs -->
+    <section>
+      <div class="mb-3 flex items-center justify-between">
+        <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-400">
+          Virtual IPs <span id="count-vip" class="ml-1 text-slate-600"></span>
+        </h2>
+        <button
+          data-add="virtual_ips"
+          class="rounded-lg bg-emerald-500 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-emerald-400"
+        >
+          <i class="fa-solid fa-plus mr-1"></i>Add VIP
+        </button>
+      </div>
+      <div class="overflow-hidden rounded-xl border border-slate-800 bg-slate-900/50">
+        <table class="w-full text-left text-sm">
+          <thead class="bg-slate-900/80 text-xs uppercase tracking-wide text-slate-500">
+            <tr>
+              <th class="px-4 py-3 font-semibold">Name</th>
+              <th class="px-4 py-3 font-semibold">Proto / Ext → Mapped</th>
+              <th class="px-4 py-3 font-semibold">Mapped IP</th>
+              <th class="px-4 py-3 font-semibold">Status</th>
+              <th class="px-4 py-3 text-right font-semibold">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="vip-rows" class="divide-y divide-slate-800"></tbody>
+        </table>
+        <p id="vip-empty" hidden class="px-4 py-8 text-center text-sm text-slate-500">
+          No virtual IPs defined yet.
+        </p>
+      </div>
+    </section>
+
+    <!-- Firewall policies -->
+    <section>
+      <div class="mb-3 flex items-center justify-between">
+        <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-400">
+          Firewall Policies
+          <span id="count-policy" class="ml-1 text-slate-600"></span>
+        </h2>
+        <button
+          data-add="firewall_policies"
+          class="rounded-lg bg-emerald-500 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-emerald-400"
+        >
+          <i class="fa-solid fa-plus mr-1"></i>Add policy
+        </button>
+      </div>
+      <div class="overflow-hidden rounded-xl border border-slate-800 bg-slate-900/50">
+        <table class="w-full text-left text-sm">
+          <thead class="bg-slate-900/80 text-xs uppercase tracking-wide text-slate-500">
+            <tr>
+              <th class="px-4 py-3 font-semibold">ID</th>
+              <th class="px-4 py-3 font-semibold">Name</th>
+              <th class="px-4 py-3 font-semibold">Src → Dst</th>
+              <th class="px-4 py-3 font-semibold">Action</th>
+              <th class="px-4 py-3 text-right font-semibold">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="policy-rows" class="divide-y divide-slate-800"></tbody>
+        </table>
+        <p id="policy-empty" hidden class="px-4 py-8 text-center text-sm text-slate-500">
+          No firewall policies defined yet.
+        </p>
+      </div>
+    </section>
+
+    <!-- DHCP reservations -->
+    <section>
+      <div class="mb-3 flex items-center justify-between">
+        <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-400">
+          DHCP Reservations
+          <span id="count-dhcp" class="ml-1 text-slate-600"></span>
+        </h2>
+        <button
+          data-add="dhcp_server_reservations"
+          class="rounded-lg bg-emerald-500 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-emerald-400"
+        >
+          <i class="fa-solid fa-plus mr-1"></i>Add reservation group
+        </button>
+      </div>
+      <div class="overflow-hidden rounded-xl border border-slate-800 bg-slate-900/50">
+        <table class="w-full text-left text-sm">
+          <thead class="bg-slate-900/80 text-xs uppercase tracking-wide text-slate-500">
+            <tr>
+              <th class="px-4 py-3 font-semibold">FortiOS ID</th>
+              <th class="px-4 py-3 font-semibold">Method</th>
+              <th class="px-4 py-3 font-semibold">Reservations</th>
+              <th class="px-4 py-3 text-right font-semibold">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="dhcp-rows" class="divide-y divide-slate-800"></tbody>
+        </table>
+        <p id="dhcp-empty" hidden class="px-4 py-8 text-center text-sm text-slate-500">
+          No DHCP reservations defined yet.
+        </p>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- Virtual IP modal -->
+<div id="modal-vip" style="display: none" class="fixed inset-0 z-40 flex items-center justify-center bg-black/60 p-4">
+  <div class="flex max-h-[90vh] w-full max-w-2xl flex-col rounded-xl border border-slate-800 bg-slate-900 p-6">
+    <div class="mb-4 flex items-center justify-between">
+      <h3 id="vip-title" class="text-lg font-semibold">Add virtual IP</h3>
+      <button type="button" data-close class="rounded-md px-2 py-1 text-slate-400 hover:bg-slate-800">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+    </div>
+    <form id="vip-form" class="grid gap-4 overflow-y-auto sm:grid-cols-2">
+      <input type="hidden" id="vip-orig" />
+      <label class="block text-sm"><span class="mb-1 block text-slate-300">Name</span>
+        <input id="vip-name" required placeholder="plex" class="fg-input" /></label>
+      <label class="block text-sm"><span class="mb-1 block text-slate-300">Type</span>
+        <input id="vip-type" placeholder="static-nat" class="fg-input" /></label>
+      <label class="block text-sm"><span class="mb-1 block text-slate-300">External interface</span>
+        <input id="vip-extintf" placeholder="wan" class="fg-input" /></label>
+      <label class="block text-sm"><span class="mb-1 block text-slate-300">External IP</span>
+        <input id="vip-extip" placeholder="0.0.0.0" class="fg-input" /></label>
+      <label class="block text-sm"><span class="mb-1 block text-slate-300">Protocol</span>
+        <input id="vip-protocol" placeholder="tcp" class="fg-input" /></label>
+      <div class="grid grid-cols-2 gap-3">
+        <label class="block text-sm"><span class="mb-1 block text-slate-300">External port</span>
+          <input id="vip-extport" required placeholder="32400" class="fg-input" /></label>
+        <label class="block text-sm"><span class="mb-1 block text-slate-300">Mapped port</span>
+          <input id="vip-mappedport" placeholder="32400" class="fg-input" /></label>
+      </div>
+      <label class="block text-sm sm:col-span-2"><span class="mb-1 block text-slate-300">Mapped IP(s)</span>
+        <input id="vip-mappedip" required placeholder="192.168.1.100" class="fg-input font-mono text-xs" />
+        <span class="mt-1 block text-xs text-slate-500">Comma-separated target IPs/ranges</span></label>
+      <div class="grid grid-cols-2 gap-3">
+        <label class="block text-sm"><span class="mb-1 block text-slate-300">Status</span>
+          <select id="vip-status" class="fg-input">
+            <option value="enable">enable</option>
+            <option value="disable">disable</option>
+          </select></label>
+        <label class="block text-sm"><span class="mb-1 block text-slate-300">Port forward</span>
+          <select id="vip-portforward" class="fg-input">
+            <option value="enable">enable</option>
+            <option value="disable">disable</option>
+          </select></label>
+      </div>
+      <label class="flex items-center gap-2 text-sm text-slate-300 sm:col-span-2">
+        <input id="vip-import" type="checkbox" class="h-4 w-4 rounded border-slate-700 bg-slate-950 text-sky-500 focus:ring-sky-500" />
+        Import existing (adopt a VIP already on the FortiGate)
+      </label>
+      <div class="flex justify-end gap-3 sm:col-span-2">
+        <button type="button" data-close class="rounded-lg border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:bg-slate-800">Cancel</button>
+        <button type="submit" class="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-400">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Firewall policy modal -->
+<div id="modal-policy" style="display: none" class="fixed inset-0 z-40 flex items-center justify-center bg-black/60 p-4">
+  <div class="flex max-h-[90vh] w-full max-w-2xl flex-col rounded-xl border border-slate-800 bg-slate-900 p-6">
+    <div class="mb-4 flex items-center justify-between">
+      <h3 id="policy-title" class="text-lg font-semibold">Add firewall policy</h3>
+      <button type="button" data-close class="rounded-md px-2 py-1 text-slate-400 hover:bg-slate-800">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+    </div>
+    <form id="policy-form" class="grid gap-4 overflow-y-auto sm:grid-cols-2">
+      <input type="hidden" id="policy-orig" />
+      <label class="block text-sm"><span class="mb-1 block text-slate-300">Policy ID</span>
+        <input id="policy-id" type="number" required placeholder="10" class="fg-input" /></label>
+      <label class="block text-sm"><span class="mb-1 block text-slate-300">Name</span>
+        <input id="policy-name" required placeholder="plex" class="fg-input" /></label>
+      <label class="block text-sm"><span class="mb-1 block text-slate-300">Action</span>
+        <input id="policy-action" placeholder="accept" class="fg-input" /></label>
+      <label class="block text-sm"><span class="mb-1 block text-slate-300">Status</span>
+        <select id="policy-status" class="fg-input">
+          <option value="enable">enable</option>
+          <option value="disable">disable</option>
+        </select></label>
+      <label class="block text-sm"><span class="mb-1 block text-slate-300">Schedule</span>
+        <input id="policy-schedule" placeholder="always" class="fg-input" /></label>
+      <label class="block text-sm"><span class="mb-1 block text-slate-300">NAT</span>
+        <input id="policy-nat" placeholder="disable" class="fg-input" /></label>
+      <label class="block text-sm"><span class="mb-1 block text-slate-300">Log traffic</span>
+        <input id="policy-logtraffic" placeholder="all" class="fg-input" /></label>
+      <label class="block text-sm"><span class="mb-1 block text-slate-300">Match VIP</span>
+        <input id="policy-match_vip" placeholder="enable" class="fg-input" /></label>
+      <label class="block text-sm"><span class="mb-1 block text-slate-300">Source interfaces</span>
+        <input id="policy-srcintf" placeholder="wan" class="fg-input" /></label>
+      <label class="block text-sm"><span class="mb-1 block text-slate-300">Dest interfaces</span>
+        <input id="policy-dstintf" placeholder="lan" class="fg-input" /></label>
+      <label class="block text-sm"><span class="mb-1 block text-slate-300">Source addresses</span>
+        <input id="policy-srcaddr" placeholder="all" class="fg-input" /></label>
+      <label class="block text-sm"><span class="mb-1 block text-slate-300">Dest addresses</span>
+        <input id="policy-dstaddr" placeholder="plex" class="fg-input" /></label>
+      <label class="block text-sm sm:col-span-2"><span class="mb-1 block text-slate-300">Services</span>
+        <input id="policy-service" placeholder="ALL" class="fg-input" />
+        <span class="mt-1 block text-xs text-slate-500">Comma-separated names for the interface/address/service fields</span></label>
+      <label class="flex items-center gap-2 text-sm text-slate-300 sm:col-span-2">
+        <input id="policy-import" type="checkbox" class="h-4 w-4 rounded border-slate-700 bg-slate-950 text-sky-500 focus:ring-sky-500" />
+        Import existing (adopt a policy already on the FortiGate)
+      </label>
+      <div class="flex justify-end gap-3 sm:col-span-2">
+        <button type="button" data-close class="rounded-lg border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:bg-slate-800">Cancel</button>
+        <button type="submit" class="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-400">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- DHCP reservation modal -->
+<div id="modal-dhcp" style="display: none" class="fixed inset-0 z-40 flex items-center justify-center bg-black/60 p-4">
+  <div class="flex max-h-[90vh] w-full max-w-3xl flex-col rounded-xl border border-slate-800 bg-slate-900 p-6">
+    <div class="mb-4 flex items-center justify-between">
+      <h3 id="dhcp-title" class="text-lg font-semibold">Add reservation group</h3>
+      <button type="button" data-close class="rounded-md px-2 py-1 text-slate-400 hover:bg-slate-800">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+    </div>
+    <form id="dhcp-form" class="flex flex-col gap-4 overflow-y-auto">
+      <input type="hidden" id="dhcp-orig" />
+      <div class="grid grid-cols-2 gap-4">
+        <label class="block text-sm"><span class="mb-1 block text-slate-300">FortiOS ID</span>
+          <input id="dhcp-fosid" type="number" required placeholder="1" class="fg-input" /></label>
+        <label class="block text-sm"><span class="mb-1 block text-slate-300">Method</span>
+          <input id="dhcp-method" placeholder="PUT" class="fg-input" /></label>
+      </div>
+      <div>
+        <div class="mb-2 flex items-center justify-between">
+          <span class="text-xs font-semibold uppercase tracking-wide text-slate-400">Reserved addresses</span>
+          <button type="button" id="dhcp-add-row" class="rounded-md border border-slate-700 px-2 py-1 text-xs text-slate-300 hover:bg-slate-800">
+            <i class="fa-solid fa-plus mr-1"></i>Add row
+          </button>
+        </div>
+        <div class="overflow-hidden rounded-lg border border-slate-800">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-900/80 uppercase tracking-wide text-slate-500">
+              <tr>
+                <th class="px-2 py-2 font-semibold">ID</th>
+                <th class="px-2 py-2 font-semibold">IP</th>
+                <th class="px-2 py-2 font-semibold">MAC</th>
+                <th class="px-2 py-2 font-semibold">Description</th>
+                <th class="px-2 py-2"></th>
+              </tr>
+            </thead>
+            <tbody id="dhcp-addr-rows" class="divide-y divide-slate-800"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="flex justify-end gap-3">
+        <button type="button" data-close class="rounded-lg border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:bg-slate-800">Cancel</button>
+        <button type="submit" class="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-400">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- config.tfvars preview modal -->
+<div id="modal-preview" style="display: none" class="fixed inset-0 z-40 flex items-center justify-center bg-black/60 p-4">
+  <div class="flex max-h-[85vh] w-full max-w-4xl flex-col rounded-xl border border-slate-800 bg-slate-900 p-6">
+    <div class="mb-3 flex items-center justify-between">
+      <h3 class="flex items-center gap-2 text-lg font-semibold">
+        <i class="fa-solid fa-file-code text-slate-400"></i>
+        <code class="text-slate-300">.config/terraform/components/network/fortigate/config.tfvars</code>
+      </h3>
+      <div class="flex items-center gap-2">
+        <button id="preview-copy" class="rounded-md border border-slate-700 px-3 py-1 text-xs text-slate-300 hover:bg-slate-800" title="Copy to clipboard">
+          <i class="fa-solid fa-copy mr-1"></i>Copy
+        </button>
+        <button type="button" data-close class="rounded-md px-2 py-1 text-slate-400 hover:bg-slate-800">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+    </div>
+    <pre id="tfvars-preview" class="flex-1 overflow-auto rounded-lg bg-slate-950 p-4 text-sm leading-relaxed text-slate-300"></pre>
+  </div>
+</div>
+
+<style>
+  .fg-input {
+    width: 100%;
+    border-radius: 0.5rem;
+    border: 1px solid rgb(51 65 85);
+    background-color: rgb(2 6 23);
+    padding: 0.5rem 0.75rem;
+    color: rgb(241 245 249);
+  }
+  .fg-input:focus {
+    outline: none;
+    border-color: rgb(14 165 233);
+  }
+</style>
+{% endblock %} {% block scripts %}
+<script src="{{ url_for('static', filename='js/network_fortigate.js') }}"></script>
+{% endblock %}

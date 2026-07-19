@@ -1,6 +1,6 @@
 # Site-local configuration (tfvars, backends, keys)
 
-This directory is the single site-local source of truth: Terraform/Kubernetes tfvars, backends, keys, and Docker config under **`docker/`** (`minio.env` and `swarm.yaml`). Its Terraform tree mirrors the repo under **`terraform/components/`** (for example `.config/terraform/components/swarm/grafana/app.tfvars`). **Terraform pipelines and `scripts/terraform/load_root_env.sh` default `CONFIG_DIR` and `TFVARS_HOME_DIR` to `<repo>/.config`** when they are unset after loading **`.config/docker/minio.env`**.
+This directory is the single site-local source of truth: Terraform/Kubernetes tfvars, backends, keys, and Docker config under **`docker/`** (`minio.env` and `swarm.tfvars`). Its Terraform tree mirrors the repo under **`terraform/components/`** (for example `.config/terraform/components/swarm/grafana/app.tfvars`). **Terraform pipelines and `scripts/terraform/load_root_env.sh` default `CONFIG_DIR` and `TFVARS_HOME_DIR` to `<repo>/.config`** when they are unset after loading **`.config/docker/minio.env`**.
 
 ## homelab-config tags (required)
 
@@ -34,9 +34,11 @@ Canonical mirrored paths (for example `terraform/components/swarm/<svc>/app.tfva
 
 ## Layout (typical)
 
-- `docker/` — `minio.env` (Compose + host scripts) and `swarm.yaml` (swarm topology); see `docker/README.md`, `docker/*.env.example`, and `docker/swarm.yaml.example`
+- `docker/` — `minio.env` (Compose + host scripts) and `swarm.tfvars` (swarm topology); see `docker/README.md` and `docker/*.env.example`
 - `terraform/minio.backend.hcl` — shared remote state backend config for Swarm/remote Terraform stages
 - `terraform/components/` — site tfvars mirroring **`terraform/components/`** in the repo (`swarm/`, `cluster/`, `remote/`, `network/`). Create `<slice>.tfvars` under the matching path here (live secrets stay in `.config` only; do not add checked-in `*.tfvars.example`).
+- `terraform/providers/` — one shared **provider login** file per app (`terraform/providers/<app>.tfvars`, config-id `terraform/providers/<app>`), managed by the homelab-config web app and passed as an extra `-var-file` by the consuming slice. Today: `proxmox`, `docker`, `cloudflare`, `grafana`, `jenkins`, `argocd`, `fortigate`, `nginx_proxy_manager`, `vault`. These hold credentials only; desired-state config stays in each slice's own `config.tfvars`.
+- `terraform/nfs.tfvars` — shared NFS export catalog (config-id `terraform/nfs`), also managed by the homelab-config web app.
 - `kubernetes/` — optional cluster tfvars if your site keeps them here
 - `.ssh/` — keys and `known_hosts` for optional SSH workflows
 

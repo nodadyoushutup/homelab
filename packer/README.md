@@ -49,6 +49,20 @@ CentOS, and provides `pkg_install`/`pkg_install_best_effort`).
 - `tar`, `xz`, `sha256sum` (Kali only — used to unpack/verify its `.tar.xz` cloud image)
 - KVM support for best performance when selecting `accelerator=kvm` (`/dev/kvm` must be available to the runner/container)
 
+## Build defaults (homelab-config)
+
+Build defaults can be managed in the **homelab-config** web app under the
+**Packer** section (Machines group). It renders
+`.config/packer/build.pkrvars.hcl` (git-ignored), which
+`packer/packer.sh` and `packer/pipeline/packer.sh` read as their defaults for
+`--distro`, `--gui`, `--install_node_exporter`, the per-distro release, `--target`,
+`--build_arch`, the accelerators, `--publish`, and `--version`. **Explicit CLI
+flags always override the managed defaults.** The file is not a real
+`packer -var-file` (it also holds orchestration keys like `distro`/`build_arch`),
+so the scripts parse it for defaults rather than feeding it to Packer. CI
+(GitHub Actions / Jenkins) uses its own dispatch inputs, since the git-ignored
+`.config` is not present in a CI checkout.
+
 ## Build
 
 From repo root (defaults to Ubuntu 24.04):

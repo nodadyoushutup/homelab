@@ -15,7 +15,6 @@ locals {
   manage_github_credentials_input = var.manage_github_credentials
   orphaned_item_days_to_keep      = var.orphaned_item_days_to_keep
   orphaned_item_num_to_keep       = var.orphaned_item_num_to_keep
-  provider_config                 = var.provider_config
   prune_dead_branches             = var.prune_dead_branches
 
   repo_root           = abspath("${path.module}/../../../../..")

@@ -3,7 +3,6 @@
 # MinIO on swarm-cp-0 (Docker); reachable as swarm-cp-0.local from the LAN.
 bucket = ""
 region = ""
-# access_key/secret_key auto-populate when MinIO is initialized by bootstrap.
 access_key = ""
 secret_key = ""
 

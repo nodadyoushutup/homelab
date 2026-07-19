@@ -1,5 +1,7 @@
 # provider.tf
-# S3 remote state and Vault provider (auth via VAULT_ADDR/VAULT_TOKEN env) for the Vault config slice.
+# S3 remote state and Vault provider for the Vault config slice. Provider login
+# comes from var.vault (config-id terraform/providers/vault), a shared -var-file
+# managed by the homelab-config web app.
 
 terraform {
   backend "s3" {
@@ -14,4 +16,8 @@ terraform {
   }
 }
 
-provider "vault" {}
+provider "vault" {
+  address         = var.vault.address
+  token           = var.vault.token
+  skip_tls_verify = try(var.vault.skip_tls_verify, false)
+}

@@ -2,13 +2,17 @@
 # Single source of truth for Vault Swarm service values (resources read local.* only).
 
 locals {
-  api_addr                     = var.api_addr
-  cluster_addr                 = var.cluster_addr
-  dns_nameservers              = var.dns_nameservers
-  placement                    = var.placement
-  published_port               = var.published_port
-  raft_node_id                 = var.raft_node_id
-  swarm_docker_provider_config = var.swarm_docker_provider_config
+  api_addr        = var.api_addr
+  cluster_addr    = var.cluster_addr
+  dns_nameservers = var.dns_nameservers
+  placement       = var.placement
+  published_port  = var.published_port
+  raft_node_id    = var.raft_node_id
+  docker_selected = var.docker_providers[var.docker_machine]
+  swarm_docker_provider_config = {
+    docker         = { host = local.docker_selected.host, ssh_opts = local.docker_selected.ssh_opts }
+    registry_auths = var.registry_auths
+  }
 
   stack_name       = "vault"
   data_volume_name = "vault-data"

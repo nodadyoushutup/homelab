@@ -13,6 +13,11 @@ export CONFIG_DIR
 
 # shellcheck source=../../../scripts/terraform/resolve_config_by_id.sh
 source "${ROOT_DIR}/scripts/terraform/resolve_config_by_id.sh"
+# shellcheck source=/dev/null
+source "${ROOT_DIR}/scripts/terraform/terraform_backend_init.sh"
+# Shared Docker provider catalog (config-id: terraform/providers/docker); exports DOCKER_TFVARS.
+# shellcheck source=../../../scripts/terraform/docker_tfvars_env.sh
+source "${ROOT_DIR}/scripts/terraform/docker_tfvars_env.sh"
 
 SLICE_CONFIG_ID="$(homelab_config_id_from_terraform_dir "${ROOT_DIR}" "${TERRAFORM_DIR}")"
 DEFAULT_SLICE_TFVARS="$(homelab_resolve_config_path "${CONFIG_DIR}" "${SLICE_CONFIG_ID}")"
@@ -111,7 +116,7 @@ fi
 
 require_terraform
 require_file "slice tfvars" "${SLICE_TFVARS}"
-require_file "backend config" "${BACKEND_CONFIG}"
+require_file "docker providers tfvars" "${DOCKER_TFVARS}"
 
 echo "Terraform dir:     ${TERRAFORM_DIR}"
 echo "Slice tfvars:      ${SLICE_TFVARS}"
@@ -119,44 +124,16 @@ echo "Backend config:    ${BACKEND_CONFIG}"
 
 cd "${TERRAFORM_DIR}"
 
-run_terraform_init() {
-  local init_log
-  init_log="$(mktemp -t graylog-database-terraform-init-XXXXXX)"
-
-  if terraform init -backend-config="${BACKEND_CONFIG}" "$@" \
-    > >(tee "${init_log}") \
-    2> >(tee -a "${init_log}" >&2); then
-    rm -f "${init_log}"
-    return 0
-  fi
-
-  if grep -q "Backend configuration changed" "${init_log}"; then
-    if [[ -f ".terraform/terraform.tfstate" ]]; then
-      echo "[WARN] Backend change detected; attempting state migration"
-      if terraform init -force-copy -migrate-state -backend-config="${BACKEND_CONFIG}" "$@"; then
-        rm -f "${init_log}"
-        return 0
-      fi
-    fi
-    echo "[WARN] Backend change detected; re-running terraform init -reconfigure"
-    if terraform init -reconfigure -backend-config="${BACKEND_CONFIG}" "$@"; then
-      rm -f "${init_log}"
-      return 0
-    fi
-  fi
-
-  rm -f "${init_log}"
-  return 1
-}
 
 echo "[STEP] terraform init (Graylog database)"
-if ! run_terraform_init; then
+if ! homelab_terraform_init "${TERRAFORM_DIR}"; then
   echo "[ERR] terraform init failed" >&2
   exit 1
 fi
 
 PLAN_ARGS=(
   -input=false
+  -var-file "${DOCKER_TFVARS}"
   -var-file "${SLICE_TFVARS}"
 )
 

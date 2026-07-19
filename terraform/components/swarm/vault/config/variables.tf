@@ -1,6 +1,16 @@
 # variables.tf
 # External input contract for the Vault config slice.
 
+variable "vault" {
+  description = "Vault provider login (config-id terraform/providers/vault); shared -var-file managed by the homelab-config web app."
+  type = object({
+    address         = string
+    token           = string
+    skip_tls_verify = optional(bool, false)
+  })
+  sensitive = true
+}
+
 variable "mount_path" {
   description = "Path where KV v2 will be mounted."
   type        = string

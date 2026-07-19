@@ -1,9 +1,12 @@
 # variables.tf
 # External input contract for the Cloudflare DNS config slice.
 
-variable "provider_config" {
-  description = "Provider configuration map for Cloudflare authentication."
-  type        = any
+variable "cloudflare" {
+  description = "Cloudflare provider login (config-id terraform/providers/cloudflare); shared -var-file managed by the homelab-config web app."
+  type = object({
+    api_token = string
+  })
+  sensitive = true
 }
 
 variable "zone_id" {

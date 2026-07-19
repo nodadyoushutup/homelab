@@ -554,6 +554,8 @@ PIPELINE_ARGS=("$@")
 
 # shellcheck source=../../../scripts/terraform/resolve_config_by_id.sh
 source "${PIPELINE_SCRIPT_ROOT}/resolve_config_by_id.sh"
+# shellcheck source=/dev/null
+source "${PIPELINE_SCRIPT_ROOT}/terraform_backend_init.sh"
 
 SLICE_CONFIG_ID="$(homelab_config_id_from_terraform_dir "${ROOT_DIR}" "${TERRAFORM_DIR}")"
 DEFAULT_SLICE_TFVARS="$(homelab_resolve_config_path "${TFVARS_HOME_DIR}" "${SLICE_CONFIG_ID}")"
@@ -618,7 +620,8 @@ if [[ -z "${TFVARS_PATH}" || ! -f "${TFVARS_PATH}" ]]; then
   echo "[ERR] Missing TFVARS file: ${TFVARS_PATH}" >&2
   exit 1
 fi
-if [[ -z "${BACKEND_CONFIG_PATH}" || ! -f "${BACKEND_CONFIG_PATH}" ]]; then
+if [[ "$(homelab_terraform_state_mode)" == "s3" \
+  && ( -z "${BACKEND_CONFIG_PATH}" || ! -f "${BACKEND_CONFIG_PATH}" ) ]]; then
   echo "[ERR] Missing backend config file: ${BACKEND_CONFIG_PATH}" >&2
   exit 1
 fi
@@ -636,40 +639,11 @@ fi
 
 cd "${TERRAFORM_DIR}"
 
-run_terraform_init() {
-  local init_args=("$@")
-  local init_log
-  init_log="$(mktemp -t talos-terraform-init-XXXXXX)"
-
-  if "${EXEC_SCRIPT}" init "${init_args[@]}" \
-    > >(tee "${init_log}") \
-    2> >(tee -a "${init_log}" >&2); then
-    rm -f "${init_log}"
-    return 0
-  fi
-
-  if grep -q "Backend configuration changed" "${init_log}"; then
-    if [[ -f ".terraform/terraform.tfstate" ]]; then
-      echo "[WARN] Backend change detected; attempting automatic state migration"
-      if "${EXEC_SCRIPT}" init -force-copy -migrate-state "${init_args[@]}"; then
-        rm -f "${init_log}"
-        return 0
-      fi
-    fi
-
-    echo "[WARN] Backend change detected; re-running terraform init with -reconfigure"
-    if "${EXEC_SCRIPT}" init -reconfigure "${init_args[@]}"; then
-      rm -f "${init_log}"
-      return 0
-    fi
-  fi
-
-  rm -f "${init_log}"
-  return 1
-}
-
 echo "[STEP] terraform init (${STAGE_NAME})"
-if ! run_terraform_init -backend-config="${BACKEND_CONFIG_PATH}"; then
+# Route through the shared mode-aware helper (local self-init / S3 + auto
+# state migration). BACKEND_CONFIG is what the helper reads in S3 mode.
+BACKEND_CONFIG="${BACKEND_CONFIG_PATH}"
+if ! homelab_terraform_init "${TERRAFORM_DIR}"; then
   echo "[ERR] terraform init failed" >&2
   exit 1
 fi

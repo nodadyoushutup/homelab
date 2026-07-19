@@ -1,45 +1,49 @@
 # locals.tf
 # Single source of truth for Proxmox VM/cloud-init values (resources read local.* only).
+# Each machine is normalized with defaults for the constant fields so the tfvars
+# (managed by homelab-config) stay concise while the resources reproduce the
+# previously hardcoded images/VMs exactly.
 
 locals {
-  provider_config = var.provider_config
+  provider_config = { proxmox = var.proxmox }
 
-  runner_amd64_user_config_path    = var.runner_amd64_user_config_path
-  runner_amd64_network_config_path = var.runner_amd64_network_config_path
+  proxmox_images = var.proxmox_images
 
-  k8s_cp_0_user_config_path    = var.k8s_cp_0_user_config_path
-  k8s_cp_0_network_config_path = var.k8s_cp_0_network_config_path
+  proxmox_machines = {
+    for name, m in var.proxmox_machines : name => {
+      vm_id      = m.vm_id
+      node_name  = try(m.node_name, "pve")
+      bios       = try(m.bios, "ovmf")
+      machine    = try(m.machine, "q35")
+      started    = try(m.started, true)
+      on_boot    = try(m.on_boot, true)
+      os_type    = try(m.os_type, "l26")
+      cores      = try(m.cores, 2)
+      cpu_type   = try(m.cpu_type, "host")
+      memory     = m.memory
+      tags       = try(m.tags, ["terraform"])
+      boot_order = try(m.boot_order, null)
 
-  k8s_wk_0_user_config_path    = var.k8s_wk_0_user_config_path
-  k8s_wk_0_network_config_path = var.k8s_wk_0_network_config_path
+      efi_datastore_id = try(m.efi.datastore_id, "local-lvm")
+      efi_type         = try(m.efi.type, "4m")
+      efi_pre_enrolled = try(m.efi.pre_enrolled_keys, false)
 
-  k8s_wk_1_user_config_path    = var.k8s_wk_1_user_config_path
-  k8s_wk_1_network_config_path = var.k8s_wk_1_network_config_path
+      disk_datastore_id = try(m.disk.datastore_id, "virtualization")
+      disk_interface    = try(m.disk.interface, "scsi0")
+      disk_size         = m.disk.size
+      disk_image        = try(m.disk.image, null)
 
-  k8s_wk_2_user_config_path    = var.k8s_wk_2_user_config_path
-  k8s_wk_2_network_config_path = var.k8s_wk_2_network_config_path
+      cdrom_interface = try(m.cdrom.interface, null)
+      cdrom_image     = try(m.cdrom.image, null)
 
-  k8s_wk_3_user_config_path    = var.k8s_wk_3_user_config_path
-  k8s_wk_3_network_config_path = var.k8s_wk_3_network_config_path
+      init_datastore_id   = try(m.initialization.datastore_id, "local-lvm")
+      init_interface      = try(m.initialization.interface, "ide2")
+      user_config_path    = m.initialization.user_config_path
+      network_config_path = m.initialization.network_config_path
 
-  k8s_wk_4_user_config_path    = var.k8s_wk_4_user_config_path
-  k8s_wk_4_network_config_path = var.k8s_wk_4_network_config_path
-
-  k8s_wk_5_user_config_path    = var.k8s_wk_5_user_config_path
-  k8s_wk_5_network_config_path = var.k8s_wk_5_network_config_path
-
-  k8s_wk_6_user_config_path    = var.k8s_wk_6_user_config_path
-  k8s_wk_6_network_config_path = var.k8s_wk_6_network_config_path
-
-  k8s_wk_7_user_config_path    = var.k8s_wk_7_user_config_path
-  k8s_wk_7_network_config_path = var.k8s_wk_7_network_config_path
-
-  k8s_wk_8_user_config_path    = var.k8s_wk_8_user_config_path
-  k8s_wk_8_network_config_path = var.k8s_wk_8_network_config_path
-
-  k8s_wk_9_user_config_path    = var.k8s_wk_9_user_config_path
-  k8s_wk_9_network_config_path = var.k8s_wk_9_network_config_path
-
-  k8s_wk_10_user_config_path    = var.k8s_wk_10_user_config_path
-  k8s_wk_10_network_config_path = var.k8s_wk_10_network_config_path
+      net_bridge      = try(m.network.bridge, "vmbr0")
+      net_model       = try(m.network.model, "virtio")
+      net_mac_address = m.network.mac_address
+    }
+  }
 }

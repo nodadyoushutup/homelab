@@ -13,6 +13,14 @@ export CONFIG_DIR
 
 # shellcheck source=../../../scripts/terraform/resolve_config_by_id.sh
 source "${ROOT_DIR}/scripts/terraform/resolve_config_by_id.sh"
+# shellcheck source=/dev/null
+source "${ROOT_DIR}/scripts/terraform/terraform_backend_init.sh"
+# Shared Docker provider catalog (config-id: terraform/providers/docker); exports DOCKER_TFVARS.
+# shellcheck source=../../../scripts/terraform/docker_tfvars_env.sh
+source "${ROOT_DIR}/scripts/terraform/docker_tfvars_env.sh"
+# Shared NFS catalog (config-id: terraform/nfs); exports NFS_TFVARS.
+# shellcheck source=../../../../scripts/terraform/nfs_tfvars_env.sh
+source "${ROOT_DIR}/scripts/terraform/nfs_tfvars_env.sh"
 
 SLICE_CONFIG_ID="$(homelab_config_id_from_terraform_dir "${ROOT_DIR}" "${TERRAFORM_DIR}")"
 DEFAULT_SLICE_TFVARS="$(homelab_resolve_config_path "${CONFIG_DIR}" "${SLICE_CONFIG_ID}")"
@@ -50,6 +58,8 @@ terraform_console_string() {
   ensure_terraform_console_ready
 
   var_args+=(-var-file "${SLICE_TFVARS}")
+  var_args+=(-var-file "${NFS_TFVARS}")
+  var_args+=(-var-file "${DOCKER_TFVARS}")
 
   if ! console_output="$(
     printf '%s\n' "${expression}" | terraform -chdir="${TERRAFORM_DIR}" console "${var_args[@]}" 2>/dev/null
@@ -94,8 +104,10 @@ load_registry_auth_from_terraform() {
 
   local -a var_args=()
   var_args+=(-var-file "${SLICE_TFVARS}")
+  var_args+=(-var-file "${NFS_TFVARS}")
+  var_args+=(-var-file "${DOCKER_TFVARS}")
 
-  auths_json="$(printf '%s\n' 'jsonencode(coalesce(try(var.swarm_docker_provider_config.registry_auths, null), []))' | terraform -chdir="${TERRAFORM_DIR}" console "${var_args[@]}" 2>/dev/null || true)"
+  auths_json="$(printf '%s\n' 'jsonencode(coalesce(try(var.registry_auths, null), []))' | terraform -chdir="${TERRAFORM_DIR}" console "${var_args[@]}" 2>/dev/null || true)"
   if [[ -z "${auths_json}" ]]; then
     return 0
   fi
@@ -229,7 +241,9 @@ run_pre_terraform_checks() {
   fi
 
   echo "[INFO] Checking Jenkins controller outputs"
-  if ! terraform -chdir="${CONTROLLER_TERRAFORM_DIR}" init -backend-config="${BACKEND_CONFIG}" > /dev/null; then
+  # Mode-aware: in local mode this reads the controller's local state; in s3
+  # mode it inits against MinIO (and auto-migrates if the backend changed).
+  if ! homelab_terraform_init "${CONTROLLER_TERRAFORM_DIR}" > /dev/null; then
     echo "[ERR] Unable to initialize controller backend; ensure controller pipeline has been run." >&2
     exit 1
   fi
@@ -321,7 +335,8 @@ done
 
 require_terraform
 require_file "slice tfvars" "${SLICE_TFVARS}"
-require_file "backend config" "${BACKEND_CONFIG}"
+require_file "docker providers tfvars" "${DOCKER_TFVARS}"
+require_file "nfs catalog tfvars" "${NFS_TFVARS}"
 
 echo "Terraform dir:     ${TERRAFORM_DIR}"
 echo "Slice tfvars:      ${SLICE_TFVARS}"
@@ -331,45 +346,18 @@ run_pre_terraform_checks
 
 cd "${TERRAFORM_DIR}"
 
-run_terraform_init() {
-  local init_log
-  init_log="$(mktemp -t jenkins-agent-amd64-terraform-init-XXXXXX)"
-
-  if terraform init -backend-config="${BACKEND_CONFIG}" "$@" \
-    > >(tee "${init_log}") \
-    2> >(tee -a "${init_log}" >&2); then
-    rm -f "${init_log}"
-    return 0
-  fi
-
-  if grep -q "Backend configuration changed" "${init_log}"; then
-    if [[ -f ".terraform/terraform.tfstate" ]]; then
-      echo "[WARN] Backend change detected; attempting state migration"
-      if terraform init -force-copy -migrate-state -backend-config="${BACKEND_CONFIG}" "$@"; then
-        rm -f "${init_log}"
-        return 0
-      fi
-    fi
-    echo "[WARN] Backend change detected; re-running terraform init -reconfigure"
-    if terraform init -reconfigure -backend-config="${BACKEND_CONFIG}" "$@"; then
-      rm -f "${init_log}"
-      return 0
-    fi
-  fi
-
-  rm -f "${init_log}"
-  return 1
-}
 
 echo "[STEP] terraform init (Jenkins agent amd64)"
-if ! run_terraform_init; then
+if ! homelab_terraform_init "${TERRAFORM_DIR}"; then
   echo "[ERR] terraform init failed" >&2
   exit 1
 fi
 
 PLAN_ARGS=(
   -input=false
+  -var-file "${DOCKER_TFVARS}"
   -var-file "${SLICE_TFVARS}"
+  -var-file "${NFS_TFVARS}"
 )
 
 echo "[STEP] terraform plan (Jenkins agent amd64)"

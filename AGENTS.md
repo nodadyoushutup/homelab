@@ -37,7 +37,28 @@ user explicitly asks. Live operator config belongs under
 - Docker/local dotenv lives under `<repo>/.config/docker/`.
 - Pipelines use `scripts/terraform/load_root_env.sh`.
 - Per-slice tfvars are self-contained; each slice pipeline passes **only** that
-  slice’s `-var-file` (no shared swarm/dns/nfs/amd64/arm64 bundles).
+  slice’s `-var-file`, with two intentional exceptions, both managed by the
+  homelab-config web app:
+  - the shared NFS catalog (`terraform/nfs` -> `.config/terraform/nfs.tfvars`);
+    consumer slices that mount NFS pass `nfs.tfvars` as an extra `-var-file` and
+    select a share via `nfs_share`.
+  - provider config under `terraform/providers/<app>` ->
+    `.config/terraform/providers/<app>.tfvars` (one file per app/provider). The
+    consuming slice passes its `providers/<app>.tfvars` as an extra `-var-file`:
+    - the Proxmox slice feeds `var.proxmox` from `providers/proxmox.tfvars`.
+    - every Swarm slice feeds `var.docker_providers` + `var.registry_auths` from
+      the shared `providers/docker.tfvars` and selects an entry via
+      `docker_machine`. `docker_providers` is fully derived (swarm-node entries
+      from `docker/swarm.tfvars`, plus non-swarm hosts from
+      `docker/extra_hosts.yaml`); only `registry_auths` is edited in that file.
+    - each remaining provider `config/` slice feeds a single `var.<app>` login
+      object from its own `providers/<app>.tfvars`: `cloudflare`, `grafana`,
+      `jenkins`, `argocd`, `fortigate`, `nginx_proxy_manager`, and `vault`.
+      Provider login lives in the shared file only; desired-state config (DNS
+      records, dashboards, jobs, firewall policy, proxy hosts, KV secrets) stays
+      in that slice's own `config.tfvars`.
+
+  No other shared swarm/dns/amd64/arm64 bundles.
 - Container image tags are hardcoded literals on resources in `main.tf` — tag
   only, **no** digest/`@sha256:...`, and **not** a variable or local (Renovate
   must see the literal).

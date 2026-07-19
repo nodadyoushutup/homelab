@@ -1,0 +1,195 @@
+{% extends "base.html" %} {% block title %}SSH · homelab-config{% endblock %} {%
+block content %}
+<div class="mx-auto max-w-6xl p-6 lg:p-8">
+  <header class="mb-8 flex flex-wrap items-start justify-between gap-4">
+    <div>
+      <h1 class="flex items-center gap-3 text-2xl font-bold">
+        <i class="fa-solid fa-key text-sky-400"></i> SSH
+      </h1>
+      <p class="mt-1 text-sm text-slate-400">
+        Manage named key sets under
+        <code class="rounded bg-slate-800 px-1.5 py-0.5 text-slate-300"
+          >.config/.ssh/</code
+        >. Each set is its own folder and key pair (e.g.
+        <code class="rounded bg-slate-800 px-1.5 py-0.5 text-slate-300"
+          >.ssh/ca</code
+        >).
+      </p>
+    </div>
+    <div class="flex items-center gap-3">
+      <button
+        id="new-set-btn"
+        class="rounded-lg bg-sky-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-sky-400"
+      >
+        <i class="fa-solid fa-folder-plus mr-2"></i>New key set
+      </button>
+    </div>
+  </header>
+
+  <div
+    id="host-hint"
+    hidden
+    class="mb-6 rounded-lg border border-slate-700 bg-slate-900/50 px-4 py-3 text-sm text-slate-300"
+  >
+    <i class="fa-solid fa-server mr-2 text-slate-500"></i>
+    Host <code class="text-slate-400">~/.ssh</code> has a key pair available to
+    sync: <span id="host-files" class="font-mono text-slate-400"></span>
+  </div>
+
+  <div id="sets" class="grid gap-6 md:grid-cols-2"></div>
+  <p id="sets-empty" hidden class="rounded-xl border border-dashed border-slate-800 px-4 py-10 text-center text-sm text-slate-500">
+    No key sets yet. Create one, or sync from the host machine.
+  </p>
+
+  <section class="mt-8">
+    <h2 class="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-slate-400">
+      <i class="fa-solid fa-share-nodes text-slate-500"></i> Shared files
+      <span class="text-xs font-normal normal-case text-slate-600">(config, known_hosts)</span>
+    </h2>
+    <div class="overflow-hidden rounded-xl border border-slate-800 bg-slate-900/50">
+      <table class="w-full text-left text-sm">
+        <thead class="bg-slate-900/80 text-xs uppercase tracking-wide text-slate-500">
+          <tr>
+            <th class="px-4 py-3 font-semibold">File</th>
+            <th class="px-4 py-3 font-semibold">Kind</th>
+            <th class="px-4 py-3 font-semibold">Mode</th>
+            <th class="px-4 py-3 font-semibold">Size</th>
+            <th class="px-4 py-3 text-right font-semibold">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="shared-rows" class="divide-y divide-slate-800"></tbody>
+      </table>
+      <p id="shared-empty" hidden class="px-4 py-6 text-center text-sm text-slate-500">
+        No shared files.
+      </p>
+    </div>
+  </section>
+</div>
+
+<!-- New key set modal -->
+<div
+  id="modal-newset"
+  style="display: none"
+  class="fixed inset-0 z-40 flex items-center justify-center bg-black/60 p-4"
+>
+  <div class="w-full max-w-md rounded-xl border border-slate-800 bg-slate-900 p-6">
+    <h3 class="mb-4 text-lg font-semibold">New key set</h3>
+    <form id="newset-form" class="space-y-4">
+      <label class="block text-sm">
+        <span class="mb-1 block text-slate-300">Set name</span>
+        <input
+          id="newset-name"
+          required
+          placeholder="e.g. ca, deploy, backup"
+          class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 focus:border-sky-500 focus:outline-none"
+        />
+        <span class="mt-1 block text-xs text-slate-500"
+          >Creates <code class="text-slate-400">.config/.ssh/&lt;name&gt;/</code></span
+        >
+      </label>
+      <div class="flex justify-end gap-2">
+        <button type="button" data-close class="rounded-lg border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:bg-slate-800">Cancel</button>
+        <button type="submit" class="rounded-lg bg-sky-500 px-4 py-2 text-sm font-medium text-white hover:bg-sky-400">Create</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Upload key modal -->
+<div
+  id="modal-upload"
+  style="display: none"
+  class="fixed inset-0 z-40 flex items-center justify-center bg-black/60 p-4"
+>
+  <div class="w-full max-w-md rounded-xl border border-slate-800 bg-slate-900 p-6">
+    <h3 class="mb-1 text-lg font-semibold">Upload key</h3>
+    <p class="mb-4 text-sm text-slate-400">
+      into set <code id="upload-set" class="rounded bg-slate-800 px-1.5 py-0.5 text-slate-300"></code>
+    </p>
+    <form id="upload-form" class="space-y-4">
+      <div class="flex gap-2">
+        <label class="flex-1 cursor-pointer rounded-lg border border-slate-700 px-3 py-2 text-center text-sm">
+          <input type="radio" name="kind" value="private" class="peer sr-only" checked />
+          <span class="peer-checked:text-sky-300"><i class="fa-solid fa-lock mr-1"></i>Private</span>
+        </label>
+        <label class="flex-1 cursor-pointer rounded-lg border border-slate-700 px-3 py-2 text-center text-sm">
+          <input type="radio" name="kind" value="public" class="peer sr-only" />
+          <span class="peer-checked:text-sky-300"><i class="fa-solid fa-lock-open mr-1"></i>Public</span>
+        </label>
+      </div>
+      <label class="block text-sm">
+        <span class="mb-1 block text-slate-300">Target filename</span>
+        <input
+          id="upload-name"
+          required
+          value="id_ed25519"
+          class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 focus:border-sky-500 focus:outline-none"
+        />
+      </label>
+      <label class="block text-sm">
+        <span class="mb-1 block text-slate-300">Key file</span>
+        <input
+          id="upload-file"
+          type="file"
+          required
+          class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-300 file:mr-3 file:rounded file:border-0 file:bg-slate-800 file:px-3 file:py-1 file:text-slate-200"
+        />
+      </label>
+      <div class="flex justify-end gap-2">
+        <button type="button" data-close class="rounded-lg border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:bg-slate-800">Cancel</button>
+        <button type="submit" class="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-400">Upload</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- authorized_keys editor modal -->
+<div
+  id="modal-authkeys"
+  style="display: none"
+  class="fixed inset-0 z-40 flex items-center justify-center bg-black/60 p-4"
+>
+  <div class="w-full max-w-2xl rounded-xl border border-slate-800 bg-slate-900 p-6">
+    <h3 class="mb-1 text-lg font-semibold">
+      <i class="fa-solid fa-user-check mr-1 text-indigo-300"></i>authorized_keys
+    </h3>
+    <p class="mb-4 text-sm text-slate-400">
+      for set
+      <code id="authkeys-set" class="rounded bg-slate-800 px-1.5 py-0.5 text-slate-300"></code>.
+      One public key per line — these get pushed to each node's
+      <code class="rounded bg-slate-800 px-1.5 py-0.5 text-slate-300">~/.ssh/authorized_keys</code>
+      on sync.
+    </p>
+    <form id="authkeys-form" class="space-y-4">
+      <textarea
+        id="authkeys-body"
+        rows="12"
+        spellcheck="false"
+        placeholder="ssh-ed25519 AAAA... user@host"
+        class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-xs leading-relaxed text-slate-200 focus:border-sky-500 focus:outline-none"
+      ></textarea>
+      <div class="flex justify-end gap-2">
+        <button type="button" data-close class="rounded-lg border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:bg-slate-800">Cancel</button>
+        <button type="submit" class="rounded-lg bg-indigo-500 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-400">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- View file modal -->
+<div
+  id="modal-view"
+  style="display: none"
+  class="fixed inset-0 z-40 flex items-center justify-center bg-black/60 p-4"
+>
+  <div class="w-full max-w-2xl rounded-xl border border-slate-800 bg-slate-900 p-6">
+    <div class="mb-3 flex items-center justify-between">
+      <h3 id="view-title" class="text-lg font-semibold"></h3>
+      <button type="button" data-close class="rounded-md px-2 py-1 text-slate-400 hover:bg-slate-800"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <pre id="view-body" class="max-h-[28rem] overflow-auto rounded-lg bg-slate-950 p-3 text-xs leading-relaxed text-slate-300"></pre>
+  </div>
+</div>
+{% endblock %} {% block scripts %}
+<script src="{{ url_for('static', filename='js/ssh.js') }}"></script>
+{% endblock %}

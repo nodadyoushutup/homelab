@@ -1,29 +1,10 @@
 # homelab-config: terraform/components/swarm/cloud-image-repository/app
 # Self-contained slice tfvars (provider/DNS/NFS inlined; no shared swarm/dns/nfs var-files).
 
-swarm_docker_provider_config = {
-  docker = {
-    host = ""
-    ssh_opts = [
-      "", "",
-      "", "",
-      "", "",
-    ]
-  }
-
-  registry_auths = [
-    {
-      address  = ""
-      username = ""
-      password = ""
-    },
-    {
-      address  = ""
-      username = ""
-      password = ""
-    },
-  ]
-}
+# Docker provider comes from the shared catalog (config-id
+# terraform/providers/docker); the pipeline passes docker.tfvars as an extra
+# -var-file. This slice just selects a machine (and reuses shared registry_auths).
+docker_machine = "swarm-cp-0"
 
 dns_nameservers = [
   "",
@@ -41,15 +22,9 @@ placement = {
   ]
 }
 
-# NFS export backing the served /data directory (data/packer). No local volume.
-# driver_options are the Docker local-driver NFS mount opts, e.g.
-#   type   = "nfs"
-#   device = ":/path/to/repo/data/packer"
-#   o      = "addr=<nfs-server-ip>,nfsvers=4.2,rw"
-nfs = {
-  driver_options = {
-    type   = ""
-    device = ""
-    o      = ""
-  }
-}
+# NFS backing the served /data directory (data/packer). Comes from the shared
+# catalog (config-id terraform/nfs); the pipeline passes nfs.tfvars as an extra
+# -var-file. This slice selects a share + the sub-path that holds Packer output.
+# The served container path is fixed at /data (see the app locals).
+nfs_share   = "code"
+nfs_subpath = "/homelab/data/packer"

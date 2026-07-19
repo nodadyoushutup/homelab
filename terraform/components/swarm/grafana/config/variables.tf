@@ -1,12 +1,13 @@
 # variables.tf
 # External input contract for the Grafana config slice.
 
-variable "provider_config" {
-  description = "Grafana API URL and credentials for this config slice."
+variable "grafana" {
+  description = "Grafana provider login (config-id terraform/providers/grafana); shared -var-file managed by the homelab-config web app."
   type = object({
     url  = string
     auth = string
   })
+  sensitive = true
 }
 
 variable "datasources" {

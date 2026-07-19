@@ -89,7 +89,7 @@ Use this before relying on Packer with `accelerator=kvm`:
 
 If `/dev/kvm` is missing on the host, fix the host (BIOS/UEFI virtualization, nested virt for VMs, or correct kernel) before expecting KVM inside the runner container.
 
-**ARM64 pool host choice:** point `swarm_docker_provider_config.docker.host` in `.config/terraform/components/swarm/gha-runner-arm64/app.tfvars` at an AArch64 machine that actually exposes `/dev/kvm` if you expect Packer with `-accel kvm`. Small SBCs often omit KVM; pick another ARM host there if needed.
+**ARM64 pool host choice:** set `docker_machine` in `.config/terraform/components/swarm/gha-runner-arm64/app.tfvars` to a `docker_providers` entry (in the shared `.config/terraform/providers/docker.tfvars`) that resolves to an AArch64 machine actually exposing `/dev/kvm` if you expect Packer with `-accel kvm`. Small SBCs often omit KVM; select another ARM host entry there if needed.
 
 ### After changing Terraform or the image
 

@@ -14,12 +14,26 @@ locals {
   jenkins_url                      = var.jenkins_url
   kvm_supplementary_groups         = var.kvm_supplementary_groups
   mounts                           = var.mounts
-  nfs                              = var.nfs
   service_name_prefix              = var.service_name_prefix
   shared_repo_mount_target         = var.shared_repo_mount_target
   shared_tfvars_volume_driver      = var.shared_tfvars_volume_driver
   shared_tfvars_volume_driver_opts = var.shared_tfvars_volume_driver_opts
-  swarm_docker_provider_config     = var.swarm_docker_provider_config
+  docker_selected                  = var.docker_providers[var.docker_machine]
+  swarm_docker_provider_config = {
+    docker         = { host = local.docker_selected.host, ssh_opts = local.docker_selected.ssh_opts }
+    registry_auths = var.registry_auths
+  }
+
+  # Compose the Docker NFS volume from the shared catalog (config-id terraform/nfs).
+  nfs_selected = var.nfs_shares[var.nfs_share]
+  nfs = {
+    target = var.nfs_mount_target
+    driver_options = {
+      type   = "nfs"
+      device = ":${local.nfs_selected.export}${var.nfs_subpath}"
+      o      = "addr=${local.nfs_selected.server},${local.nfs_selected.options}"
+    }
+  }
 
   casc_config     = yamldecode(file(local.casc_config_path))
   requested_nodes = try(local.casc_config.jenkins.nodes, [])

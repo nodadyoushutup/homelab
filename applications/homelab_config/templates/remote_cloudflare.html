@@ -1,0 +1,216 @@
+{% extends "base.html" %} {% block title %}Cloudflare · homelab-config{% endblock %}
+{% block content %}
+<div class="mx-auto max-w-6xl p-6 lg:p-8">
+  <header class="mb-8 flex flex-wrap items-start justify-between gap-4">
+    <div>
+      <h1 class="flex items-center gap-3 text-2xl font-bold">
+        <i class="fa-brands fa-cloudflare text-orange-400"></i> Cloudflare
+      </h1>
+      <p class="mt-1 text-sm text-slate-400">
+        DNS records for the Cloudflare zone. Provider login lives separately
+        under Providers. Every change is saved automatically to
+        <code class="rounded bg-slate-800 px-1.5 py-0.5 text-slate-300"
+          >.config/terraform/components/remote/cloudflare/config.tfvars</code
+        >
+        (config-id
+        <code class="rounded bg-slate-800 px-1.5 py-0.5 text-slate-300"
+          >terraform/components/remote/cloudflare/config</code
+        >).
+      </p>
+    </div>
+    <div class="flex items-center gap-3">
+      <span id="save-state" class="text-sm text-slate-500" title="Auto-save on"></span>
+      <button
+        id="preview-btn"
+        class="rounded-lg border border-slate-700 px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-slate-800"
+        title="Show the rendered config.tfvars"
+      >
+        <i class="fa-solid fa-file-code mr-2"></i>Preview config.tfvars
+      </button>
+      <button
+        id="reload-btn"
+        class="rounded-lg border border-slate-700 px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-slate-800"
+        title="Re-read config.tfvars from disk"
+      >
+        <i class="fa-solid fa-rotate mr-2"></i>Reload from disk
+      </button>
+    </div>
+  </header>
+
+  <div
+    id="drift-banner"
+    style="display: none"
+    class="mb-6 flex items-center justify-between gap-4 rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-200"
+  >
+    <span>
+      <i class="fa-solid fa-triangle-exclamation mr-2"></i>
+      <span id="drift-message">config.tfvars changed on disk outside the app.</span>
+    </span>
+    <button
+      id="drift-reload"
+      class="rounded-md bg-amber-500/20 px-3 py-1 text-xs font-medium text-amber-100 hover:bg-amber-500/30"
+    >
+      Reload from disk
+    </button>
+  </div>
+
+  <section class="space-y-6">
+    <div class="rounded-xl border border-slate-800 bg-slate-900/50 p-5">
+      <h2 class="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-400">
+        Zone
+      </h2>
+      <label class="block text-sm sm:max-w-md">
+        <span class="mb-1 block text-slate-300">Zone ID</span>
+        <input
+          id="f-zone"
+          placeholder="308122502fe49836d9b2077ecbfb4a0c"
+          class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-xs text-slate-100 focus:border-sky-500 focus:outline-none"
+        />
+        <span class="mt-1 block text-xs text-slate-500"
+          >Cloudflare zone that owns these records</span
+        >
+      </label>
+    </div>
+
+    <div class="rounded-xl border border-slate-800 bg-slate-900/50 p-5">
+      <h2
+        id="form-title"
+        class="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-400"
+      >
+        Add A record
+      </h2>
+      <form id="record-form" class="grid gap-4 sm:grid-cols-2">
+        <input type="hidden" id="f-id" />
+
+        <label class="block text-sm">
+          <span class="mb-1 block text-slate-300">Key</span>
+          <input
+            id="f-key"
+            required
+            placeholder="grafana_a"
+            class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 focus:border-sky-500 focus:outline-none"
+          />
+          <span class="mt-1 block text-xs text-slate-500"
+            >Stable Terraform map key (letters, digits, - and _)</span
+          >
+        </label>
+
+        <label class="block text-sm">
+          <span class="mb-1 block text-slate-300">Name</span>
+          <input
+            id="f-name"
+            required
+            placeholder="grafana.example.com"
+            class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 focus:border-sky-500 focus:outline-none"
+          />
+        </label>
+
+        <label class="block text-sm">
+          <span class="mb-1 block text-slate-300">Content</span>
+          <input
+            id="f-content"
+            required
+            placeholder="192.168.1.120"
+            class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-xs text-slate-100 focus:border-sky-500 focus:outline-none"
+          />
+          <span class="mt-1 block text-xs text-slate-500">A record target IP</span>
+        </label>
+
+        <div class="grid grid-cols-2 gap-4">
+          <label class="block text-sm">
+            <span class="mb-1 block text-slate-300">TTL</span>
+            <input
+              id="f-ttl"
+              type="number"
+              min="1"
+              value="1"
+              class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 focus:border-sky-500 focus:outline-none"
+            />
+            <span class="mt-1 block text-xs text-slate-500">1 = automatic</span>
+          </label>
+          <label class="flex items-center gap-2 pt-7 text-sm text-slate-300">
+            <input
+              id="f-proxied"
+              type="checkbox"
+              class="h-4 w-4 rounded border-slate-700 bg-slate-950 text-sky-500 focus:ring-sky-500"
+            />
+            Proxied
+          </label>
+        </div>
+
+        <div class="flex items-center gap-3 sm:col-span-2">
+          <button
+            type="submit"
+            id="save-btn"
+            class="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-400"
+          >
+            <i class="fa-solid fa-plus mr-2"></i>Add record
+          </button>
+          <button
+            type="button"
+            id="cancel-edit"
+            hidden
+            class="rounded-lg border border-slate-700 px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-slate-800"
+          >
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div class="overflow-hidden rounded-xl border border-slate-800 bg-slate-900/50">
+      <table class="w-full text-left text-sm">
+        <thead class="bg-slate-900/80 text-xs uppercase tracking-wide text-slate-500">
+          <tr>
+            <th class="px-4 py-3 font-semibold">Record</th>
+            <th class="px-4 py-3 font-semibold">Content</th>
+            <th class="px-4 py-3 font-semibold">TTL</th>
+            <th class="px-4 py-3 font-semibold">Proxied</th>
+            <th class="px-4 py-3 text-right font-semibold">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="record-rows" class="divide-y divide-slate-800"></tbody>
+      </table>
+      <p id="empty-state" hidden class="px-4 py-8 text-center text-sm text-slate-500">
+        No DNS records defined yet. Add one above.
+      </p>
+    </div>
+  </section>
+</div>
+
+<!-- config.tfvars preview modal -->
+<div
+  id="modal-preview"
+  style="display: none"
+  class="fixed inset-0 z-40 flex items-center justify-center bg-black/60 p-4"
+>
+  <div class="flex max-h-[85vh] w-full max-w-4xl flex-col rounded-xl border border-slate-800 bg-slate-900 p-6">
+    <div class="mb-3 flex items-center justify-between">
+      <h3 class="flex items-center gap-2 text-lg font-semibold">
+        <i class="fa-solid fa-file-code text-slate-400"></i>
+        <code class="text-slate-300"
+          >.config/terraform/components/remote/cloudflare/config.tfvars</code
+        >
+      </h3>
+      <div class="flex items-center gap-2">
+        <button
+          id="preview-copy"
+          class="rounded-md border border-slate-700 px-3 py-1 text-xs text-slate-300 hover:bg-slate-800"
+          title="Copy to clipboard"
+        >
+          <i class="fa-solid fa-copy mr-1"></i>Copy
+        </button>
+        <button type="button" data-close class="rounded-md px-2 py-1 text-slate-400 hover:bg-slate-800">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+    </div>
+    <pre
+      id="tfvars-preview"
+      class="flex-1 overflow-auto rounded-lg bg-slate-950 p-4 text-sm leading-relaxed text-slate-300"
+    ></pre>
+  </div>
+</div>
+{% endblock %} {% block scripts %}
+<script src="{{ url_for('static', filename='js/remote_cloudflare.js') }}"></script>
+{% endblock %}

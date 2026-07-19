@@ -46,7 +46,7 @@ Domains today: `swarm/`, `cluster/`, `remote/`, `network/`.
 ## Site config
 
 - Operator tfvars live under `.config/terraform/components/<domain>/<component>/<slice>.tfvars` (mirrors the repo path).
-- Each slice deploy passes **only that slice’s** `-var-file` (self-contained; no shared swarm/dns/nfs bundles mid-audit).
+- Each slice deploy passes **only that slice’s** `-var-file` (self-contained; no shared swarm/dns/amd64/arm64 bundles mid-audit), with two intentional exceptions (both managed by the homelab-config web app): the shared NFS catalog (`terraform/nfs` -> `.config/terraform/nfs.tfvars`) is passed as an extra `-var-file` by consumer slices that mount NFS (they select a share via `nfs_share`), and provider config under `terraform/providers/<app>` -> `.config/terraform/providers/<app>.tfvars` (one file per app/provider) is passed as an extra `-var-file` by the consuming slice: the Proxmox slice feeds `var.proxmox`, and every Swarm slice feeds `var.docker_providers` + `var.registry_auths` from the shared `providers/docker.tfvars` (swarm-node entries derived from `docker/swarm.yaml` plus editable non-swarm hosts) and selects one via `docker_machine`.
 - Backend config stays separate (`-backend-config`); do not add checked-in `*.tfvars.example`.
 
 ## Anti-patterns

@@ -1,0 +1,396 @@
+{% extends "base.html" %} {% block title %}Nginx Proxy Manager · homelab-config{% endblock %}
+{% block content %}
+<div class="mx-auto max-w-6xl p-6 lg:p-8">
+  <header class="mb-8 flex flex-wrap items-start justify-between gap-4">
+    <div>
+      <h1 class="flex items-center gap-3 text-2xl font-bold">
+        <i class="fa-solid fa-network-wired text-emerald-400"></i> Nginx Proxy Manager
+      </h1>
+      <p class="mt-1 text-sm text-slate-400">
+        Certificates, reverse-proxy hosts, redirections, streams and access
+        lists. Provider login lives separately under Providers. Every change is
+        saved automatically to
+        <code class="rounded bg-slate-800 px-1.5 py-0.5 text-slate-300"
+          >.config/terraform/components/swarm/nginx_proxy_manager/config.tfvars</code
+        >
+        (config-id
+        <code class="rounded bg-slate-800 px-1.5 py-0.5 text-slate-300"
+          >terraform/components/swarm/nginx_proxy_manager/config</code
+        >).
+      </p>
+    </div>
+    <div class="flex items-center gap-3">
+      <span id="save-state" class="text-sm text-slate-500" title="Auto-save on"></span>
+      <button id="preview-btn" class="rounded-lg border border-slate-700 px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-slate-800" title="Show the rendered config.tfvars">
+        <i class="fa-solid fa-file-code mr-2"></i>Preview config.tfvars
+      </button>
+      <button id="reload-btn" class="rounded-lg border border-slate-700 px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-slate-800" title="Re-read config.tfvars from disk">
+        <i class="fa-solid fa-rotate mr-2"></i>Reload from disk
+      </button>
+    </div>
+  </header>
+
+  <div id="drift-banner" style="display: none" class="mb-6 flex items-center justify-between gap-4 rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
+    <span><i class="fa-solid fa-triangle-exclamation mr-2"></i><span>config.tfvars changed on disk outside the app.</span></span>
+    <button id="drift-reload" class="rounded-md bg-amber-500/20 px-3 py-1 text-xs font-medium text-amber-100 hover:bg-amber-500/30">Reload from disk</button>
+  </div>
+
+  <div class="space-y-8">
+    <!-- Defaults -->
+    <section class="rounded-xl border border-slate-800 bg-slate-900/50 p-5">
+      <h2 class="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-400">Certificate defaults</h2>
+      <div class="grid gap-4 sm:grid-cols-2">
+        <label class="block text-sm"><span class="mb-1 block text-slate-300">Certificate email</span>
+          <input id="def-email" placeholder="admin@example.com" class="npm-input" /></label>
+        <label class="flex items-center gap-2 pt-7 text-sm text-slate-300">
+          <input id="def-dns-enabled" type="checkbox" class="h-4 w-4 rounded border-slate-700 bg-slate-950 text-sky-500 focus:ring-sky-500" />
+          Use DNS challenge
+        </label>
+        <label class="block text-sm"><span class="mb-1 block text-slate-300">DNS provider</span>
+          <input id="def-dns-provider" placeholder="cloudflare" class="npm-input" /></label>
+        <label class="block text-sm"><span class="mb-1 block text-slate-300">Propagation seconds</span>
+          <input id="def-dns-prop" type="number" min="0" placeholder="60" class="npm-input" /></label>
+        <label class="block text-sm sm:col-span-2"><span class="mb-1 block text-slate-300">DNS credentials</span>
+          <input id="def-dns-creds" placeholder="dns_cloudflare_api_token = ..." class="npm-input font-mono text-xs" /></label>
+      </div>
+    </section>
+
+    <!-- Proxy hosts -->
+    <section>
+      <div class="mb-3 flex items-center justify-between">
+        <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-400">Proxy Hosts <span id="count-proxy_hosts" class="ml-1 text-slate-600"></span></h2>
+        <button data-add="proxy_hosts" class="rounded-lg bg-emerald-500 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-emerald-400"><i class="fa-solid fa-plus mr-1"></i>Add host</button>
+      </div>
+      <div class="overflow-hidden rounded-xl border border-slate-800 bg-slate-900/50">
+        <table class="w-full text-left text-sm">
+          <thead class="bg-slate-900/80 text-xs uppercase tracking-wide text-slate-500"><tr>
+            <th class="px-4 py-3 font-semibold">Name / Domains</th>
+            <th class="px-4 py-3 font-semibold">Forward</th>
+            <th class="px-4 py-3 font-semibold">Certificate</th>
+            <th class="px-4 py-3 font-semibold">SSL</th>
+            <th class="px-4 py-3 text-right font-semibold">Actions</th>
+          </tr></thead>
+          <tbody id="proxy_hosts-rows" class="divide-y divide-slate-800"></tbody>
+        </table>
+        <p id="proxy_hosts-empty" hidden class="px-4 py-8 text-center text-sm text-slate-500">No proxy hosts defined yet.</p>
+      </div>
+    </section>
+
+    <!-- Certificates -->
+    <section>
+      <div class="mb-3 flex items-center justify-between">
+        <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-400">Certificates <span id="count-certificates" class="ml-1 text-slate-600"></span></h2>
+        <button data-add="certificates" class="rounded-lg bg-emerald-500 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-emerald-400"><i class="fa-solid fa-plus mr-1"></i>Add certificate</button>
+      </div>
+      <div class="overflow-hidden rounded-xl border border-slate-800 bg-slate-900/50">
+        <table class="w-full text-left text-sm">
+          <thead class="bg-slate-900/80 text-xs uppercase tracking-wide text-slate-500"><tr>
+            <th class="px-4 py-3 font-semibold">Name</th>
+            <th class="px-4 py-3 font-semibold">Domains</th>
+            <th class="px-4 py-3 font-semibold">DNS challenge</th>
+            <th class="px-4 py-3 text-right font-semibold">Actions</th>
+          </tr></thead>
+          <tbody id="certificates-rows" class="divide-y divide-slate-800"></tbody>
+        </table>
+        <p id="certificates-empty" hidden class="px-4 py-8 text-center text-sm text-slate-500">No certificates defined yet.</p>
+      </div>
+    </section>
+
+    <!-- Redirections -->
+    <section>
+      <div class="mb-3 flex items-center justify-between">
+        <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-400">Redirections <span id="count-redirections" class="ml-1 text-slate-600"></span></h2>
+        <button data-add="redirections" class="rounded-lg bg-emerald-500 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-emerald-400"><i class="fa-solid fa-plus mr-1"></i>Add redirection</button>
+      </div>
+      <div class="overflow-hidden rounded-xl border border-slate-800 bg-slate-900/50">
+        <table class="w-full text-left text-sm">
+          <thead class="bg-slate-900/80 text-xs uppercase tracking-wide text-slate-500"><tr>
+            <th class="px-4 py-3 font-semibold">Name / Domains</th>
+            <th class="px-4 py-3 font-semibold">Forwards to</th>
+            <th class="px-4 py-3 font-semibold">Code</th>
+            <th class="px-4 py-3 text-right font-semibold">Actions</th>
+          </tr></thead>
+          <tbody id="redirections-rows" class="divide-y divide-slate-800"></tbody>
+        </table>
+        <p id="redirections-empty" hidden class="px-4 py-8 text-center text-sm text-slate-500">No redirections defined yet.</p>
+      </div>
+    </section>
+
+    <!-- Streams -->
+    <section>
+      <div class="mb-3 flex items-center justify-between">
+        <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-400">Streams <span id="count-streams" class="ml-1 text-slate-600"></span></h2>
+        <button data-add="streams" class="rounded-lg bg-emerald-500 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-emerald-400"><i class="fa-solid fa-plus mr-1"></i>Add stream</button>
+      </div>
+      <div class="overflow-hidden rounded-xl border border-slate-800 bg-slate-900/50">
+        <table class="w-full text-left text-sm">
+          <thead class="bg-slate-900/80 text-xs uppercase tracking-wide text-slate-500"><tr>
+            <th class="px-4 py-3 font-semibold">Name</th>
+            <th class="px-4 py-3 font-semibold">Incoming → Forward</th>
+            <th class="px-4 py-3 font-semibold">Protocol</th>
+            <th class="px-4 py-3 text-right font-semibold">Actions</th>
+          </tr></thead>
+          <tbody id="streams-rows" class="divide-y divide-slate-800"></tbody>
+        </table>
+        <p id="streams-empty" hidden class="px-4 py-8 text-center text-sm text-slate-500">No streams defined yet.</p>
+      </div>
+    </section>
+
+    <!-- Access lists -->
+    <section>
+      <div class="mb-3 flex items-center justify-between">
+        <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-400">Access Lists <span id="count-access_lists" class="ml-1 text-slate-600"></span></h2>
+        <button data-add="access_lists" class="rounded-lg bg-emerald-500 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-emerald-400"><i class="fa-solid fa-plus mr-1"></i>Add access list</button>
+      </div>
+      <div class="overflow-hidden rounded-xl border border-slate-800 bg-slate-900/50">
+        <table class="w-full text-left text-sm">
+          <thead class="bg-slate-900/80 text-xs uppercase tracking-wide text-slate-500"><tr>
+            <th class="px-4 py-3 font-semibold">Name</th>
+            <th class="px-4 py-3 font-semibold">Auth users</th>
+            <th class="px-4 py-3 font-semibold">Access rules</th>
+            <th class="px-4 py-3 text-right font-semibold">Actions</th>
+          </tr></thead>
+          <tbody id="access_lists-rows" class="divide-y divide-slate-800"></tbody>
+        </table>
+        <p id="access_lists-empty" hidden class="px-4 py-8 text-center text-sm text-slate-500">No access lists defined yet.</p>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- Proxy host modal -->
+<div id="modal-proxy_hosts" style="display: none" class="fixed inset-0 z-40 flex items-center justify-center bg-black/60 p-4">
+  <div class="flex max-h-[90vh] w-full max-w-2xl flex-col rounded-xl border border-slate-800 bg-slate-900 p-6">
+    <div class="mb-4 flex items-center justify-between">
+      <h3 id="proxy_hosts-title" class="text-lg font-semibold">Add proxy host</h3>
+      <button type="button" data-close class="rounded-md px-2 py-1 text-slate-400 hover:bg-slate-800"><i class="fa-solid fa-xmark text-lg"></i></button>
+    </div>
+    <form id="proxy_hosts-form" class="grid gap-4 overflow-y-auto sm:grid-cols-2">
+      <input type="hidden" id="ph-orig" />
+      <label class="block text-sm"><span class="mb-1 block text-slate-300">Name (key)</span>
+        <input id="ph-name" required placeholder="grafana" class="npm-input" /></label>
+      <label class="block text-sm"><span class="mb-1 block text-slate-300">Forward scheme</span>
+        <select id="ph-forward_scheme" class="npm-input"><option value="http">http</option><option value="https">https</option></select></label>
+      <label class="block text-sm sm:col-span-2"><span class="mb-1 block text-slate-300">Domain names</span>
+        <textarea id="ph-domain_names" required rows="2" placeholder="grafana.example.com" class="npm-input font-mono text-xs"></textarea>
+        <span class="mt-1 block text-xs text-slate-500">One per line or comma-separated</span></label>
+      <label class="block text-sm"><span class="mb-1 block text-slate-300">Forward host</span>
+        <input id="ph-forward_host" required placeholder="192.168.1.121" class="npm-input" /></label>
+      <label class="block text-sm"><span class="mb-1 block text-slate-300">Forward port</span>
+        <input id="ph-forward_port" type="number" required placeholder="3000" class="npm-input" /></label>
+      <label class="block text-sm"><span class="mb-1 block text-slate-300">Certificate</span>
+        <select id="ph-certificate" class="npm-input"></select></label>
+      <label class="block text-sm"><span class="mb-1 block text-slate-300">Access list</span>
+        <select id="ph-access_list" class="npm-input"></select></label>
+      <fieldset class="grid grid-cols-2 gap-2 rounded-lg border border-slate-800 p-3 text-sm sm:col-span-2">
+        <legend class="px-1 text-xs uppercase tracking-wide text-slate-500">Options</legend>
+        <label class="flex items-center gap-2 text-slate-300"><input id="ph-enabled" type="checkbox" class="npm-check" /> Enabled</label>
+        <label class="flex items-center gap-2 text-slate-300"><input id="ph-ssl_forced" type="checkbox" class="npm-check" /> Force SSL</label>
+        <label class="flex items-center gap-2 text-slate-300"><input id="ph-block_exploits" type="checkbox" class="npm-check" /> Block exploits</label>
+        <label class="flex items-center gap-2 text-slate-300"><input id="ph-caching_enabled" type="checkbox" class="npm-check" /> Cache assets</label>
+        <label class="flex items-center gap-2 text-slate-300"><input id="ph-allow_websocket_upgrade" type="checkbox" class="npm-check" /> Websockets</label>
+        <label class="flex items-center gap-2 text-slate-300"><input id="ph-http2_support" type="checkbox" class="npm-check" /> HTTP/2</label>
+        <label class="flex items-center gap-2 text-slate-300"><input id="ph-hsts_enabled" type="checkbox" class="npm-check" /> HSTS</label>
+        <label class="flex items-center gap-2 text-slate-300"><input id="ph-hsts_subdomains" type="checkbox" class="npm-check" /> HSTS subdomains</label>
+      </fieldset>
+      <div class="sm:col-span-2">
+        <div class="mb-2 flex items-center justify-between">
+          <span class="text-xs font-semibold uppercase tracking-wide text-slate-400">Custom locations</span>
+          <button type="button" id="ph-add-loc" class="rounded-md border border-slate-700 px-2 py-1 text-xs text-slate-300 hover:bg-slate-800"><i class="fa-solid fa-plus mr-1"></i>Add location</button>
+        </div>
+        <div class="overflow-hidden rounded-lg border border-slate-800">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-900/80 uppercase tracking-wide text-slate-500"><tr>
+              <th class="px-2 py-2 font-semibold">Path</th><th class="px-2 py-2 font-semibold">Scheme</th>
+              <th class="px-2 py-2 font-semibold">Host</th><th class="px-2 py-2 font-semibold">Port</th><th class="px-2 py-2"></th>
+            </tr></thead>
+            <tbody id="ph-loc-rows" class="divide-y divide-slate-800"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 sm:col-span-2">
+        <button type="button" data-close class="rounded-lg border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:bg-slate-800">Cancel</button>
+        <button type="submit" class="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-400">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Certificate modal -->
+<div id="modal-certificates" style="display: none" class="fixed inset-0 z-40 flex items-center justify-center bg-black/60 p-4">
+  <div class="flex max-h-[90vh] w-full max-w-2xl flex-col rounded-xl border border-slate-800 bg-slate-900 p-6">
+    <div class="mb-4 flex items-center justify-between">
+      <h3 id="certificates-title" class="text-lg font-semibold">Add certificate</h3>
+      <button type="button" data-close class="rounded-md px-2 py-1 text-slate-400 hover:bg-slate-800"><i class="fa-solid fa-xmark text-lg"></i></button>
+    </div>
+    <form id="certificates-form" class="grid gap-4 overflow-y-auto sm:grid-cols-2">
+      <input type="hidden" id="cert-orig" />
+      <label class="block text-sm"><span class="mb-1 block text-slate-300">Name (key)</span>
+        <input id="cert-name" required placeholder="grafana" class="npm-input" /></label>
+      <label class="block text-sm"><span class="mb-1 block text-slate-300">Let's Encrypt email <span class="text-slate-500">(optional)</span></span>
+        <input id="cert-letsencrypt_email" placeholder="inherits default" class="npm-input" /></label>
+      <label class="block text-sm sm:col-span-2"><span class="mb-1 block text-slate-300">Domain names</span>
+        <textarea id="cert-domain_names" required rows="2" placeholder="grafana.example.com" class="npm-input font-mono text-xs"></textarea>
+        <span class="mt-1 block text-xs text-slate-500">One per line or comma-separated</span></label>
+      <label class="flex items-center gap-2 text-sm text-slate-300 sm:col-span-2"><input id="cert-letsencrypt_agree" type="checkbox" class="npm-check" /> Agree to Let's Encrypt ToS</label>
+      <fieldset class="grid gap-3 rounded-lg border border-slate-800 p-3 text-sm sm:col-span-2 sm:grid-cols-2">
+        <legend class="px-1 text-xs uppercase tracking-wide text-slate-500">DNS challenge override <span class="text-slate-600">(blank = inherit default)</span></legend>
+        <label class="flex items-center gap-2 text-slate-300"><input id="cert-dns-enabled" type="checkbox" class="npm-check" /> Use DNS challenge</label>
+        <label class="block"><span class="mb-1 block text-slate-300">Provider</span><input id="cert-dns-provider" placeholder="cloudflare" class="npm-input" /></label>
+        <label class="block"><span class="mb-1 block text-slate-300">Propagation seconds</span><input id="cert-dns-prop" type="number" min="0" class="npm-input" /></label>
+        <label class="block sm:col-span-2"><span class="mb-1 block text-slate-300">Credentials</span><input id="cert-dns-creds" class="npm-input font-mono text-xs" /></label>
+      </fieldset>
+      <div class="flex justify-end gap-3 sm:col-span-2">
+        <button type="button" data-close class="rounded-lg border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:bg-slate-800">Cancel</button>
+        <button type="submit" class="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-400">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Redirection modal -->
+<div id="modal-redirections" style="display: none" class="fixed inset-0 z-40 flex items-center justify-center bg-black/60 p-4">
+  <div class="flex max-h-[90vh] w-full max-w-2xl flex-col rounded-xl border border-slate-800 bg-slate-900 p-6">
+    <div class="mb-4 flex items-center justify-between">
+      <h3 id="redirections-title" class="text-lg font-semibold">Add redirection</h3>
+      <button type="button" data-close class="rounded-md px-2 py-1 text-slate-400 hover:bg-slate-800"><i class="fa-solid fa-xmark text-lg"></i></button>
+    </div>
+    <form id="redirections-form" class="grid gap-4 overflow-y-auto sm:grid-cols-2">
+      <input type="hidden" id="rd-orig" />
+      <label class="block text-sm"><span class="mb-1 block text-slate-300">Name (key)</span>
+        <input id="rd-name" required placeholder="old_site" class="npm-input" /></label>
+      <label class="block text-sm"><span class="mb-1 block text-slate-300">Forward domain</span>
+        <input id="rd-forward_domain_name" required placeholder="example.com" class="npm-input" /></label>
+      <label class="block text-sm sm:col-span-2"><span class="mb-1 block text-slate-300">Domain names</span>
+        <textarea id="rd-domain_names" required rows="2" placeholder="old.example.com" class="npm-input font-mono text-xs"></textarea></label>
+      <label class="block text-sm"><span class="mb-1 block text-slate-300">Forward scheme</span>
+        <select id="rd-forward_scheme" class="npm-input"><option value="auto">auto</option><option value="http">http</option><option value="https">https</option></select></label>
+      <label class="block text-sm"><span class="mb-1 block text-slate-300">HTTP code</span>
+        <input id="rd-forward_http_code" type="number" placeholder="301" class="npm-input" /></label>
+      <label class="block text-sm"><span class="mb-1 block text-slate-300">Certificate</span>
+        <select id="rd-certificate" class="npm-input"></select></label>
+      <fieldset class="grid grid-cols-2 gap-2 rounded-lg border border-slate-800 p-3 text-sm sm:col-span-2">
+        <legend class="px-1 text-xs uppercase tracking-wide text-slate-500">Options</legend>
+        <label class="flex items-center gap-2 text-slate-300"><input id="rd-enabled" type="checkbox" class="npm-check" /> Enabled</label>
+        <label class="flex items-center gap-2 text-slate-300"><input id="rd-preserve_path" type="checkbox" class="npm-check" /> Preserve path</label>
+        <label class="flex items-center gap-2 text-slate-300"><input id="rd-ssl_forced" type="checkbox" class="npm-check" /> Force SSL</label>
+        <label class="flex items-center gap-2 text-slate-300"><input id="rd-block_exploits" type="checkbox" class="npm-check" /> Block exploits</label>
+        <label class="flex items-center gap-2 text-slate-300"><input id="rd-http2_support" type="checkbox" class="npm-check" /> HTTP/2</label>
+        <label class="flex items-center gap-2 text-slate-300"><input id="rd-hsts_enabled" type="checkbox" class="npm-check" /> HSTS</label>
+        <label class="flex items-center gap-2 text-slate-300"><input id="rd-hsts_subdomains" type="checkbox" class="npm-check" /> HSTS subdomains</label>
+      </fieldset>
+      <div class="flex justify-end gap-3 sm:col-span-2">
+        <button type="button" data-close class="rounded-lg border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:bg-slate-800">Cancel</button>
+        <button type="submit" class="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-400">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Stream modal -->
+<div id="modal-streams" style="display: none" class="fixed inset-0 z-40 flex items-center justify-center bg-black/60 p-4">
+  <div class="flex max-h-[90vh] w-full max-w-xl flex-col rounded-xl border border-slate-800 bg-slate-900 p-6">
+    <div class="mb-4 flex items-center justify-between">
+      <h3 id="streams-title" class="text-lg font-semibold">Add stream</h3>
+      <button type="button" data-close class="rounded-md px-2 py-1 text-slate-400 hover:bg-slate-800"><i class="fa-solid fa-xmark text-lg"></i></button>
+    </div>
+    <form id="streams-form" class="grid gap-4 overflow-y-auto sm:grid-cols-2">
+      <input type="hidden" id="st-orig" />
+      <label class="block text-sm"><span class="mb-1 block text-slate-300">Name (key)</span>
+        <input id="st-name" required placeholder="minecraft" class="npm-input" /></label>
+      <label class="block text-sm"><span class="mb-1 block text-slate-300">Incoming port</span>
+        <input id="st-incoming_port" type="number" required placeholder="25565" class="npm-input" /></label>
+      <label class="block text-sm"><span class="mb-1 block text-slate-300">Forwarding host</span>
+        <input id="st-forwarding_host" required placeholder="192.168.1.50" class="npm-input" /></label>
+      <label class="block text-sm"><span class="mb-1 block text-slate-300">Forwarding port</span>
+        <input id="st-forwarding_port" type="number" required placeholder="25565" class="npm-input" /></label>
+      <label class="block text-sm sm:col-span-2"><span class="mb-1 block text-slate-300">Certificate</span>
+        <select id="st-certificate" class="npm-input"></select></label>
+      <fieldset class="grid grid-cols-3 gap-2 rounded-lg border border-slate-800 p-3 text-sm sm:col-span-2">
+        <legend class="px-1 text-xs uppercase tracking-wide text-slate-500">Options</legend>
+        <label class="flex items-center gap-2 text-slate-300"><input id="st-tcp_forwarding" type="checkbox" class="npm-check" /> TCP</label>
+        <label class="flex items-center gap-2 text-slate-300"><input id="st-udp_forwarding" type="checkbox" class="npm-check" /> UDP</label>
+        <label class="flex items-center gap-2 text-slate-300"><input id="st-enabled" type="checkbox" class="npm-check" /> Enabled</label>
+      </fieldset>
+      <div class="flex justify-end gap-3 sm:col-span-2">
+        <button type="button" data-close class="rounded-lg border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:bg-slate-800">Cancel</button>
+        <button type="submit" class="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-400">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Access list modal -->
+<div id="modal-access_lists" style="display: none" class="fixed inset-0 z-40 flex items-center justify-center bg-black/60 p-4">
+  <div class="flex max-h-[90vh] w-full max-w-2xl flex-col rounded-xl border border-slate-800 bg-slate-900 p-6">
+    <div class="mb-4 flex items-center justify-between">
+      <h3 id="access_lists-title" class="text-lg font-semibold">Add access list</h3>
+      <button type="button" data-close class="rounded-md px-2 py-1 text-slate-400 hover:bg-slate-800"><i class="fa-solid fa-xmark text-lg"></i></button>
+    </div>
+    <form id="access_lists-form" class="flex flex-col gap-4 overflow-y-auto">
+      <input type="hidden" id="al-orig" />
+      <div class="grid grid-cols-2 gap-4">
+        <label class="block text-sm"><span class="mb-1 block text-slate-300">Name (key)</span>
+          <input id="al-name" required placeholder="internal_only" class="npm-input" /></label>
+        <div class="flex items-end gap-4 pb-2">
+          <label class="flex items-center gap-2 text-sm text-slate-300"><input id="al-satisfy_any" type="checkbox" class="npm-check" /> Satisfy any</label>
+          <label class="flex items-center gap-2 text-sm text-slate-300"><input id="al-pass_auth" type="checkbox" class="npm-check" /> Pass auth</label>
+        </div>
+      </div>
+      <div>
+        <div class="mb-2 flex items-center justify-between">
+          <span class="text-xs font-semibold uppercase tracking-wide text-slate-400">Authorizations (basic auth users)</span>
+          <button type="button" id="al-add-auth" class="rounded-md border border-slate-700 px-2 py-1 text-xs text-slate-300 hover:bg-slate-800"><i class="fa-solid fa-plus mr-1"></i>Add user</button>
+        </div>
+        <div class="overflow-hidden rounded-lg border border-slate-800">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-900/80 uppercase tracking-wide text-slate-500"><tr><th class="px-2 py-2 font-semibold">Username</th><th class="px-2 py-2 font-semibold">Password</th><th class="px-2 py-2"></th></tr></thead>
+            <tbody id="al-auth-rows" class="divide-y divide-slate-800"></tbody>
+          </table>
+        </div>
+      </div>
+      <div>
+        <div class="mb-2 flex items-center justify-between">
+          <span class="text-xs font-semibold uppercase tracking-wide text-slate-400">Access rules (allow/deny by address)</span>
+          <button type="button" id="al-add-access" class="rounded-md border border-slate-700 px-2 py-1 text-xs text-slate-300 hover:bg-slate-800"><i class="fa-solid fa-plus mr-1"></i>Add rule</button>
+        </div>
+        <div class="overflow-hidden rounded-lg border border-slate-800">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-900/80 uppercase tracking-wide text-slate-500"><tr><th class="px-2 py-2 font-semibold">Directive</th><th class="px-2 py-2 font-semibold">Address</th><th class="px-2 py-2"></th></tr></thead>
+            <tbody id="al-access-rows" class="divide-y divide-slate-800"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="flex justify-end gap-3">
+        <button type="button" data-close class="rounded-lg border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:bg-slate-800">Cancel</button>
+        <button type="submit" class="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-400">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- config.tfvars preview modal -->
+<div id="modal-preview" style="display: none" class="fixed inset-0 z-40 flex items-center justify-center bg-black/60 p-4">
+  <div class="flex max-h-[85vh] w-full max-w-4xl flex-col rounded-xl border border-slate-800 bg-slate-900 p-6">
+    <div class="mb-3 flex items-center justify-between">
+      <h3 class="flex items-center gap-2 text-lg font-semibold">
+        <i class="fa-solid fa-file-code text-slate-400"></i>
+        <code class="text-slate-300">.config/.../nginx_proxy_manager/config.tfvars</code>
+      </h3>
+      <div class="flex items-center gap-2">
+        <button id="preview-copy" class="rounded-md border border-slate-700 px-3 py-1 text-xs text-slate-300 hover:bg-slate-800" title="Copy to clipboard"><i class="fa-solid fa-copy mr-1"></i>Copy</button>
+        <button type="button" data-close class="rounded-md px-2 py-1 text-slate-400 hover:bg-slate-800"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+    </div>
+    <pre id="tfvars-preview" class="flex-1 overflow-auto rounded-lg bg-slate-950 p-4 text-sm leading-relaxed text-slate-300"></pre>
+  </div>
+</div>
+
+<style>
+  .npm-input { width: 100%; border-radius: 0.5rem; border: 1px solid rgb(51 65 85); background-color: rgb(2 6 23); padding: 0.5rem 0.75rem; color: rgb(241 245 249); }
+  .npm-input:focus { outline: none; border-color: rgb(14 165 233); }
+  .npm-check { height: 1rem; width: 1rem; border-radius: 0.25rem; border-color: rgb(51 65 85); background-color: rgb(2 6 23); color: rgb(14 165 233); }
+</style>
+{% endblock %} {% block scripts %}
+<script src="{{ url_for('static', filename='js/network_npm.js') }}"></script>
+{% endblock %}

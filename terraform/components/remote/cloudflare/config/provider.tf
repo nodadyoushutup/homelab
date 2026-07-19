@@ -15,5 +15,5 @@ terraform {
 }
 
 provider "cloudflare" {
-  api_token = local.provider_config.cloudflare.api_token
+  api_token = var.cloudflare.api_token
 }

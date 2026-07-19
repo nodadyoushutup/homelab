@@ -2,8 +2,7 @@
 # Single source of truth for Grafana config (datasources + dashboards) values (resources read local.* only).
 
 locals {
-  provider_config = var.provider_config
-  datasources     = var.datasources
+  datasources = var.datasources
 
   node_exporter_file_path = "${path.module}/dashboards/node-exporter.json"
   node_exporter_file_hash = filemd5(local.node_exporter_file_path)

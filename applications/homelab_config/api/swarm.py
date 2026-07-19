@@ -1,196 +1,231 @@
-"""REST endpoints for managing Docker Swarm nodes.
+"""REST endpoints for editing the Docker Swarm topology.
 
-The frontend talks to the backend over REST (this blueprint) and receives live
-updates over Socket.IO: every mutation persists ``.config/docker/swarm.yaml``
-and broadcasts the refreshed node list plus the rendered YAML.
+The on-disk ``.config/docker/swarm.tfvars`` is the source of truth and every edit
+is persisted immediately (auto-save): add/update/delete mutate the in-memory
+working copy, write it to disk, and broadcast the result live over Socket.IO.
+``/reload`` re-reads the file to pick up out-of-band changes.
 """
 
 from __future__ import annotations
 
 import logging
+import threading
 
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, current_app, jsonify, request
 
-from homelab_config.extensions import db, socketio
-from homelab_config.models import (
-    DEFAULT_SSH_PORT,
-    DEFAULT_SSH_USER,
-    VALID_ROLES,
-    SwarmNode,
-)
-from homelab_config.swarm_config import render_nodes, write_swarm_yaml
+from homelab_config import swarm_reconcile
+from homelab_config.extensions import socketio
+from homelab_config.store import StoreError, SwarmStore
+from homelab_config.swarm_config import NodeValidationError
 
 logger = logging.getLogger(__name__)
 
 bp = Blueprint("swarm_api", __name__, url_prefix="/api/swarm")
 
 EVENT_NODES = "swarm:nodes"
-EVENT_CONFIG_WRITTEN = "config:written"
+EVENT_STATUS = "swarm:status"
+EVENT_APPLY_LOG = "swarm:apply:log"
+EVENT_APPLY_PLAN = "swarm:apply:plan"
+EVENT_APPLY_DONE = "swarm:apply:done"
+
+# Serialize reconcile runs: only one plan/apply at a time across all clients.
+_apply_lock = threading.Lock()
+_apply_running = False
 
 
-def _all_nodes() -> list[SwarmNode]:
-    """Return all swarm nodes with managers first, then alphabetical by name."""
-    return (
-        SwarmNode.query.order_by(SwarmNode.role.asc(), SwarmNode.name.asc()).all()
-    )
+def _store() -> SwarmStore:
+    return current_app.config["SWARM_STORE"]
 
 
-def _sync() -> list[SwarmNode]:
-    """Persist swarm.yaml and broadcast the refreshed state to all clients.
-
-    Returns:
-        The current list of swarm nodes.
-    """
-    nodes = _all_nodes()
-    path = write_swarm_yaml(nodes)
-    payload = [node.to_dict() for node in nodes]
-    socketio.emit(EVENT_NODES, payload)
-    socketio.emit(
-        EVENT_CONFIG_WRITTEN,
-        {"path": str(path), "yaml": render_nodes(nodes)},
-    )
-    return nodes
+def broadcast(store: SwarmStore) -> None:
+    """Emit the current working nodes and status to all clients."""
+    socketio.emit(EVENT_NODES, store.list_nodes())
+    socketio.emit(EVENT_STATUS, store.status())
 
 
-def _read_node_fields(data: dict, *, existing: SwarmNode | None = None) -> tuple:
-    """Validate and normalize a node payload.
-
-    Args:
-        data: Raw JSON request body.
-        existing: Node being updated, if any (used to default unspecified
-            fields on updates).
-
-    Returns:
-        A ``(fields, error, status)`` tuple. ``fields`` is ``None`` when
-        validation fails; otherwise ``error``/``status`` are ``None``.
-    """
-    name = str(data.get("name", existing.name if existing else "") or "").strip()
-    host = str(data.get("host", existing.host if existing else "") or "").strip()
-    role = str(
-        data.get("role", existing.role if existing else "") or ""
-    ).strip().lower()
-    ssh_user = str(
-        data.get("ssh_user", existing.ssh_user if existing else DEFAULT_SSH_USER)
-        or DEFAULT_SSH_USER
-    ).strip()
-    raw_port = data.get(
-        "ssh_port", existing.ssh_port if existing else DEFAULT_SSH_PORT
-    )
-    raw_labels = data.get("labels", existing.labels if existing else {})
-
-    if not name:
-        return None, "name is required", 400
-    if not host:
-        return None, "host is required", 400
-    if role not in VALID_ROLES:
-        return None, f"role must be one of {', '.join(VALID_ROLES)}", 400
-    try:
-        ssh_port = int(raw_port)
-    except (TypeError, ValueError):
-        return None, "ssh_port must be an integer", 400
-    if not 1 <= ssh_port <= 65535:
-        return None, "ssh_port must be between 1 and 65535", 400
-    labels = raw_labels if isinstance(raw_labels, dict) else {}
-
-    fields = {
-        "name": name,
-        "host": host,
-        "role": role,
-        "ssh_user": ssh_user,
-        "ssh_port": ssh_port,
-        "labels": labels,
-    }
-    return fields, None, None
+def _persist(store: SwarmStore) -> None:
+    """Write the working copy to disk and broadcast (auto-save)."""
+    store.write()
+    broadcast(store)
 
 
 @bp.get("/nodes")
 def list_nodes():
-    """Return every swarm node."""
-    return jsonify([node.to_dict() for node in _all_nodes()])
+    """Return the working nodes plus drift/status flags."""
+    store = _store()
+    return jsonify({"nodes": store.list_nodes(), "status": store.status()})
 
 
 @bp.post("/nodes")
 def create_node():
-    """Create a new swarm node."""
+    """Add a node and persist swarm.tfvars immediately (auto-save)."""
+    store = _store()
     data = request.get_json(silent=True) or {}
-    fields, error, status = _read_node_fields(data)
-    if fields is None:
-        return jsonify({"error": error}), status
-
-    if SwarmNode.query.filter_by(name=fields["name"]).first():
-        return jsonify({"error": f"node '{fields['name']}' already exists"}), 409
-
-    node = SwarmNode(
-        name=fields["name"],
-        host=fields["host"],
-        role=fields["role"],
-        ssh_user=fields["ssh_user"],
-        ssh_port=fields["ssh_port"],
-    )
-    node.labels = fields["labels"]
-    db.session.add(node)
-    db.session.commit()
-    logger.info("Created swarm node %s (%s)", node.name, node.role)
-    _sync()
-    return jsonify(node.to_dict()), 201
+    try:
+        node = store.add(data)
+    except NodeValidationError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except StoreError as exc:
+        return jsonify({"error": str(exc)}), 409
+    logger.info("Added swarm node %s (%s)", node["name"], node["role"])
+    _persist(store)
+    return jsonify(node), 201
 
 
-@bp.put("/nodes/<int:node_id>")
-def update_node(node_id: int):
-    """Update an existing swarm node."""
-    node = db.session.get(SwarmNode, node_id)
-    if node is None:
-        return jsonify({"error": "node not found"}), 404
-
+@bp.put("/nodes/<name>")
+def update_node(name: str):
+    """Update a node and persist swarm.tfvars immediately (auto-save)."""
+    store = _store()
     data = request.get_json(silent=True) or {}
-    fields, error, status = _read_node_fields(data, existing=node)
-    if fields is None:
-        return jsonify({"error": error}), status
-
-    clash = SwarmNode.query.filter(
-        SwarmNode.name == fields["name"], SwarmNode.id != node_id
-    ).first()
-    if clash is not None:
-        return jsonify({"error": f"node '{fields['name']}' already exists"}), 409
-
-    node.name = fields["name"]
-    node.host = fields["host"]
-    node.role = fields["role"]
-    node.ssh_user = fields["ssh_user"]
-    node.ssh_port = fields["ssh_port"]
-    node.labels = fields["labels"]
-    db.session.commit()
-    logger.info("Updated swarm node %s (%s)", node.name, node.role)
-    _sync()
-    return jsonify(node.to_dict())
+    try:
+        node = store.update(name, data)
+    except NodeValidationError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except StoreError as exc:
+        status = 404 if "not found" in str(exc) else 409
+        return jsonify({"error": str(exc)}), status
+    logger.info("Updated swarm node %s (%s)", node["name"], node["role"])
+    _persist(store)
+    return jsonify(node)
 
 
-@bp.delete("/nodes/<int:node_id>")
-def delete_node(node_id: int):
-    """Delete a swarm node."""
-    node = db.session.get(SwarmNode, node_id)
-    if node is None:
-        return jsonify({"error": "node not found"}), 404
-
-    name = node.name
-    db.session.delete(node)
-    db.session.commit()
+@bp.delete("/nodes/<name>")
+def delete_node(name: str):
+    """Delete a node and persist swarm.tfvars immediately (auto-save)."""
+    store = _store()
+    try:
+        store.delete(name)
+    except StoreError as exc:
+        return jsonify({"error": str(exc)}), 404
     logger.info("Deleted swarm node %s", name)
-    _sync()
-    return jsonify({"deleted": node_id})
+    _persist(store)
+    return jsonify({"deleted": name})
 
 
-@bp.get("/yaml")
-def preview_yaml():
-    """Return the rendered swarm.yaml for the current node set."""
-    return jsonify({"yaml": render_nodes(_all_nodes())})
+@bp.get("/tfvars")
+def preview_tfvars():
+    """Return the rendered swarm.tfvars for the working copy."""
+    return jsonify({"tfvars": _store().render()})
+
+
+@bp.get("/status")
+def status():
+    """Return drift/status flags."""
+    return jsonify(_store().status())
+
+
+@bp.post("/reload")
+def reload_config():
+    """Reload the working copy from disk to pick up out-of-band changes."""
+    store = _store()
+    store.reload()
+    logger.info("Reloaded swarm topology from disk")
+    broadcast(store)
+    return jsonify({"nodes": store.list_nodes(), "status": store.status()})
+
+
+# --- reconcile (plan / apply) ------------------------------------------------
+
+
+def _make_reporter(phase: str):
+    """Return a reporter that streams reconcile output to all clients."""
+
+    def report(level: str, message: str) -> None:
+        socketio.emit(
+            EVENT_APPLY_LOG, {"phase": phase, "level": level, "message": message}
+        )
+        socketio.sleep(0)
+
+    return report
+
+
+def _release_lock() -> None:
+    global _apply_running
+    with _apply_lock:
+        _apply_running = False
+
+
+def _plan_task(nodes: list[dict]) -> None:
+    """Background: gather state + build a plan and stream it (no changes)."""
+    report = _make_reporter("plan")
+    try:
+        state = swarm_reconcile.gather_state(nodes, report)
+        plan = swarm_reconcile.build_plan(nodes, state)
+        socketio.emit(EVENT_APPLY_PLAN, {"phase": "plan", **plan})
+        ok = not plan["errors"]
+        report(
+            "ok" if ok else "error",
+            "Plan ready."
+            if plan["actions"]
+            else ("Nothing to do - swarm matches the config." if ok else "Plan blocked."),
+        )
+        socketio.emit(EVENT_APPLY_DONE, {"phase": "plan", "ok": ok})
+    except Exception as exc:  # noqa: BLE001 - surface any failure to the UI
+        logger.exception("swarm plan failed")
+        report("error", f"Plan failed: {exc}")
+        socketio.emit(EVENT_APPLY_DONE, {"phase": "plan", "ok": False, "error": str(exc)})
+    finally:
+        _release_lock()
+
+
+def _apply_task(nodes: list[dict], confirm_destructive: bool) -> None:
+    """Background: re-plan then apply, streaming progress. Re-checks destructive."""
+    report = _make_reporter("apply")
+    try:
+        state = swarm_reconcile.gather_state(nodes, report)
+        plan = swarm_reconcile.build_plan(nodes, state)
+        socketio.emit(EVENT_APPLY_PLAN, {"phase": "apply", **plan})
+        if plan["errors"]:
+            for err in plan["errors"]:
+                report("error", err)
+            socketio.emit(EVENT_APPLY_DONE, {"phase": "apply", "ok": False})
+            return
+        if not plan["actions"]:
+            report("ok", "Nothing to do - swarm matches the config.")
+            socketio.emit(EVENT_APPLY_DONE, {"phase": "apply", "ok": True})
+            return
+        if plan["destructive"] and not confirm_destructive:
+            report("warn", "Plan contains destructive actions - confirmation required.")
+            socketio.emit(
+                EVENT_APPLY_DONE,
+                {"phase": "apply", "ok": False, "needs_confirm": True},
+            )
+            return
+        result = swarm_reconcile.apply_plan(nodes, state, plan, report)
+        socketio.emit(EVENT_APPLY_DONE, {"phase": "apply", **result})
+    except Exception as exc:  # noqa: BLE001 - surface any failure to the UI
+        logger.exception("swarm apply failed")
+        report("error", f"Apply failed: {exc}")
+        socketio.emit(EVENT_APPLY_DONE, {"phase": "apply", "ok": False, "error": str(exc)})
+    finally:
+        _release_lock()
+
+
+def _start_reconcile(task, *args) -> tuple:
+    """Acquire the single-run guard and start a background reconcile task."""
+    global _apply_running
+    with _apply_lock:
+        if _apply_running:
+            return jsonify({"error": "a reconcile is already running"}), 409
+        _apply_running = True
+    socketio.start_background_task(task, *args)
+    return jsonify({"started": True}), 202
+
+
+@bp.post("/plan")
+def plan():
+    """Compute (but do not apply) the reconcile plan; streams over Socket.IO."""
+    nodes = _store().list_nodes()
+    return _start_reconcile(_plan_task, nodes)
 
 
 @bp.post("/apply")
-def apply_config():
-    """Re-write swarm.yaml from the current node set and broadcast it."""
-    nodes = _sync()
-    return jsonify({"written": True, "count": len(nodes)})
+def apply():
+    """Reconcile the live swarm to match swarm.tfvars; streams over Socket.IO."""
+    data = request.get_json(silent=True) or {}
+    confirm = bool(data.get("confirm_destructive"))
+    nodes = _store().list_nodes()
+    return _start_reconcile(_apply_task, nodes, confirm)
 
 
-__all__ = ["bp"]
+__all__ = ["bp", "broadcast"]

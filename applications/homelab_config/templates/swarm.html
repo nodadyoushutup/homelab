@@ -7,27 +7,58 @@
         <i class="fa-brands fa-docker text-sky-400"></i> Docker Swarm
       </h1>
       <p class="mt-1 text-sm text-slate-400">
-        Define the machines in your Docker Swarm. Changes are saved to
+        Define the machines in your Docker Swarm. Every change is saved
+        automatically to
         <code class="rounded bg-slate-800 px-1.5 py-0.5 text-slate-300"
-          >.config/docker/swarm.yaml</code
+          >.config/docker/swarm.tfvars</code
         >.
       </p>
     </div>
-    <div class="flex items-center gap-4">
-      <span id="connection-status" class="text-xs text-slate-400">
-        <i class="fa-solid fa-circle mr-1 text-[8px] text-amber-400"></i>connecting…
-      </span>
+    <div class="flex items-center gap-3">
+      <span id="save-state" class="text-sm text-slate-500" title="Auto-save on"></span>
       <button
         id="apply-btn"
         class="rounded-lg bg-sky-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-sky-400"
+        title="Reconcile the live swarm to match this config (plan first)"
       >
-        <i class="fa-solid fa-floppy-disk mr-2"></i>Write swarm.yaml
+        <i class="fa-solid fa-wand-magic-sparkles mr-2"></i>Apply
+      </button>
+      <button
+        id="preview-btn"
+        class="rounded-lg border border-slate-700 px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-slate-800"
+        title="Show the rendered swarm.tfvars"
+      >
+        <i class="fa-solid fa-file-code mr-2"></i>Preview swarm.tfvars
+      </button>
+      <button
+        id="reload-btn"
+        class="rounded-lg border border-slate-700 px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-slate-800"
+        title="Re-read swarm.tfvars from disk"
+      >
+        <i class="fa-solid fa-rotate mr-2"></i>Reload from disk
       </button>
     </div>
   </header>
 
-  <div class="grid gap-6 lg:grid-cols-3">
-    <section class="space-y-6 lg:col-span-2">
+  <div
+    id="drift-banner"
+    style="display: none"
+    class="mb-6 flex items-center justify-between gap-4 rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-200"
+  >
+    <span>
+      <i class="fa-solid fa-triangle-exclamation mr-2"></i>
+      <span id="drift-message">swarm.tfvars changed on disk outside the app.</span>
+    </span>
+    <button
+      id="drift-reload"
+      class="rounded-md bg-amber-500/20 px-3 py-1 text-xs font-medium text-amber-100 hover:bg-amber-500/30"
+    >
+      Reload from disk
+    </button>
+  </div>
+
+  <div>
+    <section class="space-y-6">
       <div class="rounded-xl border border-slate-800 bg-slate-900/50 p-5">
         <h2
           id="form-title"
@@ -43,7 +74,6 @@
             <input
               id="f-name"
               required
-              placeholder="swarm-cp-0"
               class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 focus:border-sky-500 focus:outline-none"
             />
           </label>
@@ -53,7 +83,6 @@
             <input
               id="f-host"
               required
-              placeholder="swarm-cp-0.local"
               class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 focus:border-sky-500 focus:outline-none"
             />
           </label>
@@ -62,7 +91,7 @@
             <span class="mb-1 block text-slate-300">SSH user</span>
             <input
               id="f-user"
-              placeholder="nodadyoushutup"
+              required
               class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 focus:border-sky-500 focus:outline-none"
             />
           </label>
@@ -72,10 +101,12 @@
               <span class="mb-1 block text-slate-300">Role</span>
               <select
                 id="f-role"
+                required
                 class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 focus:border-sky-500 focus:outline-none"
               >
+                <option value=""></option>
                 <option value="manager">manager</option>
-                <option value="worker" selected>worker</option>
+                <option value="worker">worker</option>
               </select>
             </label>
             <label class="block text-sm">
@@ -86,22 +117,80 @@
                 min="1"
                 max="65535"
                 value="22"
+                required
                 class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 focus:border-sky-500 focus:outline-none"
               />
             </label>
           </div>
 
-          <label class="block text-sm sm:col-span-2">
+          <label class="block text-sm">
+            <span class="mb-1 block text-slate-300">SSH key</span>
+            <select
+              id="f-ssh-key"
+              class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 focus:border-sky-500 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+            ></select>
+            <span id="f-ssh-key-hint" class="mt-1 block text-xs text-slate-500"
+              >Key set from
+              <a href="/ssh" class="text-sky-400 hover:underline">Machines &rsaquo; SSH</a></span
+            >
+          </label>
+
+          <label class="block text-sm">
             <span class="mb-1 block text-slate-300"
-              >Labels
-              <span class="text-slate-500">(key=value, comma separated)</span></span
+              >SSH password
+              <span class="text-slate-500">(optional)</span></span
             >
             <input
-              id="f-labels"
-              placeholder="gpu=true, zone=rack1"
+              id="f-ssh-password"
+              type="password"
+              autocomplete="new-password"
               class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 focus:border-sky-500 focus:outline-none"
             />
           </label>
+
+          <label
+            class="flex cursor-pointer items-start gap-3 rounded-lg border border-slate-800 bg-slate-950/40 p-3 text-sm sm:col-span-2"
+          >
+            <input
+              id="f-sync-ssh"
+              type="checkbox"
+              class="mt-0.5 h-4 w-4 rounded border-slate-600 bg-slate-950 text-sky-500 focus:ring-sky-500"
+            />
+            <span>
+              <span class="text-slate-200">Sync SSH</span>
+              <span class="mt-0.5 block text-xs text-slate-500"
+                >Bootstrap will push this key set (incl.
+                <code class="rounded bg-slate-800 px-1 py-0.5 text-slate-400"
+                  >authorized_keys</code
+                >) into the node's <code class="rounded bg-slate-800 px-1 py-0.5 text-slate-400">~/.ssh</code>, overwriting existing files. It tries the SSH key first and falls back to the password when one is set.</span
+              >
+            </span>
+          </label>
+
+          <div class="block text-sm sm:col-span-2">
+            <div class="mb-1 flex items-center justify-between gap-3">
+              <span class="text-slate-300"
+                >Labels
+                <span class="text-slate-500">(key=value, comma separated)</span></span
+              >
+              <label
+                class="flex cursor-pointer items-center gap-2 text-xs text-slate-400"
+                title="Set the placement label role=<name> (e.g. role=swarm-cp-0)"
+              >
+                <input
+                  id="f-label-by-name"
+                  type="checkbox"
+                  checked
+                  class="h-4 w-4 rounded border-slate-600 bg-slate-950 text-sky-500 focus:ring-sky-500"
+                />
+                Label by name
+              </label>
+            </div>
+            <input
+              id="f-labels"
+              class="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 focus:border-sky-500 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+            />
+          </div>
 
           <div class="flex items-center gap-3 sm:col-span-2">
             <button
@@ -132,6 +221,7 @@
               <th class="px-4 py-3 font-semibold">Node</th>
               <th class="px-4 py-3 font-semibold">Role</th>
               <th class="px-4 py-3 font-semibold">SSH</th>
+              <th class="px-4 py-3 font-semibold">Key</th>
               <th class="px-4 py-3 font-semibold">Labels</th>
               <th class="px-4 py-3 text-right font-semibold">Actions</th>
             </tr>
@@ -143,20 +233,112 @@
         </p>
       </div>
     </section>
+  </div>
+</div>
 
-    <aside class="space-y-4">
-      <div class="rounded-xl border border-slate-800 bg-slate-900/50 p-5">
-        <h2
-          class="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-slate-400"
+<!-- swarm.tfvars preview modal -->
+<div
+  id="modal-preview"
+  style="display: none"
+  class="fixed inset-0 z-40 flex items-center justify-center bg-black/60 p-4"
+>
+  <div class="flex max-h-[85vh] w-full max-w-4xl flex-col rounded-xl border border-slate-800 bg-slate-900 p-6">
+    <div class="mb-3 flex items-center justify-between">
+      <h3 class="flex items-center gap-2 text-lg font-semibold">
+        <i class="fa-solid fa-file-code text-slate-400"></i>
+        <code class="text-slate-300">.config/docker/swarm.tfvars</code>
+      </h3>
+      <div class="flex items-center gap-2">
+        <button
+          id="preview-copy"
+          class="rounded-md border border-slate-700 px-3 py-1 text-xs text-slate-300 hover:bg-slate-800"
+          title="Copy to clipboard"
         >
-          <i class="fa-solid fa-file-code text-slate-500"></i> swarm.yaml preview
-        </h2>
-        <pre
-          id="yaml-preview"
-          class="max-h-[34rem] overflow-auto rounded-lg bg-slate-950 p-3 text-xs leading-relaxed text-slate-300"
-        ></pre>
+          <i class="fa-solid fa-copy mr-1"></i>Copy
+        </button>
+        <button type="button" data-close class="rounded-md px-2 py-1 text-slate-400 hover:bg-slate-800">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
       </div>
-    </aside>
+    </div>
+    <pre
+      id="tfvars-preview"
+      class="flex-1 overflow-auto rounded-lg bg-slate-950 p-4 text-sm leading-relaxed text-slate-300"
+    ></pre>
+  </div>
+</div>
+
+<!-- Apply / reconcile modal -->
+<div
+  id="modal-apply"
+  style="display: none"
+  class="fixed inset-0 z-40 flex items-center justify-center bg-black/60 p-4"
+>
+  <div class="flex max-h-[88vh] w-full max-w-3xl flex-col rounded-xl border border-slate-800 bg-slate-900 p-6">
+    <div class="mb-3 flex items-center justify-between">
+      <h3 class="flex items-center gap-2 text-lg font-semibold">
+        <i class="fa-solid fa-wand-magic-sparkles text-sky-400"></i>
+        Apply swarm
+        <span id="apply-phase" class="text-xs font-normal text-slate-500"></span>
+      </h3>
+      <button type="button" data-close class="rounded-md px-2 py-1 text-slate-400 hover:bg-slate-800">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+    </div>
+
+    <p class="mb-3 text-sm text-slate-400">
+      Plans the changes needed to make the live Docker Swarm match this config
+      (init manager, join/label nodes, sync SSH), then applies only what's needed
+      &mdash; like <code class="rounded bg-slate-800 px-1 py-0.5 text-slate-300">terraform apply</code>.
+    </p>
+
+    <!-- Planned actions -->
+    <div id="apply-plan-wrap" class="mb-3" style="display: none">
+      <h4 class="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">Planned actions</h4>
+      <ul id="apply-plan" class="space-y-1 rounded-lg border border-slate-800 bg-slate-950/60 p-3 text-sm"></ul>
+    </div>
+
+    <!-- Destructive confirm -->
+    <div
+      id="apply-destructive"
+      style="display: none"
+      class="mb-3 rounded-lg border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-200"
+    >
+      <div class="mb-2 flex items-center gap-2 font-medium">
+        <i class="fa-solid fa-triangle-exclamation"></i> Destructive changes
+      </div>
+      <p id="apply-destructive-text" class="mb-2 text-rose-200/90"></p>
+      <label class="flex cursor-pointer items-center gap-2">
+        <input id="apply-confirm" type="checkbox" class="h-4 w-4 rounded border-rose-400 bg-slate-950 text-rose-500 focus:ring-rose-500" />
+        I understand this will destroy/recreate swarm resources.
+      </label>
+    </div>
+
+    <!-- Live log -->
+    <pre
+      id="apply-log"
+      class="min-h-[8rem] flex-1 overflow-auto whitespace-pre-wrap rounded-lg bg-slate-950 p-3 text-xs leading-relaxed text-slate-300"
+    ></pre>
+
+    <div class="mt-4 flex items-center justify-end gap-2">
+      <button type="button" data-close class="rounded-lg border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:bg-slate-800">Close</button>
+      <button
+        id="apply-replan"
+        type="button"
+        class="rounded-lg border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:bg-slate-800"
+        title="Dry run: show what would change without applying"
+      >
+        <i class="fa-solid fa-magnifying-glass mr-1.5"></i>Plan only
+      </button>
+      <button
+        id="apply-run"
+        type="button"
+        disabled
+        class="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-40"
+      >
+        <i class="fa-solid fa-play mr-1.5"></i>Apply changes
+      </button>
+    </div>
   </div>
 </div>
 {% endblock %} {% block scripts %}

@@ -1,0 +1,107 @@
+{% extends "base.html" %} {% block title %}Grafana · homelab-config{% endblock %}
+{% block content %}
+<div class="mx-auto max-w-5xl p-6 lg:p-8">
+  <header class="mb-8 flex flex-wrap items-start justify-between gap-4">
+    <div>
+      <h1 class="flex items-center gap-3 text-2xl font-bold">
+        <i class="fa-solid fa-chart-line text-orange-400"></i> Grafana
+      </h1>
+      <p class="mt-1 text-sm text-slate-400">
+        Grafana data sources. Dashboards ship as JSON baked into the slice and
+        provider login lives under Providers. Changes save automatically to
+        <code class="rounded bg-slate-800 px-1.5 py-0.5 text-slate-300"
+          >.config/terraform/components/swarm/grafana/config.tfvars</code
+        >.
+      </p>
+    </div>
+    <div class="flex items-center gap-3">
+      <span id="save-state" class="text-sm text-slate-500" title="Auto-save on"></span>
+      <button id="preview-btn" class="rounded-lg border border-slate-700 px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-slate-800"><i class="fa-solid fa-file-code mr-2"></i>Preview config.tfvars</button>
+      <button id="reload-btn" class="rounded-lg border border-slate-700 px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-slate-800"><i class="fa-solid fa-rotate mr-2"></i>Reload from disk</button>
+    </div>
+  </header>
+
+  <div id="drift-banner" style="display: none" class="mb-6 flex items-center justify-between gap-4 rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
+    <span><i class="fa-solid fa-triangle-exclamation mr-2"></i>config.tfvars changed on disk outside the app.</span>
+    <button id="drift-reload" class="rounded-md bg-amber-500/20 px-3 py-1 text-xs font-medium text-amber-100 hover:bg-amber-500/30">Reload from disk</button>
+  </div>
+
+  <div class="mb-3 flex items-center justify-between">
+    <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-400">Data Sources <span id="count" class="ml-1 text-slate-600"></span></h2>
+    <button id="add-btn" class="rounded-lg bg-orange-500 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-orange-400"><i class="fa-solid fa-plus mr-1"></i>Add data source</button>
+  </div>
+  <div class="overflow-hidden rounded-xl border border-slate-800 bg-slate-900/50">
+    <table class="w-full text-left text-sm">
+      <thead class="bg-slate-900/80 text-xs uppercase tracking-wide text-slate-500"><tr>
+        <th class="px-4 py-3 font-semibold">Name / UID</th>
+        <th class="px-4 py-3 font-semibold">Type</th>
+        <th class="px-4 py-3 font-semibold">URL</th>
+        <th class="px-4 py-3 font-semibold">Default</th>
+        <th class="px-4 py-3 text-right font-semibold">Actions</th>
+      </tr></thead>
+      <tbody id="rows" class="divide-y divide-slate-800"></tbody>
+    </table>
+    <p id="empty" hidden class="px-4 py-8 text-center text-sm text-slate-500">No data sources defined yet.</p>
+  </div>
+</div>
+
+<div id="modal-ds" style="display: none" class="fixed inset-0 z-40 flex items-center justify-center bg-black/60 p-4">
+  <div class="flex max-h-[90vh] w-full max-w-2xl flex-col rounded-xl border border-slate-800 bg-slate-900 p-6">
+    <div class="mb-4 flex items-center justify-between">
+      <h3 id="ds-title" class="text-lg font-semibold">Add data source</h3>
+      <button type="button" data-close class="rounded-md px-2 py-1 text-slate-400 hover:bg-slate-800"><i class="fa-solid fa-xmark text-lg"></i></button>
+    </div>
+    <form id="ds-form" class="grid gap-4 overflow-y-auto sm:grid-cols-2">
+      <input type="hidden" id="ds-orig" />
+      <label class="block text-sm"><span class="mb-1 block text-slate-300">Name</span>
+        <input id="ds-name" required placeholder="Prometheus" class="mon-input" /></label>
+      <label class="block text-sm"><span class="mb-1 block text-slate-300">UID</span>
+        <input id="ds-uid" required placeholder="prometheus" class="mon-input" /></label>
+      <label class="block text-sm"><span class="mb-1 block text-slate-300">Type</span>
+        <input id="ds-type" required placeholder="prometheus" class="mon-input" /></label>
+      <label class="flex items-center gap-2 pt-7 text-sm text-slate-300">
+        <input id="ds-is_default" type="checkbox" class="mon-check" /> Default data source</label>
+      <label class="block text-sm sm:col-span-2"><span class="mb-1 block text-slate-300">URL</span>
+        <input id="ds-url" required placeholder="http://victoriametrics:8428" class="mon-input font-mono text-xs" />
+        <span id="ds-url-hint" class="mt-1 hidden text-xs text-amber-300">The <code>prometheus</code> UID must use http://victoriametrics:8428</span></label>
+      <div class="sm:col-span-2">
+        <div class="mb-2 flex items-center justify-between">
+          <span class="text-xs font-semibold uppercase tracking-wide text-slate-400">JSON data (extra settings)</span>
+          <button type="button" id="ds-add-jd" class="rounded-md border border-slate-700 px-2 py-1 text-xs text-slate-300 hover:bg-slate-800"><i class="fa-solid fa-plus mr-1"></i>Add field</button>
+        </div>
+        <div class="overflow-hidden rounded-lg border border-slate-800">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-900/80 uppercase tracking-wide text-slate-500"><tr><th class="px-2 py-2 font-semibold">Key</th><th class="px-2 py-2 font-semibold">Value</th><th class="px-2 py-2"></th></tr></thead>
+            <tbody id="ds-jd-rows" class="divide-y divide-slate-800"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 sm:col-span-2">
+        <button type="button" data-close class="rounded-lg border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:bg-slate-800">Cancel</button>
+        <button type="submit" class="rounded-lg bg-orange-500 px-4 py-2 text-sm font-medium text-white hover:bg-orange-400">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="modal-preview" style="display: none" class="fixed inset-0 z-40 flex items-center justify-center bg-black/60 p-4">
+  <div class="flex max-h-[85vh] w-full max-w-4xl flex-col rounded-xl border border-slate-800 bg-slate-900 p-6">
+    <div class="mb-3 flex items-center justify-between">
+      <h3 class="flex items-center gap-2 text-lg font-semibold"><i class="fa-solid fa-file-code text-slate-400"></i><code class="text-slate-300">.config/.../grafana/config.tfvars</code></h3>
+      <div class="flex items-center gap-2">
+        <button id="preview-copy" class="rounded-md border border-slate-700 px-3 py-1 text-xs text-slate-300 hover:bg-slate-800"><i class="fa-solid fa-copy mr-1"></i>Copy</button>
+        <button type="button" data-close class="rounded-md px-2 py-1 text-slate-400 hover:bg-slate-800"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+    </div>
+    <pre id="tfvars-preview" class="flex-1 overflow-auto rounded-lg bg-slate-950 p-4 text-sm leading-relaxed text-slate-300"></pre>
+  </div>
+</div>
+
+<style>
+  .mon-input { width: 100%; border-radius: 0.5rem; border: 1px solid rgb(51 65 85); background-color: rgb(2 6 23); padding: 0.5rem 0.75rem; color: rgb(241 245 249); }
+  .mon-input:focus { outline: none; border-color: rgb(249 115 22); }
+  .mon-check { height: 1rem; width: 1rem; border-radius: 0.25rem; border-color: rgb(51 65 85); background-color: rgb(2 6 23); color: rgb(249 115 22); }
+</style>
+{% endblock %} {% block scripts %}
+<script src="{{ url_for('static', filename='js/monitoring_grafana.js') }}"></script>
+{% endblock %}

@@ -7,7 +7,7 @@ MANAGER_HOST="${MANAGER_HOST:-192.168.1.120}"
 WORKER_HOST="${WORKER_HOST:-swarm-wk-4.local}"
 WORKER_IP="${WORKER_IP:-192.168.1.25}"
 NODE_ROLE="${NODE_ROLE:-swarm-wk-4}"
-SSH_KEY="${SSH_KEY:-${ROOT_DIR}/.config/.ssh/id_ed25519}"
+SSH_KEY="${SSH_KEY:-${ROOT_DIR}/.config/.ssh/ca/id_ed25519}"
 KNOWN_HOSTS="${KNOWN_HOSTS:-${ROOT_DIR}/.config/.ssh/known_hosts}"
 SSH_USER="${SSH_USER:-nodadyoushutup}"
 

@@ -1,0 +1,96 @@
+{% extends "base.html" %} {% block title %}Victoria Metrics · homelab-config{% endblock %}
+{% block content %}
+<div class="mx-auto max-w-4xl p-6 lg:p-8">
+  <header class="mb-8 flex flex-wrap items-start justify-between gap-4">
+    <div>
+      <h1 class="flex items-center gap-3 text-2xl font-bold">
+        <i class="fa-solid fa-database text-violet-400"></i> Victoria Metrics
+      </h1>
+      <p class="mt-1 text-sm text-slate-400">
+        Swarm app settings for the VictoriaMetrics service (deploy target, DNS
+        and placement). The shared Docker provider catalog stays under Providers.
+        Saved automatically to
+        <code class="rounded bg-slate-800 px-1.5 py-0.5 text-slate-300"
+          >.config/terraform/components/swarm/victoriametrics/app.tfvars</code
+        >.
+      </p>
+    </div>
+    <div class="flex items-center gap-3">
+      <span id="save-state" class="text-sm text-slate-500" title="Auto-save on"></span>
+      <button id="preview-btn" class="rounded-lg border border-slate-700 px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-slate-800"><i class="fa-solid fa-file-code mr-2"></i>Preview app.tfvars</button>
+      <button id="reload-btn" class="rounded-lg border border-slate-700 px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-slate-800"><i class="fa-solid fa-rotate mr-2"></i>Reload from disk</button>
+    </div>
+  </header>
+
+  <div id="drift-banner" style="display: none" class="mb-6 flex items-center justify-between gap-4 rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
+    <span><i class="fa-solid fa-triangle-exclamation mr-2"></i>app.tfvars changed on disk outside the app.</span>
+    <button id="drift-reload" class="rounded-md bg-amber-500/20 px-3 py-1 text-xs font-medium text-amber-100 hover:bg-amber-500/30">Reload from disk</button>
+  </div>
+
+  <div class="space-y-6">
+    <section class="rounded-xl border border-slate-800 bg-slate-900/50 p-5">
+      <h2 class="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-400">Deployment</h2>
+      <label class="block text-sm"><span class="mb-1 block text-slate-300">Docker machine</span>
+        <input id="docker_machine" placeholder="swarm-cp-0" class="mon-input" />
+        <span class="mt-1 block text-xs text-slate-500">Which entry in the shared Docker provider catalog to deploy through.</span></label>
+    </section>
+
+    <section class="rounded-xl border border-slate-800 bg-slate-900/50 p-5">
+      <div class="mb-3 flex items-center justify-between">
+        <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-400">DNS nameservers</h2>
+        <button id="dns-add" class="rounded-md border border-slate-700 px-2 py-1 text-xs text-slate-300 hover:bg-slate-800"><i class="fa-solid fa-plus mr-1"></i>Add</button>
+      </div>
+      <div id="dns-list" class="space-y-2"></div>
+    </section>
+
+    <section class="rounded-xl border border-slate-800 bg-slate-900/50 p-5">
+      <div class="mb-3 flex items-center justify-between">
+        <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-400">Placement</h2>
+        <label class="flex items-center gap-2 text-sm text-slate-300"><input id="placement-enabled" type="checkbox" class="mon-check" /> Enable placement</label>
+      </div>
+      <div id="placement-body" class="space-y-4">
+        <div>
+          <div class="mb-2 flex items-center justify-between">
+            <span class="text-xs font-semibold uppercase tracking-wide text-slate-500">Constraints</span>
+            <button id="constraint-add" class="rounded-md border border-slate-700 px-2 py-1 text-xs text-slate-300 hover:bg-slate-800"><i class="fa-solid fa-plus mr-1"></i>Add</button>
+          </div>
+          <div id="constraint-list" class="space-y-2"></div>
+        </div>
+        <div>
+          <div class="mb-2 flex items-center justify-between">
+            <span class="text-xs font-semibold uppercase tracking-wide text-slate-500">Platforms</span>
+            <button id="platform-add" class="rounded-md border border-slate-700 px-2 py-1 text-xs text-slate-300 hover:bg-slate-800"><i class="fa-solid fa-plus mr-1"></i>Add</button>
+          </div>
+          <div class="overflow-hidden rounded-lg border border-slate-800">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-900/80 uppercase tracking-wide text-slate-500"><tr><th class="px-2 py-2 font-semibold">OS</th><th class="px-2 py-2 font-semibold">Architecture</th><th class="px-2 py-2"></th></tr></thead>
+              <tbody id="platform-rows" class="divide-y divide-slate-800"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<div id="modal-preview" style="display: none" class="fixed inset-0 z-40 flex items-center justify-center bg-black/60 p-4">
+  <div class="flex max-h-[85vh] w-full max-w-3xl flex-col rounded-xl border border-slate-800 bg-slate-900 p-6">
+    <div class="mb-3 flex items-center justify-between">
+      <h3 class="flex items-center gap-2 text-lg font-semibold"><i class="fa-solid fa-file-code text-slate-400"></i><code class="text-slate-300">.config/.../victoriametrics/app.tfvars</code></h3>
+      <div class="flex items-center gap-2">
+        <button id="preview-copy" class="rounded-md border border-slate-700 px-3 py-1 text-xs text-slate-300 hover:bg-slate-800"><i class="fa-solid fa-copy mr-1"></i>Copy</button>
+        <button type="button" data-close class="rounded-md px-2 py-1 text-slate-400 hover:bg-slate-800"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+    </div>
+    <pre id="tfvars-preview" class="flex-1 overflow-auto rounded-lg bg-slate-950 p-4 text-sm leading-relaxed text-slate-300"></pre>
+  </div>
+</div>
+
+<style>
+  .mon-input { width: 100%; border-radius: 0.5rem; border: 1px solid rgb(51 65 85); background-color: rgb(2 6 23); padding: 0.5rem 0.75rem; color: rgb(241 245 249); }
+  .mon-input:focus { outline: none; border-color: rgb(139 92 246); }
+  .mon-check { height: 1rem; width: 1rem; border-radius: 0.25rem; border-color: rgb(51 65 85); background-color: rgb(2 6 23); color: rgb(139 92 246); }
+</style>
+{% endblock %} {% block scripts %}
+<script src="{{ url_for('static', filename='js/monitoring_victoriametrics.js') }}"></script>
+{% endblock %}

@@ -2,12 +2,26 @@
 # Single source of truth for mcp-playwright Swarm service values (resources read local.* only).
 
 locals {
-  env                          = var.env
-  replicas                     = var.replicas
-  dns_nameservers              = var.dns_nameservers
-  placement                    = var.placement
-  nfs                          = var.nfs
-  swarm_docker_provider_config = var.swarm_docker_provider_config
+  env             = var.env
+  replicas        = var.replicas
+  dns_nameservers = var.dns_nameservers
+  placement       = var.placement
+  docker_selected = var.docker_providers[var.docker_machine]
+  swarm_docker_provider_config = {
+    docker         = { host = local.docker_selected.host, ssh_opts = local.docker_selected.ssh_opts }
+    registry_auths = var.registry_auths
+  }
+
+  # Compose the Docker NFS volume from the shared catalog (config-id terraform/nfs).
+  nfs_selected = var.nfs_shares[var.nfs_share]
+  nfs = {
+    target = var.nfs_mount_target
+    driver_options = {
+      type   = "nfs"
+      device = ":${local.nfs_selected.export}${var.nfs_subpath}"
+      o      = "addr=${local.nfs_selected.server},${local.nfs_selected.options}"
+    }
+  }
 
   service_name  = "mcp-playwright"
   network_name  = "mcp-playwright"

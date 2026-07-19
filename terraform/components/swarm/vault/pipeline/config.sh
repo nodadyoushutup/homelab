@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 # Bespoke Vault config deploy (intentional during the AGENTS.md audit campaign).
 # Bespoke self-contained entrypoint (shared *_pipeline.sh wrappers removed).
-# Slice tfvars only (no shared swarm/dns/nfs). Merged secrets remain an extra -var-file.
+# Slice tfvars plus the Vault provider credentials (config-id
+# terraform/providers/vault) and the merged secrets, all as extra -var-files.
+# The .env/VAULT_ADDR handling below is operational only (health check + unseal);
+# the hashicorp/vault provider now authenticates from var.vault (VAULT_TFVARS).
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -14,6 +17,10 @@ TFVARS_HOME_DIR="${TFVARS_HOME_DIR:-${CONFIG_DIR}}"
 
 # shellcheck source=../../../scripts/terraform/resolve_config_by_id.sh
 source "${ROOT_DIR}/scripts/terraform/resolve_config_by_id.sh"
+# shellcheck source=/dev/null
+source "${ROOT_DIR}/scripts/terraform/terraform_backend_init.sh"
+# shellcheck source=../../../scripts/terraform/vault_tfvars_env.sh
+source "${ROOT_DIR}/scripts/terraform/vault_tfvars_env.sh"
 
 SLICE_CONFIG_ID="$(homelab_config_id_from_terraform_dir "${ROOT_DIR}" "${TERRAFORM_DIR}")"
 DEFAULT_SLICE_TFVARS="$(homelab_resolve_config_path "${CONFIG_DIR}" "${SLICE_CONFIG_ID}")"
@@ -223,10 +230,11 @@ fi
 
 require_terraform
 require_file "slice tfvars" "${SLICE_TFVARS}"
-require_file "backend config" "${BACKEND_CONFIG}"
+require_file "vault credentials tfvars" "${VAULT_TFVARS}"
 
 echo "Terraform dir:     ${TERRAFORM_DIR}"
 echo "Slice tfvars:      ${SLICE_TFVARS}"
+echo "Vault creds:       ${VAULT_TFVARS}"
 echo "Backend config:    ${BACKEND_CONFIG}"
 
 [[ -f "${VAULT_INIT_FILE}" ]] || {
@@ -268,38 +276,9 @@ fi
 
 cd "${TERRAFORM_DIR}"
 
-run_terraform_init() {
-  local init_log
-  init_log="$(mktemp -t vault-config-terraform-init-XXXXXX)"
-
-  if terraform init -backend-config="${BACKEND_CONFIG}" "$@" \
-    > >(tee "${init_log}") \
-    2> >(tee -a "${init_log}" >&2); then
-    rm -f "${init_log}"
-    return 0
-  fi
-
-  if grep -q "Backend configuration changed" "${init_log}"; then
-    if [[ -f ".terraform/terraform.tfstate" ]]; then
-      echo "[WARN] Backend change detected; attempting state migration"
-      if terraform init -force-copy -migrate-state -backend-config="${BACKEND_CONFIG}" "$@"; then
-        rm -f "${init_log}"
-        return 0
-      fi
-    fi
-    echo "[WARN] Backend change detected; re-running terraform init -reconfigure"
-    if terraform init -reconfigure -backend-config="${BACKEND_CONFIG}" "$@"; then
-      rm -f "${init_log}"
-      return 0
-    fi
-  fi
-
-  rm -f "${init_log}"
-  return 1
-}
 
 echo "[STEP] terraform init (Vault config)"
-if ! run_terraform_init; then
+if ! homelab_terraform_init "${TERRAFORM_DIR}"; then
   echo "[ERR] terraform init failed" >&2
   exit 1
 fi
@@ -307,6 +286,7 @@ fi
 PLAN_ARGS=(
   -input=false
   -var-file "${SLICE_TFVARS}"
+  -var-file "${VAULT_TFVARS}"
   -var-file "${VAULT_MERGED_SECRETS_TFVARS}"
 )
 

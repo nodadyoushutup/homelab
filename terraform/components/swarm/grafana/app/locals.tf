@@ -2,10 +2,14 @@
 # Single source of truth for Grafana Swarm service values (resources read local.* only).
 
 locals {
-  env                          = var.env
-  ini_path                     = var.ini_path
-  placement                    = var.placement
-  swarm_docker_provider_config = var.swarm_docker_provider_config
+  env             = var.env
+  ini_path        = var.ini_path
+  placement       = var.placement
+  docker_selected = var.docker_providers[var.docker_machine]
+  swarm_docker_provider_config = {
+    docker         = { host = local.docker_selected.host, ssh_opts = local.docker_selected.ssh_opts }
+    registry_auths = var.registry_auths
+  }
 
   service_name  = "grafana"
   network_name  = "grafana-app"

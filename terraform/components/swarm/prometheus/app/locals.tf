@@ -2,10 +2,14 @@
 # Single source of truth for Prometheus Swarm service values (resources read local.* only).
 
 locals {
-  config_path                  = var.config_path
-  dns_nameservers              = var.dns_nameservers
-  placement                    = var.placement
-  swarm_docker_provider_config = var.swarm_docker_provider_config
+  config_path     = var.config_path
+  dns_nameservers = var.dns_nameservers
+  placement       = var.placement
+  docker_selected = var.docker_providers[var.docker_machine]
+  swarm_docker_provider_config = {
+    docker         = { host = local.docker_selected.host, ssh_opts = local.docker_selected.ssh_opts }
+    registry_auths = var.registry_auths
+  }
 
   service_name  = "prometheus"
   network_name  = "prometheus"
