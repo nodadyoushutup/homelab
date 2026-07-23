@@ -1,4 +1,4 @@
-FROM ghcr.io/lanbaoshen/mcp-jenkins:3.1.1@sha256:0a647e292d32230bbcd90c1c1f217f058a2d6f6b282db84e403a23c828b85bbf
+FROM ghcr.io/lanbaoshen/mcp-jenkins:3.4.0@sha256:fa258bea42564a5f284e55df82bb21024d493987676e6fb806d59c56da627aad
 
 COPY --chmod=0755 entrypoint.sh /usr/local/bin/mcp-jenkins-entrypoint
 
