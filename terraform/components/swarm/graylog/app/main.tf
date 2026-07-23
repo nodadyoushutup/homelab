@@ -52,7 +52,7 @@ resource "docker_service" "graylog_datanode" {
     container_spec {
       hostname = local.datanode_hostname
       # Literal tag for Renovate (not a var/local; no digest).
-      image = "graylog/graylog-datanode:7.1.1"
+      image = "graylog/graylog-datanode:7.1.5"
 
       env = {
         GRAYLOG_DATANODE_NODE_ID_FILE    = local.datanode_node_id_file
