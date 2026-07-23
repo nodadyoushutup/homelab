@@ -39,7 +39,7 @@ resource "docker_service" "agentmemory" {
 
     container_spec {
       # Literal tag for Renovate (not a var/local; no digest).
-      image = "ghcr.io/nodadyoushutup/agentmemory:0.0.1"
+      image = "ghcr.io/nodadyoushutup/agentmemory:0.0.2"
       env   = local.agentmemory_env
 
       dns_config {
@@ -93,7 +93,7 @@ resource "docker_service" "mcp_agentmemory" {
 
     container_spec {
       # Literal tag for Renovate (not a var/local; no digest).
-      image = "ghcr.io/nodadyoushutup/mcp-agentmemory:0.0.1"
+      image = "ghcr.io/nodadyoushutup/mcp-agentmemory:0.0.2"
       env   = local.mcp_agentmemory_env
 
       dns_config {

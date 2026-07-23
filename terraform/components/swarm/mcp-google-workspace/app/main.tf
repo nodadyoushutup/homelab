@@ -34,7 +34,7 @@ resource "docker_service" "mcp_google_workspace" {
 
     container_spec {
       # Literal tag for Renovate (not a var/local; no digest).
-      image = "ghcr.io/nodadyoushutup/mcp-google-workspace:0.0.3"
+      image = "ghcr.io/nodadyoushutup/mcp-google-workspace:0.0.4"
       env   = local.env
 
       dns_config {

@@ -34,7 +34,7 @@ resource "docker_service" "mcp_fortigate" {
 
     container_spec {
       # Literal tag for Renovate (not a var/local; no digest).
-      image = "ghcr.io/nodadyoushutup/mcp-fortigate:0.0.1"
+      image = "ghcr.io/nodadyoushutup/mcp-fortigate:0.0.2"
       env   = local.env
 
       dns_config {
