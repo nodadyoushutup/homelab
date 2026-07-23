@@ -58,7 +58,7 @@ resource "docker_service" "prometheus" {
 
     container_spec {
       # Literal tag for Renovate (not a var/local; no digest).
-      image = "prom/prometheus:v3.9.1"
+      image = "prom/prometheus:v3.13.1"
       args  = local.args
 
       dns_config {
