@@ -45,7 +45,7 @@ resource "docker_service" "mcp_kubernetes" {
 
     container_spec {
       # Literal tag for Renovate (not a var/local; no digest).
-      image    = "quay.io/containers/kubernetes_mcp_server:v0.0.60"
+      image    = "quay.io/containers/kubernetes_mcp_server:v0.0.65"
       user     = local.container_user
       cap_drop = local.cap_drop
       args     = local.args
