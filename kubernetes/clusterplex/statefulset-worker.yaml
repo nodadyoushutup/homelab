@@ -28,7 +28,7 @@ spec:
     spec:
       initContainers:
         - name: set-codec-permissions
-          image: busybox:1.36.1
+          image: busybox:1.38.0
           imagePullPolicy: IfNotPresent
           command:
             - sh
@@ -38,7 +38,7 @@ spec:
             - name: codecs
               mountPath: /codecs
         - name: set-transcode-permissions
-          image: busybox:1.36.1
+          image: busybox:1.38.0
           imagePullPolicy: IfNotPresent
           command:
             - sh
@@ -48,7 +48,7 @@ spec:
             - name: transcode
               mountPath: /transcode
         - name: set-tmp-permissions
-          image: busybox:1.36.1
+          image: busybox:1.38.0
           imagePullPolicy: IfNotPresent
           command:
             - sh
