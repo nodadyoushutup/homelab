@@ -298,7 +298,7 @@ jobs:
 
       - name: Log in to GitHub Container Registry
         if: needs.prepare.outputs.publish_github == 'true'
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -306,7 +306,7 @@ jobs:
 
       - name: Log in to Zot registry
         if: needs.prepare.outputs.publish_zot == 'true'
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ${{ env.ZOT_REGISTRY }}
           username: ${{ secrets.ZOT_REGISTRY_USERNAME }}
@@ -371,7 +371,7 @@ jobs:
 
       - name: Log in to GitHub Container Registry
         if: needs.prepare.outputs.publish_github == 'true'
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -379,7 +379,7 @@ jobs:
 
       - name: Log in to Zot registry
         if: needs.prepare.outputs.publish_zot == 'true'
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ${{ env.ZOT_REGISTRY }}
           username: ${{ secrets.ZOT_REGISTRY_USERNAME }}
@@ -441,7 +441,7 @@ jobs:
     steps:
       - name: Log in to GitHub Container Registry
         if: needs.prepare.outputs.publish_github == 'true'
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -449,7 +449,7 @@ jobs:
 
       - name: Log in to Zot registry
         if: needs.prepare.outputs.publish_zot == 'true'
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ${{ env.ZOT_REGISTRY }}
           username: ${{ secrets.ZOT_REGISTRY_USERNAME }}
