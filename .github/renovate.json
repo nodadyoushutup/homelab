@@ -14,6 +14,14 @@
       "/^kubernetes/.+\\.ya?ml$/"
     ]
   },
+  "hostRules": [
+    {
+      "matchHost": "https://ghcr.io",
+      "hostType": "docker",
+      "username": "nodadyoushutup",
+      "password": "{{ secrets.GitHubPAT }}"
+    }
+  ],
   "packageRules": [
     {
       "matchDatasources": [
@@ -31,7 +39,7 @@
       "matchPackageNames": [
         "jc21/nginx-proxy-manager"
       ],
-      "allowedVersions": "!/^2\\.13\\.[0-6](?:$|-)/"
+      "enabled": false
     }
   ]
 }
