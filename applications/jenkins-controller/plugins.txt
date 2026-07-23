@@ -4,7 +4,7 @@ dark-theme:652.vea_da_dfea_e769
 email-ext:1933.v45cec755423f
 github-branch-source:1967.1970.vd86979736546
 gradle:2.19.1244.v1f9866817fec
-ldap:807.v7d7de30930cf
+ldap:807.809.vd3a_4e5e4ec98
 matrix-auth:3.2.10
 pam-auth:1.12
 workflow-aggregator:608.v67378e9d3db_1
