@@ -1,7 +1,7 @@
 # agentmemory + iii for Swarm. Adapted from upstream deploy/coolify/Dockerfile.
 # Binds 0.0.0.0:3111; persists state under /data.
 
-ARG III_VERSION=0.11.2
+ARG III_VERSION=0.22.0
 
 FROM iiidev/iii:${III_VERSION} AS iii-image
 
