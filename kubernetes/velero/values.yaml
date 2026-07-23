@@ -76,7 +76,7 @@ upgradeCRDs: false
 kubectl:
   image:
     repository: registry.k8s.io/kubectl
-    tag: v1.35.0
+    tag: v1.36.3
 
 rbac:
   create: true
