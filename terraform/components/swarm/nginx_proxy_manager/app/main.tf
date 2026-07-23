@@ -53,7 +53,7 @@ resource "docker_service" "nginx_proxy_manager" {
 
     container_spec {
       # Literal tag for Renovate (not a var/local; no digest).
-      image = "jc21/nginx-proxy-manager:2.12.6"
+      image = "jc21/nginx-proxy-manager:2.15.1"
       env   = local.env
 
       dns_config {
