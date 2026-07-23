@@ -25,7 +25,7 @@ resource "docker_service" "container_housekeeping" {
     }
 
     container_spec {
-      image   = "docker:29.2.1-cli" # Literal tag for Renovate (not a var/local; no digest).
+      image   = "docker:29.6.2-cli" # Literal tag for Renovate (not a var/local; no digest).
       command = ["/bin/sh", "-ec"]
       args    = [local.cleanup_script]
 
@@ -67,7 +67,7 @@ resource "docker_service" "container_housekeeping_wk4" {
     }
 
     container_spec {
-      image   = "docker:29.2.1-cli" # Literal tag for Renovate (not a var/local; no digest).
+      image   = "docker:29.6.2-cli" # Literal tag for Renovate (not a var/local; no digest).
       command = ["/bin/sh", "-ec"]
       args    = [local.cleanup_script]
 
