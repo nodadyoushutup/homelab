@@ -22,7 +22,7 @@ spec:
         kubernetes.io/hostname: k8s-wk-0
       containers:
         - name: picsur
-          image: ghcr.io/caramelfur/picsur-alpha:latest
+          image: ghcr.io/caramelfur/picsur-alpha:0.5.7
           imagePullPolicy: IfNotPresent
           env:
             - name: PICSUR_HOST

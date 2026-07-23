@@ -59,7 +59,7 @@ spec:
               mountPath: /run/plex-temp
       containers:
         - name: clusterplex-worker
-          image: linuxserver/plex:latest
+          image: linuxserver/plex:1.43.3
           imagePullPolicy: Always
           envFrom:
             - configMapRef:

@@ -88,7 +88,7 @@ spec:
               mountPath: /transcode
       containers:
         - name: clusterplex-pms
-          image: linuxserver/plex:latest
+          image: linuxserver/plex:1.43.3
           imagePullPolicy: Always
           envFrom:
             - configMapRef:

@@ -47,7 +47,7 @@ spec:
               done
       containers:
         - name: privatebin
-          image: privatebin/pdo:stable
+          image: privatebin/pdo:2.0.5
           imagePullPolicy: IfNotPresent
           env:
             - name: TZ
