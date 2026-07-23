@@ -34,7 +34,7 @@ resource "docker_service" "dozzle" {
 
     container_spec {
       # Literal tag for Renovate (not a var/local; no digest).
-      image = "amir20/dozzle:v9.0.1"
+      image = "amir20/dozzle:v9.0.3"
 
       env = local.env
 
