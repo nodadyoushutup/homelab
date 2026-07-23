@@ -1,7 +1,7 @@
 # homelab-config web app (local-dev container).
 # Built via docker/docker-compose.homelab-config.yaml with the source bind-mounted
 # for hot reload; the COPY below just bakes a runnable default image.
-FROM python:3.12-slim
+FROM python:3.14-slim
 
 # ssh-keygen (openssh-client) backs the SSH key fingerprints in ssh_store.py.
 # libnss-mdns lets the container resolve <host>.local (mDNS/Avahi) names like
