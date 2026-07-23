@@ -34,7 +34,7 @@ resource "docker_service" "cadvisor" {
 
     container_spec {
       # Literal tag for Renovate (not a var/local; no digest).
-      image = "ghcr.io/google/cadvisor:v0.57.0"
+      image = "ghcr.io/google/cadvisor:v0.60.5"
       args  = local.args
 
       dns_config {
