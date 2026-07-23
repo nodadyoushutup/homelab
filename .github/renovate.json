@@ -37,15 +37,6 @@
         "docker"
       ],
       "matchPackageNames": [
-        "jc21/nginx-proxy-manager"
-      ],
-      "enabled": false
-    },
-    {
-      "matchDatasources": [
-        "docker"
-      ],
-      "matchPackageNames": [
         "lscr.io/linuxserver/qbittorrent"
       ],
       "enabled": false
