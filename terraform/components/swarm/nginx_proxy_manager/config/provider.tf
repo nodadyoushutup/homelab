@@ -9,7 +9,7 @@ terraform {
   required_providers {
     nginxproxymanager = {
       source  = "Sander0542/nginxproxymanager"
-      version = "1.2.2"
+      version = "1.4.0"
     }
   }
 }
