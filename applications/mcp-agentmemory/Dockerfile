@@ -1,5 +1,5 @@
 # Streamable HTTP gateway for agentmemory: mcp-proxy + x-api-key front door.
-FROM ghcr.io/sparfenyuk/mcp-proxy:latest@sha256:644ae2eec70fccba8a1b49d75172bd6b298860aa8bbeae708ab2ab0b3bf88da8
+FROM ghcr.io/sparfenyuk/mcp-proxy:latest@sha256:ce037447191eeed517faa80640539dedaffb79a3ec107bfd23625a4438b0d06d
 
 RUN apk add --no-cache nodejs npm \
   && npm install --global --omit=dev @agentmemory/mcp@0.9.27 \
