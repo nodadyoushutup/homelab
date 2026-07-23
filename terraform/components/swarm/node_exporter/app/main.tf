@@ -34,7 +34,7 @@ resource "docker_service" "node_exporter" {
 
     container_spec {
       # Literal tag for Renovate (not a var/local; no digest).
-      image = "prom/node-exporter:v1.10.2"
+      image = "prom/node-exporter:v1.12.1"
 
       args = local.args
 
