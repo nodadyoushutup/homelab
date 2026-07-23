@@ -68,7 +68,7 @@ resource "docker_service" "grafana" {
 
     container_spec {
       # Literal tag for Renovate (not a var/local; no digest).
-      image = "grafana/grafana:12.3.1"
+      image = "grafana/grafana:13.1.1"
       env   = local.env
 
       mounts {
