@@ -1,4 +1,4 @@
-ARG MCP_ARGOCD_UPSTREAM_IMAGE=ghcr.io/argoproj-labs/mcp-for-argocd:latest@sha256:ef703dc15d0534c5368f835ae4948ac212055a3486481a56b05e9eb042a4ea6f
+ARG MCP_ARGOCD_UPSTREAM_IMAGE=ghcr.io/argoproj-labs/mcp-for-argocd:latest@sha256:da44010c0e08e80b020ddb1cc73af6534a4bb27428a0803eae3453276d588601
 FROM ${MCP_ARGOCD_UPSTREAM_IMAGE}
 
 USER root
