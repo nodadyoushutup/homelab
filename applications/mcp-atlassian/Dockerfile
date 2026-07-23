@@ -1,4 +1,4 @@
-ARG MCP_ATLASSIAN_UPSTREAM_IMAGE=ghcr.io/sooperset/mcp-atlassian:latest@sha256:6c4f96725b0e775a014a0b3016d358efdab58efd57c37ad7c2050136545b0e00
+ARG MCP_ATLASSIAN_UPSTREAM_IMAGE=ghcr.io/sooperset/mcp-atlassian:latest@sha256:d2bb29af785bc44bbb16eee4e577eceabe208cdbe1bcac80c4be9915864de45d
 FROM ${MCP_ATLASSIAN_UPSTREAM_IMAGE}
 
 USER root
