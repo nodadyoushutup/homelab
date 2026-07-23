@@ -9,6 +9,11 @@
       "/(^|/)applications/jenkins-agent/Dockerfile$/"
     ]
   },
+  "kubernetes": {
+    "managerFilePatterns": [
+      "/^kubernetes/.+\\.ya?ml$/"
+    ]
+  },
   "packageRules": [
     {
       "matchDatasources": [
