@@ -39,7 +39,7 @@ resource "docker_service" "grafana_postgres" {
 
     container_spec {
       # Literal tag for Renovate (not a var/local; no digest).
-      image = "postgres:18.3"
+      image = "postgres:18.4"
       env = {
         POSTGRES_PASSWORD = local.env.POSTGRES_PASSWORD
         POSTGRES_USER     = local.env.POSTGRES_USER
