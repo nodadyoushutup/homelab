@@ -39,7 +39,7 @@ resource "docker_service" "victoriametrics" {
 
     container_spec {
       # Literal tag for Renovate (not a var/local; no digest).
-      image = "victoriametrics/victoria-metrics:v1.137.0"
+      image = "victoriametrics/victoria-metrics:v1.148.0"
 
       dns_config {
         nameservers = local.dns_nameservers
