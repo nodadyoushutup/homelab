@@ -48,7 +48,7 @@ resource "docker_service" "vault" {
 
     container_spec {
       # Literal tag for Renovate (not a var/local; no digest).
-      image = "hashicorp/vault:1.21.4"
+      image = "hashicorp/vault:2.0.3"
       args  = ["server"]
       env = {
         VAULT_ADDR = local.local_vault_addr
