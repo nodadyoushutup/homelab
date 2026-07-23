@@ -12,7 +12,7 @@ resource "docker_container" "gha_runner" {
   for_each = local.replica_indexes
 
   name  = "homelab-${local.service_name_prefix}-${each.key}"
-  image = "ghcr.io/nodadyoushutup/gha-runner:0.1.2"
+  image = "ghcr.io/nodadyoushutup/gha-runner:0.1.1"
 
   restart = "always"
   user    = "0:0"
