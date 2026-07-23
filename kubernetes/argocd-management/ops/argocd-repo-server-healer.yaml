@@ -157,7 +157,7 @@ spec:
               type: RuntimeDefault
           containers:
             - name: healer
-              image: docker.io/bitnami/kubectl@sha256:e2b97dde9666986c61c56d49aae85a714b89b69392baa531438e74ec34096fb4
+              image: docker.io/bitnami/kubectl@sha256:558420daf32bbc382e3e9af4537f4073085b336ddd47399a3b70e70087115978
               imagePullPolicy: IfNotPresent
               command:
                 - /bin/bash
