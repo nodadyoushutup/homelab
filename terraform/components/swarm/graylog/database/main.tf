@@ -42,7 +42,7 @@ resource "docker_service" "graylog_mongodb" {
 
     container_spec {
       # Literal tag for Renovate (not a var/local; no digest).
-      image = "mongo:7.0.21"
+      image = "mongo:7.0.39"
 
       dns_config {
         nameservers = local.dns_nameservers
