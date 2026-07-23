@@ -286,11 +286,14 @@ jobs:
     needs: prepare
     if: needs.prepare.outputs.build_strategy == 'direct' && needs.prepare.outputs.build_amd64 == 'true'
     runs-on: [self-hosted, linux, homelab, amd64, build]
-    # Per-job docker config: shared docker.sock hosts must not share login/logout state.
-    env:
-      DOCKER_CONFIG: ${{ runner.temp }}/docker-config-amd64
 
     steps:
+      - name: Isolate Docker CLI config
+        shell: bash
+        run: |
+          mkdir -p "${RUNNER_TEMP}/docker-config-amd64"
+          echo "DOCKER_CONFIG=${RUNNER_TEMP}/docker-config-amd64" >> "$GITHUB_ENV"
+
       - name: Check out the code
         uses: actions/checkout@v7
 
@@ -317,32 +320,41 @@ jobs:
         run: |
           set -euo pipefail
 
+          image_refs=()
           tag_args=()
 
           if [ "${{ needs.prepare.outputs.publish_github }}" = "true" ]; then
-            tag_args+=(--tag "${{ needs.prepare.outputs.ghcr_image_base }}:${{ needs.prepare.outputs.version }}-amd64")
+            image_ref="${{ needs.prepare.outputs.ghcr_image_base }}:${{ needs.prepare.outputs.version }}-amd64"
+            image_refs+=("${image_ref}")
+            tag_args+=(--tag "${image_ref}")
           fi
 
           if [ "${{ needs.prepare.outputs.publish_zot }}" = "true" ]; then
-            tag_args+=(--tag "${{ needs.prepare.outputs.zot_image_base }}:${{ needs.prepare.outputs.version }}-amd64")
+            image_ref="${{ needs.prepare.outputs.zot_image_base }}:${{ needs.prepare.outputs.version }}-amd64"
+            image_refs+=("${image_ref}")
+            tag_args+=(--tag "${image_ref}")
           fi
 
-          if [ "${#tag_args[@]}" -eq 0 ]; then
+          if [ "${#image_refs[@]}" -eq 0 ]; then
             echo "No registry targets were prepared for this publish." >&2
             exit 1
           fi
 
-          # Push directly — avoid --load then docker push (shared-daemon prune races).
-          # Use the host docker driver; do not spawn per-job buildx containers on shared hosts.
+          # Host docker driver (no per-job buildx container). Soft cleanup must not
+          # prune tagged images between --load and docker push on shared daemons.
           docker buildx build \
             --builder default \
             --platform linux/amd64 \
             --provenance=false \
             --sbom=false \
             --file "${{ needs.prepare.outputs.dockerfile }}" \
-            --push \
+            --load \
             "${tag_args[@]}" \
             "${{ needs.prepare.outputs.docker_context }}"
+
+          for image_ref in "${image_refs[@]}"; do
+            docker push "${image_ref}"
+          done
 
       - name: Post-job Docker cleanup (self-hosted disk)
         if: always()
@@ -352,10 +364,14 @@ jobs:
     needs: prepare
     if: needs.prepare.outputs.build_strategy == 'direct' && needs.prepare.outputs.build_arm64 == 'true'
     runs-on: [self-hosted, linux, homelab, arm64]
-    env:
-      DOCKER_CONFIG: ${{ runner.temp }}/docker-config-arm64
 
     steps:
+      - name: Isolate Docker CLI config
+        shell: bash
+        run: |
+          mkdir -p "${RUNNER_TEMP}/docker-config-arm64"
+          echo "DOCKER_CONFIG=${RUNNER_TEMP}/docker-config-arm64" >> "$GITHUB_ENV"
+
       - name: Check out the code
         uses: actions/checkout@v7
 
@@ -382,17 +398,22 @@ jobs:
         run: |
           set -euo pipefail
 
+          image_refs=()
           tag_args=()
 
           if [ "${{ needs.prepare.outputs.publish_github }}" = "true" ]; then
-            tag_args+=(--tag "${{ needs.prepare.outputs.ghcr_image_base }}:${{ needs.prepare.outputs.version }}-arm64")
+            image_ref="${{ needs.prepare.outputs.ghcr_image_base }}:${{ needs.prepare.outputs.version }}-arm64"
+            image_refs+=("${image_ref}")
+            tag_args+=(--tag "${image_ref}")
           fi
 
           if [ "${{ needs.prepare.outputs.publish_zot }}" = "true" ]; then
-            tag_args+=(--tag "${{ needs.prepare.outputs.zot_image_base }}:${{ needs.prepare.outputs.version }}-arm64")
+            image_ref="${{ needs.prepare.outputs.zot_image_base }}:${{ needs.prepare.outputs.version }}-arm64"
+            image_refs+=("${image_ref}")
+            tag_args+=(--tag "${image_ref}")
           fi
 
-          if [ "${#tag_args[@]}" -eq 0 ]; then
+          if [ "${#image_refs[@]}" -eq 0 ]; then
             echo "No registry targets were prepared for this publish." >&2
             exit 1
           fi
@@ -403,9 +424,13 @@ jobs:
             --provenance=false \
             --sbom=false \
             --file "${{ needs.prepare.outputs.dockerfile }}" \
-            --push \
+            --load \
             "${tag_args[@]}" \
             "${{ needs.prepare.outputs.docker_context }}"
+
+          for image_ref in "${image_refs[@]}"; do
+            docker push "${image_ref}"
+          done
 
   publish_direct_manifest:
     needs:
@@ -420,10 +445,14 @@ jobs:
       needs.build_direct_arm64.result != 'failure' &&
       needs.build_direct_arm64.result != 'cancelled'
     runs-on: [self-hosted, linux, homelab, build]
-    env:
-      DOCKER_CONFIG: ${{ runner.temp }}/docker-config-manifest
 
     steps:
+      - name: Isolate Docker CLI config
+        shell: bash
+        run: |
+          mkdir -p "${RUNNER_TEMP}/docker-config-manifest"
+          echo "DOCKER_CONFIG=${RUNNER_TEMP}/docker-config-manifest" >> "$GITHUB_ENV"
+
       - name: Check out the code
         uses: actions/checkout@v7
 
