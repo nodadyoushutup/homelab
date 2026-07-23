@@ -11,7 +11,7 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 COPY scripts/install/ /tmp/install-scripts/
 RUN apt-get update -y \
-    && apt-get install -y --no-install-recommends ca-certificates curl git golang-go jq libicu74 make python3 python3-pip python3-venv sudo unzip zip \
+    && apt-get install -y --no-install-recommends ca-certificates curl git golang-go jq make python3 python3-pip python3-venv sudo unzip zip \
     && chmod 0755 /tmp/install-scripts/*.sh \
     && AUTOMATION_DOCKER_PROFILE=cli \
        AUTOMATION_DOCKER_CONFIGURE_USER=0 \

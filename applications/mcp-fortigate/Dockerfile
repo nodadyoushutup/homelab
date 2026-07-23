@@ -20,11 +20,13 @@ RUN pip install --no-cache-dir \
 RUN pip install --no-cache-dir --no-deps "git+https://github.com/juststank/ftg_mcp.git@${FTG_MCP_REF}"
 RUN python - <<'PY'
 from pathlib import Path
+import sysconfig
 
-site_packages = Path("/usr/local/lib/python3.11/site-packages")
+site_packages = Path(sysconfig.get_paths()["purelib"])
 (site_packages / "sitecustomize.py").unlink(missing_ok=True)
 
 init_path = site_packages / "src/fortigate_mcp/__init__.py"
+init_path.parent.mkdir(parents=True, exist_ok=True)
 init_path.write_text(
     "\"\"\"FortiGate MCP package metadata.\"\"\"\n"
     "__version__ = \"1.0.0\"\n"

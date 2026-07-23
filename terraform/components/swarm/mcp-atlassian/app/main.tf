@@ -34,7 +34,7 @@ resource "docker_service" "mcp_atlassian" {
 
     container_spec {
       # Literal tag for Renovate (not a var/local; no digest).
-      image = "ghcr.io/nodadyoushutup/mcp-atlassian:0.0.5"
+      image = "ghcr.io/nodadyoushutup/mcp-atlassian:0.0.6"
       env   = local.env
 
       dns_config {

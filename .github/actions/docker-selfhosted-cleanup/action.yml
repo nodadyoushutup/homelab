@@ -1,19 +1,22 @@
 name: Docker self-hosted cleanup
 description: >
-  Prune exited containers (they pin image IDs), BuildKit cache, then all unused
-  images including tagged digests not referenced by any running container. Use
-  with if always() after self-hosted jobs.
+  Safe post-job reclaim on shared self-hosted Docker hosts. Only prune exited
+  containers, dangling images, and aged build cache. Never use image prune -a —
+  parallel jobs share one daemon and --load/--push tags must survive until push
+  finishes.
 
 runs:
   using: composite
   steps:
-    - name: Prune exited containers, build cache, and unused images (incl. tagged)
+    - name: Prune exited containers, dangling images, and aged build cache
       shell: bash
       run: |
         set +e
-        echo "=== Docker cleanup (post-job, self-hosted) ==="
+        echo "=== Docker cleanup (post-job, self-hosted, shared-daemon safe) ==="
         docker container prune -f
-        docker builder prune -af
-        docker image prune -af
+        # Dangling only — do not delete tagged images another concurrent job may still push.
+        docker image prune -f
+        # Age-gated build cache only; -af races concurrent builds on the same host.
+        docker builder prune -f --filter until=24h
         docker system df || true
         df -h / || true

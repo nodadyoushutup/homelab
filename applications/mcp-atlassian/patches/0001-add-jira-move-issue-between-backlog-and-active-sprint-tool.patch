@@ -2,9 +2,9 @@ diff --git a/mcp_atlassian/servers/jira.py b/mcp_atlassian/servers/jira.py
 index 1111111..2222222 100644
 --- a/mcp_atlassian/servers/jira.py
 +++ b/mcp_atlassian/servers/jira.py
-@@ -2375,6 +2375,264 @@ async def add_issues_to_sprint(
+@@ -2994,6 +2994,370 @@
+     }
      return json.dumps(result, indent=2, ensure_ascii=False)
- 
  
 +@jira_mcp.tool(
 +    tags={"jira", "write", "toolset:jira_agile"},
@@ -370,6 +370,6 @@ index 1111111..2222222 100644
 +    return json.dumps(result, indent=2, ensure_ascii=False)
 +
 +
+ 
  @jira_mcp.tool(
-     tags={"jira", "read", "toolset:jira_projects"},
-     annotations={"title": "Get Project Versions", "readOnlyHint": True},
+     tags={"jira", "write", "toolset:jira_agile"},
