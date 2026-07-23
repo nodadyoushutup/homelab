@@ -357,7 +357,7 @@ jobs:
           }
 
       - name: Upload qcow2 for publish job
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: packer-qcow2-${{ needs.prepare.outputs.version }}-amd64
           path: ${{ env.PACKER_OUTPUT_DIR }}/**/*.qcow2
@@ -465,7 +465,7 @@ jobs:
           }
 
       - name: Upload qcow2 for publish job
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: packer-qcow2-${{ needs.prepare.outputs.version }}-arm64
           path: ${{ env.PACKER_OUTPUT_DIR }}/**/*.qcow2
@@ -500,7 +500,7 @@ jobs:
 
     steps:
       - name: Download qcow2 artifacts from build jobs
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           pattern: packer-qcow2-${{ needs.prepare.outputs.version }}-*
           merge-multiple: true
