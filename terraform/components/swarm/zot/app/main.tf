@@ -50,7 +50,7 @@ resource "docker_service" "zot" {
 
     container_spec {
       # Literal tag for Renovate (not a var/local; no digest).
-      image = "ghcr.io/project-zot/zot:v2.1.15"
+      image = "ghcr.io/project-zot/zot:v2.1.18"
 
       dns_config {
         nameservers = local.dns_nameservers
