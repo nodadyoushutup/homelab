@@ -19,6 +19,7 @@ spec:
         app.kubernetes.io/name: seerr
     spec:
       securityContext:
+        fsGroupChangePolicy: OnRootMismatch
         fsGroup: 1000
         seccompProfile:
           type: RuntimeDefault

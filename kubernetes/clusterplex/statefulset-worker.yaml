@@ -77,11 +77,18 @@ spec:
               mountPath: /codecs
             - name: worker-tmpfs
               mountPath: /run/plex-temp
+          # DOCKER_MODS (clusterplex worker) can take several minutes on cold start.
+          startupProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 60
           readinessProbe:
             httpGet:
               path: /health
               port: http
-            initialDelaySeconds: 120
             periodSeconds: 10
             timeoutSeconds: 5
             failureThreshold: 15
@@ -89,7 +96,6 @@ spec:
             httpGet:
               path: /health
               port: http
-            initialDelaySeconds: 120
             periodSeconds: 10
             timeoutSeconds: 5
             failureThreshold: 3
