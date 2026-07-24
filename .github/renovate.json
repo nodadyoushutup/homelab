@@ -40,6 +40,19 @@
         "lscr.io/linuxserver/qbittorrent"
       ],
       "enabled": false
+    },
+    {
+      "description": "Postgres major bumps need dump/restore; do not auto-bump majors",
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchPackageNames": [
+        "postgres"
+      ],
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "enabled": false
     }
   ]
 }
