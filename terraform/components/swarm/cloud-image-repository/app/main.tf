@@ -36,7 +36,7 @@ resource "docker_service" "cloud_image_repository" {
 
     container_spec {
       # Literal tag for Renovate (not a var/local; no digest).
-      image = "ghcr.io/nodadyoushutup/cloud-image-repository:0.0.4"
+      image = "ghcr.io/nodadyoushutup/cloud-image-repository:0.0.10"
 
       dns_config {
         nameservers = local.dns_nameservers
