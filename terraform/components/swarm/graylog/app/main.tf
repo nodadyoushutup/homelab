@@ -117,7 +117,7 @@ resource "docker_service" "graylog" {
     container_spec {
       hostname = local.server_hostname
       # Literal tag for Renovate (not a var/local; no digest).
-      image = "graylog/graylog:7.1.5"
+      image = "graylog/graylog:7.1.6"
 
       command = local.server_command
 
